@@ -259,6 +259,15 @@ class ConversationRepository
 
             // Check if message already exists to avoid duplicate processing
             val messageExists = messageDao.messageExists(message.id, identityHash)
+            // One exception: a row the service process stored as a sealed message it
+            // could not open is unfinished, not a duplicate. This process can open
+            // it, and the opened content has to land somewhere — skipping the write
+            // would leave the recipient looking at a permanently blank message.
+            val storedAwaitsUnseal =
+                messageExists &&
+                    PqProtection.fromStored(
+                        messageDao.getMessageById(message.id, identityHash)?.pqStatus,
+                    ) == PqProtection.UNOPENED
 
             // CRITICAL: Create/update conversation FIRST (before message insert)
             // This ensures foreign key constraint is satisfied
@@ -313,38 +322,21 @@ class ConversationRepository
 
             // NOW insert the message (after conversation exists) with SANITIZED content
             // Only insert if message doesn't already exist - prevents LXMF replay from
-            // overwriting imported messages with new timestamps (fixes ordering bug)
-            if (!messageExists) {
+            // overwriting imported messages with new timestamps (fixes ordering bug).
+            // A row still awaiting an unseal is the one case that is written again,
+            // because what is there is a placeholder for content we can now supply.
+            if (!messageExists || storedAwaitsUnseal) {
                 // Extract large attachments to disk to avoid SQLite CursorWindow limit (~2MB)
                 val processedFieldsJson = extractLargeAttachments(message.id, message.fieldsJson)
 
-                val messageEntity =
-                    MessageEntity(
-                        id = message.id,
-                        conversationHash = peerHash,
+                messageDao.insertMessage(
+                    message.toEntity(
+                        peerHash = peerHash,
                         identityHash = identityHash,
-                        content = sanitizedContent, // Store SANITIZED content
-                        timestamp = message.timestamp,
-                        isFromMe = message.isFromMe,
-                        status = message.status,
-                        isRead = message.isFromMe, // Our own messages are always "read"
-                        fieldsJson = processedFieldsJson, // LXMF fields with large attachments extracted
-                        deliveryMethod = message.deliveryMethod,
-                        errorMessage = message.errorMessage,
-                        replyToMessageId = message.replyToMessageId, // Reply reference
-                        // Received-side routing / signal metadata. Previously these
-                        // were dropped here, which meant the message-details screen
-                        // never rendered RSSI/SNR/hopcount/receiving-interface even
-                        // when the upstream producer populated them.
-                        receivedHopCount = message.receivedHopCount,
-                        receivedInterface = message.receivedInterface,
-                        receivedRssi = message.receivedRssi,
-                        receivedSnr = message.receivedSnr,
-                        receivedAt = message.receivedAt,
-                        sentInterface = message.sentInterface,
-                        pqStatus = message.pqProtection.name,
-                    )
-                messageDao.insertMessage(messageEntity)
+                        sanitizedContent = sanitizedContent,
+                        processedFieldsJson = processedFieldsJson,
+                    ),
+                )
 
                 // Check if this message has file attachments and should supersede a pending notification
                 if (!message.isFromMe && message.fieldsJson != null) {
@@ -599,6 +591,45 @@ class ConversationRepository
                 iconForegroundColor = iconForegroundColor,
                 iconBackgroundColor = iconBackgroundColor,
             )
+
+        /**
+         * Model -> row, with the content already sanitised and large attachments
+         * already extracted by the caller.
+         *
+         * Extracted from `saveMessage` to keep that function readable; nothing here
+         * decides anything.
+         */
+        private fun Message.toEntity(
+            peerHash: String,
+            identityHash: String,
+            sanitizedContent: String,
+            processedFieldsJson: String?,
+        ) = MessageEntity(
+            id = id,
+            conversationHash = peerHash,
+            identityHash = identityHash,
+            content = sanitizedContent,
+            timestamp = timestamp,
+            isFromMe = isFromMe,
+            status = status,
+            // Our own messages are always "read"
+            isRead = isFromMe,
+            fieldsJson = processedFieldsJson,
+            deliveryMethod = deliveryMethod,
+            errorMessage = errorMessage,
+            replyToMessageId = replyToMessageId,
+            // Received-side routing / signal metadata. These used to be dropped
+            // here, which meant the message-details screen never rendered
+            // RSSI/SNR/hopcount/receiving-interface even when the upstream producer
+            // populated them.
+            receivedHopCount = receivedHopCount,
+            receivedInterface = receivedInterface,
+            receivedRssi = receivedRssi,
+            receivedSnr = receivedSnr,
+            receivedAt = receivedAt,
+            sentInterface = sentInterface,
+            pqStatus = pqProtection.name,
+        )
 
         private fun MessageEntity.toMessage() =
             Message(

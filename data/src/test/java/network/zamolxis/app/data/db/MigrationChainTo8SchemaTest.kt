@@ -20,7 +20,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class MigrationChainTo8SchemaTest {
-    private val DATABASE_NAME = migrationDbPath("pq-pending-full-chain-schema-migration")
+    private val databaseName = migrationDbPath("pq-pending-full-chain-schema-migration")
 
     @get:Rule
     val helper =
@@ -31,10 +31,10 @@ class MigrationChainTo8SchemaTest {
 
     @Test
     fun `full chain 2 to 8 matches exported Room version 8 schema`() {
-        helper.createDatabase(DATABASE_NAME, 2).close()
+        helper.createDatabase(databaseName, 2).close()
         helper
             .runMigrationsAndValidate(
-                DATABASE_NAME,
+                databaseName,
                 8,
                 true,
                 ZamolxisDatabase.MIGRATION_2_3,

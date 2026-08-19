@@ -12,7 +12,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class Migration3To4SchemaTest {
-    private val DATABASE_NAME = migrationDbPath("announce-interface-room-schema-migration")
+    private val databaseName = migrationDbPath("announce-interface-room-schema-migration")
 
     @get:Rule
     val helper =
@@ -23,9 +23,9 @@ class Migration3To4SchemaTest {
 
     @Test
     fun `migration output matches exported Room version 4 schema`() {
-        helper.createDatabase(DATABASE_NAME, 3).close()
+        helper.createDatabase(databaseName, 3).close()
         helper.runMigrationsAndValidate(
-            DATABASE_NAME,
+            databaseName,
             4,
             true,
             ZamolxisDatabase.MIGRATION_3_4,

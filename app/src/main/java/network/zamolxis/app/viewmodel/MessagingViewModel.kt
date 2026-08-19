@@ -2526,35 +2526,63 @@ class MessagingViewModel
                         extraFields = pqFieldsFor(pqPlan).ifEmpty { null },
                     )
 
-                result
-                    .onSuccess { receipt ->
-                        recordPqDelivery(pqPlan, destinationHash)
-                        handleSendSuccess(
-                            receipt = receipt,
-                            sanitized = sanitized,
-                            destinationHash = destinationHash,
-                            imageData = imageData,
-                            imageFormat = imageFormat,
-                            fileAttachments = emptyList(),
-                            deliveryMethodString = deliveryMethodString,
-                            pqProtection = pqProtectionFor(pqPlan),
-                        )
-                    }.onFailure { error ->
-                        handleSendFailure(
-                            error = error,
-                            sanitized = sanitized,
-                            destinationHash = destinationHash,
-                            deliveryMethodString = deliveryMethodString,
-                            imageData = imageData,
-                            imageFormat = imageFormat,
-                            fileAttachments = emptyList(),
-                            replyToMessageId = null,
-                            voiceBytes = null,
-                        )
-                    }
+                recordSharedImageOutcome(
+                    result = result,
+                    pqPlan = pqPlan,
+                    sanitized = sanitized,
+                    destinationHash = destinationHash,
+                    imageData = imageData,
+                    imageFormat = imageFormat,
+                    deliveryMethodString = deliveryMethodString,
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "Error sending shared image message", e)
             }
+        }
+
+        /**
+         * Persist the outcome of a shared-image send.
+         *
+         * Split out of [sendImageMessageDirect] only for length; it is the same two
+         * branches, with the post-quantum status coming from the plan the send
+         * actually used.
+         */
+        @Suppress("LongParameterList")
+        private suspend fun recordSharedImageOutcome(
+            result: Result<network.zamolxis.app.rns.api.model.MessageReceipt>,
+            pqPlan: PqMessageSealer.Outgoing,
+            sanitized: String,
+            destinationHash: String,
+            imageData: ByteArray,
+            imageFormat: String,
+            deliveryMethodString: String,
+        ) {
+            result
+                .onSuccess { receipt ->
+                    recordPqDelivery(pqPlan, destinationHash)
+                    handleSendSuccess(
+                        receipt = receipt,
+                        sanitized = sanitized,
+                        destinationHash = destinationHash,
+                        imageData = imageData,
+                        imageFormat = imageFormat,
+                        fileAttachments = emptyList(),
+                        deliveryMethodString = deliveryMethodString,
+                        pqProtection = pqProtectionFor(pqPlan),
+                    )
+                }.onFailure { error ->
+                    handleSendFailure(
+                        error = error,
+                        sanitized = sanitized,
+                        destinationHash = destinationHash,
+                        deliveryMethodString = deliveryMethodString,
+                        imageData = imageData,
+                        imageFormat = imageFormat,
+                        fileAttachments = emptyList(),
+                        replyToMessageId = null,
+                        voiceBytes = null,
+                    )
+                }
         }
 
         /**
@@ -2943,31 +2971,35 @@ class MessagingViewModel
          *   Those are not sealed by this layer, so the layer must be told rather
          *   than left to overstate what it covered.
          */
+        // ReturnCount: three guards and the result. Each guard is a distinct reason
+        // the layer cannot run, and each resolves differently against the mode —
+        // collapsing them would lose exactly the distinction that keeps REQUIRED
+        // from sending plaintext.
+        @Suppress("ReturnCount")
         private suspend fun preparePqSend(
             destinationHash: String,
             content: String,
             hasAttachments: Boolean,
         ): PqMessageSealer.Outgoing {
+            // Null means the mode itself could not be read. There is then no way to
+            // know whether plaintext is acceptable to this user, and guessing "yes"
+            // is the one guess that cannot be taken back — so it refuses, visibly,
+            // and the user can retry.
             val mode =
                 runCatching { settingsRepository.getPostQuantumMode() }.getOrElse {
-                    // Without the mode there is no way to know whether plaintext is
-                    // acceptable to this user, and guessing "yes" is the one guess
-                    // that cannot be taken back. Refusing is visible and the user
-                    // can retry.
                     Log.e(TAG, "Could not read the post-quantum mode; refusing rather than guessing", it)
-                    return PqMessageSealer.Outgoing.Refused(PlainReason.LAYER_UNAVAILABLE)
-                }
+                    null
+                } ?: return PqMessageSealer.Outgoing.Refused(PlainReason.LAYER_UNAVAILABLE)
 
             if (mode == PqMode.OFF) {
                 return PqMessageSealer.Outgoing.Plain(content, emptyMap(), PlainReason.DISABLED_BY_USER)
             }
 
-            val identity =
-                runCatching { identityRepository.getActiveIdentitySync() }.getOrNull()
-                    ?: run {
-                        Log.w(TAG, "No active identity; post-quantum layer cannot run")
-                        return failClosedOrPlain(mode, content)
-                    }
+            val identity = runCatching { identityRepository.getActiveIdentitySync() }.getOrNull()
+            if (identity == null) {
+                Log.w(TAG, "No active identity; post-quantum layer cannot run")
+                return failClosedOrPlain(mode, content)
+            }
 
             return runCatching {
                 pqMessageSealer.prepareOutgoing(

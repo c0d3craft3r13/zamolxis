@@ -2,6 +2,7 @@ package network.zamolxis.app.data.repository
 
 import app.cash.turbine.test
 import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.storage.AttachmentStorageManager
 import network.zamolxis.app.test.DatabaseTest
 import io.mockk.every
@@ -155,6 +156,71 @@ class ConversationRepositoryDatabaseTest : DatabaseTest() {
             // Verify only one message exists
             val allMessages = messageDao.getAllMessagesForIdentity(TEST_IDENTITY_HASH)
             assertEquals("Should have exactly 1 message (duplicate not inserted)", 1, allMessages.size)
+        }
+
+    @Test
+    fun `saveMessage completes a row the service stored as unopened`() =
+        runTest {
+            // The service process persists what arrives and cannot open a sealed
+            // message, so it writes a placeholder marked UNOPENED. Deduplication
+            // must not treat that as a finished message: the app process opens it
+            // and the content has to land, or the recipient is left with a
+            // permanently blank bubble.
+            val placeholder =
+                Message(
+                    id = "msg_sealed",
+                    destinationHash = TEST_PEER_HASH,
+                    content = "",
+                    timestamp = 1000L,
+                    isFromMe = false,
+                    status = "delivered",
+                    pqProtection = PqProtection.UNOPENED,
+                )
+            repository.saveMessage(TEST_PEER_HASH, "Peer", placeholder, null)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val opened =
+                placeholder.copy(
+                    content = "opened at last",
+                    pqProtection = PqProtection.SEALED,
+                )
+            repository.saveMessage(TEST_PEER_HASH, "Peer", opened, null)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val saved = messageDao.getMessageById("msg_sealed", TEST_IDENTITY_HASH)
+            assertEquals("opened at last", saved?.content)
+            assertEquals(PqProtection.SEALED.name, saved?.pqStatus)
+            // And the conversation preview follows, rather than staying blank.
+            val conversation = conversationDao.getConversation(TEST_PEER_HASH, TEST_IDENTITY_HASH)
+            assertEquals("opened at last", conversation?.lastMessage)
+        }
+
+    @Test
+    fun `saveMessage still refuses to overwrite an already opened message`() =
+        runTest {
+            // The exception above is narrow: only an UNOPENED row is rewritten.
+            val original =
+                Message(
+                    id = "msg_plain",
+                    destinationHash = TEST_PEER_HASH,
+                    content = "Original",
+                    timestamp = 1000L,
+                    isFromMe = false,
+                    status = "delivered",
+                    pqProtection = PqProtection.SEALED,
+                )
+            repository.saveMessage(TEST_PEER_HASH, "Peer", original, null)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            repository.saveMessage(
+                TEST_PEER_HASH,
+                "Peer",
+                original.copy(content = "Replayed"),
+                null,
+            )
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals("Original", messageDao.getMessageById("msg_plain", TEST_IDENTITY_HASH)?.content)
         }
 
     @Test

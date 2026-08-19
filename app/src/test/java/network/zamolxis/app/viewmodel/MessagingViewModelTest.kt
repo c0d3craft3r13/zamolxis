@@ -97,6 +97,20 @@ import network.zamolxis.app.data.repository.Message as DataMessage
 @OptIn(ExperimentalCoroutinesApi::class)
 class MessagingViewModelTest {
 
+    /** Settings the view model reads on construction and on every send. */
+    private fun stubSettingsRepository() {
+        coEvery { settingsRepository.getDefaultDeliveryMethod() } returns "direct"
+        coEvery { settingsRepository.getTryPropagationOnFail() } returns true
+        coEvery { settingsRepository.getIncomingMessageSizeLimitKb() } returns 500
+        // Required, not optional: the send path refuses to send when it cannot read
+        // the post-quantum mode, because guessing "plaintext is fine" is the one
+        // guess that cannot be taken back. An unstubbed mode used to be swallowed
+        // and the message went out unsealed.
+        coEvery { settingsRepository.getPostQuantumMode() } returns PqMode.OPPORTUNISTIC
+        every { settingsRepository.messageFontScaleFlow } returns flowOf(1.0f)
+        every { settingsRepository.sortMessagesBySentTime } returns flowOf(false)
+    }
+
     @Test
     fun `voice message quality uses exact standard LXST Opus call profiles`() {
         assertEquals(8_000, VoiceMessageFormat.OPUS_MEDIUM.recordingConfig?.bitRateBps)
@@ -280,17 +294,7 @@ class MessagingViewModelTest {
         // Mock activeConversationManager methods
         every { activeConversationManager.setActive(any()) } just Runs
 
-        // Mock settingsRepository methods
-        coEvery { settingsRepository.getDefaultDeliveryMethod() } returns "direct"
-        coEvery { settingsRepository.getTryPropagationOnFail() } returns true
-        coEvery { settingsRepository.getIncomingMessageSizeLimitKb() } returns 500
-        // Required, not optional: the send path refuses to send when it cannot read
-        // the post-quantum mode, because guessing "plaintext is fine" is the one
-        // guess that cannot be taken back. An unstubbed mode used to be swallowed
-        // and the message went out unsealed.
-        coEvery { settingsRepository.getPostQuantumMode() } returns PqMode.OPPORTUNISTIC
-        every { settingsRepository.messageFontScaleFlow } returns flowOf(1.0f)
-        every { settingsRepository.sortMessagesBySentTime } returns flowOf(false)
+        stubSettingsRepository()
 
         // Mock conversationLinkManager flows
         every { conversationLinkManager.linkStates } returns MutableStateFlow(emptyMap())

@@ -270,6 +270,12 @@ class ServicePersistenceManager(
         }
     }
 
+    // This is the single place an inbound LXMF message becomes a stored row, so it
+    // legitimately carries every protocol field the message arrived with
+    // (LongParameterList), walks the conversation-then-message write in one place
+    // (LongMethod), and bails out early on each independent reason not to store
+    // something — no identity, blocked peer, unknown sender, duplicate (ReturnCount).
+    @Suppress("LongParameterList", "LongMethod", "ReturnCount")
     suspend fun persistMessage(
         messageHash: String,
         content: String,

@@ -19,7 +19,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class Migration7To8SchemaTest {
-    private val DATABASE_NAME = migrationDbPath("pq-pending-key-schema-migration")
+    private val databaseName = migrationDbPath("pq-pending-key-schema-migration")
 
     @get:Rule
     val helper =
@@ -30,9 +30,9 @@ class Migration7To8SchemaTest {
 
     @Test
     fun `migration output matches exported Room version 8 schema`() {
-        helper.createDatabase(DATABASE_NAME, 7).close()
+        helper.createDatabase(databaseName, 7).close()
         helper.runMigrationsAndValidate(
-            DATABASE_NAME,
+            databaseName,
             8,
             true,
             ZamolxisDatabase.MIGRATION_7_8,

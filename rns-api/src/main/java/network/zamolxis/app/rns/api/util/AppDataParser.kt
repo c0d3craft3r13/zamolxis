@@ -177,6 +177,11 @@ object AppDataParser {
      *
      * @return the fingerprint bytes, or null when absent or not the expected shape
      */
+    // ReturnCount: every one of these is "this announce does not carry a
+    // fingerprint" observed at a different point — absent app_data, not a msgpack
+    // array, too few elements, wrong type, implausible length. They are guard
+    // clauses against other clients' announces, not branching logic.
+    @Suppress("ReturnCount")
     fun parsePqFingerprint(appData: ByteArray?): ByteArray? {
         if (appData == null || appData.isEmpty()) return null
         return try {

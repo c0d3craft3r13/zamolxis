@@ -12,7 +12,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class Migration2To3SchemaTest {
-    private val DATABASE_NAME = migrationDbPath("peer-activity-room-schema-migration")
+    private val databaseName = migrationDbPath("peer-activity-room-schema-migration")
 
     @get:Rule
     val helper =
@@ -23,9 +23,9 @@ class Migration2To3SchemaTest {
 
     @Test
     fun `migration output matches exported Room version 3 schema`() {
-        helper.createDatabase(DATABASE_NAME, 2).close()
+        helper.createDatabase(databaseName, 2).close()
         helper.runMigrationsAndValidate(
-            DATABASE_NAME,
+            databaseName,
             3,
             true,
             ZamolxisDatabase.MIGRATION_2_3,

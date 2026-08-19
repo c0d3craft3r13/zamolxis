@@ -219,6 +219,11 @@ class PqKeyRepository
          * @return trusted fingerprint to pending fingerprint, or null if there is
          *   no pending change
          */
+        // ReturnCount: four of these are "there is no pending change to show" from
+        // four different directions — no row, not flagged, no trusted key, no
+        // pending key. Nesting them would put the one interesting branch four
+        // levels deep.
+        @Suppress("ReturnCount")
         suspend fun keyChangeFingerprints(peerHash: String): Pair<ByteArray, ByteArray>? {
             val row = dao.getPeerKey(peerHash) ?: return null
             if (!row.keyChangeUnresolved) return null

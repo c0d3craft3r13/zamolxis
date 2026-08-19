@@ -12,7 +12,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class Migration5To6SchemaTest {
-    private val DATABASE_NAME = migrationDbPath("call-history-blocking-schema-migration")
+    private val databaseName = migrationDbPath("call-history-blocking-schema-migration")
 
     @get:Rule
     val helper =
@@ -23,9 +23,9 @@ class Migration5To6SchemaTest {
 
     @Test
     fun `migration output matches exported Room version 6 schema`() {
-        helper.createDatabase(DATABASE_NAME, 5).close()
+        helper.createDatabase(databaseName, 5).close()
         helper.runMigrationsAndValidate(
-            DATABASE_NAME,
+            databaseName,
             6,
             true,
             ZamolxisDatabase.MIGRATION_5_6,

@@ -95,6 +95,10 @@ data class TestAnnounceResult(
 @HiltViewModel
 class DebugViewModel
     @Inject
+    // LongParameterList: a debug screen reports on every subsystem, so it needs a
+    // handle on each. Bundling them into a holder would hide the same dependencies
+    // from the graph without removing one.
+    @Suppress("LongParameterList")
     constructor(
         @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
         private val rnsCore: RnsCore,

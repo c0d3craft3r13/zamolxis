@@ -141,6 +141,10 @@ class NotificationHelper
          * @param messagePreview Preview text of the message
          * @param isFavorite Whether the sender is a saved peer
          */
+        // ReturnCount: four guard clauses — master toggle, per-category preference,
+        // permission, and the active-conversation suppression. Each one is a reason
+        // not to notify; nesting them would say the same thing with more indentation.
+        @Suppress("ReturnCount")
         suspend fun notifyMessageReceived(
             destinationHash: String,
             peerName: String,
