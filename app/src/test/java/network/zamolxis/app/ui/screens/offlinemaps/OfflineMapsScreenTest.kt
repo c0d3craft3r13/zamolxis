@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.offlinemaps
+package network.zamolxis.app.ui.screens.offlinemaps
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -8,8 +8,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.data.repository.OfflineMapRegion
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.data.repository.OfflineMapRegion
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -442,7 +442,7 @@ class OfflineMapsScreenTest {
     fun regionCard_displaysCheckingState() {
         val region = createTestRegion(status = OfflineMapRegion.Status.COMPLETE, tileVersion = "v1")
         val updateResult =
-            network.columba.app.viewmodel.UpdateCheckResult(
+            network.zamolxis.app.viewmodel.UpdateCheckResult(
                 regionId = 1L,
                 currentVersion = "v1",
                 latestVersion = null,
@@ -465,7 +465,7 @@ class OfflineMapsScreenTest {
     fun regionCard_displaysUpdateAvailableState() {
         val region = createTestRegion(status = OfflineMapRegion.Status.COMPLETE, tileVersion = "v1")
         val updateResult =
-            network.columba.app.viewmodel.UpdateCheckResult(
+            network.zamolxis.app.viewmodel.UpdateCheckResult(
                 regionId = 1L,
                 currentVersion = "v1",
                 latestVersion = "v2",
@@ -489,7 +489,7 @@ class OfflineMapsScreenTest {
     fun regionCard_displaysUpToDateState() {
         val region = createTestRegion(status = OfflineMapRegion.Status.COMPLETE, tileVersion = "v1")
         val updateResult =
-            network.columba.app.viewmodel.UpdateCheckResult(
+            network.zamolxis.app.viewmodel.UpdateCheckResult(
                 regionId = 1L,
                 currentVersion = "v1",
                 latestVersion = "v1",
@@ -532,7 +532,7 @@ class OfflineMapsScreenTest {
     fun regionCard_showsUpdateDialogOnUpdateNowClick() {
         val region = createTestRegion(status = OfflineMapRegion.Status.COMPLETE, name = "Test Region", tileVersion = "v1")
         val updateResult =
-            network.columba.app.viewmodel.UpdateCheckResult(
+            network.zamolxis.app.viewmodel.UpdateCheckResult(
                 regionId = 1L,
                 currentVersion = "v1",
                 latestVersion = "v2",
@@ -558,7 +558,7 @@ class OfflineMapsScreenTest {
     fun regionCard_updateDialogCancelDismisses() {
         val region = createTestRegion(status = OfflineMapRegion.Status.COMPLETE, tileVersion = "v1")
         val updateResult =
-            network.columba.app.viewmodel.UpdateCheckResult(
+            network.zamolxis.app.viewmodel.UpdateCheckResult(
                 regionId = 1L,
                 currentVersion = "v1",
                 latestVersion = "v2",
@@ -587,7 +587,7 @@ class OfflineMapsScreenTest {
         var callbackCalled = false
         val region = createTestRegion(status = OfflineMapRegion.Status.COMPLETE, tileVersion = "v1")
         val updateResult =
-            network.columba.app.viewmodel.UpdateCheckResult(
+            network.zamolxis.app.viewmodel.UpdateCheckResult(
                 regionId = 1L,
                 currentVersion = "v1",
                 latestVersion = "v2",
@@ -667,7 +667,7 @@ class OfflineMapsScreenTest {
     fun regionCard_displaysUpdateCheckError() {
         val region = createTestRegion(status = OfflineMapRegion.Status.COMPLETE, tileVersion = "v1")
         val updateResult =
-            network.columba.app.viewmodel.UpdateCheckResult(
+            network.zamolxis.app.viewmodel.UpdateCheckResult(
                 regionId = 1L,
                 currentVersion = null,
                 latestVersion = null,
@@ -693,7 +693,7 @@ class OfflineMapsScreenTest {
         var callbackCalled = false
         val region = createTestRegion(status = OfflineMapRegion.Status.COMPLETE, tileVersion = "v1")
         val updateResult =
-            network.columba.app.viewmodel.UpdateCheckResult(
+            network.zamolxis.app.viewmodel.UpdateCheckResult(
                 regionId = 1L,
                 currentVersion = null,
                 latestVersion = null,

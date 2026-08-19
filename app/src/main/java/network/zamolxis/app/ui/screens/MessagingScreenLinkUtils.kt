@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.net.Uri
 import android.util.Patterns
@@ -64,7 +64,7 @@ internal fun toBrowsableUrl(rawUrl: String): String {
 internal fun toBrowsableUri(rawUrl: String): Uri = Uri.parse(toBrowsableUrl(rawUrl))
 
 /**
- * Returns a browsable URI only for schemes Columba explicitly supports in messages.
+ * Returns a browsable URI only for schemes Zamolxis explicitly supports in messages.
  * Markdown links are untrusted input, so file, content, intent, data, and script
  * schemes are rejected instead of being delegated to Android.
  */

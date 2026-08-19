@@ -13,7 +13,7 @@
 # shows a specific Opus tier recommendation and a populated PathInfoSection.
 #
 # Preconditions (must be true before running this flow):
-#   - App network.columba.app.debug installed on emulator-5554 (python build).
+#   - App network.zamolxis.app.debug installed on emulator-5554 (python build).
 #   - Onboarding already completed (so launchApp lands on the Chats screen,
 #     not the Welcome wizard or IdentityUnlock screen).
 #   - At least one existing conversation visible in the chat list. The flow
@@ -29,14 +29,14 @@
 #   - "Cancel"                -> AlertDialog dismissButton in
 #                                QualitySelectionDialog.kt:166.
 
-appId: network.columba.app.debug
+appId: network.zamolxis.app.debug
 name: 01-probe-codec
 tags:
   - py-backend
   - punch-list-1
 ---
 - launchApp:
-    appId: network.columba.app.debug
+    appId: network.zamolxis.app.debug
     clearKeychain: false
     stopApp: false
 

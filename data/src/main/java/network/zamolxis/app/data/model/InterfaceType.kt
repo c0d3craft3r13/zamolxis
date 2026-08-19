@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 /**
  * Canonical classifier for the transport an RNS interface runs over.
@@ -22,7 +22,7 @@ package network.columba.app.data.model
  * - [BLE]        — `AndroidBLE` (in-app Reticulum-over-BLE), legacy
  *                  `Bluetooth` strings.
  * - [RNODE]      — `RNodeInterface`, `RNodeMultiInterface`,
- *                  `ColumbaRNodeInterface` (BLE-attached RNode hardware).
+ *                  `ZamolxisRNodeInterface` (BLE-attached RNode hardware).
  *
  * [displayLabel] is the short string shown in chips / pills; [storageName]
  * is what gets persisted to the `announces.receivingInterfaceType` column.
@@ -65,7 +65,7 @@ enum class InterfaceType(
          *   - `"TCPServerInterface[0.0.0.0:4242]"`
          *   - `"AndroidBLE"`, `"BLE"`, `"Bluetooth…"`
          *   - `"RNodeInterface[My Radio]"`, `"RNodeMultiInterface[…]"`,
-         *     `"ColumbaRNodeInterface[…]"`
+         *     `"ZamolxisRNodeInterface[…]"`
          *
          * Returns [UNKNOWN] for null, blank, `"None"`, or anything else.
          */
@@ -93,7 +93,7 @@ enum class InterfaceType(
 
         // Order matters — "tcpserver" must be checked before the looser "tcp*"
         // patterns. "rnode" must be checked before BLE-keyword fallback because
-        // the BLE-attached RNode driver string is `ColumbaRNodeInterface` which
+        // the BLE-attached RNode driver string is `ZamolxisRNodeInterface` which
         // contains neither "BLE" nor "Bluetooth". KISSInterface is RNode's
         // serial wire framing; "lora" / "weave" cover legacy and downstream
         // LoRa interface variants that all bottom out at RNode hardware.

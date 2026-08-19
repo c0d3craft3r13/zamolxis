@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding.pages
+package network.zamolxis.app.ui.screens.onboarding.pages
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -31,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 /**
  * Crash reporting opt-in page (sentry flavor only).
@@ -66,7 +68,7 @@ fun CrashReportingPage(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Help Us Improve",
+            text = stringResource(R.string.onboarding_crash_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -76,10 +78,7 @@ fun CrashReportingPage(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text =
-                "Columba can send anonymous crash and error reports to help the " +
-                    "developer find and fix bugs. No message content, contacts, or " +
-                    "identity information is ever included.",
+            text = stringResource(R.string.onboarding_crash_body),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -117,13 +116,13 @@ fun CrashReportingPage(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Anonymous Crash Reports",
+                        text = stringResource(R.string.onboarding_crash_toggle_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = "You can change this anytime in Settings → Advanced",
+                        text = stringResource(R.string.onboarding_crash_toggle_note),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -150,7 +149,7 @@ fun CrashReportingPage(
                         .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Back")
+                Text(stringResource(R.string.common_back))
             }
 
             Button(
@@ -161,7 +160,7 @@ fun CrashReportingPage(
                         .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Continue")
+                Text(stringResource(R.string.common_continue))
             }
         }
 

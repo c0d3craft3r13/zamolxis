@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,11 +21,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import network.zamolxis.app.R
 
 /**
  * Default explanation shown inside the IFAC card. Used when the caller does
@@ -105,7 +107,7 @@ fun IfacConfigCard(
             OutlinedTextField(
                 value = networkName,
                 onValueChange = onNetworkNameChange,
-                label = { Text("Network Name") },
+                label = { Text(stringResource(R.string.ifac_network_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = networkNameError != null,
@@ -115,7 +117,7 @@ fun IfacConfigCard(
             OutlinedTextField(
                 value = passphrase,
                 onValueChange = onPassphraseChange,
-                label = { Text("Passphrase") },
+                label = { Text(stringResource(R.string.ifac_passphrase)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = passphraseError != null,

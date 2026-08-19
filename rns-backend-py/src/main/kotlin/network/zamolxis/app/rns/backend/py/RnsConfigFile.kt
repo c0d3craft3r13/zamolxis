@@ -1,8 +1,8 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.LogLevel
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.LogLevel
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 
 /**
  * Renders a [ReticulumConfig] into upstream RNS's on-disk `config` file
@@ -32,7 +32,7 @@ internal object RnsConfigFile {
      *   block (upstream RNS routes through the master's transport). The
      *   `rpc_key` is rendered if set so the master accepts the RPC. Mirrors
      *   v0.10.x behaviour. The caller (PythonRnsRuntime) decides this via
-     *   [network.columba.app.rns.api.util.SharedInstanceProbe].
+     *   [network.zamolxis.app.rns.api.util.SharedInstanceProbe].
      *
      * - `hostShareInstance = true` → "we're the master, publish ourselves
      *   on TCP 37428 so other apps on the device can join." Emits
@@ -170,10 +170,10 @@ internal object RnsConfigFile {
                 //     internal dispatch (Reticulum.py:900) picks it up.
                 //   • BLE / Classic / USB — upstream needs jnius for
                 //     Bluetooth (broken under Chaquopy). We bundle a
-                //     Columba-authored RNS.Interface
-                //     (columba_rnode_interface.py, deployed by
+                //     Zamolxis-authored RNS.Interface
+                //     (zamolxis_rnode_interface.py, deployed by
                 //     event_bridge.deploy_bundled_interfaces to
-                //     <configdir>/interfaces/ColumbaRNodeInterface.py) that
+                //     <configdir>/interfaces/ZamolxisRNodeInterface.py) that
                 //     bridges via KotlinRNodeBridge / KotlinUSBBridge.
                 if (iface.connectionMode == "tcp") {
                     val host = iface.tcpHost
@@ -199,11 +199,11 @@ internal object RnsConfigFile {
                     sb.appendLine("    mode = ${iface.mode}")
                 } else {
                     // BLE / Classic / USB — bundled custom interface path.
-                    // ColumbaRNodeInterface bridges to KotlinRNodeBridge
+                    // ZamolxisRNodeInterface bridges to KotlinRNodeBridge
                     // (BLE/Classic) and KotlinUSBBridge (USB) on the Kotlin
                     // side via event_bridge / usb_bridge slim-Python
-                    // accessors. See columba_rnode_interface.py.
-                    sb.appendLine("    type = ColumbaRNodeInterface")
+                    // accessors. See zamolxis_rnode_interface.py.
+                    sb.appendLine("    type = ZamolxisRNodeInterface")
                     sb.appendLine("    enabled = yes")
                     sb.appendLine("    connection_mode = ${iface.connectionMode}")
                     if (iface.targetDeviceName.isNotBlank()) {

@@ -1,8 +1,8 @@
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.ImageBitmap
-import network.columba.app.rns.api.util.LxmfFields
+import network.zamolxis.app.rns.api.util.LxmfFields
 
 /** Rendering hint authenticated in the LXMF message fields. */
 enum class MessageRenderer(

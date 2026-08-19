@@ -1,7 +1,7 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
-import network.columba.app.util.HexUtils.hexStringToByteArray
-import network.columba.app.util.HexUtils.toHexString
+import network.zamolxis.app.util.HexUtils.hexStringToByteArray
+import network.zamolxis.app.util.HexUtils.toHexString
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test

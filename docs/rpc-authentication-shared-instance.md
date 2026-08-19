@@ -2,7 +2,7 @@
 
 ## Overview
 
-When Columba connects to a shared Reticulum instance (e.g., Sideband), message delivery fails with RPC authentication errors. This document explains the root cause and provides solutions.
+When Zamolxis connects to a shared Reticulum instance (e.g., Sideband), message delivery fails with RPC authentication errors. This document explains the root cause and provides solutions.
 
 ## Key Finding: RPC is NOT Required for Message Delivery
 
@@ -73,12 +73,12 @@ All methods deliver through `LXMRouter.lxmf_delivery()` → delivery callback. N
        ↓
 7. Reticulum.get_rpc_client() [Reticulum.py:969]
    - Creates RPC connection with authkey
-   - AuthenticationError: Columba's authkey doesn't match Sideband's
+   - AuthenticationError: Zamolxis's authkey doesn't match Sideband's
 ```
 
 ### Root Cause
 
-**Columba and Sideband have different RPC keys** because:
+**Zamolxis and Sideband have different RPC keys** because:
 - Each app has its own config directory (Android sandboxing)
 - RPC keys are derived from app-specific identity private keys
 - Without explicit key sharing, authentication fails
@@ -111,7 +111,7 @@ Even though `__track_phy_stats` defaults to `False`, certain call sites in `Link
 - **Lines 995, 1031, 1040, 1053, 1060, 1064, 1069**: Various DATA packet types
 - **Lines 1107, 1129, 1138, 1147, 1167, 1176, 1185**: RESOURCE_ADV, LINKCLOSE, etc.
 
-This is automatic RNS behavior - **Columba does not explicitly request signal stats**.
+This is automatic RNS behavior - **Zamolxis does not explicitly request signal stats**.
 
 ---
 
@@ -131,7 +131,7 @@ Interface configuration is blocked for connected clients. This is by design - th
 
 ## Solutions
 
-### Option 1: Patch RNS in Columba's Bundled Copy
+### Option 1: Patch RNS in Zamolxis's Bundled Copy
 
 Add exception handling in `Link.__update_phy_stats()`:
 
@@ -227,18 +227,18 @@ rpc_string += "rpc_key = " + RNS.hexrep(self.sideband.reticulum.rpc_key, delimit
 
 Sideband provides a UI to export this configuration, which other apps can paste into their Reticulum config.
 
-### The Columba Problem
+### The Zamolxis Problem
 
-Columba is unique because:
+Zamolxis is unique because:
 
-1. **Android sandbox**: Columba has its own app directory, can't read Sideband's config
+1. **Android sandbox**: Zamolxis has its own app directory, can't read Sideband's config
 2. **Bundled Python**: Uses Chaquopy with its own RNS installation
-3. **Own identity**: Columba creates its own identity file (different from Sideband's)
+3. **Own identity**: Zamolxis creates its own identity file (different from Sideband's)
 4. **Derived RPC key**: RNS derives RPC key from identity: `Identity.full_hash(private_key)`
 
-When Columba connects to Sideband's shared instance:
+When Zamolxis connects to Sideband's shared instance:
 - **Data routing works** (LocalClientInterface uses raw sockets)
-- **RPC fails** (Columba's derived key != Sideband's derived key)
+- **RPC fails** (Zamolxis's derived key != Sideband's derived key)
 
 ### RPC Key Configuration in RNS
 
@@ -264,6 +264,6 @@ RNS supports explicit RPC key configuration for exactly this scenario - when app
 | Message delivery without RPC | Should work (bug prevents it) |
 | Root cause | Missing exception handling in `__update_phy_stats()` |
 | Why other clients work | They share config directories or explicitly configure RPC key |
-| Columba's issue | Android sandbox prevents config sharing, RPC key mismatch |
+| Zamolxis's issue | Android sandbox prevents config sharing, RPC key mismatch |
 | Interface configuration | Always disabled for shared instance clients |
 | Recommended fix | Patch RNS + support RPC key configuration in UI |

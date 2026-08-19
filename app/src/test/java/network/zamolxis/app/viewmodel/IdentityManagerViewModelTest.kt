@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.ContentResolver
 import android.content.Context
@@ -20,10 +20,10 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.service.InterfaceConfigManager
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.service.InterfaceConfigManager
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -45,7 +45,7 @@ class IdentityManagerViewModelTest {
 
     private lateinit var mockContext: Context
     private lateinit var mockRepository: IdentityRepository
-    private lateinit var mockKeyProvider: network.columba.app.data.crypto.IdentityKeyProvider
+    private lateinit var mockKeyProvider: network.zamolxis.app.data.crypto.IdentityKeyProvider
     private lateinit var mockProtocol: RnsCore
     private lateinit var mockInterfaceConfigManager: InterfaceConfigManager
     private val testDispatcher = StandardTestDispatcher()
@@ -693,7 +693,7 @@ class IdentityManagerViewModelTest {
     /** A valid 64-byte identity key encoded as Base32. */
     private val testIdentityBytes = ByteArray(64) { (it * 3 + 17).toByte() }
     private val testBase32Key =
-        network.columba.app.util.Base32
+        network.zamolxis.app.util.Base32
             .encode(testIdentityBytes)
 
     @Test
@@ -756,7 +756,7 @@ class IdentityManagerViewModelTest {
 
             // Given — valid Base32 but only 32 bytes (not 64)
             val shortKey =
-                network.columba.app.util.Base32
+                network.zamolxis.app.util.Base32
                     .encode(ByteArray(32) { it.toByte() })
 
             viewModel.uiState.test {
@@ -889,7 +889,7 @@ class IdentityManagerViewModelTest {
 
                 // Verify round-trip: decode the Base32 string back to bytes
                 val decoded =
-                    network.columba.app.util.Base32.decode(
+                    network.zamolxis.app.util.Base32.decode(
                         (exportState as IdentityManagerUiState.ExportTextReady).base32String,
                     )
                 assertArrayEquals(fileData, decoded)

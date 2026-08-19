@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -34,8 +34,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import network.zamolxis.app.R
 
 /**
  * Determines if the shared instance banner should be shown.
@@ -104,7 +107,7 @@ fun SharedInstanceBannerCard(
     /** Current availability from service query */
     sharedInstanceOnline: Boolean = false,
     /**
-     * True when this Columba instance is itself acting as the shared
+     * True when this Zamolxis instance is itself acting as the shared
      * instance master (python backend only). Drives the new "Hosting
      * Shared Instance" header state.
      */
@@ -185,17 +188,17 @@ fun SharedInstanceBannerCard(
                                 isInformationalState -> Icons.Default.LinkOff
                                 else -> Icons.Default.Link
                             },
-                        contentDescription = "Instance Mode",
+                        contentDescription = stringResource(R.string.sharedinstance_mode_cd),
                         tint = contentColor,
                     )
                     Text(
                         text =
                             when {
-                                isHostingShareInstanceConflict -> "Sharing Conflict — Another App is Hosting"
-                                isHostingSharedInstance -> "Hosting Shared Instance"
-                                isInformationalState -> "Shared Instance No Longer Available"
-                                isUsingSharedInstance -> "Connected to Shared Instance"
-                                else -> "Using Columba's Own Instance"
+                                isHostingShareInstanceConflict -> stringResource(R.string.sharedinstance_conflict)
+                                isHostingSharedInstance -> stringResource(R.string.sharedinstance_hosting)
+                                isInformationalState -> stringResource(R.string.sharedinstance_unavailable)
+                                isUsingSharedInstance -> stringResource(R.string.sharedinstance_connected)
+                                else -> stringResource(R.string.sharedinstance_own)
                             },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -209,7 +212,12 @@ fun SharedInstanceBannerCard(
                         } else {
                             Icons.Default.KeyboardArrowDown
                         },
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription =
+                        if (isExpanded) {
+                            stringResource(R.string.common_collapse)
+                        } else {
+                            stringResource(R.string.common_expand)
+                        },
                     tint = contentColor,
                 )
             }
@@ -229,44 +237,29 @@ fun SharedInstanceBannerCard(
                     // existing informational/client/own UI is untouched.
                     if (isHostingShareInstanceConflict) {
                         Text(
-                            text =
-                                "You enabled Share Instance in Advanced settings, but another " +
-                                    "app on this device (e.g., Sideband) is already hosting " +
-                                    "a shared Reticulum instance on TCP 37428. Columba has " +
-                                    "joined it as a client. To host from Columba instead, " +
-                                    "disable sharing in the other app and restart Columba.",
+                            text = stringResource(R.string.sharedinstance_conflict_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = contentColor,
                         )
                     } else if (isHostingSharedInstance) {
                         Text(
-                            text =
-                                "Other RNS apps on this device can connect to Columba's " +
-                                    "transport via the shared instance on TCP 37428. " +
-                                    "Disable Share Instance in Advanced settings and restart " +
-                                    "Reticulum to stop hosting.",
+                            text = stringResource(R.string.sharedinstance_hosting_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = contentColor,
                         )
                         Button(onClick = onCopyAccessConfiguration) {
-                            Text("Copy access configuration")
+                            Text(stringResource(R.string.sharedinstance_copy_access))
                         }
                     } else if (isInformationalState) {
-                        // Informational state - shared instance went offline, Columba restarted
+                        // Informational state - shared instance went offline, Zamolxis restarted
                         Text(
-                            text =
-                                "The shared Reticulum instance (e.g., Sideband) is no longer " +
-                                    "available. Columba has automatically restarted with its own " +
-                                    "network interfaces.",
+                            text = stringResource(R.string.sharedinstance_offline_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = contentColor,
                         )
 
                         Text(
-                            text =
-                                "Your messages will continue to be sent and received. " +
-                                    "If the shared instance becomes available again, you can " +
-                                    "switch back to it from Settings.",
+                            text = stringResource(R.string.sharedinstance_offline_sub),
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor.copy(alpha = 0.7f),
                         )
@@ -275,11 +268,9 @@ fun SharedInstanceBannerCard(
                         Text(
                             text =
                                 if (isUsingSharedInstance) {
-                                    "Another app (e.g., Sideband) is managing the Reticulum network " +
-                                        "on this device. Columba is using that connection."
+                                    stringResource(R.string.sharedinstance_using_body)
                                 } else {
-                                    "Columba is running its own Reticulum instance. Toggle off to use " +
-                                        "a shared instance if available."
+                                    stringResource(R.string.sharedinstance_own_body)
                                 },
                             style = MaterialTheme.typography.bodyMedium,
                             color = contentColor,
@@ -291,19 +282,17 @@ fun SharedInstanceBannerCard(
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
                                 Text(
-                                    text = "• Network interfaces are managed by the other app",
+                                    text = stringResource(R.string.sharedinstance_bullet_interfaces),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = contentColor,
                                 )
                                 Text(
-                                    text = "• Your identities and messages remain private to Columba",
+                                    text = stringResource(R.string.sharedinstance_bullet_private),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = contentColor,
                                 )
                                 Text(
-                                    text =
-                                        "• BLE connections to other Columba users require " +
-                                            "Columba's own instance",
+                                    text = stringResource(R.string.sharedinstance_bullet_ble),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = contentColor,
                                 )
@@ -319,7 +308,7 @@ fun SharedInstanceBannerCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Text(
-                                text = "Use Columba's own instance",
+                                text = stringResource(R.string.sharedinstance_use_own),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = contentColor,
                             )
@@ -349,7 +338,7 @@ fun SharedInstanceBannerCard(
 
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "RPC Key (from Sideband → Connectivity)",
+                                text = stringResource(R.string.sharedinstance_rpc_key),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = contentColor,
                             )
@@ -378,11 +367,11 @@ fun SharedInstanceBannerCard(
                                     },
                                     enabled = rpcKeyInput != rpcKey.orEmpty(),
                                 ) {
-                                    Text("Save")
+                                    Text(stringResource(R.string.common_save))
                                 }
                             }
                             Text(
-                                text = "Paste full config or just the hex key",
+                                text = stringResource(R.string.sharedinstance_paste_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = contentColor.copy(alpha = 0.7f),
                             )

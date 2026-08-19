@@ -1,13 +1,13 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.util.Log
-import network.columba.app.data.model.BleConnectionInfo
-import network.columba.app.data.model.BleConnectionsState
-import network.columba.app.data.model.ConnectionType
-import network.columba.app.rns.host.ble.bridge.KotlinBLEBridge
-import network.columba.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.data.model.BleConnectionInfo
+import network.zamolxis.app.data.model.BleConnectionsState
+import network.zamolxis.app.data.model.ConnectionType
+import network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge
+import network.zamolxis.app.rns.api.RnsTransportAdmin
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine

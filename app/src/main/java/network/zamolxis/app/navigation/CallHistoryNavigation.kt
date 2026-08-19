@@ -1,9 +1,9 @@
-package network.columba.app.navigation
+package network.zamolxis.app.navigation
 
 import android.net.Uri
 import androidx.navigation.NavHostController
-import network.columba.app.viewmodel.CALL_AGAIN_FAILURE_RESULT
-import network.columba.app.viewmodel.CallInitiationFailure
+import network.zamolxis.app.viewmodel.CALL_AGAIN_FAILURE_RESULT
+import network.zamolxis.app.viewmodel.CallInitiationFailure
 
 const val ACTIVE_ONLY_ARGUMENT = "activeOnly"
 const val EXPECTED_CALL_ATTEMPT_ID_ARGUMENT = "expectedCallAttemptId"

@@ -1,4 +1,4 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
@@ -7,11 +7,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.AnnounceInterfaceSightingEntity
-import network.columba.app.data.model.EnrichedAnnounce
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.data.model.MapAnnounceLookup
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.AnnounceInterfaceSightingEntity
+import network.zamolxis.app.data.model.EnrichedAnnounce
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.model.MapAnnounceLookup
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -1,11 +1,11 @@
-package network.columba.app.startup
+package network.zamolxis.app.startup
 
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.InterfaceConfig
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -38,7 +38,7 @@ class StartupConfigLoaderTest {
     private lateinit var interfaceRepository: InterfaceRepository
     private lateinit var identityRepository: IdentityRepository
     private lateinit var settingsRepository: SettingsRepository
-    private lateinit var transportObserver: network.columba.app.service.manager.InterfaceTransportObserver
+    private lateinit var transportObserver: network.zamolxis.app.service.manager.InterfaceTransportObserver
     private lateinit var loader: StartupConfigLoader
 
     private val testIdentity =
@@ -71,7 +71,7 @@ class StartupConfigLoaderTest {
         // Default to WIFI_LIKE so existing tests' AutoInterface (default WIFI_ONLY) passes
         // the filter unchanged. Tests can override to assert filter behaviour.
         io.mockk.every { transportObserver.snapshotTransport() } returns
-            network.columba.app.rns.host.manager.CurrentTransport.WIFI_LIKE
+            network.zamolxis.app.rns.host.manager.CurrentTransport.WIFI_LIKE
 
         // Default stubs for settings that most tests don't override
         coEvery { settingsRepository.getBatteryProfile() } returns BatteryProfile.BALANCED

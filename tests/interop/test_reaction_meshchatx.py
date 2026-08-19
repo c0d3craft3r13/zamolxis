@@ -1,4 +1,4 @@
-"""Columba ↔ MeshChatX reaction round-trip — wire-format interop.
+"""Zamolxis ↔ MeshChatX reaction round-trip — wire-format interop.
 
 Both apps share the per-event reaction wire format:
 
@@ -16,21 +16,21 @@ import time
 import pytest
 
 
-def _columba_has_send_reaction(columba_peer) -> bool:
+def _zamolxis_has_send_reaction(zamolxis_peer) -> bool:
     """Probe for a SEND_REACTION TestReceiver action — see
-    `_columba_has_send_reply` in `test_reply_meshchatx.py` for the
+    `_zamolxis_has_send_reply` in `test_reply_meshchatx.py` for the
     pattern."""
     try:
-        columba_peer.clear_logcat()
-        columba_peer.broadcast(
+        zamolxis_peer.clear_logcat()
+        zamolxis_peer.broadcast(
             "SEND_REACTION",
             to="00" * 16,
             target="00" * 16,
             emoji="👍",
         )
         time.sleep(1.5)
-        for line in columba_peer._read_logcat_lines():
-            if "rx_broadcast action=network.columba.test.SEND_REACTION" in line:
+        for line in zamolxis_peer._read_logcat_lines():
+            if "rx_broadcast action=network.zamolxis.test.SEND_REACTION" in line:
                 return True
         return False
     except Exception:  # noqa: BLE001
@@ -38,8 +38,8 @@ def _columba_has_send_reaction(columba_peer) -> bool:
 
 
 @pytest.mark.timeout(120)
-def test_reaction_meshchatx_to_columba_wire_format(meshchatx_interop):
-    """MeshChatX sends an emoji reaction → Columba's inbound path
+def test_reaction_meshchatx_to_zamolxis_wire_format(meshchatx_interop):
+    """MeshChatX sends an emoji reaction → Zamolxis's inbound path
     routes it through `reactionReceivedFlow` and `handleIncomingReaction`
     persists the aggregation into the v2 `reactionsJson` column.
 
@@ -51,12 +51,12 @@ def test_reaction_meshchatx_to_columba_wire_format(meshchatx_interop):
     """
     pair = meshchatx_interop
 
-    # Step 1 — anchor message Columba → MeshChatX so MeshChatX has a
+    # Step 1 — anchor message Zamolxis → MeshChatX so MeshChatX has a
     # target message hash. MeshChatX's reactions endpoint needs the
-    # target hash; using a Columba-originated anchor keeps hash
+    # target hash; using a Zamolxis-originated anchor keeps hash
     # consistent across both sides.
     anchor_content = f"col_react_anchor_{int(time.time() * 1000)}"
-    anchor_send = pair.columba.send_text(
+    anchor_send = pair.zamolxis.send_text(
         pair.meshchatx_hex,
         anchor_content,
         method="OPPORTUNISTIC",
@@ -64,23 +64,23 @@ def test_reaction_meshchatx_to_columba_wire_format(meshchatx_interop):
     anchor_hash = anchor_send.msg_id_hex
 
     pair.meshchatx.wait_for_message(
-        from_hex=pair.columba_hex,
+        from_hex=pair.zamolxis_hex,
         predicate=lambda m: m.content == anchor_content,
         timeout=60,
     )
 
     # Step 2 — MeshChatX reacts.
-    pair.columba.clear_logcat()
+    pair.zamolxis.clear_logcat()
     pair.meshchatx.send_reaction(
-        dest_hex=pair.columba_hex,
+        dest_hex=pair.zamolxis_hex,
         target_message_hash=anchor_hash,
         emoji="👍",
     )
 
-    # Step 3 — Columba surfaces the inbound reaction LXMessage on
+    # Step 3 — Zamolxis surfaces the inbound reaction LXMessage on
     # rx_msg. Reaction messages are otherwise content-empty, so we
     # filter by source rather than content here.
-    msg = pair.columba.wait_for_message(
+    msg = pair.zamolxis.wait_for_message(
         from_hex=pair.meshchatx_hex,
         content_predicate=lambda m: True,
         timeout=60,
@@ -95,31 +95,31 @@ def test_reaction_meshchatx_to_columba_wire_format(meshchatx_interop):
 
 
 @pytest.mark.timeout(120)
-def test_reaction_columba_to_meshchatx_wire_format(meshchatx_interop):
-    """Columba sends an emoji reaction → MeshChatX decodes it.
+def test_reaction_zamolxis_to_meshchatx_wire_format(meshchatx_interop):
+    """Zamolxis sends an emoji reaction → MeshChatX decodes it.
 
     Gated on the `SEND_REACTION` TestReceiver action; skips until
-    that action lands on the Columba debug surface.
+    that action lands on the Zamolxis debug surface.
     """
     pair = meshchatx_interop
 
-    if not _columba_has_send_reaction(pair.columba):
+    if not _zamolxis_has_send_reaction(pair.zamolxis):
         pytest.skip(
-            "Columba TestReceiver does not expose SEND_REACTION yet. "
-            "Wire it via `network.columba.test.SEND_REACTION` to enable."
+            "Zamolxis TestReceiver does not expose SEND_REACTION yet. "
+            "Wire it via `network.zamolxis.test.SEND_REACTION` to enable."
         )
 
     anchor_content = f"mcx_react_anchor_{int(time.time() * 1000)}"
-    anchor_send = pair.meshchatx.send_text(pair.columba_hex, anchor_content)
+    anchor_send = pair.meshchatx.send_text(pair.zamolxis_hex, anchor_content)
     anchor_hash = anchor_send["lxmf_message"]["hash"]
 
-    pair.columba.wait_for_message(
+    pair.zamolxis.wait_for_message(
         from_hex=pair.meshchatx_hex,
         content_predicate=lambda m: m.content == anchor_content,
         timeout=60,
     )
 
-    pair.columba.broadcast(
+    pair.zamolxis.broadcast(
         "SEND_REACTION",
         to=pair.meshchatx_hex,
         target=anchor_hash,
@@ -130,7 +130,7 @@ def test_reaction_columba_to_meshchatx_wire_format(meshchatx_interop):
     # conversation endpoint returns the *reaction message* (empty
     # content, fields[0x10] carrying the reaction blob).
     msg = pair.meshchatx.wait_for_message(
-        from_hex=pair.columba_hex,
+        from_hex=pair.zamolxis_hex,
         predicate=lambda m: m.fields.get("app_extensions") is not None
         or m.fields.get("reaction") is not None,
         timeout=60,
@@ -139,4 +139,4 @@ def test_reaction_columba_to_meshchatx_wire_format(meshchatx_interop):
     extensions = msg.fields.get("app_extensions") or msg.fields.get("reaction") or {}
     assert extensions.get("reaction_to", "").lower() == anchor_hash.lower()
     assert extensions.get("emoji") == "❤️"
-    assert extensions.get("sender", "").lower() == pair.columba_hex.lower()
+    assert extensions.get("sender", "").lower() == pair.zamolxis_hex.lower()

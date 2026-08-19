@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -44,11 +44,11 @@ class LocalInterfaceLabelTest {
         // RNS stores abstract-socket paths with a leading null byte; the value must not
         // leak into the displayed endpoint.
         assertEquals(
-            "Shared Instance @ unix:rns/columba" to "Shared Instance (host)",
+            "Shared Instance @ unix:rns/zamolxis" to "Shared Instance (host)",
             formatLocalInterfaceLabel(
                 pyClassName = "LocalServerInterface",
                 bindPort = null,
-                socketPath = "\u0000rns/columba",
+                socketPath = "\u0000rns/zamolxis",
                 targetIp = null,
                 targetPort = null,
                 rawName = "Reticulum",

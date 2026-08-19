@@ -1,16 +1,16 @@
-package network.columba.app.rns.host.di
+package network.zamolxis.app.rns.host.di
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
-import network.columba.app.rns.host.binder.ReticulumServiceBinder
-import network.columba.app.rns.host.manager.BleCoordinator
-import network.columba.app.rns.host.manager.CurrentTransport
-import network.columba.app.rns.host.manager.LockManager
-import network.columba.app.rns.host.manager.NetworkChangeManager
-import network.columba.app.rns.host.manager.ServiceNotificationManager
-import network.columba.app.rns.host.persistence.ServicePersistenceManager
-import network.columba.app.rns.host.persistence.ServiceSettingsAccessor
-import network.columba.app.rns.host.state.ServiceState
+import network.zamolxis.app.rns.host.binder.ReticulumServiceBinder
+import network.zamolxis.app.rns.host.manager.BleCoordinator
+import network.zamolxis.app.rns.host.manager.CurrentTransport
+import network.zamolxis.app.rns.host.manager.LockManager
+import network.zamolxis.app.rns.host.manager.NetworkChangeManager
+import network.zamolxis.app.rns.host.manager.ServiceNotificationManager
+import network.zamolxis.app.rns.host.persistence.ServicePersistenceManager
+import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
+import network.zamolxis.app.rns.host.state.ServiceState
 
 /**
  * Manual dependency injection module for ReticulumService.

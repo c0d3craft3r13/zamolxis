@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,10 +26,10 @@ import androidx.compose.ui.unit.dp
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
-import network.columba.app.R
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.ui.components.ProfileIcon
-import network.columba.app.viewmodel.BlockLookupState
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.ui.components.ProfileIcon
+import network.zamolxis.app.viewmodel.BlockLookupState
 
 @Composable
 internal fun CallDetailsRecord(

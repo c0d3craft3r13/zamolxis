@@ -1,46 +1,50 @@
-package network.columba.app.data.db
+package network.zamolxis.app.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import org.json.JSONObject
-import network.columba.app.data.db.dao.AnnounceDao
-import network.columba.app.data.db.dao.BlockedPeerDao
-import network.columba.app.data.db.dao.ContactDao
-import network.columba.app.data.db.dao.ConversationDao
-import network.columba.app.data.db.dao.CustomThemeDao
-import network.columba.app.data.db.dao.DraftDao
-import network.columba.app.data.db.dao.InterfaceFirstSeenDao
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.dao.MessageDao
-import network.columba.app.data.db.dao.OfflineMapRegionDao
-import network.columba.app.data.db.dao.PeerActivityDao
-import network.columba.app.data.db.dao.PeerIconDao
-import network.columba.app.data.db.dao.PeerIdentityDao
-import network.columba.app.data.db.dao.ReceivedLocationDao
-import network.columba.app.data.db.dao.RmspServerDao
-import network.columba.app.data.db.dao.CallHistoryDao
-import network.columba.app.data.db.dao.CallHistoryDeletionDao
-import network.columba.app.data.db.entity.CallHistoryDeletionEntity
-import network.columba.app.data.db.entity.CallHistoryEntity
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.AnnounceInterfaceSightingEntity
-import network.columba.app.data.db.entity.BlockedPeerEntity
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.CustomThemeEntity
-import network.columba.app.data.db.entity.DraftEntity
-import network.columba.app.data.db.entity.InterfaceFirstSeenEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.db.entity.OfflineMapRegionEntity
-import network.columba.app.data.db.entity.PeerActivityEntity
-import network.columba.app.data.db.entity.PeerActivityEventEntity
-import network.columba.app.data.db.entity.PeerIconEntity
-import network.columba.app.data.db.entity.PeerIdentityEntity
-import network.columba.app.data.db.entity.ReceivedLocationEntity
-import network.columba.app.data.db.entity.RmspServerEntity
+import network.zamolxis.app.data.db.dao.AnnounceDao
+import network.zamolxis.app.data.db.dao.BlockedPeerDao
+import network.zamolxis.app.data.db.dao.ContactDao
+import network.zamolxis.app.data.db.dao.ConversationDao
+import network.zamolxis.app.data.db.dao.CustomThemeDao
+import network.zamolxis.app.data.db.dao.DraftDao
+import network.zamolxis.app.data.db.dao.InterfaceFirstSeenDao
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.dao.MessageDao
+import network.zamolxis.app.data.db.dao.OfflineMapRegionDao
+import network.zamolxis.app.data.db.dao.PeerActivityDao
+import network.zamolxis.app.data.db.dao.PeerIconDao
+import network.zamolxis.app.data.db.dao.PeerIdentityDao
+import network.zamolxis.app.data.db.dao.ReceivedLocationDao
+import network.zamolxis.app.data.db.dao.RmspServerDao
+import network.zamolxis.app.data.db.dao.CallHistoryDao
+import network.zamolxis.app.data.db.dao.CallHistoryDeletionDao
+import network.zamolxis.app.data.db.dao.PqKeyDao
+import network.zamolxis.app.data.db.entity.CallHistoryDeletionEntity
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.AnnounceInterfaceSightingEntity
+import network.zamolxis.app.data.db.entity.BlockedPeerEntity
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.CustomThemeEntity
+import network.zamolxis.app.data.db.entity.DraftEntity
+import network.zamolxis.app.data.db.entity.InterfaceFirstSeenEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.db.entity.OfflineMapRegionEntity
+import network.zamolxis.app.data.db.entity.PeerActivityEntity
+import network.zamolxis.app.data.db.entity.PeerActivityEventEntity
+import network.zamolxis.app.data.db.entity.LocalPqKeyEntity
+import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
+import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
+import network.zamolxis.app.data.db.entity.PeerIconEntity
+import network.zamolxis.app.data.db.entity.PeerIdentityEntity
+import network.zamolxis.app.data.db.entity.ReceivedLocationEntity
+import network.zamolxis.app.data.db.entity.RmspServerEntity
 
 @Database(
     entities = [
@@ -63,11 +67,14 @@ import network.columba.app.data.db.entity.RmspServerEntity
         InterfaceFirstSeenEntity::class,
         PeerActivityEntity::class,
         PeerActivityEventEntity::class,
+        LocalPqKeyEntity::class,
+        PeerPqKeyEntity::class,
+        PqKeyDeliveryEntity::class,
     ],
-    version = 6,
+    version = 8,
     exportSchema = true,
 )
-abstract class ColumbaDatabase : RoomDatabase() {
+abstract class ZamolxisDatabase : RoomDatabase() {
     companion object {
         /**
          * v1 → v2: split reactions out of `fieldsJson` overload into a
@@ -329,6 +336,82 @@ abstract class ColumbaDatabase : RoomDatabase() {
                 }
             }
 
+        /**
+         * v6 → v7: storage for the hybrid post-quantum layer.
+         *
+         * Purely additive — three CREATE TABLE statements and their indices,
+         * with no ALTER and no data movement. An upgrade therefore cannot
+         * damage an existing row, which matters more here than usual: the
+         * tables it sits beside hold the user's message history and the
+         * Keystore-wrapped identity key, and neither can be recovered if a
+         * migration mangles them.
+         *
+         * Existing installs land on v7 with all three tables empty, which reads
+         * as "no post-quantum key yet" everywhere — the same state as a fresh
+         * install, so nothing has to special-case the upgrade.
+         */
+        /**
+         * v7 → v8: hold a peer's replacement key while the user decides about it.
+         *
+         * A single nullable column. `pendingPublicKey` is written when a peer
+         * offers a key that contradicts the stored one, and is only ever promoted
+         * to `publicKey` by an explicit human decision — nothing in the send path
+         * reads it, so an unverified key sitting there cannot be used to seal.
+         */
+        val MIGRATION_7_8: Migration =
+            object : Migration(7, 8) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE peer_pq_keys ADD COLUMN pendingPublicKey BLOB")
+                }
+            }
+
+        val MIGRATION_6_7: Migration =
+            object : Migration(6, 7) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `local_pq_keys` (
+                            `identityHash` TEXT NOT NULL,
+                            `publicKey` BLOB NOT NULL,
+                            `encryptedKeyPair` BLOB NOT NULL,
+                            `createdTimestamp` INTEGER NOT NULL,
+                            PRIMARY KEY(`identityHash`),
+                            FOREIGN KEY(`identityHash`) REFERENCES `local_identities`(`identityHash`)
+                                ON UPDATE NO ACTION ON DELETE CASCADE
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `peer_pq_keys` (
+                            `peerHash` TEXT NOT NULL,
+                            `publicKey` BLOB,
+                            `announcedFingerprint` BLOB,
+                            `keyChangeUnresolved` INTEGER NOT NULL DEFAULT 0,
+                            `updatedTimestamp` INTEGER NOT NULL,
+                            PRIMARY KEY(`peerHash`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `pq_key_deliveries` (
+                            `identityHash` TEXT NOT NULL,
+                            `peerHash` TEXT NOT NULL,
+                            `deliveredTimestamp` INTEGER NOT NULL,
+                            PRIMARY KEY(`identityHash`, `peerHash`),
+                            FOREIGN KEY(`identityHash`) REFERENCES `local_identities`(`identityHash`)
+                                ON UPDATE NO ACTION ON DELETE CASCADE
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS `index_pq_key_deliveries_peerHash` " +
+                            "ON `pq_key_deliveries` (`peerHash`)",
+                    )
+                }
+            }
+
         @Suppress("ReturnCount")
         fun splitReactionsOutOfFieldsJson(fieldsJson: String): Pair<String, String>? =
             try {
@@ -380,4 +463,6 @@ abstract class ColumbaDatabase : RoomDatabase() {
     abstract fun callHistoryDao(): CallHistoryDao
 
     abstract fun callHistoryDeletionDao(): CallHistoryDeletionDao
+
+    abstract fun pqKeyDao(): PqKeyDao
 }

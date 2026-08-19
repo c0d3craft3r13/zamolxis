@@ -1,15 +1,15 @@
-package network.columba.app.repository
+package network.zamolxis.app.repository
 
 import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import network.columba.app.data.database.dao.InterfaceDao
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.api.model.toJsonString
-import network.columba.app.util.validation.InputValidator
-import network.columba.app.util.validation.ValidationResult
+import network.zamolxis.app.data.database.dao.InterfaceDao
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.api.model.toJsonString
+import network.zamolxis.app.util.validation.InputValidator
+import network.zamolxis.app.util.validation.ValidationResult
 import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject

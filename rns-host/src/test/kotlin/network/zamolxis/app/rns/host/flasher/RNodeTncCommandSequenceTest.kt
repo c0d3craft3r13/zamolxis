@@ -1,6 +1,6 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
-import network.columba.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot

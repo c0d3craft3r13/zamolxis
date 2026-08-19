@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.foundation.background
@@ -33,7 +33,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule

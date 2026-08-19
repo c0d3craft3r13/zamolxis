@@ -1,4 +1,4 @@
-package network.columba.app.rns.host
+package network.zamolxis.app.rns.host
 
 import android.content.Context
 import android.util.Log
@@ -11,19 +11,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.call.AcceptedCallLifecycle
-import network.columba.app.rns.api.call.CallAttemptDirection
-import network.columba.app.rns.api.call.CallAttemptRequest
-import network.columba.app.rns.api.call.CallCallbackAdapter
-import network.columba.app.rns.api.call.CallLifecycleRecorder
-import network.columba.app.rns.api.call.SerializedLifecycleCallbackAdapter
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.backend.py.ChaquopyRnsBackend
-import network.columba.app.rns.backend.py.PyEventCallback
-import network.columba.app.rns.backend.py.PyTwoArgCallback
-import network.columba.app.rns.backend.py.PythonRnsRuntime
-import network.columba.app.rns.host.persistence.CallsFromContactsGate
-import network.columba.app.rns.host.persistence.ServiceSettingsAccessor
+import network.zamolxis.app.rns.api.call.AcceptedCallLifecycle
+import network.zamolxis.app.rns.api.call.CallAttemptDirection
+import network.zamolxis.app.rns.api.call.CallAttemptRequest
+import network.zamolxis.app.rns.api.call.CallCallbackAdapter
+import network.zamolxis.app.rns.api.call.CallLifecycleRecorder
+import network.zamolxis.app.rns.api.call.SerializedLifecycleCallbackAdapter
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.backend.py.ChaquopyRnsBackend
+import network.zamolxis.app.rns.backend.py.PyEventCallback
+import network.zamolxis.app.rns.backend.py.PyTwoArgCallback
+import network.zamolxis.app.rns.backend.py.PythonRnsRuntime
+import network.zamolxis.app.rns.host.persistence.CallsFromContactsGate
+import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
 import tech.torlando.lxst.audio.Signalling
 import tech.torlando.lxst.core.AudioDevice
 import tech.torlando.lxst.core.AudioPacketHandler
@@ -338,7 +338,7 @@ class PythonCallManager(
     /**
      * Apply [setIncomingEnabled] for this manager.
      *
-     * Invoked by [network.columba.app.rns.backend.py.PythonRnsTelephony]'s
+     * Invoked by [network.zamolxis.app.rns.backend.py.PythonRnsTelephony]'s
      * `setIncomingEnabledHook` (wired in [init]) when the UI calls
      * `RnsTelephony.setIncomingEnabled(...)` across the AIDL boundary.
      *

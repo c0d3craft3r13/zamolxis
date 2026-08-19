@@ -1,10 +1,10 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
-import network.columba.app.data.repository.CustomThemeData
-import network.columba.app.data.repository.CustomThemeRepository
-import network.columba.app.data.repository.ThemeColorSet
+import network.zamolxis.app.data.repository.CustomThemeData
+import network.zamolxis.app.data.repository.CustomThemeRepository
+import network.zamolxis.app.data.repository.ThemeColorSet
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

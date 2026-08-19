@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.content.Context
 import android.util.Log
@@ -11,13 +11,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.call.AcceptedCallLifecycle
-import network.columba.app.rns.api.call.CallAttemptDirection
-import network.columba.app.rns.api.call.CallAttemptRequest
-import network.columba.app.rns.api.call.CallCallbackAdapter
-import network.columba.app.rns.api.call.CallLifecycleRecorder
-import network.columba.app.rns.api.call.SerializedLifecycleCallbackAdapter
-import network.columba.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.call.AcceptedCallLifecycle
+import network.zamolxis.app.rns.api.call.CallAttemptDirection
+import network.zamolxis.app.rns.api.call.CallAttemptRequest
+import network.zamolxis.app.rns.api.call.CallCallbackAdapter
+import network.zamolxis.app.rns.api.call.CallLifecycleRecorder
+import network.zamolxis.app.rns.api.call.SerializedLifecycleCallbackAdapter
+import network.zamolxis.app.rns.api.util.hexToBytes
 import network.reticulum.common.DestinationDirection
 import network.reticulum.common.DestinationType
 import network.reticulum.destination.Destination

@@ -1,21 +1,21 @@
 // Abstract prevents JUnit from trying to instantiate this base class directly
 @file:Suppress("UnnecessaryAbstractClass")
 
-package network.columba.app.test
+package network.zamolxis.app.test
 
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.dao.AnnounceDao
-import network.columba.app.data.db.dao.ContactDao
-import network.columba.app.data.db.dao.ConversationDao
-import network.columba.app.data.db.dao.DraftDao
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.dao.MessageDao
-import network.columba.app.data.db.dao.PeerIdentityDao
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.dao.AnnounceDao
+import network.zamolxis.app.data.db.dao.ContactDao
+import network.zamolxis.app.data.db.dao.ConversationDao
+import network.zamolxis.app.data.db.dao.DraftDao
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.dao.MessageDao
+import network.zamolxis.app.data.db.dao.PeerIdentityDao
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import org.junit.After
 import org.junit.Before
 import org.junit.runner.RunWith
@@ -64,7 +64,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 abstract class DatabaseTest {
-    protected lateinit var database: ColumbaDatabase
+    protected lateinit var database: ZamolxisDatabase
     protected lateinit var context: Context
 
     // Convenience accessors for common DAOs
@@ -89,7 +89,7 @@ abstract class DatabaseTest {
         context = ApplicationProvider.getApplicationContext<Context>()
         database =
             Room
-                .inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+                .inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
     }

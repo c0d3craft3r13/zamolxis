@@ -1,5 +1,5 @@
 """
-USB Bridge for Columba RNode support.
+USB Bridge for Zamolxis RNode support.
 
 Provides Python interface to KotlinUSBBridge for USB serial communication
 with RNode devices. Handles device enumeration, permission requests, and

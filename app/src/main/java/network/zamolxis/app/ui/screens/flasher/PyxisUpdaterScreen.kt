@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.flasher
+package network.zamolxis.app.ui.screens.flasher
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -52,9 +52,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import network.columba.app.R
-import network.columba.app.rns.host.usb.UsbDeviceInfo
-import network.columba.app.viewmodel.PyxisUpdaterViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.rns.host.usb.UsbDeviceInfo
+import network.zamolxis.app.viewmodel.PyxisUpdaterViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

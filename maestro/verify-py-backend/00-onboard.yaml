@@ -1,4 +1,4 @@
-# 00-onboard: Reusable setup flow that walks a fresh-install Columba debug
+# 00-onboard: Reusable setup flow that walks a fresh-install Zamolxis debug
 # build (python flavor) from the Welcome page of the onboarding pager all
 # the way to the Chats landing screen. Subsequent flows in this directory
 # (01-probe-codec, 02-link-dot, 03-04-05-discovery-toggles, etc.) assume
@@ -44,14 +44,14 @@
 # take several seconds while the Python wrapper initializes; we use
 # extendedWaitUntil with a 20s timeout to absorb that.
 
-appId: network.columba.app.debug
+appId: network.zamolxis.app.debug
 name: 00-onboard
 tags:
   - py-backend
   - setup
 ---
 - launchApp:
-    appId: network.columba.app.debug
+    appId: network.zamolxis.app.debug
     clearState: true
     clearKeychain: true
     stopApp: true
@@ -69,7 +69,7 @@ tags:
 # Sanity: confirm we're on the pager Welcome (NOT the legacy
 # WelcomeScreen.kt, which has "Continue" instead of "Get Started" and
 # routes through a different ViewModel path).
-- assertVisible: "Welcome to Columba"
+- assertVisible: "Welcome to Zamolxis"
 
 - tapOn: "Get Started"
 

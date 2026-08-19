@@ -2,32 +2,32 @@
 // test dispatcher cannot control real IO threads, so Thread.sleep() is needed
 @file:Suppress("SleepInsteadOfDelay")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.app.Application
 import android.graphics.Bitmap
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.paging.PagingData
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.data.repository.ReceivedLocationRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.notifications.NotificationHelper
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.service.ActiveConversationManager
-import network.columba.app.service.ConversationLinkManager
-import network.columba.app.service.IdentityResolutionManager
-import network.columba.app.service.LocationSharingManager
-import network.columba.app.service.PropagationNodeManager
-import network.columba.app.ui.model.ImageCache
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.data.repository.ReceivedLocationRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.notifications.NotificationHelper
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.service.ActiveConversationManager
+import network.zamolxis.app.service.ConversationLinkManager
+import network.zamolxis.app.service.IdentityResolutionManager
+import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.ui.model.ImageCache
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -51,6 +51,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
+import network.zamolxis.app.data.repository.PqKeyRepository
+import network.zamolxis.app.service.pq.PqMessageSealer
+import network.zamolxis.crypto.pq.PlainReason
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -127,6 +130,18 @@ class MessagingViewModelImageLoadingTest {
                     rnsTelephony = mockk<RnsTelephony>().also {
                         every { it.callState } returns MutableStateFlow(CallState.Idle)
                     },
+                    // Stubbed to the pre-existing behaviour: content passes through
+                    // untouched and no post-quantum fields are added, so these tests
+                    // keep exercising exactly what they did before.
+                    pqMessageSealer = mockk<PqMessageSealer>().also {
+                        coEvery { it.prepareOutgoing(any(), any(), any(), any(), any()) } answers {
+                            PqMessageSealer.Outgoing.Plain(arg(2), emptyMap(), PlainReason.PEER_UNSUPPORTED)
+                        }
+                        coEvery { it.onSendSucceeded(any(), any(), any()) } just Runs
+                    },
+                    pqKeyRepository = mockk<PqKeyRepository>().also {
+                        coEvery { it.keyChangeFingerprints(any()) } returns null
+                    },
                 )
             advanceUntilIdle()
             testBody()
@@ -189,7 +204,7 @@ class MessagingViewModelImageLoadingTest {
         every { propagationNodeManager.isSyncing } returns MutableStateFlow(false)
         every { propagationNodeManager.manualSyncResult } returns MutableSharedFlow()
         every { propagationNodeManager.syncProgress } returns
-            MutableStateFlow(network.columba.app.service.SyncProgress.Idle)
+            MutableStateFlow(network.zamolxis.app.service.SyncProgress.Idle)
         every { propagationNodeManager.currentRelay } returns MutableStateFlow(null)
         coEvery { propagationNodeManager.triggerSync() } just Runs
         coEvery { propagationNodeManager.triggerSync(silent = any()) } just Runs

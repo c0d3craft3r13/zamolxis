@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.material3.MaterialTheme
@@ -9,12 +9,12 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.TransferPhase
-import network.columba.app.rns.api.model.TransferProgressUpdate
-import network.columba.app.service.SyncProgress
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.TransferPhase
+import network.zamolxis.app.rns.api.model.TransferProgressUpdate
+import network.zamolxis.app.service.SyncProgress
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

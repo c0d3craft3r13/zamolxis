@@ -1,16 +1,16 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.model.TcpCommunityServer
-import network.columba.app.data.model.TcpCommunityServers
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.util.validation.InputValidator
-import network.columba.app.util.validation.ValidationResult
+import network.zamolxis.app.data.model.TcpCommunityServer
+import network.zamolxis.app.data.model.TcpCommunityServers
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.util.validation.InputValidator
+import network.zamolxis.app.util.validation.ValidationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import io.mockk.every
 import io.mockk.mockk
@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import network.columba.app.rns.api.model.LocationTelemetry
-import network.columba.app.rns.api.util.LxmfFields
+import network.zamolxis.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.api.util.LxmfFields
 import network.reticulum.lxmf.LXMessage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap
  * routes inbound location telemetry to `locationTelemetryFlow`.
  *
  * The chat-emit gate that used to also live here was lifted to
- * [network.columba.app.rns.api.util.isUserVisibleChatMessage] in
+ * [network.zamolxis.app.rns.api.util.isUserVisibleChatMessage] in
  * :rns-api so both backends share one impl — those tests live in
  * `ChatMessageFilterTest`. This file is now scoped to the routing
  * responsibility (does telemetry actually surface on the flow when

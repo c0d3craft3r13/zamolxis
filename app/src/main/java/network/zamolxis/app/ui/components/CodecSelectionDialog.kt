@@ -1,8 +1,10 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.runtime.Composable
-import network.columba.app.service.ConversationLinkManager
-import network.columba.app.ui.model.CodecProfile
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.service.ConversationLinkManager
+import network.zamolxis.app.ui.model.CodecProfile
+import network.zamolxis.app.R
 
 /**
  * Dialog for selecting an audio codec profile before initiating a voice call.
@@ -22,14 +24,14 @@ import network.columba.app.ui.model.CodecProfile
  */
 @Composable
 fun CodecSelectionDialog(
-    title: String = "Select Call Quality",
-    subtitle: String = "Choose a codec profile based on your connection speed",
+    title: String = stringResource(R.string.codec_dialog_title),
+    subtitle: String = stringResource(R.string.codec_dialog_subtitle),
     profiles: List<CodecProfile> = CodecProfile.entries,
     initialProfile: CodecProfile? = null,
     recommendedProfile: CodecProfile = CodecProfile.DEFAULT,
     linkState: ConversationLinkManager.LinkState? = null,
     isProbing: Boolean = false,
-    confirmButtonText: String = "Call",
+    confirmButtonText: String = stringResource(R.string.codec_dialog_call),
     onDismiss: () -> Unit,
     onProfileSelected: (CodecProfile) -> Unit,
 ) {
@@ -37,8 +39,8 @@ fun CodecSelectionDialog(
         profiles.map { profile ->
             QualityOption(
                 value = profile,
-                displayName = profile.displayName,
-                description = profile.description,
+                displayName = stringResource(profile.displayNameRes),
+                description = stringResource(profile.descriptionRes),
                 isExperimental = profile.isExperimental,
             )
         }

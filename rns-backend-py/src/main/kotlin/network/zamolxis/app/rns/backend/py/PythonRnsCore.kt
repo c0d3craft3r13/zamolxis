@@ -1,31 +1,31 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import android.util.Log
 import com.chaquo.python.PyObject
-import network.columba.app.rns.api.util.hexToBytes
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.util.toHex
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.ConversationLinkResult
-import network.columba.app.rns.api.model.Destination
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.Link
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.LinkSpeedProbeResult
-import network.columba.app.rns.api.model.LinkStatus
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.PacketReceipt
-import network.columba.app.rns.api.model.PacketType
-import network.columba.app.rns.api.model.ReceivedPacket
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.ConversationLinkResult
+import network.zamolxis.app.rns.api.model.Destination
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.Link
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.LinkSpeedProbeResult
+import network.zamolxis.app.rns.api.model.LinkStatus
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.PacketReceipt
+import network.zamolxis.app.rns.api.model.PacketType
+import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
@@ -271,7 +271,14 @@ class PythonRnsCore(
             Unit
         }
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        // Ignored: the python backend builds its announce app_data inside LXMF's
+        // own router, which has no hook for an extra element. Peers on this
+        // flavor still exchange keys through the first message — they just do not
+        // advertise the capability ahead of time.
+        pqFingerprint: ByteArray?,
+    ): Result<Unit> =
         pyResult {
             // The LXMF delivery destination is the one that carries displayName
             // in its app data. Re-announce it through the router.

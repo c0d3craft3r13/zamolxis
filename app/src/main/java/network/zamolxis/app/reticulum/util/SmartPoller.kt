@@ -1,4 +1,4 @@
-package network.columba.app.reticulum.util
+package network.zamolxis.app.reticulum.util
 
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min

@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
 import org.json.JSONObject
 
@@ -17,13 +17,13 @@ import org.json.JSONObject
  * the LXMF message's source hash, so [parseInboundReaction] sets `sender`
  * to the inbound source hash on the canonical path.
  *
- * **Legacy wire shape** (parse-only fallback, pre-standard Columba/MeshChatX):
+ * **Legacy wire shape** (parse-only fallback, pre-standard Zamolxis/MeshChatX):
  * ```
  * fields[0x10] = { "reaction_to": <hex>, "emoji": <unicode>, "sender": <hex> }
  * ```
  * Outbound never writes `0x10` anymore (clean cutover, mirrors the reply
  * `0x30`/`0x31` migration); it is kept on the inbound path so reactions from
- * un-upgraded Columba peers still resolve. See [LxmfFields.FIELD_REACTION] /
+ * un-upgraded Zamolxis peers still resolve. See [LxmfFields.FIELD_REACTION] /
  * [LxmfFields.FIELD_REACTION_LEGACY].
  *
  * **Normalized form** (what both backends emit downstream to

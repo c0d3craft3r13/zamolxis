@@ -20,15 +20,15 @@
 //                            pushes updates as capabilities mutate at runtime
 //                            (e.g., LXST jar absence in stripped-down test
 //                            builds, RNode disconnect downgrades).
-package network.columba.app.rns.ipc;
+package network.zamolxis.app.rns.ipc;
 
-import network.columba.app.rns.ipc.callback.IRnsCapabilitiesCallback;
-import network.columba.app.rns.ipc.callback.IRnsCoreCallback;
-import network.columba.app.rns.ipc.callback.IRnsLxmfCallback;
-import network.columba.app.rns.ipc.callback.IRnsNomadnetCallback;
-import network.columba.app.rns.ipc.callback.IRnsTelemetryCallback;
-import network.columba.app.rns.ipc.callback.IRnsTelephonyCallback;
-import network.columba.app.rns.ipc.callback.IRnsTransportAdminCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsCapabilitiesCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsCoreCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsLxmfCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsNomadnetCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsTelemetryCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsTelephonyCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsTransportAdminCallback;
 
 oneway interface IRnsBackend {
     // ==================== Sub-interface accessors ====================

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.tcpclient
+package network.zamolxis.app.ui.screens.tcpclient
 
 import android.app.Application
 import androidx.compose.ui.test.assertCountEquals
@@ -7,9 +7,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.TcpClientWizardTestFixtures
-import network.columba.app.viewmodel.TcpClientWizardViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.TcpClientWizardTestFixtures
+import network.zamolxis.app.viewmodel.TcpClientWizardViewModel
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just

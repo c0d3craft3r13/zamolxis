@@ -1,6 +1,6 @@
 @file:Suppress("InjectDispatcher")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.viewModelScope
@@ -20,18 +20,18 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.data.model.BleConnectionsState
-import network.columba.app.data.repository.BleStatusRepository
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.host.manager.CurrentTransport
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.service.manager.InterfaceTransportObserver
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.data.model.BleConnectionsState
+import network.zamolxis.app.data.repository.BleStatusRepository
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.host.manager.CurrentTransport
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.service.manager.InterfaceTransportObserver
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

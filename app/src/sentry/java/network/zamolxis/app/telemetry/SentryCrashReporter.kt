@@ -1,4 +1,4 @@
-package network.columba.app.telemetry
+package network.zamolxis.app.telemetry
 
 import android.content.Context
 import android.util.Log
@@ -6,7 +6,7 @@ import io.sentry.Breadcrumb
 import io.sentry.Sentry
 import io.sentry.SentryLevel
 import io.sentry.android.core.SentryAndroid
-import network.columba.app.BuildConfig
+import network.zamolxis.app.BuildConfig
 
 /**
  * Sentry-backed [CrashReporter] used by the `sentry` product flavor.
@@ -61,7 +61,7 @@ internal class SentryCrashReporter : CrashReporter {
     // The Sentry static API delegates to a global no-op hub when the SDK is not
     // initialized, so these are safe to call without an instance-level guard. This also
     // lets a separate CrashReporter instance (e.g. in MainActivity) record breadcrumbs
-    // against the global hub that ColumbaApplication initialized after consent.
+    // against the global hub that ZamolxisApplication initialized after consent.
     override fun addBreadcrumb(breadcrumb: CrashBreadcrumb) {
         Sentry.addBreadcrumb(
             Breadcrumb().apply {

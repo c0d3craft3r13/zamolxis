@@ -1,4 +1,4 @@
-package network.columba.app.data.util
+package network.zamolxis.app.data.util
 
 /**
  * Centralized text sanitization logic.

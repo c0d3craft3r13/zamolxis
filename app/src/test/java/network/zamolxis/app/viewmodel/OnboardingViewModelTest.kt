@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
@@ -17,14 +17,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.ui.screens.onboarding.OnboardingInterfaceType
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.ui.screens.onboarding.OnboardingInterfaceType
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -47,7 +47,7 @@ class OnboardingViewModelTest {
     private lateinit var mockIdentityRepository: IdentityRepository
     private lateinit var mockInterfaceRepository: InterfaceRepository
     private lateinit var mockInterfaceConfigManager: InterfaceConfigManager
-    private lateinit var mockCrashReportManager: network.columba.app.util.CrashReportManager
+    private lateinit var mockCrashReportManager: network.zamolxis.app.util.CrashReportManager
     private val testDispatcher = StandardTestDispatcher()
 
     @Before

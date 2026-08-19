@@ -1,6 +1,6 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
-import network.columba.app.data.model.FrequencyRegion
+import network.zamolxis.app.data.model.FrequencyRegion
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

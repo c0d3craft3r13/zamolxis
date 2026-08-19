@@ -1,11 +1,11 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.rns.host.di.ServiceDatabaseProvider
-import network.columba.app.test.DatabaseTest
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.rns.host.di.ServiceDatabaseProvider
+import network.zamolxis.app.test.DatabaseTest
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -168,7 +168,7 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
             val activity = database.peerActivityDao().getActivity(destinationHash)
             assertEquals(1_000L, activity?.lastReceivedAt)
             assertEquals("MESSAGE", activity?.activityType)
-            val identityHash = network.columba.app.data.util.HashUtils.computeIdentityHash(testPublicKey)
+            val identityHash = network.zamolxis.app.data.util.HashUtils.computeIdentityHash(testPublicKey)
             assertEquals(0L, peerIdentityDao.getPeerIdentity(identityHash)?.lastSeenTimestamp)
             val contact = contactDao.getEnrichedContacts(TEST_IDENTITY_HASH, currentTime = 2_000L).first().single()
             assertEquals(1_000L, contact.lastSeenTimestamp)
@@ -505,7 +505,7 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
             // Block the peer in the database
             val blockedPeerDao = database.blockedPeerDao()
             blockedPeerDao.insertBlockedPeer(
-                network.columba.app.data.db.entity.BlockedPeerEntity(
+                network.zamolxis.app.data.db.entity.BlockedPeerEntity(
                     peerHash = TEST_PEER_HASH,
                     identityHash = TEST_IDENTITY_HASH,
                     peerIdentityHash = null,
@@ -542,7 +542,7 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
             // Block a different peer
             val blockedPeerDao = database.blockedPeerDao()
             blockedPeerDao.insertBlockedPeer(
-                network.columba.app.data.db.entity.BlockedPeerEntity(
+                network.zamolxis.app.data.db.entity.BlockedPeerEntity(
                     peerHash = "some_other_peer_hash_1234567890",
                     identityHash = TEST_IDENTITY_HASH,
                     peerIdentityHash = null,
@@ -808,7 +808,7 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
 
             val saved = announceDao.getAnnounce(destinationHash)
             val expectedHash =
-                network.columba.app.data.util.HashUtils
+                network.zamolxis.app.data.util.HashUtils
                     .computeIdentityHash(testPublicKey)
             assertEquals("computedIdentityHash should match HashUtils", expectedHash, saved?.computedIdentityHash)
         }
@@ -820,7 +820,7 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
 
             // Insert announce with a computedIdentityHash
             val identityHash =
-                network.columba.app.data.util.HashUtils
+                network.zamolxis.app.data.util.HashUtils
                     .computeIdentityHash(testPublicKey)
             val announce =
                 AnnounceEntity(
@@ -997,7 +997,7 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
             assertEquals(100L, database.peerActivityDao().getActivity(TEST_PEER_HASH)?.lastReceivedAt)
 
             database.blockedPeerDao().insertBlockedPeer(
-                network.columba.app.data.db.entity.BlockedPeerEntity(
+                network.zamolxis.app.data.db.entity.BlockedPeerEntity(
                     peerHash = "blocked-peer",
                     identityHash = TEST_IDENTITY_HASH,
                     peerIdentityHash = null,
@@ -1104,7 +1104,7 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
                 ),
             )
             database.localIdentityDao().insert(
-                network.columba.app.data.db.entity.LocalIdentityEntity(
+                network.zamolxis.app.data.db.entity.LocalIdentityEntity(
                     identityHash = "other-identity",
                     displayName = "Other",
                     destinationHash = "other-destination",
@@ -1155,7 +1155,7 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
             assertEquals("TELEMETRY", activity?.activityType)
 
             database.blockedPeerDao().insertBlockedPeer(
-                network.columba.app.data.db.entity.BlockedPeerEntity(
+                network.zamolxis.app.data.db.entity.BlockedPeerEntity(
                     peerHash = "blocked-telemetry",
                     identityHash = TEST_IDENTITY_HASH,
                     peerIdentityHash = null,

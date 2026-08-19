@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 /**
  * Minimal Base32 encoder/decoder (RFC 4648).

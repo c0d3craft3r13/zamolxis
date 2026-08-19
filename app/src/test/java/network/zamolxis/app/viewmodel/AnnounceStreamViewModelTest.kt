@@ -1,24 +1,24 @@
 @file:Suppress("IgnoredReturnValue") // first() calls trigger flow collection, result intentionally unused
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import app.cash.turbine.test
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.data.repository.Announce
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.NodeType
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.service.IdentityResolutionManager
-import network.columba.app.service.PropagationNodeManager
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.repository.Announce
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.NodeType
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.service.IdentityResolutionManager
+import network.zamolxis.app.service.PropagationNodeManager
 import io.mockk.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit

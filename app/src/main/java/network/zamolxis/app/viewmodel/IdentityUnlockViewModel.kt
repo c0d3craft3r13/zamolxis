@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.net.Uri
@@ -15,10 +15,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.RnsCore
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.RnsCore
 import javax.inject.Inject
 
 private const val TAG = "IdentityUnlockVM"
@@ -137,7 +137,7 @@ class IdentityUnlockViewModel
          * Delete the undecryptable identity and restart the process. The running
          * ReticulumService still holds the old identity in native memory, and
          * the app's auto-create-identity path only fires during cold startup
-         * (`ColumbaApplication.onCreate` → `rnsCore.initialize`). If
+         * (`ZamolxisApplication.onCreate` → `rnsCore.initialize`). If
          * we tried to navigate to onboarding in-process, OnboardingViewModel's
          * `completeOnboarding` would find no active identity in Room and the
          * user's chosen display name would silently drop on the floor. Killing
@@ -183,7 +183,7 @@ class IdentityUnlockViewModel
             // roughly half the time otherwise.
             val launchIntent =
                 android.content.Intent().apply {
-                    setClassName(context, "network.columba.app.MainActivity")
+                    setClassName(context, "network.zamolxis.app.MainActivity")
                     addFlags(
                         android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
                             android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK,

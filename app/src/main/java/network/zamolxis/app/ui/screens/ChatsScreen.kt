@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -80,19 +80,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import network.columba.app.R
-import network.columba.app.data.repository.Conversation
-import network.columba.app.service.SyncResult
-import network.columba.app.ui.components.ProfileIcon
-import network.columba.app.ui.components.SearchableTopAppBar
-import network.columba.app.ui.components.StarToggleButton
-import network.columba.app.ui.components.SyncStatusBottomSheet
-import network.columba.app.ui.components.simpleVerticalScrollbar
-import network.columba.app.viewmodel.ChatsViewModel
-import network.columba.app.viewmodel.ChatsSegment
-import network.columba.app.viewmodel.ContactToggleResult
-import network.columba.app.viewmodel.SharedImageViewModel
-import network.columba.app.viewmodel.SharedTextViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.data.repository.Conversation
+import network.zamolxis.app.service.SyncResult
+import network.zamolxis.app.ui.components.ProfileIcon
+import network.zamolxis.app.ui.components.SearchableTopAppBar
+import network.zamolxis.app.ui.components.StarToggleButton
+import network.zamolxis.app.ui.components.SyncStatusBottomSheet
+import network.zamolxis.app.ui.components.simpleVerticalScrollbar
+import network.zamolxis.app.viewmodel.ChatsViewModel
+import network.zamolxis.app.viewmodel.ChatsSegment
+import network.zamolxis.app.viewmodel.ContactToggleResult
+import network.zamolxis.app.viewmodel.SharedImageViewModel
+import network.zamolxis.app.viewmodel.SharedTextViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -112,8 +112,8 @@ fun ChatsScreen(
     onLocateOnMap: (peerHash: String) -> Unit = {},
     onNavigateToQrScanner: () -> Unit = {},
     viewModel: ChatsViewModel = hiltViewModel(),
-    settingsViewModel: network.columba.app.viewmodel.SettingsViewModel = hiltViewModel(),
-    debugViewModel: network.columba.app.viewmodel.DebugViewModel = hiltViewModel(),
+    settingsViewModel: network.zamolxis.app.viewmodel.SettingsViewModel = hiltViewModel(),
+    debugViewModel: network.zamolxis.app.viewmodel.DebugViewModel = hiltViewModel(),
 ) {
     val chatsState by viewModel.chatsState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -160,9 +160,9 @@ fun ChatsScreen(
     LaunchedEffect(viewModel) {
         viewModel.callHistoryNavigation.collect { destination ->
             when (destination) {
-                is network.columba.app.viewmodel.CallHistoryNavigation.Details ->
+                is network.zamolxis.app.viewmodel.CallHistoryNavigation.Details ->
                     onCallHistoryClick(destination.callAttemptId)
-                is network.columba.app.viewmodel.CallHistoryNavigation.ActiveCall ->
+                is network.zamolxis.app.viewmodel.CallHistoryNavigation.ActiveCall ->
                     onActiveCallHistoryClick(
                         destination.callAttemptId,
                         destination.localIdentityHash,
@@ -242,7 +242,7 @@ fun ChatsScreen(
                     IconButton(onClick = { showQrBottomSheet = true }) {
                         Icon(
                             imageVector = Icons.Default.QrCode2,
-                            contentDescription = "QR Code",
+                            contentDescription = stringResource(R.string.chats_cd_qr_code),
                         )
                     }
                     // Sync button - shows spinner during sync, tapping opens status sheet
@@ -263,7 +263,7 @@ fun ChatsScreen(
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
-                                contentDescription = "Sync messages",
+                                contentDescription = stringResource(R.string.chats_cd_sync_messages),
                             )
                         }
                     }
@@ -486,7 +486,7 @@ fun ChatsScreen(
                         peerHash = conversationToBlock.peerHash,
                         peerIdentityHash =
                             conversationToBlock.peerPublicKey?.let {
-                                network.columba.app.data.util.HashUtils
+                                network.zamolxis.app.data.util.HashUtils
                                     .computeIdentityHash(it)
                             },
                         displayName = conversationToBlock.displayName,
@@ -514,7 +514,7 @@ fun ChatsScreen(
 
         // QR Code bottom sheet
         if (showQrBottomSheet) {
-            network.columba.app.ui.components.QrCodeBottomSheet(
+            network.zamolxis.app.ui.components.QrCodeBottomSheet(
                 onDismiss = { showQrBottomSheet = false },
                 onScanQrCode = { onNavigateToQrScanner() },
                 onShowQrCode = { showQrCodeDialog = true },
@@ -523,7 +523,7 @@ fun ChatsScreen(
 
         // QR Code dialog - reuses IdentityQrCodeDialog from settings
         if (showQrCodeDialog && identityHash != null) {
-            network.columba.app.ui.screens.settings.dialogs.IdentityQrCodeDialog(
+            network.zamolxis.app.ui.screens.settings.dialogs.IdentityQrCodeDialog(
                 displayName = settingsState.displayName,
                 identityHash = identityHash,
                 destinationHash = destinationHash,
@@ -619,7 +619,7 @@ fun ConversationCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Star,
-                                contentDescription = "Saved contact",
+                                contentDescription = stringResource(R.string.chats_cd_saved_contact),
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier =
                                     Modifier
@@ -766,7 +766,7 @@ fun ConversationContextMenu(
                 )
             },
             text = {
-                Text("Mark as Unread")
+                Text(stringResource(R.string.chats_mark_unread))
             },
             onClick = onMarkAsUnread,
         )
@@ -780,7 +780,7 @@ fun ConversationContextMenu(
                 )
             },
             text = {
-                Text("View Peer Details")
+                Text(stringResource(R.string.chats_view_peer_details))
             },
             onClick = onViewDetails,
         )
@@ -815,7 +815,7 @@ fun ConversationContextMenu(
             },
             text = {
                 Text(
-                    text = "Delete Conversation",
+                    text = stringResource(R.string.chats_delete_conversation),
                     color = MaterialTheme.colorScheme.error,
                 )
             },
@@ -833,7 +833,7 @@ fun ConversationContextMenu(
             },
             text = {
                 Text(
-                    text = "Block User",
+                    text = stringResource(R.string.chats_block_user),
                     color = MaterialTheme.colorScheme.error,
                 )
             },
@@ -858,10 +858,10 @@ fun DeleteConversationDialog(
             )
         },
         title = {
-            Text("Delete Conversation?")
+            Text(stringResource(R.string.chats_delete_conversation_title))
         },
         text = {
-            Text("Are you sure you want to delete your conversation with $peerName? This will permanently delete all messages.")
+            Text(stringResource(R.string.chats_delete_conversation_body, peerName))
         },
         confirmButton = {
             TextButton(
@@ -871,12 +871,12 @@ fun DeleteConversationDialog(
                         contentColor = MaterialTheme.colorScheme.error,
                     ),
             ) {
-                Text("Delete")
+                Text(stringResource(R.string.delete))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -902,11 +902,11 @@ fun BlockUserDialog(
             )
         },
         title = {
-            Text("Block $peerName?")
+            Text(stringResource(R.string.chats_block_title, peerName))
         },
         text = {
             Column {
-                Text("They won't be able to send you messages. Their conversation will be hidden from the chat list.")
+                Text(stringResource(R.string.chats_block_body))
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -918,7 +918,7 @@ fun BlockUserDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Also delete conversation and messages",
+                        text = stringResource(R.string.chats_block_also_delete),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
@@ -932,13 +932,13 @@ fun BlockUserDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Also blackhole (don't relay their announces)",
+                        text = stringResource(R.string.chats_block_also_blackhole),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 if (blackholeEnabled && !isTransportEnabled) {
                     Text(
-                        text = "Transport is currently disabled. This identity will be blackholed whenever transport is later enabled.",
+                        text = stringResource(R.string.chats_block_transport_note),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 48.dp, top = 4.dp),
@@ -954,12 +954,12 @@ fun BlockUserDialog(
                         contentColor = MaterialTheme.colorScheme.error,
                     ),
             ) {
-                Text("Block")
+                Text(stringResource(R.string.common_block))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -977,7 +977,7 @@ fun LoadingConversationsState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Loading conversations...",
+            text = stringResource(R.string.chats_loading),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -999,13 +999,13 @@ fun EmptyChatsState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No conversations yet",
+            text = stringResource(R.string.chats_empty_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Messages from peers will appear here",
+            text = stringResource(R.string.chats_empty_body),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
         )
@@ -1016,12 +1016,13 @@ fun EmptyChatsState(modifier: Modifier = Modifier) {
 private fun String.hexStringToByteArray(): ByteArray = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 
 // Reuse timestamp formatting from MessagingScreen
+@Composable
 private fun formatTimestamp(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
 
     return when {
-        diff < 60_000 -> "Now"
+        diff < 60_000 -> stringResource(R.string.time_now)
         diff < 3600_000 -> {
             val minutes = (diff / 60_000).toInt()
             "${minutes}m"

@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -25,8 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.rns.api.model.NodeType
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.rns.api.model.NodeType
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 private enum class AspectChip(
     val label: String,
@@ -173,6 +175,7 @@ private fun ActiveFilterPillRow(
 ) {
     val labels = listOfNotNull(aspectLabel, interfaceLabel)
     val joined = labels.joinToString(" • ")
+    val activeCd = stringResource(R.string.announce_filter_active_cd, joined)
     Row(
         modifier =
             Modifier
@@ -180,12 +183,12 @@ private fun ActiveFilterPillRow(
                 .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 10.dp)
                 .semantics {
-                    contentDescription = "Active filters: $joined. Tap to edit."
+                    contentDescription = activeCd
                 },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Filtering: ",
+            text = stringResource(R.string.announce_filtering_prefix),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -227,7 +230,7 @@ private fun AspectChipRow(
             FilterChip(
                 selected = isAllActive,
                 onClick = onAllClick,
-                label = { Text("All") },
+                label = { Text(stringResource(R.string.common_all)) },
                 colors = FilterChipDefaults.filterChipColors(),
             )
         }
@@ -262,7 +265,7 @@ private fun InterfaceChipRow(
             FilterChip(
                 selected = isAllActive,
                 onClick = onAllClick,
-                label = { Text("All") },
+                label = { Text(stringResource(R.string.common_all)) },
             )
         }
         items(INTERFACE_OPTIONS, key = { "iface-${it.first.name}" }) { (type, label) ->

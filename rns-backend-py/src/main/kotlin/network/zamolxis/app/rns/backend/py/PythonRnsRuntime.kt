@@ -1,16 +1,16 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import android.content.Context
 import android.util.Log
-import network.columba.app.rns.api.annotation.ReflectivelyKept
-import network.columba.app.rns.api.util.StampGenerator
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
+import network.zamolxis.app.rns.api.util.StampGenerator
+import network.zamolxis.app.rns.api.util.toHex
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Owns the Chaquopy `Python` interpreter handle, the cached upstream module
  * objects (`RNS`, `LXMF`, `event_bridge`), the live `Reticulum` / `LXMRouter`
- * instances after [start], and the registries that map Columba's stable
+ * instances after [start], and the registries that map Zamolxis's stable
  * hash/handle keys back to the live upstream PyObject references (an
  * `RNS.Identity` / `RNS.Destination` / `RNS.Link` can't cross the AIDL seam,
  * so the seam carries the hash/handle and this runtime resolves it).
@@ -54,7 +54,7 @@ class PythonRnsRuntime(
     /** Cached upstream `LXMF` package object. */
     val lxmfModule: PyObject by lazy { python.getModule("LXMF") }
 
-    /** Cached Columba-authored `event_bridge` module — the one Python file with logic. */
+    /** Cached Zamolxis-authored `event_bridge` module — the one Python file with logic. */
     val eventBridge: PyObject by lazy { python.getModule("event_bridge") }
 
     /** Live `RNS.Reticulum()` instance after [start]; null before/after. */
@@ -105,14 +105,14 @@ class PythonRnsRuntime(
     var bleBridge: Any? = null
 
     /**
-     * `KotlinRNodeBridge` instance for the bundled ColumbaRNodeInterface
+     * `KotlinRNodeBridge` instance for the bundled ZamolxisRNodeInterface
      * (Classic SPP + BLE GATT to RNode LoRa hardware).
      *
      * Set by `:rns-host`'s python-flavor module after construction (the bridge
      * type lives in `:rns-host`, so this is typed `Any?` to keep the
      * `:rns-backend-py` → `:rns-host` dep direction clean). On every [start]
      * we forward this into `event_bridge.set_rnode_bridge(...)` so the bundled
-     * `ColumbaRNodeInterface` can resolve it when its `__init__` runs during
+     * `ZamolxisRNodeInterface` can resolve it when its `__init__` runs during
      * `Reticulum()` construction. Null leaves BLE/Classic RNode non-functional
      * but won't break other interfaces.
      *
@@ -124,7 +124,7 @@ class PythonRnsRuntime(
     var rnodeHostBridge: Any? = null
 
     /**
-     * `KotlinUSBBridge` instance for the bundled ColumbaRNodeInterface in
+     * `KotlinUSBBridge` instance for the bundled ZamolxisRNodeInterface in
      * USB-serial mode.
      *
      * Forwarded into `usb_bridge.set_usb_bridge(...)` at [start] (sibling slot
@@ -217,7 +217,7 @@ class PythonRnsRuntime(
         //    interfaces — mirrors v0.10.x.
         //  • UDP bind on AutoInterface data_port → another RNS holds
         //    the multicast bind even though it's not exposing a
-        //    shared instance (another Columba running standalone).
+        //    shared instance (another Zamolxis running standalone).
         //    Can't join, can't bind — render AutoInterface as disabled
         //    so RNS doesn't crash trying to compete for the port.
         //
@@ -228,7 +228,7 @@ class PythonRnsRuntime(
         // it at the wire layer and surface a "hosting conflict" mode to
         // the UI so the user can see why their toggle didn't take
         // effect.
-        val probe = network.columba.app.rns.api.util.SharedInstanceProbe
+        val probe = network.zamolxis.app.rns.api.util.SharedInstanceProbe
         val joinShareInstance = probe.shouldShareInstance(config)
         val hostShareInstance = config.shareInstanceHosting && !joinShareInstance
         val skipAutoInterface = !joinShareInstance && !probe.isAutoInterfaceUsable()
@@ -267,9 +267,9 @@ class PythonRnsRuntime(
         eventBridge.callAttr("set_ble_bridge", bleBridge)
 
         // Hand the KotlinRNodeBridge (Classic + BLE GATT) to
-        // columba_rnode_interface.py via event_bridge's set_rnode_bridge
+        // zamolxis_rnode_interface.py via event_bridge's set_rnode_bridge
         // accessor. Must run before Reticulum() so the bundled
-        // ColumbaRNodeInterface can resolve it when its __init__ runs
+        // ZamolxisRNodeInterface can resolve it when its __init__ runs
         // during Transport.find_interfaces() execution at Reticulum
         // construction. Null bridge leaves BLE/Classic RNode degraded;
         // other interfaces (TCP RNode via upstream, BLE, etc.) keep working.
@@ -433,15 +433,15 @@ class PythonRnsRuntime(
         destinations[hexHash] ?: featureUnsupportedDestination(hexHash)
 
     private fun featureUnsupportedDestination(hexHash: String): Nothing =
-        throw network.columba.app.rns.api.RnsException(
-            network.columba.app.rns.api.RnsError.IdentityNotFound(hexHash),
+        throw network.zamolxis.app.rns.api.RnsException(
+            network.zamolxis.app.rns.api.RnsError.IdentityNotFound(hexHash),
         )
 
-    /** Throw [network.columba.app.rns.api.RnsError.BackendNotReady] if [start] hasn't run. */
+    /** Throw [network.zamolxis.app.rns.api.RnsError.BackendNotReady] if [start] hasn't run. */
     fun requireRunning() {
         if (!running.get()) {
-            throw network.columba.app.rns.api.RnsException(
-                network.columba.app.rns.api.RnsError.BackendNotReady,
+            throw network.zamolxis.app.rns.api.RnsException(
+                network.zamolxis.app.rns.api.RnsError.BackendNotReady,
             )
         }
     }
@@ -514,8 +514,11 @@ internal class StampGeneratorCallback(
                 "workblock=${workblock.size} bytes",
         )
 
+        // event_bridge.py calls this by name through Chaquopy on an RNS internal
+        // thread and blocks on the returned PyObject, so there is no suspending
+        // caller to hand the work back to. Never reached from the main thread.
         val result =
-            runBlocking(Dispatchers.Default) {
+            runBlocking(Dispatchers.Default) { // THREADING: allowed — synchronous Chaquopy callback
                 generator.generateStamp(workblock, stampCost) {
                     cancellationToken?.callAttr("is_cancelled")?.toBoolean() == true
                 }

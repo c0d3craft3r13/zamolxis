@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.util
+package network.zamolxis.app.rns.host.ble.util
 
 import io.mockk.clearAllMocks
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -216,7 +216,7 @@ class BleOperationQueueTimeoutTest {
         // Verify via reflection that BleConstants has this value
         val value =
             try {
-                val constantsClass = Class.forName("network.columba.app.rns.host.ble.model.BleConstants")
+                val constantsClass = Class.forName("network.zamolxis.app.rns.host.ble.model.BleConstants")
                 val field = constantsClass.getDeclaredField("OPERATION_TIMEOUT_MS")
                 field.isAccessible = true
                 field.get(null) as Long

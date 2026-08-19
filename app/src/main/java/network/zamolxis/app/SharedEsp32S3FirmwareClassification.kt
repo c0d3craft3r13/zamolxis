@@ -1,4 +1,4 @@
-package network.columba.app
+package network.zamolxis.app
 
 internal enum class SharedEsp32S3FirmwareClassification {
     PYXIS,

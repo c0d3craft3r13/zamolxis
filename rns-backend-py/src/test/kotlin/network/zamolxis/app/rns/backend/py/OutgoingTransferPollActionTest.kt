@@ -1,6 +1,6 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
-import network.columba.app.rns.api.model.TransferPhase
+import network.zamolxis.app.rns.api.model.TransferPhase
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

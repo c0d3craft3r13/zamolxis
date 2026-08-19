@@ -1,4 +1,4 @@
-package network.columba.app.nomadnet
+package network.zamolxis.app.nomadnet
 
 import org.json.JSONObject
 

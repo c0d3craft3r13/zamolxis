@@ -1,16 +1,17 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import android.location.Location
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.ContactMarker
-import network.columba.app.viewmodel.MarkerState
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.ContactMarker
+import network.zamolxis.app.viewmodel.MarkerState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -38,6 +39,18 @@ class ContactLocationBottomSheetTest {
     val ruleChain: RuleChain = RuleChain.outerRule(registerActivityRule).around(composeRule)
 
     val composeTestRule get() = composeRule
+
+    /**
+     * formatUpdatedTime became `@Composable` when the wording moved to `stringResource`, so it can
+     * only be called from a composition. This evaluates it inside the compose rule and
+     * hands the value back to the assertions, which are otherwise unchanged — the
+     * resources carry the same English wording the function used to build by hand.
+     */
+    private fun <T : Any> evaluate(block: @Composable () -> T): T {
+        lateinit var captured: T
+        composeRule.setContent { captured = block() }
+        return captured
+    }
 
     // ========== bearingToDirection Tests ==========
 
@@ -188,7 +201,7 @@ class ContactLocationBottomSheetTest {
     @Test
     fun `formatUpdatedTime returns just now for recent timestamps`() {
         val now = System.currentTimeMillis()
-        val result = formatUpdatedTime(now - 5_000) // 5 seconds ago
+        val result = evaluate { formatUpdatedTime(now - 5_000) } // 5 seconds ago
 
         assertEquals("Updated just now", result)
     }
@@ -196,7 +209,7 @@ class ContactLocationBottomSheetTest {
     @Test
     fun `formatUpdatedTime returns seconds for timestamps under 1 minute`() {
         val now = System.currentTimeMillis()
-        val result = formatUpdatedTime(now - 30_000) // 30 seconds ago
+        val result = evaluate { formatUpdatedTime(now - 30_000) } // 30 seconds ago
 
         assertTrue("Result should contain seconds: $result", result.contains("s ago"))
         assertTrue("Result should start with Updated: $result", result.startsWith("Updated"))
@@ -205,7 +218,7 @@ class ContactLocationBottomSheetTest {
     @Test
     fun `formatUpdatedTime returns minutes for timestamps under 1 hour`() {
         val now = System.currentTimeMillis()
-        val result = formatUpdatedTime(now - 5 * 60_000) // 5 minutes ago
+        val result = evaluate { formatUpdatedTime(now - 5 * 60_000) } // 5 minutes ago
 
         assertTrue("Result should contain minutes: $result", result.contains("m ago"))
     }
@@ -213,7 +226,7 @@ class ContactLocationBottomSheetTest {
     @Test
     fun `formatUpdatedTime returns hours for timestamps under 1 day`() {
         val now = System.currentTimeMillis()
-        val result = formatUpdatedTime(now - 3 * 3600_000) // 3 hours ago
+        val result = evaluate { formatUpdatedTime(now - 3 * 3600_000) } // 3 hours ago
 
         assertTrue("Result should contain hours: $result", result.contains("h ago"))
     }
@@ -221,7 +234,7 @@ class ContactLocationBottomSheetTest {
     @Test
     fun `formatUpdatedTime returns days for old timestamps`() {
         val now = System.currentTimeMillis()
-        val result = formatUpdatedTime(now - 2L * 86400_000L) // 2 days ago
+        val result = evaluate { formatUpdatedTime(now - 2L * 86400_000L) } // 2 days ago
 
         assertTrue("Result should contain days: $result", result.contains("d ago"))
     }
@@ -229,7 +242,7 @@ class ContactLocationBottomSheetTest {
     @Test
     fun `formatUpdatedTime handles very old timestamps`() {
         val now = System.currentTimeMillis()
-        val result = formatUpdatedTime(now - 30L * 86400_000L) // 30 days ago
+        val result = evaluate { formatUpdatedTime(now - 30L * 86400_000L) } // 30 days ago
 
         assertTrue("Result should contain days: $result", result.contains("d ago"))
     }

@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.model
+package network.zamolxis.app.rns.api.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -69,7 +69,7 @@ class LocationTelemetryTest {
 
     @Test
     fun `COLUMBA_META_FIELD_ID is upstream FIELD_CUSTOM_META 0xFD`() {
-        // Was 0x70 (Columba-invented unassigned ID); flipped to upstream's
+        // Was 0x70 (Zamolxis-invented unassigned ID); flipped to upstream's
         // canonical FIELD_CUSTOM_META so it doesn't collide if upstream
         // LXMF later assigns numbers in the unassigned range.
         assertEquals(0xFD, LocationTelemetry.COLUMBA_META_FIELD_ID)

@@ -1,16 +1,16 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import android.util.Log
 import com.chaquo.python.PyObject
-import network.columba.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.util.hexToBytes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.api.model.NomadnetPageResult
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.api.model.NomadnetPageResult
 import org.json.JSONObject
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap

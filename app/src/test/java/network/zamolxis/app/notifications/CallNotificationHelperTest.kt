@@ -1,4 +1,4 @@
-package network.columba.app.notifications
+package network.zamolxis.app.notifications
 
 import android.Manifest
 import android.app.Application
@@ -304,22 +304,22 @@ class CallNotificationHelperTest {
 
     @Test
     fun `ACTION_ANSWER_CALL is correct`() {
-        assertEquals("network.columba.app.ACTION_ANSWER_CALL", CallNotificationHelper.ACTION_ANSWER_CALL)
+        assertEquals("network.zamolxis.app.ACTION_ANSWER_CALL", CallNotificationHelper.ACTION_ANSWER_CALL)
     }
 
     @Test
     fun `ACTION_DECLINE_CALL is correct`() {
-        assertEquals("network.columba.app.ACTION_DECLINE_CALL", CallNotificationHelper.ACTION_DECLINE_CALL)
+        assertEquals("network.zamolxis.app.ACTION_DECLINE_CALL", CallNotificationHelper.ACTION_DECLINE_CALL)
     }
 
     @Test
     fun `ACTION_END_CALL is correct`() {
-        assertEquals("network.columba.app.ACTION_END_CALL", CallNotificationHelper.ACTION_END_CALL)
+        assertEquals("network.zamolxis.app.ACTION_END_CALL", CallNotificationHelper.ACTION_END_CALL)
     }
 
     @Test
     fun `ACTION_OPEN_CALL is correct`() {
-        assertEquals("network.columba.app.ACTION_OPEN_CALL", CallNotificationHelper.ACTION_OPEN_CALL)
+        assertEquals("network.zamolxis.app.ACTION_OPEN_CALL", CallNotificationHelper.ACTION_OPEN_CALL)
     }
 
     // ========== Intent Extra Constants Tests ==========

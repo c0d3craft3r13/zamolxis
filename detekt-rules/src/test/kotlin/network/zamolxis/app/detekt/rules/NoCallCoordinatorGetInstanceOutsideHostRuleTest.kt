@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import io.github.detekt.test.utils.compileContentForTest
 import io.gitlab.arturbosch.detekt.api.Config
@@ -23,7 +23,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
     fun `flags qualified CallCoordinator getInstance in app source`() {
         val source =
             """
-            package network.columba.app.viewmodel
+            package network.zamolxis.app.viewmodel
             import tech.torlando.lxst.core.CallCoordinator
             class CallViewModel {
                 private val coordinator = CallCoordinator.getInstance()
@@ -32,7 +32,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/path/to/repo/app/src/main/java/network/columba/app/viewmodel/CallViewModel.kt",
+                "/path/to/repo/app/src/main/java/network/zamolxis/app/viewmodel/CallViewModel.kt",
             )
         assertEquals(1, findings.size, "Should flag UI-side getInstance call")
         assertEquals("NoCallCoordinatorGetInstanceOutsideHost", findings[0].issue.id)
@@ -42,7 +42,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
     fun `flags fully qualified CallCoordinator getInstance in app source`() {
         val source =
             """
-            package network.columba.app.viewmodel
+            package network.zamolxis.app.viewmodel
             class CallViewModel {
                 private val coordinator = tech.torlando.lxst.core.CallCoordinator.getInstance()
             }
@@ -50,7 +50,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/path/to/repo/app/src/main/java/network/columba/app/viewmodel/CallViewModel.kt",
+                "/path/to/repo/app/src/main/java/network/zamolxis/app/viewmodel/CallViewModel.kt",
             )
         assertEquals(1, findings.size, "FQN form should also be flagged")
     }
@@ -59,7 +59,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
     fun `allows CallCoordinator getInstance in rns-host source`() {
         val source =
             """
-            package network.columba.app.rns.host
+            package network.zamolxis.app.rns.host
             import tech.torlando.lxst.core.CallCoordinator
             class HostBackendModule {
                 fun provideCallCoordinator() = CallCoordinator.getInstance()
@@ -68,7 +68,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/path/to/repo/rns-host/src/kotlinBackend/kotlin/network/columba/app/rns/host/HostBackendModule.kt",
+                "/path/to/repo/rns-host/src/kotlinBackend/kotlin/network/zamolxis/app/rns/host/HostBackendModule.kt",
             )
         assertEquals(0, findings.size, "rns-host is allowlisted")
     }
@@ -77,7 +77,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
     fun `allows CallCoordinator getInstance in rns-backend-kt source`() {
         val source =
             """
-            package network.columba.app.rns.backend.kt
+            package network.zamolxis.app.rns.backend.kt
             import tech.torlando.lxst.core.CallCoordinator
             class NativeCallManager {
                 private val coordinator = CallCoordinator.getInstance()
@@ -86,7 +86,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/path/to/repo/rns-backend-kt/src/main/kotlin/network/columba/app/rns/backend/kt/NativeCallManager.kt",
+                "/path/to/repo/rns-backend-kt/src/main/kotlin/network/zamolxis/app/rns/backend/kt/NativeCallManager.kt",
             )
         assertEquals(0, findings.size, "rns-backend-kt is allowlisted")
     }
@@ -95,7 +95,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
     fun `ignores unrelated singleton getInstance calls`() {
         val source =
             """
-            package network.columba.app.foo
+            package network.zamolxis.app.foo
             object Foo {
                 fun getInstance() = Foo
             }
@@ -106,7 +106,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/path/to/repo/app/src/main/java/network/columba/app/foo/Bar.kt",
+                "/path/to/repo/app/src/main/java/network/zamolxis/app/foo/Bar.kt",
             )
         assertEquals(0, findings.size, "Non-CallCoordinator getInstance must not be flagged")
     }
@@ -115,7 +115,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
     fun `flagged message names the allowlisted modules`() {
         val source =
             """
-            package network.columba.app.viewmodel
+            package network.zamolxis.app.viewmodel
             import tech.torlando.lxst.core.CallCoordinator
             class CallViewModel {
                 private val coordinator = CallCoordinator.getInstance()
@@ -124,7 +124,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/path/to/repo/app/src/main/java/network/columba/app/viewmodel/CallViewModel.kt",
+                "/path/to/repo/app/src/main/java/network/zamolxis/app/viewmodel/CallViewModel.kt",
             )
         assertEquals(1, findings.size)
         val message = findings[0].message

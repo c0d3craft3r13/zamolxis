@@ -1,12 +1,12 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.util.Log
-import network.columba.app.data.db.entity.PeerActivityEntity
-import network.columba.app.data.db.entity.PeerActivityType
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.data.repository.PeerActivityRepository
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.util.HexUtils
+import network.zamolxis.app.data.db.entity.PeerActivityEntity
+import network.zamolxis.app.data.db.entity.PeerActivityType
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.data.repository.PeerActivityRepository
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.util.HexUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -504,7 +504,7 @@ class ConversationLinkManager
          */
         private fun handleNewIncomingLink(
             destHashHex: String,
-            result: network.columba.app.rns.api.model.ConversationLinkResult,
+            result: network.zamolxis.app.rns.api.model.ConversationLinkResult,
         ) {
             Log.d(
                 TAG,
@@ -553,7 +553,7 @@ class ConversationLinkManager
         private fun updateActiveLinkMetrics(
             destHashHex: String,
             state: LinkState,
-            result: network.columba.app.rns.api.model.ConversationLinkResult,
+            result: network.zamolxis.app.rns.api.model.ConversationLinkResult,
         ) {
             val updatedState =
                 state.copy(

@@ -1,10 +1,10 @@
-package network.columba.app.rns.host.call
+package network.zamolxis.app.rns.host.call
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import network.columba.app.data.db.dao.CallHistoryDao
-import network.columba.app.data.db.entity.CallHistoryEntity
-import network.columba.app.data.model.CallHistoryRecord
+import network.zamolxis.app.data.db.dao.CallHistoryDao
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.data.model.CallHistoryRecord
 
 /**
  * In-memory [CallHistoryDao] fake that mirrors the reduced durable semantics:

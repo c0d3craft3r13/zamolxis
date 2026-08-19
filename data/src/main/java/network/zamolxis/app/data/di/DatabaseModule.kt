@@ -1,4 +1,4 @@
-package network.columba.app.data.di
+package network.zamolxis.app.data.di
 
 import android.content.Context
 import android.util.Log
@@ -12,29 +12,33 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.dao.AnnounceDao
-import network.columba.app.data.db.dao.BlockedPeerDao
-import network.columba.app.data.db.dao.ContactDao
-import network.columba.app.data.db.dao.ConversationDao
-import network.columba.app.data.db.dao.CustomThemeDao
-import network.columba.app.data.db.dao.DraftDao
-import network.columba.app.data.db.dao.InterfaceFirstSeenDao
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.dao.MessageDao
-import network.columba.app.data.db.dao.OfflineMapRegionDao
-import network.columba.app.data.db.dao.PeerActivityDao
-import network.columba.app.data.db.dao.PeerIconDao
-import network.columba.app.data.db.dao.PeerIdentityDao
-import network.columba.app.data.db.dao.ReceivedLocationDao
-import network.columba.app.data.db.dao.RmspServerDao
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
+import network.zamolxis.app.data.crypto.SecretBlobEncryptor
+import network.zamolxis.crypto.pq.HybridKem
+import network.zamolxis.app.data.db.dao.AnnounceDao
+import network.zamolxis.app.data.db.dao.BlockedPeerDao
+import network.zamolxis.app.data.db.dao.ContactDao
+import network.zamolxis.app.data.db.dao.ConversationDao
+import network.zamolxis.app.data.db.dao.CustomThemeDao
+import network.zamolxis.app.data.db.dao.DraftDao
+import network.zamolxis.app.data.db.dao.InterfaceFirstSeenDao
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.dao.MessageDao
+import network.zamolxis.app.data.db.dao.OfflineMapRegionDao
+import network.zamolxis.app.data.db.dao.PeerActivityDao
+import network.zamolxis.app.data.db.dao.PeerIconDao
+import network.zamolxis.app.data.db.dao.PeerIdentityDao
+import network.zamolxis.app.data.db.dao.PqKeyDao
+import network.zamolxis.app.data.db.dao.ReceivedLocationDao
+import network.zamolxis.app.data.db.dao.RmspServerDao
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions") // Hilt modules have one @Provides per DAO
 object DatabaseModule {
-    const val DATABASE_NAME = "columba_database"
+    const val DATABASE_NAME = "zamolxis_database"
 
     /**
      * Harden SQLite against process-kill-induced corruption.
@@ -45,7 +49,7 @@ object DatabaseModule {
      * older Android kernels) can leave torn WAL pages and produce `SQLITE_CORRUPT` on
      * next read. `synchronous=FULL` fsyncs on every commit, closing that window.
      *
-     * Applied from both [provideColumbaDatabase] and the `:reticulum` process's
+     * Applied from both [provideZamolxisDatabase] and the `:reticulum` process's
      * `ServiceDatabaseProvider` so both processes agree on journal mode and durability.
      *
      * Note: `onOpen` fires after Room has already run any pending migrations, so the
@@ -74,7 +78,7 @@ object DatabaseModule {
                 if (!db.inTransaction()) {
                     db.query("PRAGMA journal_mode=WAL").use { cursor ->
                         if (cursor.moveToFirst() && !cursor.getString(0).equals("wal", ignoreCase = true)) {
-                            Log.e("Columba/DB", "journal_mode=WAL not activated; mode=${cursor.getString(0)}")
+                            Log.e("Zamolxis/DB", "journal_mode=WAL not activated; mode=${cursor.getString(0)}")
                         }
                     }
                     db.query("PRAGMA synchronous=FULL").use {
@@ -82,7 +86,7 @@ object DatabaseModule {
                     }
                 } else {
                     Log.d(
-                        "Columba/DB",
+                        "Zamolxis/DB",
                         "applyPragmas: inside transaction, skipping journal_mode and synchronous " +
                             "(will retry on next transaction-free callback)",
                     )
@@ -102,69 +106,90 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideColumbaDatabase(
+    fun provideZamolxisDatabase(
         @ApplicationContext context: Context,
-    ): ColumbaDatabase =
+    ): ZamolxisDatabase =
         Room
             .databaseBuilder(
                 context,
-                ColumbaDatabase::class.java,
+                ZamolxisDatabase::class.java,
                 DATABASE_NAME,
             ).addMigrations(
-                ColumbaDatabase.MIGRATION_1_2,
-                ColumbaDatabase.MIGRATION_2_3,
-                ColumbaDatabase.MIGRATION_3_4,
-                ColumbaDatabase.MIGRATION_4_5,
-                ColumbaDatabase.MIGRATION_5_6,
+                ZamolxisDatabase.MIGRATION_1_2,
+                ZamolxisDatabase.MIGRATION_2_3,
+                ZamolxisDatabase.MIGRATION_3_4,
+                ZamolxisDatabase.MIGRATION_4_5,
+                ZamolxisDatabase.MIGRATION_5_6,
+                ZamolxisDatabase.MIGRATION_6_7,
+                ZamolxisDatabase.MIGRATION_7_8,
             )
             .enableMultiInstanceInvalidation()
             .addCallback(DURABILITY_CALLBACK)
             .build()
 
     @Provides
-    fun provideConversationDao(database: ColumbaDatabase): ConversationDao = database.conversationDao()
+    fun provideConversationDao(database: ZamolxisDatabase): ConversationDao = database.conversationDao()
 
     @Provides
-    fun provideMessageDao(database: ColumbaDatabase): MessageDao = database.messageDao()
+    fun provideMessageDao(database: ZamolxisDatabase): MessageDao = database.messageDao()
 
     @Provides
-    fun provideAnnounceDao(database: ColumbaDatabase): AnnounceDao = database.announceDao()
+    fun provideAnnounceDao(database: ZamolxisDatabase): AnnounceDao = database.announceDao()
 
     @Provides
-    fun providePeerIdentityDao(database: ColumbaDatabase): PeerIdentityDao = database.peerIdentityDao()
+    fun providePeerIdentityDao(database: ZamolxisDatabase): PeerIdentityDao = database.peerIdentityDao()
 
     @Provides
-    fun providePeerActivityDao(database: ColumbaDatabase): PeerActivityDao = database.peerActivityDao()
+    fun providePeerActivityDao(database: ZamolxisDatabase): PeerActivityDao = database.peerActivityDao()
 
     @Provides
-    fun providePeerIconDao(database: ColumbaDatabase): PeerIconDao = database.peerIconDao()
+    fun providePeerIconDao(database: ZamolxisDatabase): PeerIconDao = database.peerIconDao()
 
     @Provides
-    fun provideContactDao(database: ColumbaDatabase): ContactDao = database.contactDao()
+    fun provideContactDao(database: ZamolxisDatabase): ContactDao = database.contactDao()
 
     @Provides
-    fun provideCustomThemeDao(database: ColumbaDatabase): CustomThemeDao = database.customThemeDao()
+    fun provideCustomThemeDao(database: ZamolxisDatabase): CustomThemeDao = database.customThemeDao()
 
     @Provides
-    fun provideLocalIdentityDao(database: ColumbaDatabase): LocalIdentityDao = database.localIdentityDao()
+    fun provideLocalIdentityDao(database: ZamolxisDatabase): LocalIdentityDao = database.localIdentityDao()
 
     @Provides
-    fun provideReceivedLocationDao(database: ColumbaDatabase): ReceivedLocationDao = database.receivedLocationDao()
+    fun provideReceivedLocationDao(database: ZamolxisDatabase): ReceivedLocationDao = database.receivedLocationDao()
 
     @Provides
-    fun provideOfflineMapRegionDao(database: ColumbaDatabase): OfflineMapRegionDao = database.offlineMapRegionDao()
+    fun provideOfflineMapRegionDao(database: ZamolxisDatabase): OfflineMapRegionDao = database.offlineMapRegionDao()
 
     @Provides
-    fun provideRmspServerDao(database: ColumbaDatabase): RmspServerDao = database.rmspServerDao()
+    fun provideRmspServerDao(database: ZamolxisDatabase): RmspServerDao = database.rmspServerDao()
 
     @Provides
-    fun provideDraftDao(database: ColumbaDatabase): DraftDao = database.draftDao()
+    fun provideDraftDao(database: ZamolxisDatabase): DraftDao = database.draftDao()
 
     @Provides
-    fun provideBlockedPeerDao(database: ColumbaDatabase): BlockedPeerDao = database.blockedPeerDao()
+    fun provideBlockedPeerDao(database: ZamolxisDatabase): BlockedPeerDao = database.blockedPeerDao()
 
     @Provides
-    fun provideInterfaceFirstSeenDao(database: ColumbaDatabase): InterfaceFirstSeenDao = database.interfaceFirstSeenDao()
+    fun provideInterfaceFirstSeenDao(database: ZamolxisDatabase): InterfaceFirstSeenDao = database.interfaceFirstSeenDao()
+
+    @Provides
+    fun providePqKeyDao(database: ZamolxisDatabase): PqKeyDao = database.pqKeyDao()
+
+    /**
+     * The hybrid post-quantum engine.
+     *
+     * A singleton because it is stateless and thread-safe, and because each
+     * instance otherwise seeds its own [java.security.SecureRandom] — pointless
+     * work on a device where one properly seeded source is what you want.
+     */
+    @Provides
+    @Singleton
+    fun provideHybridKem(): HybridKem = HybridKem()
+
+    /** The Keystore-backed encryptor, behind the narrow interface its callers need. */
+    @Provides
+    @Singleton
+    fun provideSecretBlobEncryptor(encryptor: IdentityKeyEncryptor): SecretBlobEncryptor = encryptor
 
     @Provides
     @Singleton

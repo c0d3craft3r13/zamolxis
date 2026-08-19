@@ -1,6 +1,6 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
-import network.columba.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.api.model.LocationTelemetry
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePacker
 import org.msgpack.core.MessageUnpacker
@@ -9,7 +9,7 @@ import kotlin.math.round
 
 /**
  * Single source of truth for the Sideband-compatible Telemeter wire
- * format (LXMF `FIELD_TELEMETRY` payload) + Columba's `FIELD_CUSTOM_META`
+ * format (LXMF `FIELD_TELEMETRY` payload) + Zamolxis's `FIELD_CUSTOM_META`
  * extras, plus the `FIELD_COMMANDS` telemetry-request timebase units
  * ([telemetryRequestTimebaseSeconds]). Both backends — Kotlin-native
  * (`rns-backend-kt`) and Python-Chaquopy (`rns-backend-py`) — route
@@ -39,10 +39,10 @@ import kotlin.math.round
  *                    "approxRadius": int?, "ts": long? })
  * ```
  *
- * Both Python backends previously had ~190 lines of Columba-custom
+ * Both Python backends previously had ~190 lines of Zamolxis-custom
  * Telemeter encoding in `event_bridge.py`; consolidating here means
  * the Python tree stays slim (per the rns-backend-py CLAUDE.md
- * "ONE Columba-authored Python file" rule) AND drift between two
+ * "ONE Zamolxis-authored Python file" rule) AND drift between two
  * codec implementations of the same Sideband-interop wire format
  * is impossible — they're the same code.
  */
@@ -52,10 +52,10 @@ object TelemeterCodec {
 
     /**
      * Pack a [LocationTelemetry] into `FIELD_TELEMETRY` bytes the
-     * receiving peer (Sideband, MeshChat, another Columba) decodes via
+     * receiving peer (Sideband, MeshChat, another Zamolxis) decodes via
      * upstream `Telemeter.from_packed`. Cease frames still get a
      * Telemeter blob — the cease signal travels in
-     * [packColumbaMeta] / `FIELD_CUSTOM_META`, but the location body
+     * [packZamolxisMeta] / `FIELD_CUSTOM_META`, but the location body
      * present here keeps Sideband-side decoders from rejecting the
      * envelope.
      */
@@ -93,7 +93,7 @@ object TelemeterCodec {
     /**
      * Unpack a `FIELD_TELEMETRY` Telemeter blob into the location fields
      * of a [LocationTelemetry]. Returns null when the bytes aren't a
-     * Telemeter-shape payload (e.g. a legacy Columba JSON-in-bytes or a
+     * Telemeter-shape payload (e.g. a legacy Zamolxis JSON-in-bytes or a
      * malformed peer message) — caller falls back to a JSON parse there.
      *
      * The returned [LocationTelemetry] has [LocationTelemetry.sourceHash]
@@ -141,7 +141,7 @@ object TelemeterCodec {
         }
 
     /**
-     * Pack Columba's location-share extras into the `FIELD_CUSTOM_META`
+     * Pack Zamolxis's location-share extras into the `FIELD_CUSTOM_META`
      * payload. Returns null when the [telemetry] carries no extras
      * worth sending (no cease, no expiry, no coarsening radius, no
      * ms-precision timestamp Telemeter's seconds-precision drops) — the
@@ -150,7 +150,7 @@ object TelemeterCodec {
      *
      * Wire (msgpack): `{cease?, expires?, approxRadius?, ts?}`.
      */
-    fun packColumbaMeta(telemetry: LocationTelemetry): ByteArray? {
+    fun packZamolxisMeta(telemetry: LocationTelemetry): ByteArray? {
         val meta = mutableMapOf<String, Any>()
         if (telemetry.cease) meta["cease"] = true
         telemetry.expires?.let { meta["expires"] = it }
@@ -169,8 +169,8 @@ object TelemeterCodec {
         return packer.toByteArray()
     }
 
-    /** Unpack a `FIELD_CUSTOM_META` blob into a Columba-extras dataclass. */
-    data class ColumbaMeta(
+    /** Unpack a `FIELD_CUSTOM_META` blob into a Zamolxis-extras dataclass. */
+    data class ZamolxisMeta(
         val cease: Boolean = false,
         val expires: Long? = null,
         val approxRadius: Int = 0,
@@ -179,11 +179,11 @@ object TelemeterCodec {
         val tsMillis: Long? = null,
     )
 
-    fun unpackColumbaMeta(data: ByteArray): ColumbaMeta? =
+    fun unpackZamolxisMeta(data: ByteArray): ZamolxisMeta? =
         try {
             val unpacker = MessagePack.newDefaultUnpacker(data)
             val unpacked = unpackValue(unpacker) as? Map<*, *> ?: return null
-            ColumbaMeta(
+            ZamolxisMeta(
                 cease = (unpacked["cease"] as? Boolean) == true,
                 expires = (unpacked["expires"] as? Number)?.toLong(),
                 approxRadius = (unpacked["approxRadius"] as? Number)?.toInt() ?: 0,
@@ -194,7 +194,7 @@ object TelemeterCodec {
         }
 
     /**
-     * Convert a last-request time in epoch **milliseconds** (Columba tracks
+     * Convert a last-request time in epoch **milliseconds** (Zamolxis tracks
      * telemetry request times with `System.currentTimeMillis()`) to the epoch
      * **seconds** timebase that rides in an LXMF `FIELD_COMMANDS` telemetry
      * request — `{0x01: [timebase, isCollectorRequest]}`. Both backends route

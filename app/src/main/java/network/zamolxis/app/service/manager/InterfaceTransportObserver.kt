@@ -1,4 +1,4 @@
-package network.columba.app.service.manager
+package network.zamolxis.app.service.manager
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.host.manager.CurrentTransport
-import network.columba.app.rns.host.manager.currentTransportOf
-import network.columba.app.rns.host.manager.filterByTransport
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.host.manager.CurrentTransport
+import network.zamolxis.app.rns.host.manager.currentTransportOf
+import network.zamolxis.app.rns.host.manager.filterByTransport
 import javax.inject.Inject
 import javax.inject.Singleton
 

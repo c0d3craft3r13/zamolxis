@@ -1,8 +1,8 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import network.columba.app.data.db.dao.PeerActivityDao
-import network.columba.app.data.db.entity.PeerActivityEntity
+import network.zamolxis.app.data.db.dao.PeerActivityDao
+import network.zamolxis.app.data.db.entity.PeerActivityEntity
 import javax.inject.Inject
 import javax.inject.Singleton
 

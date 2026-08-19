@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -53,6 +53,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -63,6 +64,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -167,6 +169,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import network.zamolxis.app.ui.components.PqKeyChangeDialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -180,71 +183,72 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import network.columba.app.R
-import network.columba.app.service.SyncProgress
-import network.columba.app.service.SyncResult
-import network.columba.app.rns.api.BackendCapabilities.Support
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.TransferProgressUpdate
-import network.columba.app.ui.components.AttachmentPanel
-import network.columba.app.ui.components.VoiceMessageBubble
-import network.columba.app.ui.components.VoiceDraftPreview
-import network.columba.app.ui.components.VoiceRecordingControls
-import network.columba.app.ui.components.CodecSelectionDialog
-import network.columba.app.ui.components.QualityOption
-import network.columba.app.ui.components.QualitySelectionDialog
-import network.columba.app.ui.components.FileAttachmentCard
-import network.columba.app.ui.components.FileAttachmentOptionsSheet
-import network.columba.app.ui.components.FileAttachmentPreviewRow
-import network.columba.app.ui.components.findActivity
-import network.columba.app.ui.components.FullEmojiPickerDialog
-import network.columba.app.ui.components.ImageOptionsSheet
-import network.columba.app.ui.components.ImageQualitySelectionDialog
-import network.columba.app.ui.components.LocationPermissionBottomSheet
-import network.columba.app.ui.components.LocalCapabilities
-import network.columba.app.ui.components.MarkdownMessageText
-import network.columba.app.ui.components.MessageTransferProgress
-import network.columba.app.ui.components.MessageStatusIndicator
-import network.columba.app.util.isPyxisUpdateFilename
-import network.columba.app.ui.components.QuickShareLocationBottomSheet
-import network.columba.app.ui.components.ReactionDisplayRow
-import network.columba.app.ui.components.ReactionModeOverlay
-import network.columba.app.ui.components.ReplyInputBar
-import network.columba.app.ui.components.ReplyPreviewBubble
-import network.columba.app.ui.components.SelectableTextDialog
-import network.columba.app.ui.components.StarToggleButton
-import network.columba.app.ui.components.SwipeableMessageBubble
-import network.columba.app.ui.components.SyncStatusBottomSheet
-import network.columba.app.ui.components.ConversationTransferTray
-import network.columba.app.ui.components.simpleVerticalScrollbar
-import network.columba.app.ui.model.CodecProfile
-import network.columba.app.ui.model.LocationSharingState
-import network.columba.app.ui.model.MessageRenderer
-import network.columba.app.audio.VoiceMessagePlayer
-import network.columba.app.audio.VoiceMessageMetadata
-import network.columba.app.audio.VoiceMessagePlayerState
-import network.columba.app.audio.VoiceMessageFormat
-import network.columba.app.ui.model.AudioAttachmentUi
-import network.columba.app.ui.theme.MeshConnected
-import network.columba.app.ui.theme.MeshOffline
-import network.columba.app.ui.util.rememberLifecycleTickerMillis
-import network.columba.app.util.AnimatedImageLoader
-import network.columba.app.util.FileAttachment
-import network.columba.app.util.FileUtils
-import network.columba.app.util.ImageUtils
-import network.columba.app.util.LocationPermissionManager
-import network.columba.app.util.MediaPermissionManager
-import network.columba.app.util.formatRelativeTime
-import network.columba.app.util.formatTimeSince
-import network.columba.app.util.validation.ValidationConstants
-import network.columba.app.viewmodel.ContactToggleResult
-import network.columba.app.viewmodel.MessagingViewModel
-import network.columba.app.viewmodel.SharedImageViewModel
-import network.columba.app.viewmodel.SharedTextViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.service.SyncProgress
+import network.zamolxis.app.service.SyncResult
+import network.zamolxis.app.rns.api.BackendCapabilities.Support
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.TransferProgressUpdate
+import network.zamolxis.app.ui.components.AttachmentPanel
+import network.zamolxis.app.ui.components.VoiceMessageBubble
+import network.zamolxis.app.ui.components.VoiceDraftPreview
+import network.zamolxis.app.ui.components.VoiceRecordingControls
+import network.zamolxis.app.ui.components.CodecSelectionDialog
+import network.zamolxis.app.ui.components.QualityOption
+import network.zamolxis.app.ui.components.QualitySelectionDialog
+import network.zamolxis.app.ui.components.FileAttachmentCard
+import network.zamolxis.app.ui.components.FileAttachmentOptionsSheet
+import network.zamolxis.app.ui.components.FileAttachmentPreviewRow
+import network.zamolxis.app.ui.components.findActivity
+import network.zamolxis.app.ui.components.FullEmojiPickerDialog
+import network.zamolxis.app.ui.components.ImageOptionsSheet
+import network.zamolxis.app.ui.components.ImageQualitySelectionDialog
+import network.zamolxis.app.ui.components.LocationPermissionBottomSheet
+import network.zamolxis.app.ui.components.LocalCapabilities
+import network.zamolxis.app.ui.components.MarkdownMessageText
+import network.zamolxis.app.ui.components.MessageTransferProgress
+import network.zamolxis.app.ui.components.MessageStatusIndicator
+import network.zamolxis.app.util.isPyxisUpdateFilename
+import network.zamolxis.app.ui.components.QuickShareLocationBottomSheet
+import network.zamolxis.app.ui.components.ReactionDisplayRow
+import network.zamolxis.app.ui.components.ReactionModeOverlay
+import network.zamolxis.app.ui.components.ReplyInputBar
+import network.zamolxis.app.ui.components.ReplyPreviewBubble
+import network.zamolxis.app.ui.components.SelectableTextDialog
+import network.zamolxis.app.ui.components.StarToggleButton
+import network.zamolxis.app.ui.components.SwipeableMessageBubble
+import network.zamolxis.app.ui.components.SyncStatusBottomSheet
+import network.zamolxis.app.ui.components.ConversationTransferTray
+import network.zamolxis.app.ui.components.simpleVerticalScrollbar
+import network.zamolxis.app.ui.model.CodecProfile
+import network.zamolxis.app.ui.model.LocationSharingState
+import network.zamolxis.app.ui.model.MessageRenderer
+import network.zamolxis.app.audio.VoiceMessagePlayer
+import network.zamolxis.app.audio.VoiceMessageMetadata
+import network.zamolxis.app.audio.VoiceMessagePlayerState
+import network.zamolxis.app.audio.VoiceMessageFormat
+import network.zamolxis.app.ui.model.AudioAttachmentUi
+import network.zamolxis.app.ui.theme.MeshConnected
+import network.zamolxis.app.ui.theme.MeshOffline
+import network.zamolxis.app.ui.util.rememberLifecycleTickerMillis
+import network.zamolxis.app.util.AnimatedImageLoader
+import network.zamolxis.app.util.FileAttachment
+import network.zamolxis.app.util.FileUtils
+import network.zamolxis.app.util.ImageUtils
+import network.zamolxis.app.util.LocationPermissionManager
+import network.zamolxis.app.util.MediaPermissionManager
+import network.zamolxis.app.util.formatRelativeTime
+import network.zamolxis.app.util.formatTimeSince
+import network.zamolxis.app.util.validation.ValidationConstants
+import network.zamolxis.app.viewmodel.ContactToggleResult
+import network.zamolxis.app.viewmodel.MessagingViewModel
+import network.zamolxis.app.viewmodel.SharedImageViewModel
+import network.zamolxis.app.viewmodel.SharedTextViewModel
 import android.Manifest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.res.pluralStringResource
 
 private const val URL_ANNOTATION_TAG = "url"
 private const val VOICE_PREVIEW_KEY = "voice-recording-preview"
@@ -925,7 +929,7 @@ fun MessagingScreen(
         }
     }
 
-    // A notification can be posted while Columba is backgrounded even when this conversation
+    // A notification can be posted while Zamolxis is backgrounded even when this conversation
     // remains composed. Re-assert visibility on every resume so that notification is dismissed
     // and the newly visible messages are marked read.
     ConversationVisibilityEffect(destinationHash, viewModel::onConversationVisible)
@@ -941,6 +945,26 @@ fun MessagingScreen(
         if (newestMessageId != null) {
             viewModel.markAsRead(destinationHash)
         }
+    }
+
+    // Re-check on every new message as well as on open: a key change arrives with
+    // an incoming message, and the user may already be looking at the conversation
+    // when it does.
+    LaunchedEffect(destinationHash, newestMessageId) {
+        viewModel.refreshPqKeyChange(destinationHash)
+    }
+
+    val pqKeyChange by viewModel.pqKeyChange.collectAsStateWithLifecycle()
+    val pqSealed by viewModel.pqSealed.collectAsStateWithLifecycle()
+    pqKeyChange?.let { prompt ->
+        PqKeyChangeDialog(
+            peerName = peerName,
+            currentFingerprint = prompt.currentFingerprint,
+            newFingerprint = prompt.newFingerprint,
+            onAccept = { viewModel.resolvePqKeyChange(prompt.peerHash, accept = true) },
+            onReject = { viewModel.resolvePqKeyChange(prompt.peerHash, accept = false) },
+            onDismiss = { viewModel.dismissPqKeyChange() },
+        )
     }
 
     // Handle back button when reaction mode is active
@@ -960,13 +984,29 @@ fun MessagingScreen(
                     Column(
                         modifier = Modifier.clickable(onClick = onPeerClick),
                     ) {
-                        Text(
-                            text = peerName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = peerName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false),
+                            )
+                            // Shown only while messages are genuinely being sealed.
+                            // A badge that lingers when protection has lapsed is
+                            // worse than none: it tells the user they are safe at
+                            // exactly the moment they are not.
+                            if (pqSealed) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = stringResource(R.string.pq_indicator_sealed),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        }
                         // "Online" is live-link state. "Last seen" comes from
                         // the durable, verified inbound-activity record and never
                         // from an outgoing message or a failed probe.
@@ -1003,10 +1043,10 @@ fun MessagingScreen(
                                 else -> MeshOffline
                             }
                             val dotContentDescription = when {
-                                isEstablishing -> "Connecting"
-                                hasActiveLink -> "Online — link active"
-                                hasRecentActivity -> "Last seen recently"
-                                else -> "Offline"
+                                isEstablishing -> stringResource(R.string.messaging_connecting)
+                                hasActiveLink -> stringResource(R.string.messaging_cd_link_active)
+                                hasRecentActivity -> stringResource(R.string.messaging_cd_seen_recently)
+                                else -> stringResource(R.string.messaging_offline)
                             }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -1058,9 +1098,13 @@ fun MessagingScreen(
                                 // expect a reply.
                                 val statusText =
                                     when {
-                                        isEstablishing -> "Connecting..."
-                                        hasActiveLink -> "Online"
-                                        lastActivity > 0 -> "Last seen ${formatTimeSince(lastActivity, timestampTick)}"
+                                        isEstablishing -> stringResource(R.string.messaging_connecting)
+                                        hasActiveLink -> stringResource(R.string.messaging_online)
+                                        lastActivity > 0 ->
+                                            stringResource(
+                                                R.string.messaging_last_seen,
+                                                formatTimeSince(LocalContext.current, lastActivity, timestampTick),
+                                            )
                                         else -> ""
                                     }
                                 Text(
@@ -1078,7 +1122,7 @@ fun MessagingScreen(
                                 if (hasActiveLink) {
                                     Icon(
                                         imageVector = Icons.Default.Link,
-                                        contentDescription = "Active link",
+                                        contentDescription = stringResource(R.string.messaging_cd_active_link),
                                         tint = MeshConnected,
                                         modifier = Modifier.size(12.dp),
                                     )
@@ -1098,7 +1142,7 @@ fun MessagingScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                         )
                     }
                 },
@@ -1122,7 +1166,7 @@ fun MessagingScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Call,
-                            contentDescription = "Voice call",
+                            contentDescription = stringResource(R.string.messaging_cd_voice_call),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -1152,7 +1196,7 @@ fun MessagingScreen(
                                 } else {
                                     Icons.Outlined.LocationOn
                                 },
-                            contentDescription = "Share location",
+                            contentDescription = stringResource(R.string.messaging_cd_share_location),
                             tint =
                                 if (locationSharingState != LocationSharingState.NONE) {
                                     MaterialTheme.colorScheme.primary
@@ -1187,7 +1231,7 @@ fun MessagingScreen(
                         IconButton(onClick = { showOverflowMenu = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More options",
+                                contentDescription = stringResource(R.string.common_more_options),
                                 tint =
                                     if (isSyncing) {
                                         MaterialTheme.colorScheme.primary
@@ -1234,7 +1278,7 @@ fun MessagingScreen(
                                         contentDescription = null,
                                     )
                                 },
-                                text = { Text("Text size") },
+                                text = { Text(stringResource(R.string.messaging_text_size)) },
                                 onClick = {
                                     showOverflowMenu = false
                                     showTextSizeDialog = true
@@ -1251,7 +1295,7 @@ fun MessagingScreen(
                                 },
                                 text = {
                                     Text(
-                                        "Block User",
+                                        stringResource(R.string.chats_block_user),
                                         color = MaterialTheme.colorScheme.error,
                                     )
                                 },
@@ -1359,7 +1403,7 @@ fun MessagingScreen(
                                     val cachedImage =
                                         decodedResult?.bitmap
                                             ?: if (message.decodedImage == null && loadedImageIds.contains(message.id)) {
-                                                network.columba.app.ui.model.ImageCache
+                                                network.zamolxis.app.ui.model.ImageCache
                                                     .get(message.id)
                                             } else {
                                                 message.decodedImage
@@ -1644,8 +1688,8 @@ fun MessagingScreen(
                             showDeleteConfirmation = false
                             viewModel.exitReactionMode()
                         },
-                        title = { Text("Delete message") },
-                        text = { Text("This message will be permanently deleted from this device.") },
+                        title = { Text(stringResource(R.string.messaging_delete_title)) },
+                        text = { Text(stringResource(R.string.messaging_delete_body)) },
                         confirmButton = {
                             androidx.compose.material3.TextButton(
                                 onClick = {
@@ -1654,7 +1698,7 @@ fun MessagingScreen(
                                     viewModel.exitReactionMode()
                                 },
                             ) {
-                                Text("Delete", color = MaterialTheme.colorScheme.error)
+                                Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                             }
                         },
                         dismissButton = {
@@ -1664,7 +1708,7 @@ fun MessagingScreen(
                                     viewModel.exitReactionMode()
                                 },
                             ) {
-                                Text("Cancel")
+                                Text(stringResource(R.string.cancel))
                             }
                         },
                     )
@@ -1905,8 +1949,8 @@ fun MessagingScreen(
                     tint = MaterialTheme.colorScheme.error,
                 )
             },
-            title = { Text("Stop Sharing Location?") },
-            text = { Text("Stop sharing your location with $peerName?") },
+            title = { Text(stringResource(R.string.messaging_stop_sharing_title)) },
+            text = { Text(stringResource(R.string.messaging_stop_sharing_body, peerName)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -1918,12 +1962,12 @@ fun MessagingScreen(
                             containerColor = MaterialTheme.colorScheme.error,
                         ),
                 ) {
-                    Text("Stop Sharing")
+                    Text(stringResource(R.string.messaging_stop_sharing))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStopSharingDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
         )
@@ -2052,7 +2096,7 @@ fun MessagingScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageBubble(
-    message: network.columba.app.ui.model.MessageUi,
+    message: network.zamolxis.app.ui.model.MessageUi,
     isFromMe: Boolean,
     clipboardManager: androidx.compose.ui.platform.ClipboardManager,
     myIdentityHash: String? = null,
@@ -2205,7 +2249,7 @@ fun MessageBubble(
                             .crossfade(true)
                             .build(),
                     imageLoader = AnimatedImageLoader.getInstance(context),
-                    contentDescription = "Animated GIF",
+                    contentDescription = stringResource(R.string.messaging_cd_animated_gif),
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -2350,7 +2394,7 @@ fun MessageBubble(
                                         .crossfade(true)
                                         .build(),
                                 imageLoader = AnimatedImageLoader.getInstance(context),
-                                contentDescription = "Animated image attachment",
+                                contentDescription = stringResource(R.string.messaging_cd_animated_image),
                                 modifier =
                                     Modifier
                                         .widthIn(max = 268.dp)
@@ -2363,7 +2407,7 @@ fun MessageBubble(
                             // Static image - use pre-decoded bitmap for efficiency
                             Image(
                                 bitmap = imageBitmap,
-                                contentDescription = "Image attachment",
+                                contentDescription = stringResource(R.string.messaging_cd_image),
                                 modifier =
                                     Modifier
                                         .widthIn(max = 268.dp)
@@ -2402,13 +2446,13 @@ fun MessageBubble(
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Icon(
                                         imageVector = Icons.Default.BrokenImage,
-                                        contentDescription = "Image unavailable",
+                                        contentDescription = stringResource(R.string.messaging_cd_image_unavailable),
                                         modifier = Modifier.size(32.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        "Not available",
+                                        stringResource(R.string.messaging_not_available),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                     )
@@ -2427,16 +2471,15 @@ fun MessageBubble(
                                         contentDescription = null,
                                     )
                                 },
-                                title = { Text("Image Not Available") },
+                                title = { Text(stringResource(R.string.messaging_image_unavailable_title)) },
                                 text = {
                                     Text(
-                                        "The original image could not be found. This can happen when " +
-                                            "importing data without attachments included.",
+                                        stringResource(R.string.messaging_image_unavailable_body),
                                     )
                                 },
                                 confirmButton = {
                                     TextButton(onClick = { showMissingImageInfo = false }) {
-                                        Text("OK")
+                                        Text(stringResource(R.string.common_ok))
                                     }
                                 },
                             )
@@ -2596,7 +2639,7 @@ fun MessageContextMenu(
                         contentDescription = null,
                     )
                 },
-                text = { Text("Retry") },
+                text = { Text(stringResource(R.string.common_retry)) },
                 onClick = onRetry,
             )
         }
@@ -2610,7 +2653,7 @@ fun MessageContextMenu(
                         contentDescription = null,
                     )
                 },
-                text = { Text("Reply") },
+                text = { Text(stringResource(R.string.messaging_reply)) },
                 onClick = onReply,
             )
         }
@@ -2622,7 +2665,7 @@ fun MessageContextMenu(
                     contentDescription = null,
                 )
             },
-            text = { Text("Copy") },
+            text = { Text(stringResource(R.string.common_copy)) },
             onClick = onCopy,
         )
 
@@ -2635,7 +2678,7 @@ fun MessageContextMenu(
                         contentDescription = null,
                     )
                 },
-                text = { Text("View Details") },
+                text = { Text(stringResource(R.string.messaging_view_details)) },
                 onClick = onViewDetails,
             )
         }
@@ -2720,7 +2763,7 @@ fun MessageInputBar(
                                     .crossfade(true)
                                     .build(),
                             imageLoader = AnimatedImageLoader.getInstance(context),
-                            contentDescription = "Selected animated image",
+                            contentDescription = stringResource(R.string.messaging_cd_selected_animated),
                             modifier =
                                 Modifier
                                     .size(80.dp)
@@ -2738,7 +2781,7 @@ fun MessageInputBar(
                         bitmap?.let { imageBitmap ->
                             Image(
                                 bitmap = imageBitmap,
-                                contentDescription = "Selected image",
+                                contentDescription = stringResource(R.string.messaging_cd_selected_image),
                                 modifier =
                                     Modifier
                                         .size(80.dp)
@@ -2762,7 +2805,7 @@ fun MessageInputBar(
                     IconButton(onClick = onClearImage) {
                         Icon(
                             imageVector = androidx.compose.material.icons.Icons.Default.Close,
-                            contentDescription = "Remove image",
+                            contentDescription = stringResource(R.string.messaging_cd_remove_image),
                         )
                     }
                 }
@@ -2781,7 +2824,12 @@ fun MessageInputBar(
             val remaining = ValidationConstants.MAX_MESSAGE_LENGTH - messageText.length
             if (remaining < 100) {
                 Text(
-                    text = "$remaining characters remaining",
+                    text =
+                        pluralStringResource(
+                            R.plurals.messaging_characters_remaining,
+                            remaining,
+                            remaining,
+                        ),
                     style = MaterialTheme.typography.bodySmall,
                     color =
                         if (remaining < 20) {
@@ -2904,7 +2952,7 @@ fun MessageInputBar(
                             Box {
                                 if (textFieldState.text.isEmpty()) {
                                     Text(
-                                        text = "Type a message...",
+                                        text = stringResource(R.string.messaging_input_placeholder),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -2925,11 +2973,20 @@ fun MessageInputBar(
                 ) {
                     Icon(
                         imageVector = if (isAttachmentPanelActive) Icons.Default.Close else Icons.Default.Add,
-                        contentDescription = if (isAttachmentPanelActive) "Close attachments" else "Attach",
+                        contentDescription =
+                            stringResource(
+                                if (isAttachmentPanelActive) {
+                                    R.string.messaging_cd_close_attachments
+                                } else {
+                                    R.string.messaging_cd_attach
+                                },
+                            ),
                         modifier = Modifier.size(24.dp),
                     )
                 }
 
+                val sendContentDescription = stringResource(R.string.messaging_cd_send)
+                val sendingStateDescription = stringResource(R.string.messaging_sending_message)
                 FilledIconButton(
                     onClick = onSendClick,
                     enabled = canSend,
@@ -2937,8 +2994,8 @@ fun MessageInputBar(
                         Modifier
                             .size(48.dp)
                             .semantics {
-                                contentDescription = "Send message"
-                                if (isSending) stateDescription = "Sending message"
+                                contentDescription = sendContentDescription
+                                if (isSending) stateDescription = sendingStateDescription
                             },
                     shape = CircleShape,
                     colors =
@@ -2984,12 +3041,12 @@ fun EmptyMessagesState() {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
             )
             Text(
-                text = "No messages yet",
+                text = stringResource(R.string.messaging_empty_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "Send a message to start the conversation",
+                text = stringResource(R.string.messaging_empty_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             )
@@ -2997,6 +3054,7 @@ fun EmptyMessagesState() {
     }
 }
 
+@Composable
 private fun formatTimestamp(
     timestamp: Long,
     now: Long,
@@ -3004,10 +3062,10 @@ private fun formatTimestamp(
     val diff = now - timestamp
 
     return when {
-        diff < 60_000 -> "Just now"
+        diff < 60_000 -> stringResource(R.string.time_just_now)
         diff < 3600_000 -> {
             val minutes = (diff / 60_000).toInt()
-            "$minutes min ago"
+            pluralStringResource(R.plurals.time_min_ago_short, minutes, minutes)
         }
         diff < 86400_000 -> {
             SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
@@ -3056,7 +3114,7 @@ private fun FullscreenImageDialog(
         ) {
             Image(
                 bitmap = bitmap,
-                contentDescription = "Fullscreen image",
+                contentDescription = stringResource(R.string.messaging_cd_fullscreen_image),
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -3084,7 +3142,7 @@ private fun FullscreenImageDialog(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More options",
+                    contentDescription = stringResource(R.string.common_more_options),
                 )
             }
         }
@@ -3136,7 +3194,7 @@ private fun FullscreenAnimatedImageDialog(
                         .crossfade(true)
                         .build(),
                 imageLoader = AnimatedImageLoader.getInstance(context),
-                contentDescription = "Fullscreen animated image",
+                contentDescription = stringResource(R.string.messaging_cd_fullscreen_animated),
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -3164,7 +3222,7 @@ private fun FullscreenAnimatedImageDialog(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More options",
+                    contentDescription = stringResource(R.string.common_more_options),
                 )
             }
         }
@@ -3185,7 +3243,7 @@ private fun FullscreenAnimatedImageDialog(
 @Suppress("FunctionNaming")
 @Composable
 fun PendingFileNotificationBubble(
-    pendingFileInfo: network.columba.app.ui.model.PendingFileInfo,
+    pendingFileInfo: network.zamolxis.app.ui.model.PendingFileInfo,
     peerName: String,
     syncProgress: SyncProgress,
     onClick: () -> Unit,
@@ -3230,7 +3288,12 @@ fun PendingFileNotificationBubble(
                     }
                     Column {
                         Text(
-                            text = if (isSyncing) "Fetching file..." else "$peerName sent a large file",
+                            text =
+                            if (isSyncing) {
+                                stringResource(R.string.messaging_fetching_file)
+                            } else {
+                                stringResource(R.string.messaging_sent_large_file, peerName)
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium,
                         )
@@ -3241,7 +3304,12 @@ fun PendingFileNotificationBubble(
                         )
                         if (!isSyncing && pendingFileInfo.fileCount > 1) {
                             Text(
-                                text = "+${pendingFileInfo.fileCount - 1} more file${if (pendingFileInfo.fileCount > 2) "s" else ""}",
+                                text =
+                                pluralStringResource(
+                                    R.plurals.messaging_more_files,
+                                    pendingFileInfo.fileCount - 1,
+                                    pendingFileInfo.fileCount - 1,
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -3323,12 +3391,12 @@ private fun TextSizeDialog(
                 contentDescription = null,
             )
         },
-        title = { Text("Text size") },
+        title = { Text(stringResource(R.string.messaging_text_size)) },
         text = {
             Column {
                 // Preview text
                 Text(
-                    text = "Preview message text",
+                    text = stringResource(R.string.messaging_preview_text),
                     style =
                         MaterialTheme.typography.bodyLarge.copy(
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize * sliderValue,
@@ -3374,12 +3442,12 @@ private fun TextSizeDialog(
                 onScaleChange(sliderValue)
                 onDismiss()
             }) {
-                Text("OK")
+                Text(stringResource(R.string.common_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )

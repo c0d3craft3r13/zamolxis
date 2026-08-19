@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.model
+package network.zamolxis.app.rns.host.ble.model
 
 import java.util.UUID
 

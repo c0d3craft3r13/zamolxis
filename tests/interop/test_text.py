@@ -13,27 +13,27 @@ import pytest
 
 
 @pytest.mark.timeout(60)
-def test_text_direct_columba_to_sideband(interop):
+def test_text_direct_zamolxis_to_sideband(interop):
     """A → B via DIRECT (link-based) — the most common path."""
-    content = f"columba_to_sideband_direct_{int(time.time() * 1000)}"
-    interop.columba.send_text(interop.sideband_hex, content, method="DIRECT")
+    content = f"zamolxis_to_sideband_direct_{int(time.time() * 1000)}"
+    interop.zamolxis.send_text(interop.sideband_hex, content, method="DIRECT")
 
     msg = interop.sideband.wait_for_message(
-        from_hex=interop.columba_hex,
+        from_hex=interop.zamolxis_hex,
         content_predicate=lambda m: m.content_text == content,
         timeout=45,
     )
     assert msg.content_text == content
-    assert msg.source_hash.hex() == interop.columba_hex
+    assert msg.source_hash.hex() == interop.zamolxis_hex
 
 
 @pytest.mark.timeout(60)
-def test_text_direct_sideband_to_columba(interop):
+def test_text_direct_sideband_to_zamolxis(interop):
     """B → A via DIRECT — reverse direction, same path."""
-    content = f"sideband_to_columba_direct_{int(time.time() * 1000)}"
-    assert interop.sideband.send_text(interop.columba_hex, content)
+    content = f"sideband_to_zamolxis_direct_{int(time.time() * 1000)}"
+    assert interop.sideband.send_text(interop.zamolxis_hex, content)
 
-    msg = interop.columba.wait_for_message(
+    msg = interop.zamolxis.wait_for_message(
         from_hex=interop.sideband_hex,
         content_predicate=lambda m: m.content == content,
         timeout=45,
@@ -43,14 +43,14 @@ def test_text_direct_sideband_to_columba(interop):
 
 
 @pytest.mark.timeout(60)
-def test_text_opportunistic_columba_to_sideband(interop):
-    """A → B via OPPORTUNISTIC (single packet, no link). Used by Columba
+def test_text_opportunistic_zamolxis_to_sideband(interop):
+    """A → B via OPPORTUNISTIC (single packet, no link). Used by Zamolxis
     for short live messages when a ratchet is available."""
-    content = f"columba_to_sideband_opp_{int(time.time() * 1000)}"
-    interop.columba.send_text(interop.sideband_hex, content, method="OPPORTUNISTIC")
+    content = f"zamolxis_to_sideband_opp_{int(time.time() * 1000)}"
+    interop.zamolxis.send_text(interop.sideband_hex, content, method="OPPORTUNISTIC")
 
     msg = interop.sideband.wait_for_message(
-        from_hex=interop.columba_hex,
+        from_hex=interop.zamolxis_hex,
         content_predicate=lambda m: m.content_text == content,
         timeout=45,
     )
@@ -58,18 +58,18 @@ def test_text_opportunistic_columba_to_sideband(interop):
 
 
 @pytest.mark.timeout(60)
-def test_text_opportunistic_sideband_to_columba(interop):
+def test_text_opportunistic_sideband_to_zamolxis(interop):
     """Sideband picks OPPORTUNISTIC automatically when no live link is
     available and a ratchet exists — we don't choose, but the test asserts
     the message arrives regardless of which low-level method got selected.
     """
-    content = f"sideband_to_columba_opp_{int(time.time() * 1000)}"
+    content = f"sideband_to_zamolxis_opp_{int(time.time() * 1000)}"
     # Sideband's `send_message(propagation=False)` selects between
     # OPPORTUNISTIC and DIRECT internally based on link availability.
     # That selection IS the test — we just assert the bytes survive.
-    assert interop.sideband.send_text(interop.columba_hex, content)
+    assert interop.sideband.send_text(interop.zamolxis_hex, content)
 
-    msg = interop.columba.wait_for_message(
+    msg = interop.zamolxis.wait_for_message(
         from_hex=interop.sideband_hex,
         content_predicate=lambda m: m.content == content,
         timeout=45,
@@ -80,7 +80,7 @@ def test_text_opportunistic_sideband_to_columba(interop):
 def _retry_sync_until(predicate, sync_fn, timeout: float, retry_every: float = 15.0):
     """Trigger `sync_fn()` periodically until `predicate()` returns true
     or `timeout` elapses. Used by PROPAGATED tests because:
-      - Columba's outbound PROPAGATED queue waits ~2 min before its
+      - Zamolxis's outbound PROPAGATED queue waits ~2 min before its
         first upload attempt (LXMRouter's `defer_propagation_stamp`
         backoff), so the recipient's first sync usually returns nothing.
       - LXMF doesn't push — recipients must poll lxmd. We re-trigger
@@ -106,11 +106,11 @@ def _retry_sync_until(predicate, sync_fn, timeout: float, retry_every: float = 1
 
 @pytest.mark.slow
 @pytest.mark.timeout(420)
-def test_text_propagated_columba_to_sideband(interop, request):
-    """A → B via PROPAGATED (lxmd-mediated). Columba uploads to lxmd;
+def test_text_propagated_zamolxis_to_sideband(interop, request):
+    """A → B via PROPAGATED (lxmd-mediated). Zamolxis uploads to lxmd;
     Sideband fetches via `request_messages_from_propagation_node`.
 
-    Slow by design: Columba's outbound PROPAGATED queue defers the
+    Slow by design: Zamolxis's outbound PROPAGATED queue defers the
     first upload attempt by ~2 minutes (LXMRouter `defer_propagation_stamp`
     backoff), and resource transfer + sync poll add another minute.
     7-minute test budget. Skipped by default — opt in with
@@ -118,15 +118,15 @@ def test_text_propagated_columba_to_sideband(interop, request):
     if request.config.getoption("--no-prop"):
         pytest.skip("--no-prop: propagation tests disabled")
 
-    content = f"columba_to_sideband_prop_{int(time.time() * 1000)}"
-    interop.columba.send_text(interop.sideband_hex, content, method="PROPAGATED")
+    content = f"zamolxis_to_sideband_prop_{int(time.time() * 1000)}"
+    interop.zamolxis.send_text(interop.sideband_hex, content, method="PROPAGATED")
 
     received = []
 
     def _check():
         try:
             msg = interop.sideband.wait_for_message(
-                from_hex=interop.columba_hex,
+                from_hex=interop.zamolxis_hex,
                 content_predicate=lambda m: m.content_text == content,
                 timeout=2,  # short — _retry_sync_until owns the outer deadline
             )
@@ -146,23 +146,23 @@ def test_text_propagated_columba_to_sideband(interop, request):
 
 @pytest.mark.slow
 @pytest.mark.timeout(420)
-def test_text_propagated_sideband_to_columba(interop, request):
-    """B → A via PROPAGATED. Sideband uploads to lxmd; Columba fetches
+def test_text_propagated_sideband_to_zamolxis(interop, request):
+    """B → A via PROPAGATED. Sideband uploads to lxmd; Zamolxis fetches
     via its `SYNC_PROP` TestReceiver action. Skipped by default — opt
     in with `pytest -m slow`."""
     if request.config.getoption("--no-prop"):
         pytest.skip("--no-prop: propagation tests disabled")
 
-    content = f"sideband_to_columba_prop_{int(time.time() * 1000)}"
+    content = f"sideband_to_zamolxis_prop_{int(time.time() * 1000)}"
     assert interop.sideband.send_text(
-        interop.columba_hex, content, propagation=True
+        interop.zamolxis_hex, content, propagation=True
     )
 
     received = []
 
     def _check():
         try:
-            msg = interop.columba.wait_for_message(
+            msg = interop.zamolxis.wait_for_message(
                 from_hex=interop.sideband_hex,
                 content_predicate=lambda m: m.content == content,
                 timeout=2,
@@ -173,9 +173,9 @@ def test_text_propagated_sideband_to_columba(interop, request):
             return False
 
     def _sync():
-        interop.columba.broadcast("SYNC_PROP")
+        interop.zamolxis.broadcast("SYNC_PROP")
 
     assert _retry_sync_until(
         _check, _sync, timeout=270, retry_every=20,
-    ), f"Columba never received propagated content {content!r}"
+    ), f"Zamolxis never received propagated content {content!r}"
     assert received[0].content == content

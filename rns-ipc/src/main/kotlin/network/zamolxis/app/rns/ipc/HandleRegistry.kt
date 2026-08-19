@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 import android.os.IBinder
 import java.util.concurrent.ConcurrentHashMap
@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong
  * objects whose identity must survive across AIDL round-trips.
  *
  * Today the only such object is the backend's `Link` instance — the UI
- * receives a [network.columba.app.rns.api.model.Link] value parcelable that
+ * receives a [network.zamolxis.app.rns.api.model.Link] value parcelable that
  * embeds the handle ID as its `id` string. When the UI later passes the
  * `Link` back across the seam (`closeLink`, `sendOverLink`), the server uses
  * the handle to look up the live object.

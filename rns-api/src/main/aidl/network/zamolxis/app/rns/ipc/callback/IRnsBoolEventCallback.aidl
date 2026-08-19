@@ -3,7 +3,7 @@
 //   - RnsTelephony.isSpeakerOn
 //   - RnsTelephony.isPttMode
 //   - RnsTelephony.isPttActive
-package network.columba.app.rns.ipc.callback;
+package network.zamolxis.app.rns.ipc.callback;
 
 oneway interface IRnsBoolEventCallback {
     void onBool(boolean value);

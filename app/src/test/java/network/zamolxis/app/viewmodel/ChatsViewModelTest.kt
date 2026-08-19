@@ -1,24 +1,24 @@
 @file:Suppress("IgnoredReturnValue") // awaitItem() calls consume flow emissions, result intentionally unused
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.BlockedPeerRepository
-import network.columba.app.data.repository.CallHistoryRepository
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.Conversation
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.ReceivedLocationRepository
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.api.model.VoiceCallState
-import network.columba.app.service.IdentityResolutionManager
-import network.columba.app.service.PropagationNodeManager
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.BlockedPeerRepository
+import network.zamolxis.app.data.repository.CallHistoryRepository
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.Conversation
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.ReceivedLocationRepository
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.service.IdentityResolutionManager
+import network.zamolxis.app.service.PropagationNodeManager
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

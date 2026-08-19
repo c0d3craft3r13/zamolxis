@@ -1,4 +1,4 @@
-package network.columba.app.startup
+package network.zamolxis.app.startup
 
 import android.content.Context
 import android.content.SharedPreferences

@@ -15,26 +15,34 @@ coverage:
         target: 70%
 
 flags:
+  # Mirrors the modules in settings.gradle.kts that JaCoCo is applied to
+  # (root build.gradle.kts applies it to every subproject except :detekt-rules).
   unittests:
     paths:
       - "app/"
-      - "core/"
+      - "data/"
       - "micron/"
+      - "crypto-pq/"
+      - "rns-api/"
+      - "rns-ipc/"
+      - "rns-host/"
+      - "rns-backend-kt/"
+      - "rns-backend-py/"
+      - "rns-stats/"
     carryforward: true
   python:
     paths:
-      - "python/"
+      - "rns-backend-py/src/main/python/"
     carryforward: true
 
+# NOTE: these are repository paths, so the package segments are directories
+# (network/zamolxis/app), not a dotted package name. Dotted entries match nothing
+# and silently leave the files in the coverage totals.
 ignore:
-  - "external/**"
-  - "python/test_*.py"
-  # Network-dependent Python code requires a live RNS instance, not unit tests
-  - "python/rns_api.py"
+  - "rns-backend-py/src/test/python/**"
   # Service layer code requires instrumented tests, not unit tests
-  - "app/src/main/java/network.columba.app/service/**"
-  - "app/src/main/java/network.columba.app/reticulum/protocol/**"
+  - "app/src/main/java/network/zamolxis/app/service/**"
   # Compose UI files with @Preview functions (private preview functions can't be tested)
   # These components have extensive Robolectric tests but @Preview functions inflate totals
-  - "app/src/main/java/network.columba.app/ui/components/FileAttachmentCard.kt"
-  - "app/src/main/java/network.columba.app/ui/components/FileAttachmentPreviewRow.kt"
+  - "app/src/main/java/network/zamolxis/app/ui/components/FileAttachmentCard.kt"
+  - "app/src/main/java/network/zamolxis/app/ui/components/FileAttachmentPreviewRow.kt"

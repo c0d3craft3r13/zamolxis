@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.runtime.getValue
@@ -10,7 +10,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule

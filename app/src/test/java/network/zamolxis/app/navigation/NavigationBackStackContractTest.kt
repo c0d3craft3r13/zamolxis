@@ -1,4 +1,4 @@
-package network.columba.app.navigation
+package network.zamolxis.app.navigation
 
 import android.app.Application
 import android.os.Looper

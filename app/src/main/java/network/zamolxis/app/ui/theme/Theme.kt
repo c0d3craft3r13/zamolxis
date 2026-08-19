@@ -1,4 +1,4 @@
-package network.columba.app.ui.theme
+package network.zamolxis.app.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 @Composable
-fun ColumbaTheme(
+fun ZamolxisTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     selectedTheme: AppTheme = PresetTheme.VIBRANT,
     content: @Composable () -> Unit,

@@ -1,12 +1,12 @@
-package network.columba.app.ui.screens.settings.dialogs
+package network.zamolxis.app.ui.screens.settings.dialogs
 
 import android.app.Application
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.ui.theme.ColumbaTheme
-import network.columba.app.util.CrashReport
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.theme.ZamolxisTheme
+import network.zamolxis.app.util.CrashReport
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -38,7 +38,7 @@ class CrashReportDialogTest {
     @Test
     fun `displays crash dialog title`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = testCrashReport,
                     onDismiss = {},
@@ -53,7 +53,7 @@ class CrashReportDialogTest {
     @Test
     fun `displays crash dialog description`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = testCrashReport,
                     onDismiss = {},
@@ -70,7 +70,7 @@ class CrashReportDialogTest {
     @Test
     fun `displays exception name without package`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = testCrashReport,
                     onDismiss = {},
@@ -91,7 +91,7 @@ class CrashReportDialogTest {
             )
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = longMessageCrash,
                     onDismiss = {},
@@ -107,7 +107,7 @@ class CrashReportDialogTest {
     @Test
     fun `displays report bug button`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = testCrashReport,
                     onDismiss = {},
@@ -122,7 +122,7 @@ class CrashReportDialogTest {
     @Test
     fun `displays dismiss button`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = testCrashReport,
                     onDismiss = {},
@@ -137,7 +137,7 @@ class CrashReportDialogTest {
     @Test
     fun `displays privacy notice`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = testCrashReport,
                     onDismiss = {},
@@ -157,7 +157,7 @@ class CrashReportDialogTest {
         var dismissed = false
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = testCrashReport,
                     onDismiss = { dismissed = true },
@@ -175,7 +175,7 @@ class CrashReportDialogTest {
         var reportBugCalled = false
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = testCrashReport,
                     onDismiss = {},
@@ -193,7 +193,7 @@ class CrashReportDialogTest {
         val crashWithNullMessage = testCrashReport.copy(message = null)
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = crashWithNullMessage,
                     onDismiss = {},
@@ -216,7 +216,7 @@ class CrashReportDialogTest {
             )
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 CrashReportDialog(
                     crashReport = runtimeException,
                     onDismiss = {},

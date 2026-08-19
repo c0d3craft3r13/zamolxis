@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 /**
  * Represents the type of BLE connection with a peer.

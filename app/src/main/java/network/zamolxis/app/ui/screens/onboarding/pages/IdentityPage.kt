@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding.pages
+package network.zamolxis.app.ui.screens.onboarding.pages
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 /**
  * Identity page - allows user to set their display name.
@@ -67,7 +69,7 @@ fun IdentityPage(
 
         // Title
         Text(
-            text = "Your Identity",
+            text = stringResource(R.string.onboarding_identity_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -78,7 +80,7 @@ fun IdentityPage(
 
         // Subtitle
         Text(
-            text = "Choose a display name others will see:",
+            text = stringResource(R.string.onboarding_identity_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -90,8 +92,8 @@ fun IdentityPage(
         OutlinedTextField(
             value = displayName,
             onValueChange = onDisplayNameChange,
-            label = { Text("Display Name") },
-            placeholder = { Text("Anonymous Peer") },
+            label = { Text(stringResource(R.string.onboarding_display_name)) },
+            placeholder = { Text(stringResource(R.string.common_anonymous_peer)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions =
@@ -112,7 +114,7 @@ fun IdentityPage(
 
         // Helper text
         Text(
-            text = "You can change this anytime, or create multiple identities for different contexts.",
+            text = stringResource(R.string.onboarding_identity_note),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -133,7 +135,7 @@ fun IdentityPage(
                         .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Back")
+                Text(stringResource(R.string.common_back))
             }
 
             Button(
@@ -147,7 +149,7 @@ fun IdentityPage(
                         .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Continue")
+                Text(stringResource(R.string.common_continue))
             }
         }
 

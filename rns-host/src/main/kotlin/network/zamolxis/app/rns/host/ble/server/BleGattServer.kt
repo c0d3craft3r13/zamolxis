@@ -1,6 +1,6 @@
-package network.columba.app.rns.host.ble.server
+package network.zamolxis.app.rns.host.ble.server
 
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.toHex
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -17,7 +17,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
-import network.columba.app.rns.host.ble.model.BleConstants
+import network.zamolxis.app.rns.host.ble.model.BleConstants
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -79,7 +79,7 @@ class BleGattServer(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
 ) {
     companion object {
-        private const val TAG = "Columba:BLE:K:Server"
+        private const val TAG = "Zamolxis:BLE:K:Server"
     }
 
     private var gattServer: BluetoothGattServer? = null

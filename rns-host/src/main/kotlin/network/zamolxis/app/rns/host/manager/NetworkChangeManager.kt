@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.content.Context
 import android.net.ConnectivityManager

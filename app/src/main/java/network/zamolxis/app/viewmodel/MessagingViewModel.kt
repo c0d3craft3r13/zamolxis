@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.net.Uri
@@ -11,46 +11,46 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import network.columba.app.data.model.EnrichedContact
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.data.repository.ReceivedLocationRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.service.ConversationLinkManager
-import network.columba.app.service.LocationSharingManager
-import network.columba.app.service.PropagationNodeManager
-import network.columba.app.service.SyncProgress
-import network.columba.app.service.SyncResult
-import network.columba.app.ui.model.CodecProfile
-import network.columba.app.audio.VoiceMessageRecorder
-import network.columba.app.audio.VoiceMessageFormat
-import network.columba.app.audio.MicrophoneAdmissionArbiter
-import network.columba.app.ui.model.AudioAttachmentLoader
-import network.columba.app.ui.model.DecodedImageResult
-import network.columba.app.ui.model.ImageCache
-import network.columba.app.ui.model.LocationSharingState
-import network.columba.app.ui.model.MessageUi
-import network.columba.app.ui.model.SharingDuration
-import network.columba.app.ui.model.decodeImageWithAnimation
-import network.columba.app.ui.model.getImageMetadata
-import network.columba.app.ui.model.loadFileAttachmentData
-import network.columba.app.ui.model.loadFileAttachmentMetadata
-import network.columba.app.ui.model.loadImageBytes
-import network.columba.app.ui.model.loadImageData
-import network.columba.app.ui.model.parseAudioAttachment
-import network.columba.app.ui.model.toMessageUi
-import network.columba.app.util.FileAttachment
-import network.columba.app.util.FileUtils
-import network.columba.app.util.ImageUtils
-import network.columba.app.util.streamHexToFile
-import network.columba.app.util.validation.InputValidator
-import network.columba.app.util.validation.ValidationResult
+import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.data.repository.ReceivedLocationRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.service.ConversationLinkManager
+import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.service.SyncProgress
+import network.zamolxis.app.service.SyncResult
+import network.zamolxis.app.ui.model.CodecProfile
+import network.zamolxis.app.audio.VoiceMessageRecorder
+import network.zamolxis.app.audio.VoiceMessageFormat
+import network.zamolxis.app.audio.MicrophoneAdmissionArbiter
+import network.zamolxis.app.ui.model.AudioAttachmentLoader
+import network.zamolxis.app.ui.model.DecodedImageResult
+import network.zamolxis.app.ui.model.ImageCache
+import network.zamolxis.app.ui.model.LocationSharingState
+import network.zamolxis.app.ui.model.MessageUi
+import network.zamolxis.app.ui.model.SharingDuration
+import network.zamolxis.app.ui.model.decodeImageWithAnimation
+import network.zamolxis.app.ui.model.getImageMetadata
+import network.zamolxis.app.ui.model.loadFileAttachmentData
+import network.zamolxis.app.ui.model.loadFileAttachmentMetadata
+import network.zamolxis.app.ui.model.loadImageBytes
+import network.zamolxis.app.ui.model.loadImageData
+import network.zamolxis.app.ui.model.parseAudioAttachment
+import network.zamolxis.app.ui.model.toMessageUi
+import network.zamolxis.app.util.FileAttachment
+import network.zamolxis.app.util.FileUtils
+import network.zamolxis.app.util.ImageUtils
+import network.zamolxis.app.util.streamHexToFile
+import network.zamolxis.app.util.validation.InputValidator
+import network.zamolxis.app.util.validation.ValidationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -86,8 +86,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
-import network.columba.app.data.repository.Message as DataMessage
-import network.columba.app.rns.api.model.Message as ReticulumMessage
+import network.zamolxis.app.data.repository.Message as DataMessage
+import network.zamolxis.app.rns.api.model.Message as ReticulumMessage
 
 data class ComposerSendResult(
     val destinationHash: String,
@@ -105,20 +105,22 @@ class MessagingViewModel
         private val rnsCore: RnsCore,
         private val rnsLxmf: RnsLxmf,
         private val rnsTransportAdmin: RnsTransportAdmin,
-        private val conversationRepository: network.columba.app.data.repository.ConversationRepository,
-        private val announceRepository: network.columba.app.data.repository.AnnounceRepository,
-        private val contactRepository: network.columba.app.data.repository.ContactRepository,
-        private val activeConversationManager: network.columba.app.service.ActiveConversationManager,
+        private val conversationRepository: network.zamolxis.app.data.repository.ConversationRepository,
+        private val announceRepository: network.zamolxis.app.data.repository.AnnounceRepository,
+        private val contactRepository: network.zamolxis.app.data.repository.ContactRepository,
+        private val activeConversationManager: network.zamolxis.app.service.ActiveConversationManager,
         private val settingsRepository: SettingsRepository,
         private val propagationNodeManager: PropagationNodeManager,
         private val locationSharingManager: LocationSharingManager,
-        private val identityRepository: network.columba.app.data.repository.IdentityRepository,
+        private val identityRepository: network.zamolxis.app.data.repository.IdentityRepository,
         private val conversationLinkManager: ConversationLinkManager,
         private val receivedLocationRepository: ReceivedLocationRepository,
-        private val blockedPeerRepository: network.columba.app.data.repository.BlockedPeerRepository,
-        private val identityResolutionManager: network.columba.app.service.IdentityResolutionManager,
-        private val notificationHelper: network.columba.app.notifications.NotificationHelper,
+        private val blockedPeerRepository: network.zamolxis.app.data.repository.BlockedPeerRepository,
+        private val identityResolutionManager: network.zamolxis.app.service.IdentityResolutionManager,
+        private val notificationHelper: network.zamolxis.app.notifications.NotificationHelper,
         private val rnsTelephony: RnsTelephony,
+        private val pqMessageSealer: network.zamolxis.app.service.pq.PqMessageSealer,
+        private val pqKeyRepository: network.zamolxis.app.data.repository.PqKeyRepository,
         private val microphoneArbiter: MicrophoneAdmissionArbiter = MicrophoneAdmissionArbiter(),
     ) : ViewModel() {
         companion object {
@@ -178,7 +180,7 @@ class MessagingViewModel
                 }.cachedIn(viewModelScope)
 
         // Announce info for online status - updates in real-time when new announces arrive
-        val announceInfo: StateFlow<network.columba.app.data.repository.Announce?> =
+        val announceInfo: StateFlow<network.zamolxis.app.data.repository.Announce?> =
             _currentConversation
                 .flatMapLatest { peerHash ->
                     if (peerHash != null) {
@@ -193,11 +195,11 @@ class MessagingViewModel
                 )
 
         // Durable last verified packet received from the current peer.
-        val peerActivity: StateFlow<network.columba.app.data.db.entity.PeerActivityEntity?> =
+        val peerActivity: StateFlow<network.zamolxis.app.data.db.entity.PeerActivityEntity?> =
             _currentConversation
                 .flatMapLatest { peerHash ->
                     if (peerHash != null) {
-                        flow<network.columba.app.data.db.entity.PeerActivityEntity?> {
+                        flow<network.zamolxis.app.data.db.entity.PeerActivityEntity?> {
                             emit(null)
                             conversationLinkManager.observePeerActivity(peerHash).collect { emit(it) }
                         }
@@ -211,11 +213,11 @@ class MessagingViewModel
                 )
 
         // Link state for current conversation - provides real-time connectivity status
-        val conversationLinkState: StateFlow<network.columba.app.service.ConversationLinkManager.LinkState?> =
+        val conversationLinkState: StateFlow<network.zamolxis.app.service.ConversationLinkManager.LinkState?> =
             _currentConversation
                 .flatMapLatest { peerHash ->
                     if (peerHash != null) {
-                        flow<network.columba.app.service.ConversationLinkManager.LinkState?> {
+                        flow<network.zamolxis.app.service.ConversationLinkManager.LinkState?> {
                             emit(null)
                             conversationLinkManager.linkStates
                                 .map { states -> states[peerHash] }
@@ -280,6 +282,27 @@ class MessagingViewModel
         private val _fileAttachmentError = MutableSharedFlow<String>()
         val fileAttachmentError: SharedFlow<String> = _fileAttachmentError.asSharedFlow()
 
+        /**
+         * A pending post-quantum key change for the open conversation, or null.
+         *
+         * Held as state rather than a one-shot event: an unresolved change pauses
+         * sealing indefinitely, so it has to stay visible until the user decides,
+         * not vanish with a snackbar they happened to miss.
+         */
+        private val _pqKeyChange = MutableStateFlow<PqKeyChangePrompt?>(null)
+        val pqKeyChange: StateFlow<PqKeyChangePrompt?> = _pqKeyChange.asStateFlow()
+
+        /**
+         * Whether messages in the open conversation are currently being sealed.
+         *
+         * Answers the question a user actually has — "is this protected right
+         * now?" — rather than labelling individual messages, and it is derived from
+         * the same decision the send path makes, so the badge cannot promise
+         * protection that is not being applied.
+         */
+        private val _pqSealed = MutableStateFlow(false)
+        val pqSealed: StateFlow<Boolean> = _pqSealed.asStateFlow()
+
         private val composerSendResults = Channel<ComposerSendResult>(Channel.BUFFERED)
         val composerSendResult: Flow<ComposerSendResult> = composerSendResults.receiveAsFlow()
         private val sendInProgress = AtomicBoolean(false)
@@ -316,7 +339,7 @@ class MessagingViewModel
             loadPhotosJob =
                 viewModelScope.launch(Dispatchers.IO) {
                     val photos =
-                        network.columba.app.util.MediaStoreUtils
+                        network.zamolxis.app.util.MediaStoreUtils
                             .getRecentPhotos(context.applicationContext)
                     _recentPhotos.value = photos
                 }
@@ -363,8 +386,8 @@ class MessagingViewModel
         val syncProgress: StateFlow<SyncProgress> = propagationNodeManager.syncProgress
 
         private val _transferProgress =
-            MutableStateFlow<Map<String, network.columba.app.rns.api.model.TransferProgressUpdate>>(emptyMap())
-        val transferProgress: StateFlow<Map<String, network.columba.app.rns.api.model.TransferProgressUpdate>> =
+            MutableStateFlow<Map<String, network.zamolxis.app.rns.api.model.TransferProgressUpdate>>(emptyMap())
+        val transferProgress: StateFlow<Map<String, network.zamolxis.app.rns.api.model.TransferProgressUpdate>> =
             _transferProgress.asStateFlow()
 
         // Track which images have been decoded - used to trigger recomposition
@@ -377,8 +400,8 @@ class MessagingViewModel
         val decodedImages: StateFlow<Map<String, DecodedImageResult>> = _decodedImages.asStateFlow()
 
         // Cache for loaded reply previews - maps message ID to its reply preview
-        private val _replyPreviewCache = MutableStateFlow<Map<String, network.columba.app.ui.model.ReplyPreviewUi>>(emptyMap())
-        val replyPreviewCache: StateFlow<Map<String, network.columba.app.ui.model.ReplyPreviewUi>> = _replyPreviewCache.asStateFlow()
+        private val _replyPreviewCache = MutableStateFlow<Map<String, network.zamolxis.app.ui.model.ReplyPreviewUi>>(emptyMap())
+        val replyPreviewCache: StateFlow<Map<String, network.zamolxis.app.ui.model.ReplyPreviewUi>> = _replyPreviewCache.asStateFlow()
 
         // Contact status for current conversation - updates reactively
         val isContactSaved: StateFlow<Boolean> =
@@ -462,8 +485,8 @@ class MessagingViewModel
         private var lastDraftText: String = ""
 
         // Reply state - tracks which message is being replied to
-        private val _pendingReplyTo = MutableStateFlow<network.columba.app.ui.model.ReplyPreviewUi?>(null)
-        val pendingReplyTo: StateFlow<network.columba.app.ui.model.ReplyPreviewUi?> = _pendingReplyTo.asStateFlow()
+        private val _pendingReplyTo = MutableStateFlow<network.zamolxis.app.ui.model.ReplyPreviewUi?>(null)
+        val pendingReplyTo: StateFlow<network.zamolxis.app.ui.model.ReplyPreviewUi?> = _pendingReplyTo.asStateFlow()
 
         // Reaction state - tracks which message is selected for adding a reaction
         private val _pendingReactionMessageId = MutableStateFlow<String?>(null)
@@ -567,7 +590,7 @@ class MessagingViewModel
                     val replyPreview = conversationRepository.getReplyPreview(messageId, currentPeerName)
                     if (replyPreview != null) {
                         _pendingReplyTo.value =
-                            network.columba.app.ui.model.ReplyPreviewUi(
+                            network.zamolxis.app.ui.model.ReplyPreviewUi(
                                 messageId = replyPreview.messageId,
                                 senderName = replyPreview.senderName,
                                 contentPreview = replyPreview.contentPreview,
@@ -764,7 +787,7 @@ class MessagingViewModel
                     val publicKey = resolvePeerPublicKey(peerHash)
                     val peerIdentityHash =
                         publicKey?.let {
-                            network.columba.app.data.util.HashUtils
+                            network.zamolxis.app.data.util.HashUtils
                                 .computeIdentityHash(it)
                         }
                     blockedPeerRepository.blockPeer(peerHash, peerIdentityHash, currentPeerName, blackholeEnabled)
@@ -851,7 +874,7 @@ class MessagingViewModel
             viewModelScope.launch {
                 locationSharingManager.sharingEvents.collect { event ->
                     when (event) {
-                        is network.columba.app.service.SharingEvent.Blocked ->
+                        is network.zamolxis.app.service.SharingEvent.Blocked ->
                             _locationSharingMessage.emit(
                                 "Location sharing is off. Enable it in Settings → Location Sharing.",
                             )
@@ -863,7 +886,7 @@ class MessagingViewModel
             // NOTE: Message collection has been moved to MessageCollector service
             // which runs at application level to ensure messages are collected
             // even when no conversations are open.
-            // See: network.columba.app.service.MessageCollector
+            // See: network.zamolxis.app.service.MessageCollector
 
             // NOTE: Identity loading moved to loadIdentityIfNeeded() and called lazily
             // when sending messages, to avoid crashes during init when LXMF router
@@ -959,7 +982,7 @@ class MessagingViewModel
             }
         }
 
-        private suspend fun handleDeliveryStatusUpdate(update: network.columba.app.rns.api.model.DeliveryStatusUpdate) {
+        private suspend fun handleDeliveryStatusUpdate(update: network.zamolxis.app.rns.api.model.DeliveryStatusUpdate) {
             try {
                 // Retry mechanism to handle race condition where delivery proof arrives
                 // before database transaction completes
@@ -1051,7 +1074,7 @@ class MessagingViewModel
          * methods query the recipient (conversationHash) as usual.
          */
         private suspend fun enrichSentInterfaceOnDelivery(
-            message: network.columba.app.data.db.entity.MessageEntity,
+            message: network.zamolxis.app.data.db.entity.MessageEntity,
             messageHash: String,
         ) {
             if (!message.isFromMe || message.sentInterface != null) return
@@ -1364,7 +1387,7 @@ class MessagingViewModel
                             val fg = activeId.iconForegroundColor
                             val bg = activeId.iconBackgroundColor
                             if (name != null && fg != null && bg != null) {
-                                network.columba.app.rns.api.model.IconAppearance(
+                                network.zamolxis.app.rns.api.model.IconAppearance(
                                     iconName = name,
                                     foregroundColor = fg,
                                     backgroundColor = bg,
@@ -1374,10 +1397,20 @@ class MessagingViewModel
                             }
                         }
 
+                    // Post-quantum layer. A null plan means it could not take part,
+                    // in which case everything below behaves exactly as before.
+                    // Held rather than sent readable when the user demanded
+                    // post-quantum protection this peer cannot receive.
+                    val pqPlan = preparePqSend(destinationHash, sanitized)
+                    if (refusedToSend(pqPlan, destinationHash)) return@launch
+
+                    val pqContent = pqContentFor(pqPlan, sanitized)
+                    val pqFields = pqFieldsFor(pqPlan)
+
                     val result =
                         rnsLxmf.sendLxmfMessageWithMethod(
                             destinationHash = destHashBytes,
-                            content = sanitized,
+                            content = pqContent,
                             sourceIdentity = identity,
                             deliveryMethod = deliveryMethod,
                             tryPropagationOnFail = tryPropOnFail,
@@ -1385,12 +1418,14 @@ class MessagingViewModel
                             imageFormat = imageFormat,
                             fileAttachments = fileAttachmentPairs.ifEmpty { null },
                             extraFields =
-                                voiceBytes?.let {
-                                    mapOf(
-                                        network.columba.app.rns.api.util.LxmfFields.FIELD_AUDIO to
-                                            listOf(checkNotNull(voiceMode), it),
-                                    )
-                                },
+                                (
+                                    voiceBytes?.let {
+                                        mapOf(
+                                            network.zamolxis.app.rns.api.util.LxmfFields.FIELD_AUDIO to
+                                                listOf(checkNotNull(voiceMode), it),
+                                        )
+                                    } ?: emptyMap()
+                                ).plus(pqFields).ifEmpty { null },
                             replyToMessageId = replyToId,
                             // MeshChatX-interop reply format ships the
                             // quoted content inline (fields[0x31]) so
@@ -1410,6 +1445,8 @@ class MessagingViewModel
 
                     result
                         .onSuccess { receipt ->
+                            recordPqDelivery(pqPlan, destinationHash)
+
                             val persisted =
                                 handleSendSuccess(
                                     receipt,
@@ -1457,7 +1494,7 @@ class MessagingViewModel
 
         @Suppress("LongParameterList") // Refactoring to data class would add unnecessary complexity
         private suspend fun handleSendSuccess(
-            receipt: network.columba.app.rns.api.model.MessageReceipt,
+            receipt: network.zamolxis.app.rns.api.model.MessageReceipt,
             sanitized: String,
             destinationHash: String,
             imageData: ByteArray?,
@@ -2100,7 +2137,7 @@ class MessagingViewModel
                     val replyPreview = conversationRepository.getReplyPreview(replyToMessageId, currentPeerName)
                     if (replyPreview != null) {
                         val uiPreview =
-                            network.columba.app.ui.model.ReplyPreviewUi(
+                            network.zamolxis.app.ui.model.ReplyPreviewUi(
                                 messageId = replyPreview.messageId,
                                 senderName = replyPreview.senderName,
                                 contentPreview = replyPreview.contentPreview,
@@ -2120,18 +2157,18 @@ class MessagingViewModel
                         // instead of "Message deleted".
                         val replyingMessage = conversationRepository.getMessageById(messageId)
                         val inlineQuote =
-                            network.columba.app.ui.model.parseReplyQuoteFromFields(
+                            network.zamolxis.app.ui.model.parseReplyQuoteFromFields(
                                 replyingMessage?.fieldsJson,
                             )
                         val fallbackPreview =
                             if (inlineQuote != null && inlineQuote.isNotEmpty()) {
-                                network.columba.app.ui.model.ReplyPreviewUi(
+                                network.zamolxis.app.ui.model.ReplyPreviewUi(
                                     messageId = replyToMessageId,
                                     senderName = "",
                                     contentPreview = inlineQuote,
                                 )
                             } else {
-                                network.columba.app.ui.model.ReplyPreviewUi(
+                                network.zamolxis.app.ui.model.ReplyPreviewUi(
                                     messageId = replyToMessageId,
                                     senderName = "",
                                     contentPreview = "Message deleted",
@@ -2384,6 +2421,10 @@ class MessagingViewModel
          * Send a message with an image directly, bypassing the single-image StateFlows.
          * Used by multi-image share to send each image as a separate message.
          */
+        // ReturnCount: the post-quantum refusal is a guard clause alongside the
+        // existing validation guards. Folding them into nesting would bury the
+        // send call several levels deep for no gain in clarity.
+        @Suppress("ReturnCount")
         private suspend fun sendImageMessageDirect(
             destinationHash: String,
             imageData: ByteArray,
@@ -2415,7 +2456,7 @@ class MessagingViewModel
                         val fg = activeId.iconForegroundColor
                         val bg = activeId.iconBackgroundColor
                         if (name != null && fg != null && bg != null) {
-                            network.columba.app.rns.api.model.IconAppearance(
+                            network.zamolxis.app.rns.api.model.IconAppearance(
                                 iconName = name,
                                 foregroundColor = fg,
                                 backgroundColor = bg,
@@ -2427,10 +2468,13 @@ class MessagingViewModel
 
                 Log.d(TAG, "Sending shared image to $destinationHash (${imageData.size} bytes, format=$imageFormat)")
 
+                val pqPlan = preparePqSend(destinationHash, sanitized)
+                if (refusedToSend(pqPlan, destinationHash)) return
+
                 val result =
                     rnsLxmf.sendLxmfMessageWithMethod(
                         destinationHash = destHashBytes,
-                        content = sanitized,
+                        content = pqContentFor(pqPlan, sanitized),
                         sourceIdentity = identity,
                         deliveryMethod = deliveryMethod,
                         tryPropagationOnFail = tryPropOnFail,
@@ -2439,10 +2483,12 @@ class MessagingViewModel
                         fileAttachments = null,
                         replyToMessageId = null,
                         iconAppearance = iconAppearance,
+                        extraFields = pqFieldsFor(pqPlan).ifEmpty { null },
                     )
 
                 result
                     .onSuccess { receipt ->
+                        recordPqDelivery(pqPlan, destinationHash)
                         handleSendSuccess(receipt, sanitized, destinationHash, imageData, imageFormat, emptyList(), deliveryMethodString)
                     }.onFailure { error ->
                         handleSendFailure(
@@ -2647,6 +2693,179 @@ class MessagingViewModel
             }
         }
 
+        /**
+         * Look for a pending key change on the open conversation and surface it.
+         *
+         * Called when a conversation is opened and after a message arrives, since
+         * those are the two moments a change can become newly relevant.
+         */
+        fun refreshPqKeyChange(destinationHash: String) {
+            viewModelScope.launch {
+                _pqSealed.value =
+                    runCatching {
+                        val identityHash =
+                            identityRepository.getActiveIdentitySync()?.identityHash
+                                ?: return@runCatching false
+                        pqMessageSealer.isConversationSealed(
+                            identityHash = identityHash,
+                            peerHash = destinationHash,
+                            mode = settingsRepository.getPostQuantumMode(),
+                            linkCost = linkCostFor(destinationHash),
+                        )
+                    }.getOrElse {
+                        Log.w(TAG, "Could not determine protection state for $destinationHash", it)
+                        false
+                    }
+
+                _pqKeyChange.value =
+                    runCatching {
+                        pqKeyRepository.keyChangeFingerprints(destinationHash)?.let { (trusted, pending) ->
+                            PqKeyChangePrompt(
+                                peerHash = destinationHash,
+                                currentFingerprint = trusted,
+                                newFingerprint = pending,
+                            )
+                        }
+                    }.getOrElse {
+                        Log.w(TAG, "Could not read key-change state for $destinationHash", it)
+                        null
+                    }
+            }
+        }
+
+        /**
+         * Apply the user's decision about a replacement key.
+         *
+         * @param accept true to trust the new key, false to keep the existing one
+         */
+        fun resolvePqKeyChange(
+            peerHash: String,
+            accept: Boolean,
+        ) {
+            viewModelScope.launch {
+                runCatching { pqKeyRepository.resolveKeyChange(peerHash, accept) }
+                    .onFailure { Log.e(TAG, "Could not resolve key change for $peerHash", it) }
+                _pqKeyChange.value = null
+            }
+        }
+
+        /** Leave the change unresolved. Sealing stays paused until it is decided. */
+        fun dismissPqKeyChange() {
+            _pqKeyChange.value = null
+        }
+
+        /**
+         * Report a refusal to send and tell the caller to stop.
+         *
+         * @return true when the plan is [PqMessageSealer.Outgoing.Refused], meaning
+         *   the message must not go out. Only reachable in [PqMode.REQUIRED].
+         */
+        private suspend fun refusedToSend(
+            plan: network.zamolxis.app.service.pq.PqMessageSealer.Outgoing?,
+            destinationHash: String,
+        ): Boolean {
+            if (plan !is network.zamolxis.app.service.pq.PqMessageSealer.Outgoing.Refused) return false
+            Log.w(TAG, "Refusing to send unsealed to $destinationHash: ${plan.reason}")
+            _fileAttachmentError.emit(
+                applicationContext.getString(
+                    network.zamolxis.app.R.string.pq_refused_send,
+                    plan.reason.name,
+                ),
+            )
+            return true
+        }
+
+        /** The content to put on the wire: empty for a sealed message, plaintext otherwise. */
+        private fun pqContentFor(
+            plan: network.zamolxis.app.service.pq.PqMessageSealer.Outgoing?,
+            fallback: String,
+        ): String =
+            when (plan) {
+                is network.zamolxis.app.service.pq.PqMessageSealer.Outgoing.Sealed -> plan.content
+                else -> fallback
+            }
+
+        /** The LXMF fields the post-quantum layer wants added, if any. */
+        private fun pqFieldsFor(
+            plan: network.zamolxis.app.service.pq.PqMessageSealer.Outgoing?,
+        ): Map<Int, Any> =
+            when (plan) {
+                is network.zamolxis.app.service.pq.PqMessageSealer.Outgoing.Sealed -> plan.extraFields
+                is network.zamolxis.app.service.pq.PqMessageSealer.Outgoing.Plain -> plan.extraFields
+                else -> emptyMap()
+            }
+
+        /**
+         * Note that our key reached the peer — only ever after a successful send.
+         *
+         * Recording it on a failed send would stop the key being attached to a peer
+         * that never received it, and the pair could then never seal anything.
+         */
+        private suspend fun recordPqDelivery(
+            plan: network.zamolxis.app.service.pq.PqMessageSealer.Outgoing?,
+            destinationHash: String,
+        ) {
+            if (plan == null) return
+            runCatching {
+                identityRepository.getActiveIdentitySync()?.identityHash?.let { identityHash ->
+                    pqMessageSealer.onSendSucceeded(identityHash, destinationHash, plan)
+                }
+            }.onFailure { Log.w(TAG, "Could not record hybrid key delivery", it) }
+        }
+
+        /**
+         * Cost of the link this peer was last heard on.
+         *
+         * Shared by the send path and the chat indicator on purpose: computing it
+         * twice is how a badge ends up claiming protection that the sender is not
+         * actually applying.
+         */
+        private suspend fun linkCostFor(destinationHash: String): network.zamolxis.crypto.pq.LinkCost =
+            runCatching {
+                val sightings =
+                    announceRepository.getRecentInterfaceSightings(destinationHash).first()
+                network.zamolxis.app.service.pq.LinkCostResolver.costOfTypes(
+                    sightings.map { it.interfaceType },
+                )
+            }.getOrElse {
+                // Unknown path: treat as cheap, matching LinkCostResolver's default.
+                // Being wrong here spends airtime, not secrecy.
+                Log.w(TAG, "Could not determine link cost for $destinationHash", it)
+                network.zamolxis.crypto.pq.LinkCost.CHEAP
+            }
+
+        /**
+         * Ask the post-quantum layer what to do with an outgoing message.
+         *
+         * Returns null when the layer cannot participate at all — no active
+         * identity, or its hybrid key pair is unreadable. Null means "send exactly
+         * as before", so a fault here degrades to the app's previous behaviour
+         * rather than blocking the user's message.
+         */
+        private suspend fun preparePqSend(
+            destinationHash: String,
+            content: String,
+        ): network.zamolxis.app.service.pq.PqMessageSealer.Outgoing? {
+            val identityHash =
+                identityRepository.getActiveIdentitySync()?.identityHash ?: run {
+                    Log.w(TAG, "No active identity; sending without the post-quantum layer")
+                    return null
+                }
+
+            return runCatching {
+                pqMessageSealer.prepareOutgoing(
+                    identityHash = identityHash,
+                    peerHash = destinationHash,
+                    content = content,
+                    mode = settingsRepository.getPostQuantumMode(),
+                    linkCost = linkCostFor(destinationHash),
+                )
+            }.getOrElse {
+                Log.e(TAG, "Post-quantum preparation failed; sending unchanged", it)
+                null
+            }
+        }
+
         private suspend fun reconstructImageForRetry(fieldsJson: String?): Pair<Boolean, ByteArray?> {
             val hasImage = fieldsJson?.let { runCatching { JSONObject(it).has("6") }.getOrDefault(false) } == true
             if (!hasImage) return false to null
@@ -2662,7 +2881,11 @@ class MessagingViewModel
          */
         // Retry reconstructs every supported persisted attachment form and deliberately
         // keeps the lifecycle in one coroutine so status restoration cannot be skipped.
-        @Suppress("LongMethod")
+        // CyclomaticComplexMethod: the post-quantum guard adds one more branch to a
+        // function that is long by design — splitting it would move the status
+        // restoration out of the coroutine that owns it, which is the bug the
+        // single-coroutine shape exists to prevent.
+        @Suppress("LongMethod", "CyclomaticComplexMethod")
         fun retryFailedMessage(messageId: String) {
             if (!retriesInProgress.add(messageId)) return
             viewModelScope.launch {
@@ -2748,6 +2971,17 @@ class MessagingViewModel
 
                     Log.d(TAG, "Retrying message via $deliveryMethod delivery")
 
+                    // Decided fresh rather than reused from the original attempt: the
+                    // peer may have exchanged keys, or the user changed the mode, in
+                    // the time since it failed.
+                    val pqPlan = preparePqSend(failedMessage.conversationHash, failedMessage.content)
+                    if (refusedToSend(pqPlan, failedMessage.conversationHash)) {
+                        // Left at "failed" rather than moved to "pending": nothing
+                        // was sent, and showing it as in flight would be a lie.
+                        conversationRepository.updateMessageStatus(messageId, "failed")
+                        return@launch
+                    }
+
                     // Mark message as pending before sending
                     conversationRepository.updateMessageStatus(messageId, "pending")
 
@@ -2755,7 +2989,7 @@ class MessagingViewModel
                     val result =
                         rnsLxmf.sendLxmfMessageWithMethod(
                             destinationHash = destHashBytes,
-                            content = failedMessage.content,
+                            content = pqContentFor(pqPlan, failedMessage.content),
                             sourceIdentity = identity,
                             deliveryMethod = deliveryMethod,
                             tryPropagationOnFail = tryPropOnFail,
@@ -2763,18 +2997,21 @@ class MessagingViewModel
                             imageFormat = imageFormat,
                             fileAttachments = fileAttachments.map { it.filename to it.data }.ifEmpty { null },
                             extraFields =
-                                voiceBytes?.let {
-                                    mapOf(
-                                        network.columba.app.rns.api.util.LxmfFields.FIELD_AUDIO to
-                                            listOf(checkNotNull(voiceMode), it),
-                                    )
-                                },
+                                (
+                                    voiceBytes?.let {
+                                        mapOf(
+                                            network.zamolxis.app.rns.api.util.LxmfFields.FIELD_AUDIO to
+                                                listOf(checkNotNull(voiceMode), it),
+                                        )
+                                    } ?: emptyMap()
+                                ).plus(pqFieldsFor(pqPlan)).ifEmpty { null },
                             // Preserve reply on retry
                             replyToMessageId = failedMessage.replyToMessageId,
                         )
 
                     result
                         .onSuccess { receipt ->
+                            recordPqDelivery(pqPlan, failedMessage.conversationHash)
                             val newMessageHash = receipt.messageHash.joinToString("") { "%02x".format(it) }
                             Log.d(TAG, "Retry successful, new hash: ${newMessageHash.take(16)}...")
 
@@ -2824,7 +3061,7 @@ class MessagingViewModel
 
                     // Invalidate reply preview cache entries that reference the deleted message
                     val deletedPlaceholder =
-                        network.columba.app.ui.model.ReplyPreviewUi(
+                        network.zamolxis.app.ui.model.ReplyPreviewUi(
                             messageId = messageId,
                             senderName = "",
                             contentPreview = "Message deleted",
@@ -3044,7 +3281,7 @@ internal suspend fun buildFieldsJson(
     imageFormat: String?,
     fileAttachments: List<FileAttachment> = emptyList(),
     voiceBytes: ByteArray? = null,
-    voiceMode: Int? = network.columba.app.rns.api.util.LxmfFields.AM_OPUS_OGG,
+    voiceMode: Int? = network.zamolxis.app.rns.api.util.LxmfFields.AM_OPUS_OGG,
     replyToMessageId: String? = null,
     reactions: Map<String, List<String>>? = null,
     cacheDir: java.io.File? = null,
@@ -3157,7 +3394,7 @@ private fun ByteArray.toHexString(): String {
 private val HEX_CHARS = "0123456789abcdef".toCharArray()
 
 private fun resolveActualDestHash(
-    receipt: network.columba.app.rns.api.model.MessageReceipt,
+    receipt: network.zamolxis.app.rns.api.model.MessageReceipt,
     fallbackHash: String,
 ): String =
     if (receipt.destinationHash.isNotEmpty()) {
@@ -3248,3 +3485,30 @@ data class QualitySelectionState(
     val recommendedPreset: ImageCompressionPreset,
     val transferTimeEstimates: Map<ImageCompressionPreset, String?>,
 )
+
+/**
+ * A post-quantum key change awaiting the user's decision.
+ *
+ * @property peerHash the contact whose key changed
+ * @property currentFingerprint the key sealing has been using
+ * @property newFingerprint the key now being offered
+ */
+data class PqKeyChangePrompt(
+    val peerHash: String,
+    val currentFingerprint: ByteArray,
+    val newFingerprint: ByteArray,
+) {
+    // Compared by peer: the arrays would otherwise compare by identity and make
+    // equal prompts look different to Compose, redrawing the dialog needlessly.
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PqKeyChangePrompt) return false
+        return peerHash == other.peerHash &&
+            currentFingerprint.contentEquals(other.currentFingerprint) &&
+            newFingerprint.contentEquals(other.newFingerprint)
+    }
+
+    override fun hashCode(): Int =
+        31 * (31 * peerHash.hashCode() + currentFingerprint.contentHashCode()) +
+            newFingerprint.contentHashCode()
+}

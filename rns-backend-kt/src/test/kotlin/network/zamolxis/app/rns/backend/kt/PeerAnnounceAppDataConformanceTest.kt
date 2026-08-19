@@ -1,6 +1,6 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.toHex
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -11,7 +11,7 @@ import org.junit.Test
  *
  * Reference: `LXMRouter.get_announce_app_data()` packs a 2-element array
  * `[display_name_bytes_or_None, stamp_cost_or_None]` via `msgpack.packb(...)`
- * (LXMF/LXMRouter.py). Columba registers its delivery identity without a stamp
+ * (LXMF/LXMRouter.py). Zamolxis registers its delivery identity without a stamp
  * cost, so the reference second element is always nil — which is exactly what
  * [NativeRnsBackendImpl.buildPeerAnnounceAppData] packs.
  *

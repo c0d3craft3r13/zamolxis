@@ -1,11 +1,12 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -25,6 +26,18 @@ class InterfaceManagementScreenTest {
     val ruleChain: RuleChain = RuleChain.outerRule(registerActivityRule).around(composeRule)
 
     val composeTestRule get() = composeRule
+
+    /**
+     * getInterfaceTypeLabel became `@Composable` when the wording moved to `stringResource`, so it can
+     * only be called from a composition. This evaluates it inside the compose rule and
+     * hands the value back to the assertions, which are otherwise unchanged — the
+     * resources carry the same English wording the function used to build by hand.
+     */
+    private fun <T : Any> evaluate(block: @Composable () -> T): T {
+        lateinit var captured: T
+        composeRule.setContent { captured = block() }
+        return captured
+    }
 
     // ========== formatAddressWithPort Tests ==========
 
@@ -80,43 +93,43 @@ class InterfaceManagementScreenTest {
 
     @Test
     fun `getInterfaceTypeLabel returns correct label for TCPServer`() {
-        val result = getInterfaceTypeLabel("TCPServer")
+        val result = evaluate { getInterfaceTypeLabel("TCPServer") }
         assertEquals("TCP Server", result)
     }
 
     @Test
     fun `getInterfaceTypeLabel returns correct label for TCPClient`() {
-        val result = getInterfaceTypeLabel("TCPClient")
+        val result = evaluate { getInterfaceTypeLabel("TCPClient") }
         assertEquals("TCP Client", result)
     }
 
     @Test
     fun `getInterfaceTypeLabel returns correct label for AutoInterface`() {
-        val result = getInterfaceTypeLabel("AutoInterface")
+        val result = evaluate { getInterfaceTypeLabel("AutoInterface") }
         assertEquals("Auto Discovery", result)
     }
 
     @Test
     fun `getInterfaceTypeLabel returns correct label for AndroidBLE`() {
-        val result = getInterfaceTypeLabel("AndroidBLE")
+        val result = evaluate { getInterfaceTypeLabel("AndroidBLE") }
         assertEquals("Bluetooth LE", result)
     }
 
     @Test
     fun `getInterfaceTypeLabel returns correct label for RNode`() {
-        val result = getInterfaceTypeLabel("RNode")
+        val result = evaluate { getInterfaceTypeLabel("RNode") }
         assertEquals("RNode LoRa", result)
     }
 
     @Test
     fun `getInterfaceTypeLabel returns correct label for UDP`() {
-        val result = getInterfaceTypeLabel("UDP")
+        val result = evaluate { getInterfaceTypeLabel("UDP") }
         assertEquals("UDP Interface", result)
     }
 
     @Test
     fun `getInterfaceTypeLabel returns unknown type as-is`() {
-        val result = getInterfaceTypeLabel("UnknownType")
+        val result = evaluate { getInterfaceTypeLabel("UnknownType") }
         assertEquals("UnknownType", result)
     }
 

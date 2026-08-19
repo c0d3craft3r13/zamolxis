@@ -1,16 +1,16 @@
-package network.columba.app.integration
+package network.zamolxis.app.integration
 
 import android.content.Context
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.storage.AttachmentStorageManager
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.storage.AttachmentStorageManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -38,7 +38,7 @@ import kotlin.time.Duration.Companion.seconds
 @RunWith(AndroidJUnit4::class)
 class MessageDataFlowTest {
     private lateinit var context: Context
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var repository: ConversationRepository
 
     companion object {
@@ -63,7 +63,7 @@ class MessageDataFlowTest {
         // Create in-memory database
         database =
             Room
-                .inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+                .inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
 
@@ -117,7 +117,7 @@ class MessageDataFlowTest {
 
             // Act: Simulate receiving a message (as the service would do)
             val message =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_flow_test_123456789012345678",
                     destinationHash = TEST_PEER_HASH,
                     content = "Hello from peer!",
@@ -163,7 +163,7 @@ class MessageDataFlowTest {
 
             // First message (original)
             val original =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = messageId,
                     destinationHash = TEST_PEER_HASH,
                     content = "Original message",
@@ -187,7 +187,7 @@ class MessageDataFlowTest {
 
             // Replay (same ID, different timestamp - simulating propagation node delivery)
             val replay =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = messageId, // SAME ID
                     destinationHash = TEST_PEER_HASH,
                     content = "Replayed content", // Different content
@@ -236,7 +236,7 @@ class MessageDataFlowTest {
                 // Act: Send a message
                 withContext(Dispatchers.IO) {
                     val message =
-                        network.columba.app.data.repository.Message(
+                        network.zamolxis.app.data.repository.Message(
                             id = "msg_flow_emit_12345678901234567890",
                             destinationHash = TEST_PEER_HASH,
                             content = "Triggers emission",
@@ -283,7 +283,7 @@ class MessageDataFlowTest {
 
             // Act: Send outgoing message
             val sentMessage =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_sent_flow_test_1234567890123456",
                     destinationHash = TEST_PEER_HASH,
                     content = "My reply",

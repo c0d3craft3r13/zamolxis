@@ -1,4 +1,4 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 /**
  * Seam exposing live BLE peer-connection details from the host-side BLE bridge

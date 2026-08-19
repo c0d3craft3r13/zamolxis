@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -6,9 +6,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.service.ConversationLinkManager
-import network.columba.app.test.RegisterComponentActivityRule
+import androidx.test.core.app.ApplicationProvider
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.service.ConversationLinkManager
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -25,6 +26,8 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class ImageQualitySelectionDialogTest {
+    private val context = ApplicationProvider.getApplicationContext<Application>()
+
     private val registerActivityRule = RegisterComponentActivityRule()
     private val composeRule = createComposeRule()
 
@@ -81,11 +84,13 @@ class ImageQualitySelectionDialogTest {
             )
         }
 
-        // Verify descriptions exist (may be off-screen in scrollable dialog)
-        composeTestRule.onNodeWithText(ImageCompressionPreset.LOW.description).assertExists()
-        composeTestRule.onNodeWithText(ImageCompressionPreset.MEDIUM.description).assertExists()
-        composeTestRule.onNodeWithText(ImageCompressionPreset.HIGH.description).assertExists()
-        composeTestRule.onNodeWithText(ImageCompressionPreset.ORIGINAL.description).assertExists()
+        // Verify descriptions exist (may be off-screen in scrollable dialog).
+        // `description` is a `@StringRes` id now, so resolve it to the text the
+        // dialog actually renders before matching on it.
+        composeTestRule.onNodeWithText(context.getString(ImageCompressionPreset.LOW.descriptionRes)).assertExists()
+        composeTestRule.onNodeWithText(context.getString(ImageCompressionPreset.MEDIUM.descriptionRes)).assertExists()
+        composeTestRule.onNodeWithText(context.getString(ImageCompressionPreset.HIGH.descriptionRes)).assertExists()
+        composeTestRule.onNodeWithText(context.getString(ImageCompressionPreset.ORIGINAL.descriptionRes)).assertExists()
     }
 
     @Test

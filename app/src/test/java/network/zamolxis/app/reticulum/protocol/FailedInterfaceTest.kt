@@ -1,6 +1,6 @@
-package network.columba.app.reticulum.protocol
+package network.zamolxis.app.reticulum.protocol
 
-import network.columba.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

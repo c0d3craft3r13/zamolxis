@@ -1,9 +1,9 @@
-package network.columba.app.rns.host
+package network.zamolxis.app.rns.host
 
 import android.util.Log
 import com.chaquo.python.PyObject
-import network.columba.app.rns.backend.py.PyEventCallback
-import network.columba.app.rns.backend.py.PythonRnsRuntime
+import network.zamolxis.app.rns.backend.py.PyEventCallback
+import network.zamolxis.app.rns.backend.py.PythonRnsRuntime
 import tech.torlando.lxst.audio.Signalling
 import tech.torlando.lxst.telephone.NetworkTransport
 

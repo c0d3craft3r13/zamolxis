@@ -1,10 +1,10 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 import kotlinx.coroutines.flow.SharedFlow
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.LocationTelemetry
-import network.columba.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.api.model.MessageReceipt
 
 /**
  * Location telemetry & collector host mode.
@@ -22,7 +22,7 @@ interface RnsTelemetry {
      * Wire-format split (Sideband-interop):
      *   - `FIELD_TELEMETRY` (0x02) — Sideband-compatible Telemeter msgpack
      *     built from [telemetry]'s lat/lng/altitude/speed/bearing/accuracy.
-     *   - `FIELD_CUSTOM_META` (0xFD) — Columba's `cease`/`expires`/
+     *   - `FIELD_CUSTOM_META` (0xFD) — Zamolxis's `cease`/`expires`/
      *     `approxRadius`/`ts` extras, omitted entirely when none are set
      *     so Sideband peers see a clean Telemeter-only payload.
      *   - `FIELD_ICON_APPEARANCE` (0x04) — optional sender chrome.

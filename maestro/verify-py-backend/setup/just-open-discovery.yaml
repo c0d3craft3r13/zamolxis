@@ -9,7 +9,7 @@
 # time (run-flow.sh `cd`s into the per-run screenshots dir so they land
 # alongside the rest of the artifacts).
 
-appId: network.columba.app.debug
+appId: network.zamolxis.app.debug
 name: setup-just-open-discovery
 tags:
   - py-backend

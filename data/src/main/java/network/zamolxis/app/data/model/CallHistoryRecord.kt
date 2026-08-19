@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 /** Identity-scoped call evidence enriched with the peer's current presentation mapping. */
 data class CallHistoryRecord(

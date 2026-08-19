@@ -1,10 +1,10 @@
-package network.columba.app.data.crypto
+package network.zamolxis.app.data.crypto
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

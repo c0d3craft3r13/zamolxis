@@ -1,12 +1,12 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.util.hexToBytes
 
 /**
  * Chaquopy interop helpers shared by every `PythonRns*` sub-impl.

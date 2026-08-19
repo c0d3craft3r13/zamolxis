@@ -1,4 +1,4 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
 import javax.inject.Inject
 import javax.inject.Singleton

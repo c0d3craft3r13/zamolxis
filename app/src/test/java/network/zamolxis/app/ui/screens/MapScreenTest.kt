@@ -1,11 +1,12 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
+import androidx.test.core.app.ApplicationProvider
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -28,6 +29,8 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class MapScreenTest {
+    private val context = ApplicationProvider.getApplicationContext<Application>()
+
     private val registerActivityRule = RegisterComponentActivityRule()
     private val composeRule = createComposeRule()
 
@@ -196,25 +199,25 @@ class MapScreenTest {
     @Test
     fun `formatTimeAgo with recent timestamp returns Just now`() {
         val now = System.currentTimeMillis() / 1000
-        assertEquals("Just now", formatTimeAgo(now - 30))
+        assertEquals("Just now", formatTimeAgo(context, now - 30))
     }
 
     @Test
     fun `formatTimeAgo with 5 minutes ago returns min ago`() {
         val now = System.currentTimeMillis() / 1000
-        assertEquals("5 min ago", formatTimeAgo(now - 300))
+        assertEquals("5 min ago", formatTimeAgo(context, now - 300))
     }
 
     @Test
     fun `formatTimeAgo with 2 hours ago returns hours ago`() {
         val now = System.currentTimeMillis() / 1000
-        assertEquals("2 hours ago", formatTimeAgo(now - 7200))
+        assertEquals("2 hours ago", formatTimeAgo(context, now - 7200))
     }
 
     @Test
     fun `formatTimeAgo with 3 days ago returns days ago`() {
         val now = System.currentTimeMillis() / 1000
-        assertEquals("3 days ago", formatTimeAgo(now - 259200))
+        assertEquals("3 days ago", formatTimeAgo(context, now - 259200))
     }
 
     // ========== formatLoraParamsForClipboard Tests ==========

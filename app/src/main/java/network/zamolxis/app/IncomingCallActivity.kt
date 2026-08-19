@@ -1,4 +1,4 @@
-package network.columba.app
+package network.zamolxis.app
 
 import android.content.Context
 import android.content.Intent
@@ -29,18 +29,18 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import network.columba.app.notifications.CallNotificationHelper
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.ui.screens.IncomingCallActivityScreen
-import network.columba.app.ui.theme.ThemeMode
+import network.zamolxis.app.notifications.CallNotificationHelper
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.ui.screens.IncomingCallActivityScreen
+import network.zamolxis.app.ui.theme.ThemeMode
 import kotlinx.coroutines.Job
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import network.columba.app.di.RnsTelephonyEntryPoint
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
+import network.zamolxis.app.di.RnsTelephonyEntryPoint
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
 
 /**
  * Lightweight Activity that displays the incoming call screen over the lock screen.

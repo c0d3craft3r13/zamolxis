@@ -1,10 +1,10 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 import kotlinx.coroutines.flow.SharedFlow
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.rns.api.model.FailedInterface
-import network.columba.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.InterfaceConfig
 
 /**
  * Interface management, battery profile tuning, RNode control, BLE
@@ -48,7 +48,7 @@ interface RnsTransportAdmin {
     /**
      * When enabled, auto-connect only accepts discovered interfaces that
      * published an IFAC network name. Useful on mixed-trust networks where
-     * the user only wants Columba to auto-join known private networks.
+     * the user only wants Zamolxis to auto-join known private networks.
      */
     suspend fun setAutoconnectIfacOnly(enabled: Boolean)
 

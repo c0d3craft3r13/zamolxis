@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import android.util.Log
 import com.chaquo.python.PyObject
@@ -9,16 +9,16 @@ import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.LocationTelemetry
-import network.columba.app.rns.api.model.MessageReceipt
-import network.columba.app.rns.api.util.LxmfFields
-import network.columba.app.rns.api.util.TelemeterCodec
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.rns.api.util.LxmfFields
+import network.zamolxis.app.rns.api.util.TelemeterCodec
+import network.zamolxis.app.rns.api.util.toHex
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -84,7 +84,7 @@ class PythonRnsTelemetry(
             // Wire format (Sideband-interop, paramount):
             //   FIELD_TELEMETRY (0x02)   = upstream Telemeter msgpack
             //                              ({SID_TIME, SID_LOCATION: [...]})
-            //   FIELD_CUSTOM_META (0xFD) = Columba's cease/expires/approxRadius
+            //   FIELD_CUSTOM_META (0xFD) = Zamolxis's cease/expires/approxRadius
             //                              msgpack — only attached when non-empty;
             //                              Sideband ignores entirely.
             //   FIELD_ICON_APPEARANCE (0x04) = sender chrome (Sideband interop).
@@ -95,7 +95,7 @@ class PythonRnsTelemetry(
             // the resulting bytes; `event_bridge.py` no longer carries
             // any Telemeter-encoding logic.
             val telemetryBytes = TelemeterCodec.packLocationTelemetry(telemetry)
-            val metaBytes = TelemeterCodec.packColumbaMeta(telemetry)
+            val metaBytes = TelemeterCodec.packZamolxisMeta(telemetry)
             val fields = buildFieldsDict {
                 putRaw(LxmfFields.FIELD_TELEMETRY, telemetryBytes.toPyBytes())
                 metaBytes?.let { putRaw(LxmfFields.FIELD_CUSTOM_META, it.toPyBytes()) }

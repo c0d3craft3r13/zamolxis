@@ -1,11 +1,11 @@
-package network.columba.app.data.database.dao
+package network.zamolxis.app.data.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import network.columba.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.data.database.entity.InterfaceEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONException

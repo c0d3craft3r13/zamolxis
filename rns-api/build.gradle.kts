@@ -20,7 +20,7 @@ plugins {
 }
 
 android {
-    namespace = "network.columba.app.rns.api"
+    namespace = "network.zamolxis.app.rns.api"
     compileSdk = 36
 
     defaultConfig {

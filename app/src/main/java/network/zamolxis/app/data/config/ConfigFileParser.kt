@@ -1,10 +1,10 @@
-package network.columba.app.data.config
+package network.zamolxis.app.data.config
 
 import android.util.Log
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.util.validation.InputValidator
-import network.columba.app.util.validation.ValidationConstants
-import network.columba.app.util.validation.ValidationResult
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.util.validation.InputValidator
+import network.zamolxis.app.util.validation.ValidationConstants
+import network.zamolxis.app.util.validation.ValidationResult
 import java.io.File
 
 /**

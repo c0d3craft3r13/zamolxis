@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import io.gitlab.arturbosch.detekt.api.CodeSmell
 import io.gitlab.arturbosch.detekt.api.Config
@@ -16,7 +16,7 @@ import org.jetbrains.kotlin.psi.KtProperty
  * Detekt rule to enforce hierarchical BLE logging tags.
  *
  * All Kotlin classes in the BLE package that perform logging must define a TAG constant
- * following the pattern: Columba:BLE:K:<Component>
+ * following the pattern: Zamolxis:BLE:K:<Component>
  *
  * Excluded from checking:
  * - Data classes (typically don't log)
@@ -26,20 +26,20 @@ import org.jetbrains.kotlin.psi.KtProperty
  * - Sealed class subtypes (inner classes)
  *
  * This enables consistent log filtering:
- * - `adb logcat | grep "Columba:BLE"` - All BLE logs
- * - `adb logcat | grep "Columba:BLE:K"` - All Kotlin BLE logs
- * - `adb logcat | grep "Columba:BLE:K:Client"` - Specific component
+ * - `adb logcat | grep "Zamolxis:BLE"` - All BLE logs
+ * - `adb logcat | grep "Zamolxis:BLE:K"` - All Kotlin BLE logs
+ * - `adb logcat | grep "Zamolxis:BLE:K:Client"` - Specific component
  */
 class BleLoggingTagRule(config: Config = Config.empty) : Rule(config) {
 
     override val issue = Issue(
         id = "BleLoggingTag",
         severity = Severity.Maintainability,
-        description = "BLE components must use hierarchical logging tags (Columba:BLE:K:<Component>)",
+        description = "BLE components must use hierarchical logging tags (Zamolxis:BLE:K:<Component>)",
         debt = Debt.FIVE_MINS,
     )
 
-    private val tagPattern = Regex("""^Columba:BLE:K:[A-Za-z]+$""")
+    private val tagPattern = Regex("""^Zamolxis:BLE:K:[A-Za-z]+$""")
     private val blePackagePattern = Regex("""com\.lxmf\.messenger\.reticulum\.ble\.""")
 
     override fun visitKtFile(file: KtFile) {
@@ -91,7 +91,7 @@ class BleLoggingTagRule(config: Config = Config.empty) : Rule(config) {
                 CodeSmell(
                     issue = issue,
                     entity = Entity.from(tagProperty),
-                    message = "TAG must follow pattern 'Columba:BLE:K:<Component>' but was: $tagValue",
+                    message = "TAG must follow pattern 'Zamolxis:BLE:K:<Component>' but was: $tagValue",
                 ),
             )
         }

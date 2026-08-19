@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.call.AcceptedCallLifecycle
-import network.columba.app.rns.api.call.CallAttemptDirection
-import network.columba.app.rns.api.call.CallAttemptRequest
+import network.zamolxis.app.rns.api.call.AcceptedCallLifecycle
+import network.zamolxis.app.rns.api.call.CallAttemptDirection
+import network.zamolxis.app.rns.api.call.CallAttemptRequest
 import network.reticulum.common.DestinationDirection
 import network.reticulum.common.DestinationType
 import network.reticulum.destination.Destination
@@ -25,7 +25,7 @@ import tech.torlando.lxst.telephone.Telephone
  * Reduced version of the donor adapter: no transport session IDs, no rejected-link
  * history owners, no Telephone session machinery. Accepted incoming calls are made
  * durable through the shared [AcceptedCallLifecycle] owner BEFORE the ringing callback
- * / UI is exposed. Admission failures (e.g. another Columba attempt still owns
+ * / UI is exposed. Admission failures (e.g. another Zamolxis attempt still owns
  * terminal processing, or a durable insert failure) tear the link down without
  * creating any history or ringing.
  */

@@ -1,12 +1,12 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import network.columba.app.data.repository.CustomThemeRepository
-import network.columba.app.data.repository.ThemeColorSet
+import network.zamolxis.app.data.repository.CustomThemeRepository
+import network.zamolxis.app.data.repository.ThemeColorSet
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,7 +38,7 @@ class ThemeEditorViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var customThemeRepository: CustomThemeRepository
-    private lateinit var settingsRepository: network.columba.app.repository.SettingsRepository
+    private lateinit var settingsRepository: network.zamolxis.app.repository.SettingsRepository
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: ThemeEditorViewModel
 
@@ -82,7 +82,7 @@ class ThemeEditorViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         customThemeRepository = mockk<CustomThemeRepository>()
-        settingsRepository = mockk<network.columba.app.repository.SettingsRepository>()
+        settingsRepository = mockk<network.zamolxis.app.repository.SettingsRepository>()
         savedStateHandle = SavedStateHandle()
 
         // Default stubs for repository methods
@@ -131,7 +131,7 @@ class ThemeEditorViewModelTest {
             // Given
             val themeId = 123L
             val existingTheme =
-                network.columba.app.data.repository.CustomThemeData(
+                network.zamolxis.app.data.repository.CustomThemeData(
                     id = themeId,
                     name = "Ocean Theme",
                     description = "Blue ocean colors",
@@ -284,7 +284,7 @@ class ThemeEditorViewModelTest {
             // Given
             val themeId = 123L
             val existingTheme =
-                network.columba.app.data.repository.CustomThemeData(
+                network.zamolxis.app.data.repository.CustomThemeData(
                     id = themeId,
                     name = "Ocean Theme",
                     description = "Blue ocean colors",
@@ -868,7 +868,7 @@ class ThemeEditorViewModelTest {
 
             val savedThemeId = 42L
             val savedTheme =
-                network.columba.app.data.repository.CustomThemeData(
+                network.zamolxis.app.data.repository.CustomThemeData(
                     id = savedThemeId,
                     name = "Applied Theme",
                     description = "A theme that gets applied",
@@ -890,7 +890,7 @@ class ThemeEditorViewModelTest {
 
             // Data class with complex ColorScheme fields - relaxed mock is appropriate
             @Suppress("NoRelaxedMocks")
-            val mockCustomTheme = mockk<network.columba.app.ui.theme.CustomTheme>(relaxed = true)
+            val mockCustomTheme = mockk<network.zamolxis.app.ui.theme.CustomTheme>(relaxed = true)
             every { settingsRepository.customThemeDataToAppTheme(savedTheme) } returns mockCustomTheme
             coEvery { settingsRepository.saveThemePreference(mockCustomTheme) } just Runs
 
@@ -923,7 +923,7 @@ class ThemeEditorViewModelTest {
             // Given
             val themeId = 123L
             val existingTheme =
-                network.columba.app.data.repository.CustomThemeData(
+                network.zamolxis.app.data.repository.CustomThemeData(
                     id = themeId,
                     name = "Existing Theme",
                     description = "Original description",
@@ -953,7 +953,7 @@ class ThemeEditorViewModelTest {
 
             // Data class with complex ColorScheme fields - relaxed mock is appropriate
             @Suppress("NoRelaxedMocks")
-            val mockCustomTheme = mockk<network.columba.app.ui.theme.CustomTheme>(relaxed = true)
+            val mockCustomTheme = mockk<network.zamolxis.app.ui.theme.CustomTheme>(relaxed = true)
             every { settingsRepository.customThemeDataToAppTheme(updatedTheme) } returns mockCustomTheme
             coEvery { settingsRepository.saveThemePreference(mockCustomTheme) } just Runs
 
@@ -1136,7 +1136,7 @@ class ThemeEditorViewModelTest {
             val seedTertiaryArgb = 0xFF0000FF.toInt() // Blue
 
             val themeWithSeeds =
-                network.columba.app.data.repository.CustomThemeData(
+                network.zamolxis.app.data.repository.CustomThemeData(
                     id = themeId,
                     name = "Seed Test Theme",
                     description = "Tests seed color loading",
@@ -1179,7 +1179,7 @@ class ThemeEditorViewModelTest {
             val originalTertiarySeed = 0xFF0000AA.toInt()
 
             val originalTheme =
-                network.columba.app.data.repository.CustomThemeData(
+                network.zamolxis.app.data.repository.CustomThemeData(
                     id = themeId,
                     name = "Original Theme",
                     description = "Original",

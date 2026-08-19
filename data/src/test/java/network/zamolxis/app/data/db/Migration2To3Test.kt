@@ -1,4 +1,4 @@
-package network.columba.app.data.db
+package network.zamolxis.app.data.db
 
 import android.app.Application
 import android.content.Context
@@ -63,7 +63,7 @@ class Migration2To3Test {
         db.execSQL("INSERT INTO messages VALUES ('outgoing', 'owner', 'outgoing-peer', 1, 999, 'sent')")
         db.execSQL("INSERT INTO messages VALUES ('legacy', 'owner', 'legacy-peer', 0, NULL, 'delivered')")
 
-        ColumbaDatabase.MIGRATION_2_3.migrate(db)
+        ZamolxisDatabase.MIGRATION_2_3.migrate(db)
 
         assertEquals(100L, activityTimestamp("announce-peer"))
         assertEquals(200L, activityTimestamp("message-peer"))
@@ -80,7 +80,7 @@ class Migration2To3Test {
         db.execSQL("INSERT INTO announces VALUES ('future-announce', $future)")
         db.execSQL("INSERT INTO messages VALUES ('future-message', 'owner', 'future-peer', 0, $future, 'delivered')")
 
-        ColumbaDatabase.MIGRATION_2_3.migrate(db)
+        ZamolxisDatabase.MIGRATION_2_3.migrate(db)
 
         assertNull(activityTimestamp("future-announce"))
         assertNull(activityTimestamp("future-peer"))
@@ -92,7 +92,7 @@ class Migration2To3Test {
         db.execSQL("INSERT INTO announces VALUES ('CASE-PEER', 100)")
         db.execSQL("INSERT INTO announces VALUES ('case-peer', 200)")
 
-        ColumbaDatabase.MIGRATION_2_3.migrate(db)
+        ZamolxisDatabase.MIGRATION_2_3.migrate(db)
 
         assertEquals(200L, activityTimestamp("case-peer"))
     }
@@ -103,7 +103,7 @@ class Migration2To3Test {
         db.execSQL("INSERT INTO received_locations VALUES ('loc', 'same-peer', 300)")
         db.execSQL("INSERT INTO messages VALUES ('incoming', 'owner', 'same-peer', 0, 200, 'delivered')")
 
-        ColumbaDatabase.MIGRATION_2_3.migrate(db)
+        ZamolxisDatabase.MIGRATION_2_3.migrate(db)
 
         assertEquals(200L, activityTimestamp("same-peer"))
         db.query("SELECT activityType FROM peer_activity WHERE destinationHash = 'same-peer'").use {

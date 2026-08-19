@@ -1,4 +1,4 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider

@@ -74,6 +74,6 @@ verification: |
   The fix correctly addresses the root cause by checking intent resolution before launching.
 
 files_changed:
-- app/src/main/java/network.columba.app/util/BatteryOptimizationManager.kt
-- app/src/main/java/network.columba.app/ui/screens/settings/cards/BatteryOptimizationCard.kt
-- app/src/main/java/network.columba.app/ui/screens/onboarding/OnboardingPagerScreen.kt
+- app/src/main/java/network.zamolxis.app/util/BatteryOptimizationManager.kt
+- app/src/main/java/network.zamolxis.app/ui/screens/settings/cards/BatteryOptimizationCard.kt
+- app/src/main/java/network.zamolxis.app/ui/screens/onboarding/OnboardingPagerScreen.kt

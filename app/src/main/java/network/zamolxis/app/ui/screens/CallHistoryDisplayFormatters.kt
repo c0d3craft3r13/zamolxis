@@ -1,9 +1,9 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import network.columba.app.R
-import network.columba.app.ui.model.CodecProfile
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.model.CodecProfile
 
 @Composable
 internal fun localizedCodecProfileLabel(profileCode: Int?): String {

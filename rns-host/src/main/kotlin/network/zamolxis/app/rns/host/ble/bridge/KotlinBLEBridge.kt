@@ -1,8 +1,8 @@
-package network.columba.app.rns.host.ble.bridge
+package network.zamolxis.app.rns.host.ble.bridge
 
 import com.chaquo.python.PyObject
-import network.columba.app.rns.api.annotation.ReflectivelyKept
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
+import network.zamolxis.app.rns.api.util.toHex
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -11,15 +11,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
-import network.columba.app.rns.host.ble.client.BleGattClient
-import network.columba.app.rns.host.ble.client.BleScanner
-import network.columba.app.rns.host.ble.model.BleConstants
-import network.columba.app.rns.host.ble.model.BleDevice
-import network.columba.app.rns.host.ble.model.BlePowerPreset
-import network.columba.app.rns.host.ble.model.BlePowerSettings
-import network.columba.app.rns.host.ble.server.BleAdvertiser
-import network.columba.app.rns.host.ble.server.BleGattServer
-import network.columba.app.rns.host.ble.util.BleOperationQueue
+import network.zamolxis.app.rns.host.ble.client.BleGattClient
+import network.zamolxis.app.rns.host.ble.client.BleScanner
+import network.zamolxis.app.rns.host.ble.model.BleConstants
+import network.zamolxis.app.rns.host.ble.model.BleDevice
+import network.zamolxis.app.rns.host.ble.model.BlePowerPreset
+import network.zamolxis.app.rns.host.ble.model.BlePowerSettings
+import network.zamolxis.app.rns.host.ble.server.BleAdvertiser
+import network.zamolxis.app.rns.host.ble.server.BleGattServer
+import network.zamolxis.app.rns.host.ble.util.BleOperationQueue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -88,9 +88,9 @@ internal fun preferredBleRole(
 class KotlinBLEBridge(
     private val context: Context,
     private val bluetoothManager: BluetoothManager,
-) : network.columba.app.rns.api.BleConnectionSource {
+) : network.zamolxis.app.rns.api.BleConnectionSource {
     companion object {
-        private const val TAG = "Columba:BLE:K:Bridge"
+        private const val TAG = "Zamolxis:BLE:K:Bridge"
         private const val MAX_BLE_PACKET_SIZE = 512 // Maximum BLE packet size in bytes for validation
 
         @Volatile
@@ -253,7 +253,7 @@ class KotlinBLEBridge(
     private var dualConnectionRaceCount: Long = 0
 
     // Native connection change listeners (for IPC callbacks)
-    private val connectionChangeListeners = mutableListOf<network.columba.app.rns.api.BleConnectionsListener>()
+    private val connectionChangeListeners = mutableListOf<network.zamolxis.app.rns.api.BleConnectionsListener>()
     private val listenerLock = Any()
 
     // ===== BleConnectionSource (rns-api seam) =====
@@ -268,7 +268,7 @@ class KotlinBLEBridge(
     /**
      * Register a connections listener. Thread-safe: synchronized on listenerLock.
      */
-    override fun addBleConnectionsListener(listener: network.columba.app.rns.api.BleConnectionsListener) {
+    override fun addBleConnectionsListener(listener: network.zamolxis.app.rns.api.BleConnectionsListener) {
         synchronized(listenerLock) {
             connectionChangeListeners.add(listener)
             Log.d(TAG, "BLE connections listener added (total: ${connectionChangeListeners.size})")
@@ -278,7 +278,7 @@ class KotlinBLEBridge(
     /**
      * Unregister a connections listener. Thread-safe: synchronized on listenerLock.
      */
-    override fun removeBleConnectionsListener(listener: network.columba.app.rns.api.BleConnectionsListener) {
+    override fun removeBleConnectionsListener(listener: network.zamolxis.app.rns.api.BleConnectionsListener) {
         synchronized(listenerLock) {
             connectionChangeListeners.remove(listener)
             Log.d(TAG, "BLE connections listener removed (total: ${connectionChangeListeners.size})")

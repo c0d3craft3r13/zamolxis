@@ -1,11 +1,11 @@
-package network.columba.app.data.db
+package network.zamolxis.app.data.db
 
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -18,7 +18,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class Migration4To5Test {
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
 
     companion object {
         private const val DB_NAME = "call-history-migration-test"
@@ -30,8 +30,8 @@ class Migration4To5Test {
         val context = ApplicationProvider.getApplicationContext<Context>()
         // Build at version 4 (no call-history tables)
         database =
-            Room.databaseBuilder(context, ColumbaDatabase::class.java, DB_NAME)
-                .addMigrations(ColumbaDatabase.MIGRATION_4_5)
+            Room.databaseBuilder(context, ZamolxisDatabase::class.java, DB_NAME)
+                .addMigrations(ZamolxisDatabase.MIGRATION_4_5)
                 .build()
         context.deleteDatabase(DB_NAME)
     }
@@ -46,8 +46,8 @@ class Migration4To5Test {
         val context = ApplicationProvider.getApplicationContext<Context>()
         // Pre-create a v4 database with an identity row via the v4 schema path
         val pre =
-            Room.databaseBuilder(context, ColumbaDatabase::class.java, DB_NAME)
-                .addMigrations(ColumbaDatabase.MIGRATION_1_2, ColumbaDatabase.MIGRATION_2_3, ColumbaDatabase.MIGRATION_3_4)
+            Room.databaseBuilder(context, ZamolxisDatabase::class.java, DB_NAME)
+                .addMigrations(ZamolxisDatabase.MIGRATION_1_2, ZamolxisDatabase.MIGRATION_2_3, ZamolxisDatabase.MIGRATION_3_4)
                 .build()
         pre.localIdentityDao().insert(
             LocalIdentityEntity(
@@ -64,12 +64,12 @@ class Migration4To5Test {
         pre.close()
 
         database =
-            Room.databaseBuilder(context, ColumbaDatabase::class.java, DB_NAME)
+            Room.databaseBuilder(context, ZamolxisDatabase::class.java, DB_NAME)
                 .addMigrations(
-                    ColumbaDatabase.MIGRATION_1_2,
-                    ColumbaDatabase.MIGRATION_2_3,
-                    ColumbaDatabase.MIGRATION_3_4,
-                    ColumbaDatabase.MIGRATION_4_5,
+                    ZamolxisDatabase.MIGRATION_1_2,
+                    ZamolxisDatabase.MIGRATION_2_3,
+                    ZamolxisDatabase.MIGRATION_3_4,
+                    ZamolxisDatabase.MIGRATION_4_5,
                 )
                 .build()
 

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ipc
+package network.zamolxis.app.rns.host.ipc
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.api.model.NomadnetPageResult
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.api.model.NomadnetPageResult
 
 /**
  * UI-side proxy that delegates every [RnsNomadnet] member to the currently-

@@ -1,4 +1,4 @@
-package network.columba.app.screenshot
+package network.zamolxis.app.screenshot
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

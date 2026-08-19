@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.Manifest
 import android.app.Application
@@ -10,9 +10,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.R
-import network.columba.app.service.ApkSharingServer
-import network.columba.app.service.LocalHotspotManager
+import network.zamolxis.app.R
+import network.zamolxis.app.service.ApkSharingServer
+import network.zamolxis.app.service.LocalHotspotManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,7 +78,7 @@ class ApkSharingViewModel
         companion object {
             private const val TAG = "ApkSharingViewModel"
             private const val APK_CACHE_DIR = "apk_share"
-            private val APK_FILE_NAME = "columba-${network.columba.app.BuildConfig.VERSION_NAME}.apk"
+            private val APK_FILE_NAME = "zamolxis-${network.zamolxis.app.BuildConfig.VERSION_NAME}.apk"
         }
 
         private val _state = MutableStateFlow(ApkSharingState())

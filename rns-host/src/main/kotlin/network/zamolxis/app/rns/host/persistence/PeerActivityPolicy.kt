@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 /** Protocol-level qualification rules for durable peer activity. */
 internal object PeerActivityPolicy {

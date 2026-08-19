@@ -1,7 +1,7 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
-import network.columba.app.data.db.dao.OfflineMapRegionDao
-import network.columba.app.data.db.entity.OfflineMapRegionEntity
+import network.zamolxis.app.data.db.dao.OfflineMapRegionDao
+import network.zamolxis.app.data.db.entity.OfflineMapRegionEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.Manifest
 import android.content.Context
@@ -182,7 +182,7 @@ object LocationPermissionManager {
      */
     fun getPermissionRationale(): String {
         return buildString {
-            appendLine("Columba needs location access to:")
+            appendLine("Zamolxis needs location access to:")
             appendLine()
             appendLine("Share your location with chosen contacts")
             appendLine("Help friends find you at events")
@@ -191,12 +191,12 @@ object LocationPermissionManager {
             appendLine(
                 "You control who can see your location and for how long. " +
                     "Location data is only shared peer-to-peer with contacts you choose. " +
-                    "Location data, like all data on Columba, is encrypted end to end, " +
+                    "Location data, like all data on Zamolxis, is encrypted end to end, " +
                     "never stored on a central server, and is only readable by the contacts you send it to.",
             )
             appendLine()
             appendLine(
-                "Columba will not and can not share your location with anyone until you actively " +
+                "Zamolxis will not and can not share your location with anyone until you actively " +
                     "send it to someone. Your location is always encrypted safely over Reticulum.",
             )
         }
@@ -210,7 +210,7 @@ object LocationPermissionManager {
     fun getPreciseLocationRationale(): String {
         return buildString {
             appendLine(
-                "Location sharing is set to Precise, but Columba doesn't have precise " +
+                "Location sharing is set to Precise, but Zamolxis doesn't have precise " +
                     "location access.",
             )
             appendLine()

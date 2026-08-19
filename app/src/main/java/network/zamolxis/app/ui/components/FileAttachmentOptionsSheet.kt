@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -24,7 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import network.columba.app.R
+import network.zamolxis.app.R
 
 /**
  * Bottom sheet that shows options for a received file attachment.
@@ -89,8 +89,8 @@ fun FileAttachmentOptionsSheet(
 
             // Open with option
             ListItem(
-                headlineContent = { Text("Open with...") },
-                supportingContent = { Text("Open in another app") },
+                headlineContent = { Text(stringResource(R.string.fileopt_open_with)) },
+                supportingContent = { Text(stringResource(R.string.fileopt_open_with_sub)) },
                 leadingContent = {
                     Icon(
                         Icons.Default.OpenInNew,
@@ -103,8 +103,8 @@ fun FileAttachmentOptionsSheet(
 
             // Save to device option
             ListItem(
-                headlineContent = { Text("Save to device") },
-                supportingContent = { Text("Save to a folder on your device") },
+                headlineContent = { Text(stringResource(R.string.imgopt_save)) },
+                supportingContent = { Text(stringResource(R.string.imgopt_save_sub)) },
                 leadingContent = {
                     Icon(
                         Icons.Default.Save,

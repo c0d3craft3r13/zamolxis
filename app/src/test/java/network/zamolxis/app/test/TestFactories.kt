@@ -1,13 +1,13 @@
-package network.columba.app.test
+package network.zamolxis.app.test
 
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.model.EnrichedContact
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.data.repository.Announce
-import network.columba.app.data.repository.Conversation
-import network.columba.app.service.RelayInfo
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.repository.Announce
+import network.zamolxis.app.data.repository.Conversation
+import network.zamolxis.app.service.RelayInfo
 
 /**
  * Factory functions for creating test objects with sensible defaults.

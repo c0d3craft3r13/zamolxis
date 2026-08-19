@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -18,14 +18,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.theme.ColumbaTheme
-import network.columba.app.util.FileAttachment
-import network.columba.app.util.FileUtils
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.theme.ZamolxisTheme
+import network.zamolxis.app.util.FileAttachment
+import network.zamolxis.app.util.FileUtils
 
 /**
  * Displays a horizontal scrolling row of pending file attachments before sending.
@@ -142,7 +144,7 @@ private fun FileAttachmentChip(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Remove ${attachment.filename}",
+                    contentDescription = stringResource(R.string.shareloc_cd_remove, attachment.filename),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
@@ -166,7 +168,7 @@ private fun TotalSizeIndicator(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Text(
-            text = "Total: ${FileUtils.formatFileSize(totalSizeBytes)}",
+            text = stringResource(R.string.fileattach_total, FileUtils.formatFileSize(totalSizeBytes)),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -180,7 +182,7 @@ private fun TotalSizeIndicator(
 @Preview(showBackground = true)
 @Composable
 private fun FileAttachmentPreviewRowPreview() {
-    ColumbaTheme {
+    ZamolxisTheme {
         // 50 KB
         val size50KB = 50 * 1024
         // 10 KB
@@ -232,7 +234,7 @@ private fun FileAttachmentPreviewRowPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun FileAttachmentChipPreview() {
-    ColumbaTheme {
+    ZamolxisTheme {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),

@@ -1,17 +1,17 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import network.columba.app.data.model.ConnectionType
-import network.columba.app.test.BleTestFixtures
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.waitForNodeWithTag
-import network.columba.app.test.waitForNodeWithText
-import network.columba.app.test.waitForTextCount
-import network.columba.app.viewmodel.BleConnectionsUiState
-import network.columba.app.viewmodel.BleConnectionsViewModel
+import network.zamolxis.app.data.model.ConnectionType
+import network.zamolxis.app.test.BleTestFixtures
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.waitForNodeWithTag
+import network.zamolxis.app.test.waitForNodeWithText
+import network.zamolxis.app.test.waitForTextCount
+import network.zamolxis.app.viewmodel.BleConnectionsUiState
+import network.zamolxis.app.viewmodel.BleConnectionsViewModel
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertTrue

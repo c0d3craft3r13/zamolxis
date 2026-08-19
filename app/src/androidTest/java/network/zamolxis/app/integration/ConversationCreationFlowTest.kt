@@ -1,15 +1,15 @@
-package network.columba.app.integration
+package network.zamolxis.app.integration
 
 import android.content.Context
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.storage.AttachmentStorageManager
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.storage.AttachmentStorageManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -37,7 +37,7 @@ import kotlin.time.Duration.Companion.seconds
 @RunWith(AndroidJUnit4::class)
 class ConversationCreationFlowTest {
     private lateinit var context: Context
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var repository: ConversationRepository
 
     companion object {
@@ -55,7 +55,7 @@ class ConversationCreationFlowTest {
         // Create in-memory database
         database =
             Room
-                .inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+                .inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
 
@@ -109,7 +109,7 @@ class ConversationCreationFlowTest {
 
             // Act: Receive message from unknown peer
             val message =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_unknown_peer_123456789012345",
                     destinationHash = TEST_PEER_HASH_1,
                     content = "Hello from stranger!",
@@ -142,7 +142,7 @@ class ConversationCreationFlowTest {
 
             // Create 3 conversations with messages at different times
             val message1 =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_order_test_1_12345678901234",
                     destinationHash = TEST_PEER_HASH_1,
                     content = "First message",
@@ -153,7 +153,7 @@ class ConversationCreationFlowTest {
             repository.saveMessage(TEST_PEER_HASH_1, "Peer One", message1, null)
 
             val message2 =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_order_test_2_12345678901234",
                     destinationHash = TEST_PEER_HASH_2,
                     content = "Second message",
@@ -164,7 +164,7 @@ class ConversationCreationFlowTest {
             repository.saveMessage(TEST_PEER_HASH_2, "Peer Two", message2, null)
 
             val message3 =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_order_test_3_12345678901234",
                     destinationHash = TEST_PEER_HASH_3,
                     content = "Third message",
@@ -202,7 +202,7 @@ class ConversationCreationFlowTest {
             val baseTime = System.currentTimeMillis()
 
             val oldMessage =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_reorder_old_123456789012345",
                     destinationHash = TEST_PEER_HASH_1,
                     content = "Older conversation",
@@ -213,7 +213,7 @@ class ConversationCreationFlowTest {
             repository.saveMessage(TEST_PEER_HASH_1, "Old Peer", oldMessage, null)
 
             val newMessage =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_reorder_new_123456789012345",
                     destinationHash = TEST_PEER_HASH_2,
                     content = "Newer conversation",
@@ -225,7 +225,7 @@ class ConversationCreationFlowTest {
 
             // Act: Send message to older conversation
             val reply =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_reorder_reply_12345678901234",
                     destinationHash = TEST_PEER_HASH_1,
                     content = "My reply",
@@ -258,7 +258,7 @@ class ConversationCreationFlowTest {
             // Create messages in two conversations
             repeat(3) { i ->
                 val message =
-                    network.columba.app.data.repository.Message(
+                    network.zamolxis.app.data.repository.Message(
                         id = "msg_unread_peer1_$i",
                         destinationHash = TEST_PEER_HASH_1,
                         content = "Message $i from peer 1",
@@ -271,7 +271,7 @@ class ConversationCreationFlowTest {
 
             repeat(5) { i ->
                 val message =
-                    network.columba.app.data.repository.Message(
+                    network.zamolxis.app.data.repository.Message(
                         id = "msg_unread_peer2_$i",
                         destinationHash = TEST_PEER_HASH_2,
                         content = "Message $i from peer 2",
@@ -326,7 +326,7 @@ class ConversationCreationFlowTest {
 
             // Act: Receive message from this peer
             val message =
-                network.columba.app.data.repository.Message(
+                network.zamolxis.app.data.repository.Message(
                     id = "msg_contact_nickname_1234567890123",
                     destinationHash = TEST_PEER_HASH_1,
                     content = "Hey friend!",
@@ -370,7 +370,7 @@ class ConversationCreationFlowTest {
                 // Create a conversation
                 withContext(Dispatchers.IO) {
                     val message =
-                        network.columba.app.data.repository.Message(
+                        network.zamolxis.app.data.repository.Message(
                             id = "msg_delete_flow_1234567890123456",
                             destinationHash = TEST_PEER_HASH_1,
                             content = "To be deleted",

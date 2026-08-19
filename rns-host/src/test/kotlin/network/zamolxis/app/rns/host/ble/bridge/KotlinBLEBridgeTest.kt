@@ -1,13 +1,13 @@
 // Context, BluetoothManager, BluetoothAdapter, PyObject are framework classes with many methods
 @file:Suppress("NoRelaxedMocks")
 
-package network.columba.app.rns.host.ble.bridge
+package network.zamolxis.app.rns.host.ble.bridge
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
-import network.columba.app.rns.host.ble.client.BleScanner
-import network.columba.app.rns.host.ble.model.BleDevice
+import network.zamolxis.app.rns.host.ble.client.BleScanner
+import network.zamolxis.app.rns.host.ble.model.BleDevice
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -543,11 +543,11 @@ class KotlinBLEBridgeTest {
         // Get the PeerConnection inner class
         val peerConnectionClass =
             Class.forName(
-                "network.columba.app.rns.host.ble.bridge.KotlinBLEBridge\$PeerConnection",
+                "network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge\$PeerConnection",
             )
         val deduplicationStateClass =
             Class.forName(
-                "network.columba.app.rns.host.ble.bridge.KotlinBLEBridge\$DeduplicationState",
+                "network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge\$DeduplicationState",
             )
 
         // Create instance using constructor
@@ -669,7 +669,7 @@ class KotlinBLEBridgeTest {
             // Access PendingConnection class
             val pendingConnectionClass =
                 Class.forName(
-                    "network.columba.app.rns.host.ble.bridge.KotlinBLEBridge\$PendingConnection",
+                    "network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge\$PendingConnection",
                 )
 
             // Create pending connection with ORIGINAL state (central only)
@@ -898,7 +898,7 @@ class KotlinBLEBridgeTest {
             // Given
             val bridge = createBridgeWithMockScanner()
             val listener =
-                object : network.columba.app.rns.api.BleConnectionsListener {
+                object : network.zamolxis.app.rns.api.BleConnectionsListener {
                     override fun onBleConnectionsChanged(connectionDetailsJson: String) {
                         // No-op for this test
                     }
@@ -911,7 +911,7 @@ class KotlinBLEBridgeTest {
             val listenersField = KotlinBLEBridge::class.java.getDeclaredField("connectionChangeListeners")
             listenersField.isAccessible = true
             @Suppress("UNCHECKED_CAST")
-            val listeners = listenersField.get(bridge) as MutableList<network.columba.app.rns.api.BleConnectionsListener>
+            val listeners = listenersField.get(bridge) as MutableList<network.zamolxis.app.rns.api.BleConnectionsListener>
             assertEquals(1, listeners.size)
         }
 
@@ -921,7 +921,7 @@ class KotlinBLEBridgeTest {
             // Given
             val bridge = createBridgeWithMockScanner()
             val listener =
-                object : network.columba.app.rns.api.BleConnectionsListener {
+                object : network.zamolxis.app.rns.api.BleConnectionsListener {
                     override fun onBleConnectionsChanged(connectionDetailsJson: String) {
                         // No-op
                     }
@@ -935,7 +935,7 @@ class KotlinBLEBridgeTest {
             val listenersField = KotlinBLEBridge::class.java.getDeclaredField("connectionChangeListeners")
             listenersField.isAccessible = true
             @Suppress("UNCHECKED_CAST")
-            val listeners = listenersField.get(bridge) as MutableList<network.columba.app.rns.api.BleConnectionsListener>
+            val listeners = listenersField.get(bridge) as MutableList<network.zamolxis.app.rns.api.BleConnectionsListener>
             assertEquals(0, listeners.size)
         }
 
@@ -947,13 +947,13 @@ class KotlinBLEBridgeTest {
             val receivedJson = mutableListOf<String>()
 
             val listener1 =
-                object : network.columba.app.rns.api.BleConnectionsListener {
+                object : network.zamolxis.app.rns.api.BleConnectionsListener {
                     override fun onBleConnectionsChanged(connectionDetailsJson: String) {
                         receivedJson.add("L1:$connectionDetailsJson")
                     }
                 }
             val listener2 =
-                object : network.columba.app.rns.api.BleConnectionsListener {
+                object : network.zamolxis.app.rns.api.BleConnectionsListener {
                     override fun onBleConnectionsChanged(connectionDetailsJson: String) {
                         receivedJson.add("L2:$connectionDetailsJson")
                     }

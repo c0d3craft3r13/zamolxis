@@ -5,11 +5,11 @@
 ## Directory Layout
 
 ```
-columba/
+zamolxis/
 ├── app/                              # Main UI application module (Android app)
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/network.columba.app/
+│   │   │   ├── java/network.zamolxis.app/
 │   │   │   │   ├── ui/                       # Compose screens, components, themes
 │   │   │   │   ├── viewmodel/                # MVVM state holders
 │   │   │   │   ├── service/                  # Background service & managers
@@ -23,7 +23,7 @@ columba/
 │   │   │   │   ├── crypto/                   # Cryptographic utilities
 │   │   │   │   ├── map/                      # Map feature logic
 │   │   │   │   ├── MainActivity.kt           # Main entry point
-│   │   │   │   └── ColumbaApplication.kt     # Application initialization
+│   │   │   │   └── ZamolxisApplication.kt     # Application initialization
 │   │   │   ├── res/                          # Resources (drawables, strings, XML)
 │   │   │   ├── aidl/                         # AIDL service interface definitions
 │   │   │   └── AndroidManifest.xml           # App manifest
@@ -34,9 +34,9 @@ columba/
 ├── data/                             # Data layer library module
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/network.columba.app/data/
+│   │   │   ├── java/network.zamolxis.app/data/
 │   │   │   │   ├── db/                       # Room database schema
-│   │   │   │   │   ├── ColumbaDatabase.kt
+│   │   │   │   │   ├── ZamolxisDatabase.kt
 │   │   │   │   │   ├── dao/                  # Data Access Objects
 │   │   │   │   │   └── entity/               # Room entity definitions
 │   │   │   │   ├── repository/               # Data repository implementations
@@ -49,7 +49,7 @@ columba/
 ├── reticulum/                        # Reticulum library module (networking)
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/network.columba.app/reticulum/
+│   │   │   ├── java/network.zamolxis.app/reticulum/
 │   │   │   │   ├── protocol/                 # Protocol abstraction & implementations
 │   │   │   │   ├── model/                    # Domain models (Identity, Destination, etc.)
 │   │   │   │   ├── ble/                      # Bluetooth Low Energy bridge
@@ -68,7 +68,7 @@ columba/
 ├── detekt-rules/                     # Custom Detekt linting rules
 │   ├── src/
 │   │   └── main/kotlin/
-│   │       └── network.columba.app/detekt/
+│   │       └── network.zamolxis.app/detekt/
 │   └── build.gradle.kts
 │
 ├── gradle/                           # Gradle wrapper scripts
@@ -86,12 +86,12 @@ columba/
 **app/**
 - Purpose: Main application UI and orchestration
 - Contains: Kotlin Android code (Activities, ViewModels, Composables), Resources, Manifests
-- Key files: `MainActivity.kt`, `ColumbaApplication.kt`, `AndroidManifest.xml`
+- Key files: `MainActivity.kt`, `ZamolxisApplication.kt`, `AndroidManifest.xml`
 
 **data/**
 - Purpose: Data layer abstraction and persistence
 - Contains: Room database, DAOs, repositories, data models, configuration storage
-- Key files: `ColumbaDatabase.kt`, entity classes, repository implementations
+- Key files: `ZamolxisDatabase.kt`, entity classes, repository implementations
 
 **reticulum/**
 - Purpose: Network protocol implementation and radio device integration
@@ -106,9 +106,9 @@ columba/
 ## Key File Locations
 
 **Entry Points:**
-- `app/src/main/java/network.columba.app/MainActivity.kt`: Main activity launcher
-- `app/src/main/java/network.columba.app/ColumbaApplication.kt`: Application initialization
-- `app/src/main/java/network.columba.app/service/ReticulumService.kt`: Background service
+- `app/src/main/java/network.zamolxis.app/MainActivity.kt`: Main activity launcher
+- `app/src/main/java/network.zamolxis.app/ZamolxisApplication.kt`: Application initialization
+- `app/src/main/java/network.zamolxis.app/service/ReticulumService.kt`: Background service
 
 **Configuration:**
 - `app/src/main/AndroidManifest.xml`: Permissions, intent filters, service definitions
@@ -117,16 +117,16 @@ columba/
 - `detekt-config.yml`: Code quality rules (advisory, not enforced)
 
 **Core Logic:**
-- `data/src/main/java/network.columba.app/data/db/ColumbaDatabase.kt`: Database schema
-- `app/src/main/java/network.columba.app/repository/`: Repository layer (conversations, identities, settings)
-- `app/src/main/java/network.columba.app/service/manager/`: Service managers (messaging, health, BLE)
-- `reticulum/src/main/java/network.columba.app/reticulum/protocol/ReticulumProtocol.kt`: Protocol contract
+- `data/src/main/java/network.zamolxis.app/data/db/ZamolxisDatabase.kt`: Database schema
+- `app/src/main/java/network.zamolxis.app/repository/`: Repository layer (conversations, identities, settings)
+- `app/src/main/java/network.zamolxis.app/service/manager/`: Service managers (messaging, health, BLE)
+- `reticulum/src/main/java/network.zamolxis.app/reticulum/protocol/ReticulumProtocol.kt`: Protocol contract
 
 **Testing:**
 - `app/src/test/`: Unit tests (JVM, mocked Android, no device needed)
 - `app/src/androidTest/`: Instrumented tests (require device/emulator)
-- `app/src/test/java/network.columba.app/test/`: Test fixtures and helpers
-- Test fixture location: `app/src/test/java/network.columba.app/test/` (e.g., `BleTestFixtures.kt`)
+- `app/src/test/java/network.zamolxis.app/test/`: Test fixtures and helpers
+- Test fixture location: `app/src/test/java/network.zamolxis.app/test/` (e.g., `BleTestFixtures.kt`)
 
 ## Naming Conventions
 
@@ -144,41 +144,41 @@ columba/
 - Test fixtures: `*TestFixtures.kt` or `*Fixtures.kt` (e.g., `BleTestFixtures.kt`)
 
 **Directories:**
-- Package structure mirrors domain: `network.columba.app.[feature]`
+- Package structure mirrors domain: `network.zamolxis.app.[feature]`
 - Feature-specific packages group related code (e.g., `ui.screens.rnode`, `service.manager`)
-- Test directories mirror source structure: `app/src/test/java/network.columba.app/[mirror-of-main]`
+- Test directories mirror source structure: `app/src/test/java/network.zamolxis.app/[mirror-of-main]`
 
 ## Where to Add New Code
 
 **New Feature (UI + Logic):**
-- Primary code: `app/src/main/java/network.columba.app/ui/screens/[feature]/` for screens
-- ViewModel: `app/src/main/java/network.columba.app/viewmodel/[Feature]ViewModel.kt`
-- Repository: `data/src/main/java/network.columba.app/data/repository/[Feature]Repository.kt`
+- Primary code: `app/src/main/java/network.zamolxis.app/ui/screens/[feature]/` for screens
+- ViewModel: `app/src/main/java/network.zamolxis.app/viewmodel/[Feature]ViewModel.kt`
+- Repository: `data/src/main/java/network.zamolxis.app/data/repository/[Feature]Repository.kt`
 - Tests: Mirror structure under `app/src/test/java/` and `app/src/androidTest/java/`
 
 **New Network Protocol Feature:**
-- Implementation: `reticulum/src/main/java/network.columba.app/reticulum/[feature]/`
-- Models: `reticulum/src/main/java/network.columba.app/reticulum/model/[Model].kt`
-- Tests: `reticulum/src/test/java/network.columba.app/reticulum/[feature]/`
+- Implementation: `reticulum/src/main/java/network.zamolxis.app/reticulum/[feature]/`
+- Models: `reticulum/src/main/java/network.zamolxis.app/reticulum/model/[Model].kt`
+- Tests: `reticulum/src/test/java/network.zamolxis.app/reticulum/[feature]/`
 
 **New Component/Composable:**
-- Implementation: `app/src/main/java/network.columba.app/ui/components/[ComponentName].kt`
-- Models: `app/src/main/java/network.columba.app/ui/model/[ComponentModel].kt`
+- Implementation: `app/src/main/java/network.zamolxis.app/ui/components/[ComponentName].kt`
+- Models: `app/src/main/java/network.zamolxis.app/ui/model/[ComponentModel].kt`
 
 **Utilities:**
-- Shared helpers: `app/src/main/java/network.columba.app/util/`
-- Validation logic: `app/src/main/java/network.columba.app/util/validation/`
-- Reticulum utilities: `reticulum/src/main/java/network.columba.app/reticulum/util/`
+- Shared helpers: `app/src/main/java/network.zamolxis.app/util/`
+- Validation logic: `app/src/main/java/network.zamolxis.app/util/validation/`
+- Reticulum utilities: `reticulum/src/main/java/network.zamolxis.app/reticulum/util/`
 
 **Database Changes:**
-- Entity: Add to `data/src/main/java/network.columba.app/data/db/entity/[EntityName].kt`
-- DAO: Add to `data/src/main/java/network.columba.app/data/db/dao/[EntityName]Dao.kt`
-- Migration: Add `MIGRATION_X_Y` in `data/src/main/java/network.columba.app/data/di/DatabaseModule.kt`
-- Update: `ColumbaDatabase.version++`, add new entity to @Database annotation
+- Entity: Add to `data/src/main/java/network.zamolxis.app/data/db/entity/[EntityName].kt`
+- DAO: Add to `data/src/main/java/network.zamolxis.app/data/db/dao/[EntityName]Dao.kt`
+- Migration: Add `MIGRATION_X_Y` in `data/src/main/java/network.zamolxis.app/data/di/DatabaseModule.kt`
+- Update: `ZamolxisDatabase.version++`, add new entity to @Database annotation
 
 **Service Managers (Background Process):**
-- Manager: `app/src/main/java/network.columba.app/service/manager/[Feature]Manager.kt`
-- Register: Add to `ServiceModule.createManagers()` in `app/src/main/java/network.columba.app/service/di/ServiceModule.kt`
+- Manager: `app/src/main/java/network.zamolxis.app/service/manager/[Feature]Manager.kt`
+- Register: Add to `ServiceModule.createManagers()` in `app/src/main/java/network.zamolxis.app/service/di/ServiceModule.kt`
 
 ## Special Directories
 

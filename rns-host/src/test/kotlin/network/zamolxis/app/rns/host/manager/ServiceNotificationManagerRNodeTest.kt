@@ -1,10 +1,10 @@
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
-import network.columba.app.rns.api.model.PropagationState
-import network.columba.app.rns.host.state.ServiceState
+import network.zamolxis.app.rns.api.model.PropagationState
+import network.zamolxis.app.rns.host.state.ServiceState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.flasher.steps
+package network.zamolxis.app.ui.screens.flasher.steps
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,9 +29,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.rns.host.usb.UsbDeviceInfo
+import network.zamolxis.app.R
+import network.zamolxis.app.rns.host.usb.UsbDeviceInfo
 
 /**
  * Step 1: Device Selection
@@ -64,12 +66,12 @@ fun DeviceSelectionStep(
         ) {
             Column {
                 Text(
-                    text = "Select USB Device",
+                    text = stringResource(R.string.flasher_select_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Connect your RNode device via USB",
+                    text = stringResource(R.string.flasher_select_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -87,7 +89,7 @@ fun DeviceSelectionStep(
                 } else {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh devices",
+                        contentDescription = stringResource(R.string.flasher_refresh_cd),
                     )
                 }
             }
@@ -141,7 +143,7 @@ fun DeviceSelectionStep(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Waiting for USB permission...",
+                        text = stringResource(R.string.flasher_waiting_usb),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -212,7 +214,7 @@ private fun DeviceCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = device.productName ?: "Unknown Device",
+                    text = device.productName ?: stringResource(R.string.flasher_unknown_device),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     color =
@@ -223,7 +225,12 @@ private fun DeviceCard(
                         },
                 )
                 Text(
-                    text = "VID: ${formatHex(device.vendorId)} | PID: ${formatHex(device.productId)}",
+                    text =
+                        stringResource(
+                            R.string.flasher_vid_pid,
+                            formatHex(device.vendorId),
+                            formatHex(device.productId),
+                        ),
                     style = MaterialTheme.typography.bodySmall,
                     color =
                         if (isSelected) {
@@ -249,7 +256,7 @@ private fun DeviceCard(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.common_selected),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             }
@@ -274,12 +281,12 @@ private fun EmptyDeviceState(modifier: Modifier = Modifier) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "No USB devices found",
+                text = stringResource(R.string.flasher_no_devices),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "Connect an RNode device via USB and tap refresh",
+                text = stringResource(R.string.flasher_no_devices_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

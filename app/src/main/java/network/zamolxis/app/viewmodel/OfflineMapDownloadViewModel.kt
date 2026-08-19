@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.location.Address
@@ -8,14 +8,14 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.repository.OfflineMapRegion
-import network.columba.app.data.repository.OfflineMapRegionRepository
-import network.columba.app.di.IoDispatcher
-import network.columba.app.map.MapLibreOfflineManager
-import network.columba.app.map.MapTileSourceManager
-import network.columba.app.map.OfflineStyleInliner
-import network.columba.app.map.TileDownloadManager
-import network.columba.app.repository.SettingsRepository
+import network.zamolxis.app.data.repository.OfflineMapRegion
+import network.zamolxis.app.data.repository.OfflineMapRegionRepository
+import network.zamolxis.app.di.IoDispatcher
+import network.zamolxis.app.map.MapLibreOfflineManager
+import network.zamolxis.app.map.MapTileSourceManager
+import network.zamolxis.app.map.OfflineStyleInliner
+import network.zamolxis.app.map.TileDownloadManager
+import network.zamolxis.app.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher

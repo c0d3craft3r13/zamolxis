@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
@@ -6,10 +6,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.repository.CustomThemeRepository
-import network.columba.app.data.repository.ThemeColorSet
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.util.ThemeColorGenerator
+import network.zamolxis.app.data.repository.CustomThemeRepository
+import network.zamolxis.app.data.repository.ThemeColorSet
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.util.ThemeColorGenerator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

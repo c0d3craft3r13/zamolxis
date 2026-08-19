@@ -10,7 +10,7 @@ Bridges Python to KotlinBLEBridge via Chaquopy for native Android BLE access.
 This enables Reticulum BLE networking on Android by providing the same driver
 interface as the Linux implementation, but using Android's native BLE stack.
 
-Author: Columba Project
+Author: Zamolxis Project
 License: MIT
 """
 
@@ -22,7 +22,7 @@ import threading
 from typing import List, Optional, Callable, Union
 
 # Hierarchical log tag for consistent filtering (matches Kotlin BLE components)
-LOG_TAG = "Columba:BLE:Py:Driver"
+LOG_TAG = "Zamolxis:BLE:Py:Driver"
 
 
 def ensure_bytes(data: Union[bytes, 'jarray']) -> bytes:

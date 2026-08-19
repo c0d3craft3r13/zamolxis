@@ -1,10 +1,10 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.util.Log
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.rns.api.RnsCore
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.rns.api.RnsCore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

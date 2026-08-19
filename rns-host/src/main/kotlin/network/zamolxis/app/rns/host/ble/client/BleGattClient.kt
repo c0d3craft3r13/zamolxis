@@ -1,6 +1,6 @@
-package network.columba.app.rns.host.ble.client
+package network.zamolxis.app.rns.host.ble.client
 
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.toHex
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -17,8 +17,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
-import network.columba.app.rns.host.ble.model.BleConstants
-import network.columba.app.rns.host.ble.util.BleOperationQueue
+import network.zamolxis.app.rns.host.ble.model.BleConstants
+import network.zamolxis.app.rns.host.ble.util.BleOperationQueue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -65,7 +65,7 @@ class BleGattClient(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
 ) {
     companion object {
-        private const val TAG = "Columba:BLE:K:Client"
+        private const val TAG = "Zamolxis:BLE:K:Client"
         private const val MAX_CONNECTION_RETRIES = 3
         private const val CONNECTION_TIMEOUT_MS = BleConstants.CONNECTION_TIMEOUT_MS
         private val CCCD_UUID = BleConstants.CCCD_UUID

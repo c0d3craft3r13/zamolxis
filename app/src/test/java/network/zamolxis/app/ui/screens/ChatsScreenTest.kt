@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -8,9 +8,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.TestFactories
-import network.columba.app.viewmodel.ChatsViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.TestFactories
+import network.zamolxis.app.viewmodel.ChatsViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -996,7 +996,7 @@ class ChatsScreenTest {
 
     @Suppress("NoRelaxedMocks") // ChatsViewModel is a complex ViewModel with many properties; explicit stubbing for all would be excessive
     private fun createMockChatsViewModel(
-        conversations: List<network.columba.app.data.repository.Conversation> = emptyList(),
+        conversations: List<network.zamolxis.app.data.repository.Conversation> = emptyList(),
         searchQuery: String = "",
         isSyncing: Boolean = false,
         isLoading: Boolean = false,
@@ -1005,20 +1005,20 @@ class ChatsScreenTest {
 
         every { mockViewModel.chatsState } returns
             MutableStateFlow(
-                network.columba.app.viewmodel.ChatsState(
+                network.zamolxis.app.viewmodel.ChatsState(
                     conversations = conversations,
                     isLoading = isLoading,
                 ),
             )
         every { mockViewModel.searchQuery } returns MutableStateFlow(searchQuery)
         every { mockViewModel.voiceSearchQuery } returns MutableStateFlow("")
-        every { mockViewModel.selectedSegment } returns MutableStateFlow(network.columba.app.viewmodel.ChatsSegment.TEXT)
+        every { mockViewModel.selectedSegment } returns MutableStateFlow(network.zamolxis.app.viewmodel.ChatsSegment.TEXT)
         every { mockViewModel.voiceHistoryState } returns
-            MutableStateFlow(network.columba.app.viewmodel.VoiceHistoryState())
+            MutableStateFlow(network.zamolxis.app.viewmodel.VoiceHistoryState())
         every { mockViewModel.callHistoryNavigation } returns
-            MutableSharedFlow<network.columba.app.viewmodel.CallHistoryNavigation>()
+            MutableSharedFlow<network.zamolxis.app.viewmodel.CallHistoryNavigation>()
         every { mockViewModel.isSyncing } returns MutableStateFlow(isSyncing)
-        every { mockViewModel.syncProgress } returns MutableStateFlow(network.columba.app.service.SyncProgress.Idle)
+        every { mockViewModel.syncProgress } returns MutableStateFlow(network.zamolxis.app.service.SyncProgress.Idle)
         every { mockViewModel.manualSyncResult } returns MutableSharedFlow()
         every { mockViewModel.contactToggleResult } returns MutableSharedFlow()
         every { mockViewModel.draftsMap } returns MutableStateFlow(emptyMap())
@@ -1031,19 +1031,19 @@ class ChatsScreenTest {
     }
 
     @Suppress("NoRelaxedMocks")
-    private fun createMockSettingsViewModel(): network.columba.app.viewmodel.SettingsViewModel {
-        val mock = mockk<network.columba.app.viewmodel.SettingsViewModel>(relaxed = true)
+    private fun createMockSettingsViewModel(): network.zamolxis.app.viewmodel.SettingsViewModel {
+        val mock = mockk<network.zamolxis.app.viewmodel.SettingsViewModel>(relaxed = true)
         every { mock.state } returns
             MutableStateFlow(
-                network.columba.app.viewmodel
+                network.zamolxis.app.viewmodel
                     .SettingsState(),
             )
         return mock
     }
 
     @Suppress("NoRelaxedMocks")
-    private fun createMockDebugViewModel(): network.columba.app.viewmodel.DebugViewModel {
-        val mock = mockk<network.columba.app.viewmodel.DebugViewModel>(relaxed = true)
+    private fun createMockDebugViewModel(): network.zamolxis.app.viewmodel.DebugViewModel {
+        val mock = mockk<network.zamolxis.app.viewmodel.DebugViewModel>(relaxed = true)
         every { mock.qrCodeData } returns MutableStateFlow(null)
         every { mock.identityHash } returns MutableStateFlow(null)
         every { mock.destinationHash } returns MutableStateFlow(null)

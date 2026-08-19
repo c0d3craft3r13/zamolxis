@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.content.Context
 import android.util.Log
@@ -10,7 +10,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.InterfaceConfig
 import network.reticulum.interfaces.auto.AutoInterface
 import network.reticulum.interfaces.tcp.TCPClientInterface
 import network.reticulum.interfaces.tcp.TCPServerInterface
@@ -18,7 +18,7 @@ import network.reticulum.interfaces.udp.UDPInterface
 import network.reticulum.transport.Transport
 
 /**
- * Creates and registers reticulum-kt network interfaces from Columba [InterfaceConfig] objects.
+ * Creates and registers reticulum-kt network interfaces from Zamolxis [InterfaceConfig] objects.
  * Matches Carina's InterfaceManager pattern: diff-based sync, async BLE startup.
  */
 @Suppress("TooManyFunctions") // cohesive interface-lifecycle helpers; splitting would obscure coordination
@@ -34,7 +34,7 @@ internal object NativeInterfaceFactory {
      * reticulum-kt v0.0.9+ exposes `online` as a `StateFlow<Boolean>`; some
      * interface types (notably [network.reticulum.interfaces.rnode.RNodeInterface])
      * don't flip online until their handshake completes 3-5s after
-     * registration. Without an observer the Columba UI caches the initial
+     * registration. Without an observer the Zamolxis UI caches the initial
      * `false` value forever. This map keeps the collector jobs alive for
      * the lifetime of the interface and lets us cancel them in [stopInterface].
      */

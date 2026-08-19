@@ -1,6 +1,6 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
-import network.columba.app.util.validation.ValidationConstants
+import network.zamolxis.app.util.validation.ValidationConstants
 
 /**
  * Utility functions for encoding and decoding Reticulum identity information in QR codes.

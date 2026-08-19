@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,10 +22,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.util.LocationPermissionManager
+import network.zamolxis.app.R
+import network.zamolxis.app.util.LocationPermissionManager
 
 /**
  * Material 3 bottom sheet that explains location permission requirements
@@ -70,7 +72,7 @@ fun LocationPermissionBottomSheet(
                     modifier = Modifier.padding(end = 12.dp),
                 )
                 Text(
-                    text = "Location Permission",
+                    text = stringResource(R.string.locperm_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
@@ -93,7 +95,7 @@ fun LocationPermissionBottomSheet(
                 horizontalArrangement = Arrangement.End,
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Not Now")
+                    Text(stringResource(R.string.bgperm_not_now))
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(onClick = onRequestPermissions) {

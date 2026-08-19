@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc.client
+package network.zamolxis.app.rns.ipc.client
 
 import android.os.RemoteException
 import kotlinx.coroutines.CoroutineScope
@@ -11,31 +11,31 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.ConversationLinkResult
-import network.columba.app.rns.api.model.Destination
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.Link
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.LinkSpeedProbeResult
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.PacketReceipt
-import network.columba.app.rns.api.model.PacketType
-import network.columba.app.rns.api.model.ReceivedPacket
-import network.columba.app.rns.api.model.ReticulumConfig
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsCore
-import network.columba.app.rns.ipc.callback.IRnsAnnounceCallback
-import network.columba.app.rns.ipc.callback.IRnsLinkEventCallback
-import network.columba.app.rns.ipc.callback.IRnsNetworkStatusCallback
-import network.columba.app.rns.ipc.callback.IRnsPacketCallback
-import network.columba.app.rns.ipc.toAnnounceRestoreEntries
-import network.columba.app.rns.ipc.toPeerIdentityEntries
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.ConversationLinkResult
+import network.zamolxis.app.rns.api.model.Destination
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.Link
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.LinkSpeedProbeResult
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.PacketReceipt
+import network.zamolxis.app.rns.api.model.PacketType
+import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsCore
+import network.zamolxis.app.rns.ipc.callback.IRnsAnnounceCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsLinkEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsNetworkStatusCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsPacketCallback
+import network.zamolxis.app.rns.ipc.toAnnounceRestoreEntries
+import network.zamolxis.app.rns.ipc.toPeerIdentityEntries
 
 internal class ClientRnsCore(
     private val remote: IRnsCore,
@@ -163,8 +163,11 @@ internal class ClientRnsCore(
         Unit
     }
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> = runCatching {
-        awaitResult { cb -> remote.triggerAutoAnnounce(displayName, cb) }
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        pqFingerprint: ByteArray?,
+    ): Result<Unit> = runCatching {
+        awaitResult { cb -> remote.triggerAutoAnnounce(displayName, pqFingerprint, cb) }
         Unit
     }
 

@@ -1,4 +1,4 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -7,8 +7,8 @@ import androidx.room.Query
 import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
-import network.columba.app.data.db.entity.CallHistoryEntity
-import network.columba.app.data.model.CallHistoryRecord
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.data.model.CallHistoryRecord
 
 /**
  * Reduced call-history DAO. Removed rejected lifecycle semantics: no DROPPED, no

@@ -1,27 +1,27 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import android.util.Log
 import com.chaquo.python.PyObject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import network.columba.app.rns.api.annotation.ReflectivelyKept
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.DeliveryStatusUpdate
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.LocationTelemetry
-import network.columba.app.rns.api.model.NodeType
-import network.columba.app.rns.api.model.ReceivedMessage
-import network.columba.app.rns.api.model.ReceivedPacket
-import network.columba.app.rns.api.util.AppDataParser
-import network.columba.app.rns.api.util.isUserVisibleChatMessage
-import network.columba.app.rns.api.util.LxmfFields
-import network.columba.app.rns.api.util.ReactionWireCodec
-import network.columba.app.rns.api.util.TelemeterCodec
-import network.columba.app.rns.api.util.hexToBytes
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.api.model.NodeType
+import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.util.AppDataParser
+import network.zamolxis.app.rns.api.util.isUserVisibleChatMessage
+import network.zamolxis.app.rns.api.util.LxmfFields
+import network.zamolxis.app.rns.api.util.ReactionWireCodec
+import network.zamolxis.app.rns.api.util.TelemeterCodec
+import network.zamolxis.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.util.toHex
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -128,7 +128,7 @@ class PythonEventBridge {
 
     /**
      * Outbound-delivery sink: `event_bridge.attach_lxmessage_callbacks` fires
-     * this when a message Columba *sent* receives its delivery proof — the
+     * this when a message Zamolxis *sent* receives its delivery proof — the
      * packet proof for an OPPORTUNISTIC send, the link ack for a DIRECT send.
      * Attached per-LXMessage by [PythonRnsLxmf], not via `register_callbacks`.
      */
@@ -165,7 +165,7 @@ class PythonEventBridge {
         runCatching {
             val destHash = payload.dictBytes("destination_hash") ?: return
             // event_bridge._AnnounceHandler already drops announces whose
-            // aspect doesn't resolve to one Columba tracks (matching the
+            // aspect doesn't resolve to one Zamolxis tracks (matching the
             // kotlin backend's RichAnnounceHandler). Re-guard here so the
             // downstream `NodeType.fromAspect` only ever sees known aspects;
             // it falls back to `NodeType.UNKNOWN` for anything else, and
@@ -269,7 +269,7 @@ class PythonEventBridge {
 
     /**
      * Decode `FIELD_TELEMETRY` (Telemeter msgpack) + optional
-     * `FIELD_CUSTOM_META` (Columba extras msgpack) into a typed
+     * `FIELD_CUSTOM_META` (Zamolxis extras msgpack) into a typed
      * `LocationTelemetry` via the shared `TelemeterCodec`. The Python
      * side just hex-encodes the raw bytes through `_jsonable`; all
      * codec work happens Kotlin-side — one implementation shared with
@@ -301,7 +301,7 @@ class PythonEventBridge {
                 ?: return@runCatching
             val meta = fields.optString(FIELD_CUSTOM_META_KEY, "").takeIf { it.isNotBlank() }
                 ?.let { it.hexToBytes() }
-                ?.let { TelemeterCodec.unpackColumbaMeta(it) }
+                ?.let { TelemeterCodec.unpackZamolxisMeta(it) }
 
             // Cease frame short-circuits: the recipient deletes the
             // sender's location regardless of lat/lng (which the cease
@@ -342,7 +342,7 @@ class PythonEventBridge {
     /**
      * Unpack a FIELD_TELEMETRY_STREAM payload into individual
      * [LocationTelemetry] emissions, one per entry. The stream wire
-     * format (defined by Sideband, re-used by Columba) is:
+     * format (defined by Sideband, re-used by Zamolxis) is:
      *
      *   [
      *     [source_hash: bytes, timestamp: int, packed_telemetry: bytes,
@@ -432,7 +432,7 @@ class PythonEventBridge {
 
     // `routeFieldSideChannels` + `parseLocationTelemetry` were removed
     // when the Telemeter codec consolidated into
-    // `network.columba.app.rns.api.util.TelemeterCodec`. Inbound
+    // `network.zamolxis.app.rns.api.util.TelemeterCodec`. Inbound
     // location telemetry now goes through `assembleLocationTelemetry`
     // (called from `handleLxmfDelivery`), which decodes the
     // FIELD_TELEMETRY + FIELD_CUSTOM_META bytes directly via the

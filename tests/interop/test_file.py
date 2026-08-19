@@ -19,9 +19,9 @@ def attach_bytes() -> bytes:
 
 
 @pytest.mark.timeout(90)
-def test_file_columba_to_sideband(interop, attach_bytes):
-    text = f"file_from_columba_{int(time.time() * 1000)}"
-    interop.columba.send_file(
+def test_file_zamolxis_to_sideband(interop, attach_bytes):
+    text = f"file_from_zamolxis_{int(time.time() * 1000)}"
+    interop.zamolxis.send_file(
         interop.sideband_hex,
         text=text,
         filename="attach.txt",
@@ -29,7 +29,7 @@ def test_file_columba_to_sideband(interop, attach_bytes):
     )
 
     msg = interop.sideband.wait_for_message(
-        from_hex=interop.columba_hex,
+        from_hex=interop.zamolxis_hex,
         content_predicate=lambda m: m.content_text == text,
         timeout=60,
     )
@@ -41,16 +41,16 @@ def test_file_columba_to_sideband(interop, attach_bytes):
 
 
 @pytest.mark.timeout(90)
-def test_file_sideband_to_columba(interop, attach_bytes):
+def test_file_sideband_to_zamolxis(interop, attach_bytes):
     text = f"file_from_sideband_{int(time.time() * 1000)}"
     assert interop.sideband.send_file(
-        interop.columba_hex,
+        interop.zamolxis_hex,
         content=text,
         filename="attach.txt",
         data=attach_bytes,
     )
 
-    msg = interop.columba.wait_for_message(
+    msg = interop.zamolxis.wait_for_message(
         from_hex=interop.sideband_hex,
         content_predicate=lambda m: m.content == text,
         timeout=60,

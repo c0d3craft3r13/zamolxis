@@ -1,4 +1,4 @@
-package network.columba.app
+package network.zamolxis.app
 
 import android.content.Intent
 import android.hardware.usb.UsbDevice
@@ -7,10 +7,10 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import network.columba.app.notifications.CallNotificationHelper
-import network.columba.app.notifications.NotificationHelper
-import network.columba.app.util.Base32
-import network.columba.app.util.FileUtils
+import network.zamolxis.app.notifications.CallNotificationHelper
+import network.zamolxis.app.notifications.NotificationHelper
+import network.zamolxis.app.util.Base32
+import network.zamolxis.app.util.FileUtils
 
 class MainActivityIntentHandler(
     private val activity: MainActivity,

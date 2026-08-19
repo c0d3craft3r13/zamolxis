@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.rnode
+package network.zamolxis.app.ui.screens.rnode
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,12 +35,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.data.model.FrequencyRegion
-import network.columba.app.data.model.RNodeRegionalPreset
-import network.columba.app.ui.components.CustomSettingsCard
-import network.columba.app.viewmodel.RNodeWizardViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.FrequencyRegion
+import network.zamolxis.app.data.model.RNodeRegionalPreset
+import network.zamolxis.app.ui.components.CustomSettingsCard
+import network.zamolxis.app.viewmodel.RNodeWizardViewModel
 
 /**
  * Step 2: Region/Frequency Selection
@@ -66,14 +68,14 @@ fun RegionSelectionStep(viewModel: RNodeWizardViewModel) {
     ) {
         // Header
         Text(
-            text = "Select Frequency Region",
+            text = stringResource(R.string.rnode_region_title),
             style = MaterialTheme.typography.headlineSmall,
         )
 
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Choose your region to set the correct frequency band and power limits.",
+            text = stringResource(R.string.rnode_region_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -98,8 +100,8 @@ fun RegionSelectionStep(viewModel: RNodeWizardViewModel) {
             // Custom option
             item {
                 CustomSettingsCard(
-                    title = "Custom Settings",
-                    description = "Configure all parameters manually",
+                    title = stringResource(R.string.rnode_region_custom_title),
+                    description = stringResource(R.string.rnode_region_custom_desc),
                     isSelected = state.isCustomMode,
                     onClick = { viewModel.enableCustomMode() },
                 )
@@ -129,7 +131,7 @@ fun RegionSelectionStep(viewModel: RNodeWizardViewModel) {
                         OutlinedTextField(
                             value = state.searchQuery,
                             onValueChange = { viewModel.updateSearchQuery(it) },
-                            label = { Text("Search countries") },
+                            label = { Text(stringResource(R.string.rnode_region_search)) },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -156,7 +158,7 @@ fun RegionSelectionStep(viewModel: RNodeWizardViewModel) {
                             IconButton(onClick = { viewModel.selectCountry(null) }) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back to countries",
+                                    contentDescription = stringResource(R.string.rnode_region_back_to_countries),
                                 )
                             }
                             Icon(
@@ -267,7 +269,7 @@ private fun FrequencyRegionCard(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.common_selected),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -290,13 +292,13 @@ private fun PopularPresetsHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Popular Local Presets",
+                text = stringResource(R.string.rnode_region_popular),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Collapse" else "Expand",
+                contentDescription = stringResource(if (expanded) R.string.common_collapse else R.string.common_expand),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -371,7 +373,7 @@ private fun PopularPresetCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    preset.cityOrRegion ?: "Default",
+                    preset.cityOrRegion ?: stringResource(R.string.rnode_region_default),
                     style = MaterialTheme.typography.titleMedium,
                     color =
                         if (isSelected) {
@@ -383,7 +385,7 @@ private fun PopularPresetCard(
                 if (isSelected) {
                     Icon(
                         Icons.Default.Check,
-                        contentDescription = "Selected",
+                        contentDescription = stringResource(R.string.common_selected),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -413,7 +415,7 @@ private fun PopularPresetCard(
                     isSelected = isSelected,
                 )
                 SettingChip(
-                    label = "SF${preset.spreadingFactor}",
+                    label = stringResource(R.string.iface_stats_sf_value, preset.spreadingFactor),
                     isSelected = isSelected,
                 )
                 SettingChip(

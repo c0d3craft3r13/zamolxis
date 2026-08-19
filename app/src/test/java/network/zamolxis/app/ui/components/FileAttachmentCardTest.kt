@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -6,8 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.ui.model.FileAttachmentUi
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.model.FileAttachmentUi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

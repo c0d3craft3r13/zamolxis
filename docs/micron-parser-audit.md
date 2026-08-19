@@ -1,13 +1,13 @@
-# Micron Parser Audit: Columba vs Reference Implementations
+# Micron Parser Audit: Zamolxis vs Reference Implementations
 
 **Date:** 2026-03-14
-**Scope:** Columba's `MicronParser.kt` compared against:
+**Scope:** Zamolxis's `MicronParser.kt` compared against:
 - NomadNet `MicronParser.py` (Python, reference/canonical)
 - `micron-parser-js` (JavaScript, 1:1 port of NomadNet)
 
 ## Architecture Overview
 
-### Columba's Three Rendering Modes
+### Zamolxis's Three Rendering Modes
 
 All three modes share the **same parser** (`MicronParser.parse()`) but differ in
 layout and styling at the Compose rendering layer (`MicronComposables.kt`).
@@ -34,11 +34,11 @@ layout and styling at the Compose rendering layer (`MicronComposables.kt`).
 parser is in **formatting mode** (entered by encountering a backtick `` ` ``). In text
 mode, `[` and `<` are literal characters.
 
-**Columba:** `[` and `<` are parsed as link/field openers directly in `parseInline()`,
+**Zamolxis:** `[` and `<` are parsed as link/field openers directly in `parseInline()`,
 regardless of whether a backtick preceded them.
 
 **Impact:** Any document containing literal `[` or `<` characters (e.g., `[some note]`,
-`x < y`) will be incorrectly parsed as links or fields in Columba. Conversely, pages
+`x < y`) will be incorrectly parsed as links or fields in Zamolxis. Conversely, pages
 that properly use `` `[label`dest] `` work fine in both.
 
 **Files:** `MicronParser.kt:229-262` (link/field parsing in text mode)
@@ -59,7 +59,7 @@ elif first_char == "<":
     return parse_line(line[1:], state, url_delegate)
 ```
 
-**Columba:** Requires `line == "<"` (exact match). A line like `<Content after reset`
+**Zamolxis:** Requires `line == "<"` (exact match). A line like `<Content after reset`
 would be treated as regular text, not a depth reset.
 
 **Impact:** Pages that put content on the same line after `<` will not have depth reset
@@ -79,10 +79,10 @@ string `` `= `` (no leading/trailing whitespace).
 if len(line) == 2 and line == "`=":
 ```
 
-**Columba:** Uses `line.trimStart() == "`="` which matches even if there is leading
+**Zamolxis:** Uses `line.trimStart() == "`="` which matches even if there is leading
 whitespace (e.g., `   \`=`).
 
-**Impact:** Indented `` `= `` in a document would toggle literal mode in Columba but be
+**Impact:** Indented `` `= `` in a document would toggle literal mode in Zamolxis but be
 treated as regular inline text in NomadNet.
 
 **Files:** `MicronParser.kt:62`
@@ -106,12 +106,12 @@ if first_char == "\\":
 block-level first-character checks, so block-level parsing is skipped incidentally.
 The `\` then escapes the next character in inline mode.
 
-**Columba:** Escape handling only exists in `parseInline()`. Block-level checks run
+**Zamolxis:** Escape handling only exists in `parseInline()`. Block-level checks run
 first. So `\>Hello` → heading parsing triggers on the `\` not matching `>` ... actually,
 since `\` is the first char and it's not `>`, headings are skipped. But `\-` would not
 match `-` either. However, `\#comment` WOULD skip comment detection because `\` ≠ `#`.
 
-Wait — actually Columba checks `line.startsWith("#")`, `line.startsWith(">")`,
+Wait — actually Zamolxis checks `line.startsWith("#")`, `line.startsWith(">")`,
 `line.startsWith("-")`. Since the line starts with `\`, none of these match, so block
 parsing is incidentally skipped (similar to micron-parser-js). The `\` is then consumed
 in `parseInline()` as an escape.
@@ -120,7 +120,7 @@ in `parseInline()` as an escape.
 character, so `\>Hello` outputs `>Hello` in all three parsers. This is functionally
 equivalent.
 
-**Verdict:** Not actually a discrepancy for Columba in practice. The block-level checks
+**Verdict:** Not actually a discrepancy for Zamolxis in practice. The block-level checks
 naturally skip because `\` doesn't match any block-level starter. ✅ No fix needed.
 
 ---
@@ -138,13 +138,13 @@ else:
 **micron-parser-js:** Any line starting with `-` that is longer than 1 char takes
 `line[1]` as divider char (no length restriction).
 
-**Columba:** Takes `line[1]` if `line.length >= 2`, matching micron-parser-js but not
+**Zamolxis:** Takes `line[1]` if `line.length >= 2`, matching micron-parser-js but not
 NomadNet:
 ```kotlin
 val dividerChar = if (line.length >= 2) line[1] else '\u2500'
 ```
 
-**Impact:** A line like `-Hello` would produce a divider with char `H` in Columba and
+**Impact:** A line like `-Hello` would produce a divider with char `H` in Zamolxis and
 micron-parser-js, but a default `─` divider in NomadNet.
 
 **Files:** `MicronParser.kt:137`
@@ -158,14 +158,14 @@ micron-parser-js, but a default `─` divider in NomadNet.
 **NomadNet/micron-parser-js:** No line trimming at all. Lines are used exactly as split
 from `\n`.
 
-**Columba:** Applies `line.trimEnd()` to every input line:
+**Zamolxis:** Applies `line.trimEnd()` to every input line:
 ```kotlin
 val line = rawLine.trimEnd()
 ```
 
 **Impact:** Trailing whitespace with background colors is significant in pixel art pages.
 A line ending in `\`B00f   ` (three spaces with blue background) would lose those spaces
-in Columba, creating gaps in pixel art rendering.
+in Zamolxis, creating gaps in pixel art rendering.
 
 **Files:** `MicronParser.kt:47`
 
@@ -185,7 +185,7 @@ if first_char == ">" and "`<" in line:
 
 **micron-parser-js:** Does NOT have this sanitization.
 
-**Columba:** Does NOT have this sanitization.
+**Zamolxis:** Does NOT have this sanitization.
 
 **Impact:** Fields inside heading lines would be rendered with heading styling applied,
 which may cause visual issues. This is an edge case.
@@ -204,9 +204,9 @@ if ord(divider_char) < 32:
     divider_char = "\u2500"
 ```
 
-**Columba/micron-parser-js:** No such check.
+**Zamolxis/micron-parser-js:** No such check.
 
-**Impact:** A divider like `-\x01` would produce a control character divider in Columba.
+**Impact:** A divider like `-\x01` would produce a control character divider in Zamolxis.
 Unlikely in practice but could cause rendering issues.
 
 **Files:** `MicronParser.kt:137`
@@ -222,10 +222,10 @@ Unlikely in practice but could cause rendering issues.
 **micron-parser-js:** Has a special case for double-backtick in text mode that handles
 the reset differently.
 
-**Columba:** `` `` `` resets style to `MicronStyle()` AND sets alignment to
+**Zamolxis:** `` `` `` resets style to `MicronStyle()` AND sets alignment to
 `MicronAlignment.LEFT`.
 
-**Verdict:** Columba matches NomadNet here. ✅ No fix needed.
+**Verdict:** Zamolxis matches NomadNet here. ✅ No fix needed.
 
 ---
 
@@ -233,9 +233,9 @@ the reset differently.
 
 **micron-parser-js** has extended color support with `FT` (truecolor foreground) and `BT`
 (truecolor background) commands that accept 6-char hex values. Neither NomadNet nor
-Columba supports these.
+Zamolxis supports these.
 
-**Impact:** Pages using truecolor commands would not render colors in Columba. This is a
+**Impact:** Pages using truecolor commands would not render colors in Zamolxis. This is a
 micron-parser-js extension, not a NomadNet feature.
 
 ---
@@ -246,7 +246,7 @@ micron-parser-js extension, not a NomadNet feature.
 the `F`/`B` inline commands only consume 3 chars. The 6-char path exists but is not
 reachable via standard markup.
 
-**Columba:** `MicronColor.parse()` only handles 3-char strings. Page directives
+**Zamolxis:** `MicronColor.parse()` only handles 3-char strings. Page directives
 (`#!bg=`, `#!fg=`) also use `MicronColor.parse()`, so 6-char hex values in directives
 would fail.
 
@@ -256,7 +256,7 @@ would fail.
 
 ## Summary
 
-| ID | Severity | Discrepancy | NomadNet | Columba | Status |
+| ID | Severity | Discrepancy | NomadNet | Zamolxis | Status |
 |----|----------|-------------|----------|---------|--------|
 | D1 | **CRITICAL** | `[`/`<` parsed without backtick | Requires backtick | Parsed directly | **FIXED** |
 | D2 | **CRITICAL** | `<` depth reset exact match | Re-parses remainder | Exact match only | **FIXED** |
@@ -275,13 +275,13 @@ The sample document provided uses:
 - `` `= `` literal mode — would work (on its own line, no indentation)
 - `` `! `` bold — works ✅
 - `` `* `` italic — works ✅
-- `-` and `-∿` dividers — `-∿` is 3+ bytes in Columba's length check → D5 applies (`∿` used as divider char, which happens to be correct since `line.length >= 2`)
+- `-` and `-∿` dividers — `-∿` is 3+ bytes in Zamolxis's length check → D5 applies (`∿` used as divider char, which happens to be correct since `line.length >= 2`)
 - `` `c ``, `` `r ``, `` `a `` alignment — works ✅
 - `` `B005 ``, `` `Fff ``, `` `Ff00 `` etc. colors — works ✅
 - `` `_ `` underline — works ✅
 - `` `` `` reset all — works ✅
 - `[label`dest]` links — would be parsed even without preceding backtick → D1 applies
-- `Ffd0` on first line — this is a formatting command but sits as its own line. In NomadNet, it would be parsed as inline text with `` `F `` consuming `fd0`. In Columba, same behavior ✅
+- `Ffd0` on first line — this is a formatting command but sits as its own line. In NomadNet, it would be parsed as inline text with `` `F `` consuming `fd0`. In Zamolxis, same behavior ✅
 
 ### Rendering Mode Observations
 

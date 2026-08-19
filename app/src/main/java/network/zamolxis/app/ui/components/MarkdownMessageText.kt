@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.content.Context
 import android.content.Intent
@@ -38,8 +38,8 @@ import com.mikepenz.markdown.model.markdownAnimations
 import dev.snipme.highlights.Highlights
 import dev.snipme.highlights.model.SyntaxLanguage
 import dev.snipme.highlights.model.SyntaxThemes
-import network.columba.app.R
-import network.columba.app.ui.screens.toSafeBrowsableUri
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.screens.toSafeBrowsableUri
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
 import org.intellij.markdown.ast.findChildOfType

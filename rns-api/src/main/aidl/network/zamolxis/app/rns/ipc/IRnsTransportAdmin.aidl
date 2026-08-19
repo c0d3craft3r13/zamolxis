@@ -8,17 +8,17 @@
 //                               (with "has_stats": Boolean key indicating presence)
 //   - getAutoconnectedEndpoints → uses IRnsStringListCallback (Set<String> → List<String>)
 //   - Result<Unit>            → Bundle.EMPTY
-package network.columba.app.rns.ipc;
+package network.zamolxis.app.rns.ipc;
 
-import network.columba.app.rns.api.model.BatteryProfile;
-import network.columba.app.rns.api.model.InterfaceConfig;
-import network.columba.app.rns.ipc.callback.IRnsBoolCallback;
-import network.columba.app.rns.ipc.callback.IRnsIntCallback;
-import network.columba.app.rns.ipc.callback.IRnsResultCallback;
-import network.columba.app.rns.ipc.callback.IRnsStringCallback;
-import network.columba.app.rns.ipc.callback.IRnsStringEventCallback;
-import network.columba.app.rns.ipc.callback.IRnsStringListCallback;
-import network.columba.app.rns.ipc.callback.IRnsUnitEventCallback;
+import network.zamolxis.app.rns.api.model.BatteryProfile;
+import network.zamolxis.app.rns.api.model.InterfaceConfig;
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsIntCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsStringCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsStringEventCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsStringListCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsUnitEventCallback;
 
 oneway interface IRnsTransportAdmin {
     // ==================== Battery / Performance ====================

@@ -1,12 +1,12 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import network.columba.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.BackendCapabilities
 
 /**
  * Ambient [BackendCapabilities] for the active RNS backend.
  *
- * Provided once above the NavHost in `ColumbaNavigation` from
+ * Provided once above the NavHost in `ZamolxisNavigation` from
  * `SettingsViewModel.capabilities` (which forwards `RnsBackend.capabilities`).
  * UI that differs by backend reads this directly (e.g. `BatteryOptimizationCard`
  * hides the profile picker, `InterfaceManagementScreen` switches the Apply
@@ -20,7 +20,7 @@ import network.columba.app.rns.api.BackendCapabilities
  * `staticCompositionLocalOf` (not `compositionLocalOf`): the backend is fixed
  * for a build, and the rare runtime capability change (e.g. an RNode
  * disconnect downgrading an interface capability) re-provides at the
- * `ColumbaNavigation` level, recomposing the subtree — read-tracking would buy
+ * `ZamolxisNavigation` level, recomposing the subtree — read-tracking would buy
  * nothing for a value that changes this seldom.
  */
 val LocalCapabilities = staticCompositionLocalOf { BackendCapabilities.UNKNOWN }

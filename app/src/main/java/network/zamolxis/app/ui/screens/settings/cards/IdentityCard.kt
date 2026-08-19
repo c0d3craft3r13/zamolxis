@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +16,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 
 @Composable
 fun IdentityCard(
@@ -27,21 +30,21 @@ fun IdentityCard(
     onManageIdentities: () -> Unit,
 ) {
     CollapsibleSettingsCard(
-        title = "Identity",
+        title = stringResource(R.string.identitycard_title),
         icon = Icons.Default.Person,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
     ) {
         // Description for "My Identity"
         Text(
-            text = "View and share your identity, edit your display name, and manage QR codes for contact sharing.",
+            text = stringResource(R.string.identitycard_view_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         // Description for "Identity Management"
         Text(
-            text = "Create and manage multiple identities for different contexts (work, personal, anonymous).",
+            text = stringResource(R.string.identitycard_manage_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -61,7 +64,7 @@ fun IdentityCard(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("View My Identity")
+            Text(stringResource(R.string.identitycard_view_action))
         }
 
         // Secondary action - Manage Identities
@@ -75,7 +78,7 @@ fun IdentityCard(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Manage Identities")
+            Text(stringResource(R.string.identitycard_manage_action))
         }
     }
 }

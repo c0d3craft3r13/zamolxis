@@ -1,4 +1,4 @@
-package network.columba.app.ui.util
+package network.zamolxis.app.ui.util
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner

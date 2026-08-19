@@ -1,16 +1,16 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.content.Context
 import android.util.Log
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import network.columba.app.di.ApplicationScope
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.util.LocationCompat
+import network.zamolxis.app.di.ApplicationScope
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.util.LocationCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -101,7 +101,7 @@ class TelemetryCollectorManager
         private val rnsCore: RnsCore,
         private val rnsLxmf: RnsLxmf,
         private val rnsTelemetry: RnsTelemetry,
-        private val identityRepository: network.columba.app.data.repository.IdentityRepository,
+        private val identityRepository: network.zamolxis.app.data.repository.IdentityRepository,
         @ApplicationScope private val scope: CoroutineScope,
     ) {
         // Only initialize FusedLocationProviderClient when Google Play Services is available
@@ -215,7 +215,7 @@ class TelemetryCollectorManager
                         // Migrate legacy truncated collector addresses: earlier versions
                         // could persist a truncated destination hash prefix. Only treat as
                         // legacy when the short address is a prefix of the local identity
-                        // hash — non-Columba peers may use valid shorter representations.
+                        // hash — non-Zamolxis peers may use valid shorter representations.
                         if (address != null && address.length < DEST_HASH_LENGTH) {
                             val localDestHash = identityRepository.getActiveIdentitySync()?.destinationHash?.lowercase()
                             if (localDestHash != null && localDestHash.startsWith(address.lowercase())) {
@@ -714,7 +714,7 @@ class TelemetryCollectorManager
                 // Build typed location payload using the location's actual capture time
                 // (fall back to current time if location.time is 0 / unknown).
                 val telemetry =
-                    network.columba.app.rns.api.model.LocationTelemetry(
+                    network.zamolxis.app.rns.api.model.LocationTelemetry(
                         lat = location.latitude,
                         lng = location.longitude,
                         acc = location.accuracy,
@@ -747,7 +747,7 @@ class TelemetryCollectorManager
                         val fg = activeId.iconForegroundColor
                         val bg = activeId.iconBackgroundColor
                         if (name != null && fg != null && bg != null) {
-                            network.columba.app.rns.api.model.IconAppearance(
+                            network.zamolxis.app.rns.api.model.IconAppearance(
                                 iconName = name,
                                 foregroundColor = fg,
                                 backgroundColor = bg,

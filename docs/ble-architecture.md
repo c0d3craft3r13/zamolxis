@@ -1,4 +1,4 @@
-# Columba BLE Architecture Documentation
+# Zamolxis BLE Architecture Documentation
 
 This document describes the complete Bluetooth Low Energy (BLE) architecture for Reticulum networking on Android, covering all layers from Python protocol handling through native Android BLE operations.
 
@@ -728,10 +728,10 @@ def _get_fragmenter_key(self, peer_identity, address):
 |-----------|------|
 | BLEInterface.py | `app/build/python/pip/release/common/ble_reticulum/BLEInterface.py` |
 | AndroidBLEDriver | `python/ble_modules/android_ble_driver.py` |
-| KotlinBLEBridge | `reticulum/src/main/java/network.columba.app/reticulum/ble/bridge/KotlinBLEBridge.kt` |
-| BleGattClient | `reticulum/src/main/java/network.columba.app/reticulum/ble/client/BleGattClient.kt` |
-| BleGattServer | `reticulum/src/main/java/network.columba.app/reticulum/ble/server/BleGattServer.kt` |
-| BleScanner | `reticulum/src/main/java/network.columba.app/reticulum/ble/client/BleScanner.kt` |
-| BleAdvertiser | `reticulum/src/main/java/network.columba.app/reticulum/ble/server/BleAdvertiser.kt` |
-| BleOperationQueue | `reticulum/src/main/java/network.columba.app/reticulum/ble/util/BleOperationQueue.kt` |
-| BleConstants | `reticulum/src/main/java/network.columba.app/reticulum/ble/model/BleConstants.kt` |
+| KotlinBLEBridge | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/bridge/KotlinBLEBridge.kt` |
+| BleGattClient | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/client/BleGattClient.kt` |
+| BleGattServer | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/server/BleGattServer.kt` |
+| BleScanner | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/client/BleScanner.kt` |
+| BleAdvertiser | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/server/BleAdvertiser.kt` |
+| BleOperationQueue | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/util/BleOperationQueue.kt` |
+| BleConstants | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/model/BleConstants.kt` |

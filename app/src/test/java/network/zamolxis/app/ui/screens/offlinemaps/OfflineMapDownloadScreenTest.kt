@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.offlinemaps
+package network.zamolxis.app.ui.screens.offlinemaps
 
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
@@ -11,10 +11,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.AddressSearchResult
-import network.columba.app.viewmodel.DownloadProgress
-import network.columba.app.viewmodel.RadiusOption
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.AddressSearchResult
+import network.zamolxis.app.viewmodel.DownloadProgress
+import network.zamolxis.app.viewmodel.RadiusOption
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

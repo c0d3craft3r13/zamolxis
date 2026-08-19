@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.app.Activity
 import android.app.Application

@@ -1,21 +1,21 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 import android.os.Parcel
 import android.os.Parcelable
-import network.columba.app.rns.api.model.AnnounceRestoreEntry
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.api.model.FileAttachment
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.Link
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.LinkStatus
-import network.columba.app.rns.api.model.LocationTelemetry
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.api.model.NodeType
-import network.columba.app.rns.api.model.PeerIdentityEntry
+import network.zamolxis.app.rns.api.model.AnnounceRestoreEntry
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.FileAttachment
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.Link
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.LinkStatus
+import network.zamolxis.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.api.model.NodeType
+import network.zamolxis.app.rns.api.model.PeerIdentityEntry
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -342,17 +342,17 @@ class ParcelRoundTripTest {
     // ==================== Helpers ====================
 
     private fun makeLink(): Link {
-        val identity = network.columba.app.rns.api.model.Identity(
+        val identity = network.zamolxis.app.rns.api.model.Identity(
             hash = ByteArray(16) { it.toByte() },
             publicKey = ByteArray(32) { it.toByte() },
             privateKey = null,
         )
-        val destination = network.columba.app.rns.api.model.Destination(
+        val destination = network.zamolxis.app.rns.api.model.Destination(
             hash = ByteArray(16) { it.toByte() },
             hexHash = "0123456789abcdef",
             identity = identity,
-            direction = network.columba.app.rns.api.model.Direction.OUT,
-            type = network.columba.app.rns.api.model.DestinationType.SINGLE,
+            direction = network.zamolxis.app.rns.api.model.Direction.OUT,
+            type = network.zamolxis.app.rns.api.model.DestinationType.SINGLE,
             appName = "test.app",
             aspects = listOf("lxmf", "delivery"),
         )

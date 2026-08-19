@@ -1,11 +1,11 @@
-package network.columba.app.navigation
+package network.zamolxis.app.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import network.columba.app.ui.screens.CallDetailsScreen
+import network.zamolxis.app.ui.screens.CallDetailsScreen
 
 internal fun NavGraphBuilder.callDetailsDestination(
     navController: NavHostController,

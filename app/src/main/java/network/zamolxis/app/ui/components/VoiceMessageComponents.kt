@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
@@ -42,9 +42,9 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import network.columba.app.R
-import network.columba.app.audio.VoiceMessagePlayerState
-import network.columba.app.audio.VoiceMessageRecordingState
+import network.zamolxis.app.R
+import network.zamolxis.app.audio.VoiceMessagePlayerState
+import network.zamolxis.app.audio.VoiceMessageRecordingState
 import tech.torlando.lxst.recording.RecorderState
 import java.util.concurrent.TimeUnit
 

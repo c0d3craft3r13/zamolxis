@@ -1,11 +1,11 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 import android.os.Bundle
 
 /**
  * Pack a free-form `Map<String, Any>` into a [Bundle] for transport over an
- * `IRnsResultCallback` payload. Used for [network.columba.app.rns.api.RnsTransportAdmin.getDebugInfo]
- * and [network.columba.app.rns.api.RnsTransportAdmin.getInterfaceStats], whose
+ * `IRnsResultCallback` payload. Used for [network.zamolxis.app.rns.api.RnsTransportAdmin.getDebugInfo]
+ * and [network.zamolxis.app.rns.api.RnsTransportAdmin.getInterfaceStats], whose
  * values are typically primitives or strings (the developer/diagnostic
  * screens render them verbatim).
  *

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ipc
+package network.zamolxis.app.rns.host.ipc
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -10,29 +10,29 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.ConversationLinkResult
-import network.columba.app.rns.api.model.Destination
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.Link
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.LinkSpeedProbeResult
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.PacketReceipt
-import network.columba.app.rns.api.model.PacketType
-import network.columba.app.rns.api.model.ReceivedPacket
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.ConversationLinkResult
+import network.zamolxis.app.rns.api.model.Destination
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.Link
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.LinkSpeedProbeResult
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.PacketReceipt
+import network.zamolxis.app.rns.api.model.PacketType
+import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 
 /**
  * UI-side proxy that delegates every [RnsCore] member to the currently-bound
  * [RnsBackend] (the AIDL client returned by
- * [network.columba.app.rns.host.ReticulumServiceConnection]).
+ * [network.zamolxis.app.rns.host.ReticulumServiceConnection]).
  *
  * Suspend methods first await a live binding via [backendFlow], then forward.
  * Flow / StateFlow accessors are republished through `flatMapLatest` so a
@@ -125,8 +125,10 @@ internal class BoundRnsCore(
     override suspend fun announceDestination(destination: Destination, appData: ByteArray?): Result<Unit> =
         awaitBound().core.announceDestination(destination, appData)
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
-        awaitBound().core.triggerAutoAnnounce(displayName)
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        pqFingerprint: ByteArray?,
+    ): Result<Unit> = awaitBound().core.triggerAutoAnnounce(displayName, pqFingerprint)
 
     override suspend fun sendPacket(
         destination: Destination,

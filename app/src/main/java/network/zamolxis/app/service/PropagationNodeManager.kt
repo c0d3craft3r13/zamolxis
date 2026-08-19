@@ -1,16 +1,16 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.util.Log
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.di.ApplicationScope
-import network.columba.app.di.DefaultDispatcher
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.PropagationState
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.di.ApplicationScope
+import network.zamolxis.app.di.DefaultDispatcher
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.PropagationState
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -432,7 +432,7 @@ class PropagationNodeManager
         }
 
         private suspend fun handlePollResult(
-            state: network.columba.app.rns.api.model.PropagationState,
+            state: network.zamolxis.app.rns.api.model.PropagationState,
             timeoutJob: kotlinx.coroutines.Job,
         ): Boolean =
             when {

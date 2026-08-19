@@ -1,14 +1,14 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
-import network.columba.app.data.db.dao.PeerIconDao
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.notifications.NotificationHelper
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.data.db.dao.PeerIconDao
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.notifications.NotificationHelper
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.model.ReceivedMessage
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -105,6 +105,24 @@ class MessageCollectorTest {
                 identityRepository = identityRepository,
                 notificationHelper = notificationHelper,
                 peerIconDao = peerIconDao,
+                // Stubbed to the behaviour these tests already assumed: messages
+                // arrive with their content unchanged and nothing is sealed, so the
+                // existing expectations still describe what is being tested.
+                pqMessageSealer =
+                    mockk<network.zamolxis.app.service.pq.PqMessageSealer>().also {
+                        coEvery { it.processIncoming(any(), any(), any(), any()) } answers {
+                            network.zamolxis.app.service.pq.PqMessageSealer.Incoming(
+                                content = arg(2),
+                                wasSealed = false,
+                            )
+                        }
+                    },
+                // No announced fingerprints: these tests cover ordinary announce and
+                // message handling, not post-quantum capability discovery.
+                pqKeyRepository =
+                    mockk<network.zamolxis.app.data.repository.PqKeyRepository>().also {
+                        coEvery { it.recordAnnouncedFingerprint(any(), any()) } just Runs
+                    },
             )
     }
 
@@ -138,6 +156,10 @@ class MessageCollectorTest {
             coEvery { conversationRepository.getMessageById("persisted_message") } returns
                 mockk {
                     every { isRead } returns false
+                    // The notification preview now comes from the stored row rather
+                    // than the wire message, so a sealed duplicate shows its real
+                    // text instead of an empty content slot.
+                    every { content } returns "This was persisted"
                 }
 
             // When: Start collecting and emit message

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding.pages
+package network.zamolxis.app.ui.screens.onboarding.pages
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -7,7 +7,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -73,7 +73,7 @@ class PermissionsPageTest {
         }
 
         // Then
-        composeTestRule.onNodeWithText("Columba can notify you when:").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Zamolxis can notify you when:").assertIsDisplayed()
     }
 
     // ========== Feature Items Tests ==========
@@ -281,7 +281,7 @@ class PermissionsPageTest {
         }
 
         // Then - scroll to make visible
-        composeTestRule.onNodeWithText("Prevents Android from pausing Columba").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Prevents Android from pausing Zamolxis").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -594,7 +594,7 @@ class PermissionsPageTest {
 
         // Then - All key elements should be displayed (scroll for off-screen elements)
         composeTestRule.onNodeWithText("Stay Connected").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Columba can notify you when:").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Zamolxis can notify you when:").assertIsDisplayed()
         composeTestRule.onNodeWithText("New messages arrive").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Someone adds you as a contact").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Delivery confirmations are received").performScrollTo().assertIsDisplayed()
@@ -602,7 +602,7 @@ class PermissionsPageTest {
         composeTestRule.onNodeWithText("Get alerts for new messages").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Unrestricted Battery").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Receive messages even when phone is idle").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("Prevents Android from pausing Columba").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Prevents Android from pausing Zamolxis").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Back").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Continue").performScrollTo().assertIsDisplayed()
     }

@@ -1,8 +1,8 @@
-# Columba
+# Zamolxis
 
 ## What This Is
 
-Columba is an Android LXMF messenger built on the Reticulum mesh networking stack. It bridges Python (Reticulum/LXMF) with Kotlin via Chaquopy, supporting BLE, USB, and TCP interfaces for off-grid and resilient communication.
+Zamolxis is an Android LXMF messenger built on the Reticulum mesh networking stack. It bridges Python (Reticulum/LXMF) with Kotlin via Chaquopy, supporting BLE, USB, and TCP interfaces for off-grid and resilient communication.
 
 ## Core Value
 

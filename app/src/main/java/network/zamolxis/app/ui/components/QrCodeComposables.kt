@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Activity
 import android.content.Context
@@ -53,6 +53,8 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 /** Unwrap a Context to find the Activity, since Dialog wraps context in ContextThemeWrapper. */
 internal fun Context.findActivity(): Activity {
@@ -83,11 +85,13 @@ fun QrCodeImage(
     var expanded by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
+    val qrNoDataText = stringResource(R.string.qr_no_data)
+    val qrFailedText = stringResource(R.string.qr_failed)
 
     LaunchedEffect(data) {
         if (data.isBlank()) {
             isLoading = false
-            error = "No data to encode"
+            error = qrNoDataText
             return@LaunchedEffect
         }
 
@@ -104,7 +108,7 @@ fun QrCodeImage(
                 qrBitmap = bitmap
                 isLoading = false
             } catch (e: Exception) {
-                error = "Failed to generate QR code"
+                error = qrFailedText
                 isLoading = false
             }
         }
@@ -145,7 +149,7 @@ fun QrCodeImage(
                 qrBitmap != null -> {
                     Image(
                         bitmap = qrBitmap!!.asImageBitmap(),
-                        contentDescription = "QR Code",
+                        contentDescription = stringResource(R.string.common_qr_code),
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -191,7 +195,7 @@ fun QrCodeImage(
                 ) {
                     Image(
                         bitmap = qrBitmap!!.asImageBitmap(),
-                        contentDescription = "QR Code (tap to close)",
+                        contentDescription = stringResource(R.string.qr_tap_to_close),
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -282,7 +286,7 @@ fun HashSection(
                 IconButton(onClick = onCopy) {
                     Icon(
                         imageVector = Icons.Default.ContentCopy,
-                        contentDescription = "Copy",
+                        contentDescription = stringResource(R.string.common_copy),
                         modifier = Modifier.size(20.dp),
                     )
                 }

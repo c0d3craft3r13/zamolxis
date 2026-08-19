@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -6,7 +6,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.TestHostActivity
+import network.zamolxis.app.test.TestHostActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule

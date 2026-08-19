@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
@@ -18,15 +18,15 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import network.columba.app.data.db.entity.BlockedPeerEntity
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.data.repository.BlockedPeerRepository
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.CallHistoryRepository
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.data.db.entity.BlockedPeerEntity
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.data.repository.BlockedPeerRepository
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.CallHistoryRepository
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.VoiceCallState
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

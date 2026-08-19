@@ -1,4 +1,4 @@
-package network.columba.app.nomadnet
+package network.zamolxis.app.nomadnet
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import network.columba.app.micron.MicronDocument
-import network.columba.app.micron.MicronElement
-import network.columba.app.micron.MicronParser
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.util.DestinationHashValidator
+import network.zamolxis.app.micron.MicronDocument
+import network.zamolxis.app.micron.MicronElement
+import network.zamolxis.app.micron.MicronParser
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.util.DestinationHashValidator
 import org.json.JSONObject
 
 /**

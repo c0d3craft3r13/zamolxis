@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +19,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import network.columba.app.R
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.TransferPhase
-import network.columba.app.rns.api.model.TransferProgressUpdate
-import network.columba.app.service.SyncProgress
+import network.zamolxis.app.R
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.TransferPhase
+import network.zamolxis.app.rns.api.model.TransferProgressUpdate
+import network.zamolxis.app.service.SyncProgress
 import kotlin.math.roundToInt
 
 @Composable

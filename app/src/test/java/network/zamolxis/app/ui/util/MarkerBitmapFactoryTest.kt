@@ -1,4 +1,4 @@
-package network.columba.app.ui.util
+package network.zamolxis.app.ui.util
 
 import android.app.Application
 import android.graphics.Bitmap

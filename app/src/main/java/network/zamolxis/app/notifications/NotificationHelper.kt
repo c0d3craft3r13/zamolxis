@@ -1,4 +1,4 @@
-package network.columba.app.notifications
+package network.zamolxis.app.notifications
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -15,10 +15,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
-import network.columba.app.MainActivity
-import network.columba.app.R
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.repository.SettingsRepository
+import network.zamolxis.app.MainActivity
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -34,7 +34,7 @@ class NotificationHelper
     constructor(
         @ApplicationContext private val context: Context,
         private val settingsRepository: SettingsRepository,
-        private val activeConversationManager: network.columba.app.service.ActiveConversationManager,
+        private val activeConversationManager: network.zamolxis.app.service.ActiveConversationManager,
     ) {
         companion object {
             // Notification channel IDs
@@ -50,10 +50,10 @@ class NotificationHelper
             private const val NOTIFICATION_TAG_MESSAGE_PREFIX = "message:"
 
             // Intent actions
-            const val ACTION_OPEN_ANNOUNCE = "network.columba.app.ACTION_OPEN_ANNOUNCE"
-            const val ACTION_OPEN_CONVERSATION = "network.columba.app.ACTION_OPEN_CONVERSATION"
-            private const val ACTION_REPLY = "network.columba.app.ACTION_REPLY"
-            private const val ACTION_MARK_READ = "network.columba.app.ACTION_MARK_READ"
+            const val ACTION_OPEN_ANNOUNCE = "network.zamolxis.app.ACTION_OPEN_ANNOUNCE"
+            const val ACTION_OPEN_CONVERSATION = "network.zamolxis.app.ACTION_OPEN_CONVERSATION"
+            private const val ACTION_REPLY = "network.zamolxis.app.ACTION_REPLY"
+            private const val ACTION_MARK_READ = "network.zamolxis.app.ACTION_MARK_READ"
 
             // Intent extras
             const val EXTRA_DESTINATION_HASH = "destination_hash"
@@ -181,7 +181,7 @@ class NotificationHelper
                     data =
                         Uri
                             .Builder()
-                            .scheme("columba")
+                            .scheme("zamolxis")
                             .authority("conversation")
                             .appendPath(destinationHash)
                             .build()
@@ -310,7 +310,7 @@ class NotificationHelper
                 NotificationCompat
                     .Builder(context, CHANNEL_ID_ANNOUNCES)
                     .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle("Announce from $peerName")
+                    .setContentTitle(context.getString(R.string.notif_announce_title, peerName))
                     .setContentText(contentText)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setCategory(NotificationCompat.CATEGORY_STATUS)
@@ -356,8 +356,8 @@ class NotificationHelper
                 NotificationCompat
                     .Builder(context, CHANNEL_ID_BLE_EVENTS)
                     .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle("BLE Peer Connected")
-                    .setContentText("Connected to $displayName")
+                    .setContentTitle(context.getString(R.string.notif_ble_connected_title))
+                    .setContentText(context.getString(R.string.notif_ble_connected_text, displayName))
                     .setPriority(NotificationCompat.PRIORITY_LOW)
                     .setCategory(NotificationCompat.CATEGORY_STATUS)
                     .setAutoCancel(true)
@@ -401,8 +401,8 @@ class NotificationHelper
                 NotificationCompat
                     .Builder(context, CHANNEL_ID_BLE_EVENTS)
                     .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle("BLE Peer Disconnected")
-                    .setContentText("Disconnected from $displayName")
+                    .setContentTitle(context.getString(R.string.notif_ble_disconnected_title))
+                    .setContentText(context.getString(R.string.notif_ble_disconnected_text, displayName))
                     .setPriority(NotificationCompat.PRIORITY_LOW)
                     .setCategory(NotificationCompat.CATEGORY_STATUS)
                     .setAutoCancel(true)

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.rnode
+package network.zamolxis.app.ui.screens.rnode
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,10 +29,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.data.model.ModemPreset
-import network.columba.app.viewmodel.RNodeWizardViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.ModemPreset
+import network.zamolxis.app.viewmodel.RNodeWizardViewModel
 
 /**
  * Step 3: Modem Preset Selection
@@ -53,7 +55,7 @@ fun ModemPresetStep(viewModel: RNodeWizardViewModel) {
     ) {
         // Header
         Text(
-            text = "Select Modem Preset",
+            text = stringResource(R.string.rnode_wiz_title_modem_preset),
             style = MaterialTheme.typography.headlineSmall,
         )
 
@@ -61,8 +63,7 @@ fun ModemPresetStep(viewModel: RNodeWizardViewModel) {
 
         Text(
             text =
-                "Choose a preset that matches your range and speed needs. " +
-                    "These are compatible with Meshtastic naming conventions.",
+                stringResource(R.string.rnode_preset_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -148,7 +149,7 @@ private fun ModemPresetCard(
                             onClick = {},
                             label = {
                                 Text(
-                                    text = "Recommended",
+                                    text = stringResource(R.string.rnode_preset_recommended),
                                     style = MaterialTheme.typography.labelSmall,
                                 )
                             },
@@ -172,7 +173,7 @@ private fun ModemPresetCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    SettingsChip(label = "SF${preset.spreadingFactor}")
+                    SettingsChip(label = stringResource(R.string.iface_stats_sf_value, preset.spreadingFactor))
                     SettingsChip(label = "${preset.bandwidth / 1000} kHz")
                     SettingsChip(label = "4/${preset.codingRate}")
                 }
@@ -182,7 +183,7 @@ private fun ModemPresetCard(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.common_selected),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }

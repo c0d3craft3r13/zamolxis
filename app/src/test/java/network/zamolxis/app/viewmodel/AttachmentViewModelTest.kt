@@ -1,8 +1,8 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.service.AttachmentStorageService
-import network.columba.app.util.FileAttachment
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.service.AttachmentStorageService
+import network.zamolxis.app.util.FileAttachment
 import io.mockk.clearAllMocks
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers

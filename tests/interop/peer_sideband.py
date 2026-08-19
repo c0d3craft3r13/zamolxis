@@ -81,7 +81,7 @@ class SidebandPeer:
 
         Without this, telemetry-only interop tests have no observable:
         Sideband's strict `Telemeter.from_packed()` parser rejects
-        Columba's JSON-encoded FIELD_TELEMETRY and the message
+        Zamolxis's JSON-encoded FIELD_TELEMETRY and the message
         disappears.
 
         The tap is a Python closure that calls the original callback
@@ -135,7 +135,7 @@ class SidebandPeer:
         # SidebandCore re-uses the default `~/.reticulum/config` for its
         # RNS instance, which on this host shares with the host rnsd via
         # the standard `share_instance` port. That's what we want — same
-        # transport, same path table as the emulator's Columba.
+        # transport, same path table as the emulator's Zamolxis.
         from sbapp.sideband.core import SidebandCore
 
         self._core = SidebandCore(

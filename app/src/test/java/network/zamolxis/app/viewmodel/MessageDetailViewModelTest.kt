@@ -1,11 +1,11 @@
 @file:Suppress("IgnoredReturnValue")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.repository.ConversationRepository
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk

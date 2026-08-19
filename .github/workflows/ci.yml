@@ -26,6 +26,20 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v6.3.0
 
+  hardcoded-strings:
+    name: Hardcoded String Lock (Compose)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Check for new hardcoded UI strings
+        run: bash scripts/check-hardcoded-strings.sh
+
   lint:
     name: Code Quality (ktlint + detekt + CPD + Android Lint)
     runs-on: ubuntu-latest
@@ -69,11 +83,18 @@ jobs:
         run: |
           echo "Checking for forbidden @Suppress annotations in test files..."
 
+          # Every module's unit-test source set. The glob expands to the dirs that
+          # actually exist, so modules added later are covered without editing this
+          # step — the previous hardcoded pair named `reticulum/src/test`, a module
+          # that no longer exists, so :data and :rns-host went unchecked.
+          TEST_DIRS=$(ls -d */src/test 2>/dev/null)
+          echo "Scanning: $TEST_DIRS"
+
           # Count files with NoRelaxedMocks suppression
-          RELAXED_COUNT=$(grep -r "Suppress.*NoRelaxedMocks" app/src/test reticulum/src/test --include="*.kt" -l 2>/dev/null | wc -l || echo "0")
+          RELAXED_COUNT=$(grep -r "Suppress.*NoRelaxedMocks" $TEST_DIRS --include="*.kt" -l 2>/dev/null | wc -l)
 
           # Count files with NoVerifyOnlyTests suppression
-          VERIFY_COUNT=$(grep -r "Suppress.*NoVerifyOnlyTests" app/src/test reticulum/src/test --include="*.kt" -l 2>/dev/null | wc -l || echo "0")
+          VERIFY_COUNT=$(grep -r "Suppress.*NoVerifyOnlyTests" $TEST_DIRS --include="*.kt" -l 2>/dev/null | wc -l)
 
           echo "Files with @Suppress(\"NoRelaxedMocks\"): $RELAXED_COUNT"
           echo "Files with @Suppress(\"NoVerifyOnlyTests\"): $VERIFY_COUNT"
@@ -84,7 +105,8 @@ jobs:
           # BASELINE: Ratchet down over time. Don't increase these numbers.
           # Current state reflects Android framework mocks (Context, BluetoothManager, etc.)
           # that are impractical to stub explicitly. Fix when possible.
-          RELAXED_BASELINE=37
+          # Actual spread: app 27, rns-host 8, data 3 relaxed; one verify each.
+          RELAXED_BASELINE=38
           VERIFY_BASELINE=3
 
           FAIL=false
@@ -547,9 +569,9 @@ jobs:
             adb shell pm list packages | head -5;
             echo "Emulator is responsive, starting tests...";
             status=0;
-            ./gradlew :app:connectedNoSentryKotlinBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.columba.app.smoke.SmokeTest,network.columba.app.integration.MessageDataFlowTest,network.columba.app.integration.ConversationCreationFlowTest,network.columba.app.ui.components.MicronTrueColorRenderingTest --stacktrace || status=1;
-            ./gradlew :app:connectedNoSentryPythonBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.columba.app.integration.IdentityRecoveryIpcInstrumentedTest,network.columba.app.integration.IdentityRecoveryPersistenceInstrumentedTest --stacktrace || status=1;
-            ./gradlew :rns-backend-py:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.columba.app.rns.backend.py.PythonRnsCoreIdentityRecoveryInstrumentedTest --stacktrace || status=1;
+            ./gradlew :app:connectedNoSentryKotlinBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.smoke.SmokeTest,network.zamolxis.app.integration.MessageDataFlowTest,network.zamolxis.app.integration.ConversationCreationFlowTest,network.zamolxis.app.ui.components.MicronTrueColorRenderingTest --stacktrace || status=1;
+            ./gradlew :app:connectedNoSentryPythonBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.integration.IdentityRecoveryIpcInstrumentedTest,network.zamolxis.app.integration.IdentityRecoveryPersistenceInstrumentedTest --stacktrace || status=1;
+            ./gradlew :rns-backend-py:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.rns.backend.py.PythonRnsCoreIdentityRecoveryInstrumentedTest --stacktrace || status=1;
             exit "$status"
 
       - name: Upload instrumented test results

@@ -1,17 +1,18 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import android.app.Application
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import network.columba.app.service.SharingSession
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.service.SharingSession
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -39,24 +40,37 @@ class LocationSharingCardTest {
 
     val composeTestRule get() = composeRule
 
+    /**
+     * formatTimeRemaining / getDurationDisplayText / getPrecisionRadiusDisplayText became
+     * `@Composable` when their wording moved to `stringResource`, so they can only be
+     * called from a composition. This evaluates one inside the compose rule and hands the
+     * value back to the assertions, which are otherwise unchanged — the resources carry
+     * the same English wording these helpers used to build by hand.
+     */
+    private fun <T : Any> evaluate(block: @Composable () -> T): T {
+        lateinit var captured: T
+        composeRule.setContent { captured = block() }
+        return captured
+    }
+
     // ========== formatTimeRemaining Tests ==========
 
     @Test
     fun `formatTimeRemaining returns until stopped for null endTime`() {
-        val result = formatTimeRemaining(null)
+        val result = evaluate { formatTimeRemaining(null) }
         assertEquals("Until stopped", result)
     }
 
     @Test
     fun `formatTimeRemaining returns expiring for past times`() {
         val pastTime = System.currentTimeMillis() - 1000 // 1 second ago
-        val result = formatTimeRemaining(pastTime)
+        val result = evaluate { formatTimeRemaining(pastTime) }
         assertEquals("Expiring...", result)
     }
 
     @Test
     fun `formatTimeRemaining returns expiring for current time`() {
-        val result = formatTimeRemaining(System.currentTimeMillis())
+        val result = evaluate { formatTimeRemaining(System.currentTimeMillis()) }
         assertEquals("Expiring...", result)
     }
 
@@ -65,7 +79,7 @@ class LocationSharingCardTest {
         val now = System.currentTimeMillis()
         val endTime = now + 5 * 60_000 // 5 minutes from now
 
-        val result = formatTimeRemaining(endTime)
+        val result = evaluate { formatTimeRemaining(endTime) }
 
         assertTrue("Result should contain minutes: $result", result.contains("m remaining"))
         assertTrue("Result should show around 5 minutes: $result", result.contains("5m") || result.contains("4m"))
@@ -76,7 +90,7 @@ class LocationSharingCardTest {
         val now = System.currentTimeMillis()
         val endTime = now + 30 * 60_000 // 30 minutes from now
 
-        val result = formatTimeRemaining(endTime)
+        val result = evaluate { formatTimeRemaining(endTime) }
 
         assertTrue("Result should contain 'm remaining': $result", result.endsWith("m remaining"))
         // Should not contain hours
@@ -88,7 +102,7 @@ class LocationSharingCardTest {
         val now = System.currentTimeMillis()
         val endTime = now + 90 * 60_000 // 1 hour 30 minutes from now
 
-        val result = formatTimeRemaining(endTime)
+        val result = evaluate { formatTimeRemaining(endTime) }
 
         assertTrue("Result should contain 'h' for hours: $result", result.contains("h"))
         assertTrue("Result should contain 'm' for minutes: $result", result.contains("m"))
@@ -98,9 +112,12 @@ class LocationSharingCardTest {
     @Test
     fun `formatTimeRemaining correctly formats 2 hours`() {
         val now = System.currentTimeMillis()
-        val endTime = now + 2 * 60 * 60_000 // 2 hours from now
+        // Add 30 second buffer to prevent flakiness from test execution time — an exact
+        // 2h endTime rounds down to "1h 59m" once any time has passed, and setting up
+        // the composition costs more than the plain call this test used to make.
+        val endTime = now + 2 * 60 * 60_000 + 30_000
 
-        val result = formatTimeRemaining(endTime)
+        val result = evaluate { formatTimeRemaining(endTime) }
 
         assertTrue("Result should show 2 hours: $result", result.contains("2h"))
         assertTrue("Result should show 0 minutes: $result", result.contains("0m"))
@@ -112,7 +129,7 @@ class LocationSharingCardTest {
         // Add 30 second buffer to prevent flakiness from test execution time
         val endTime = now + (4 * 60 + 15) * 60_000 + 30_000
 
-        val result = formatTimeRemaining(endTime)
+        val result = evaluate { formatTimeRemaining(endTime) }
 
         assertTrue("Result should show 4 hours: $result", result.contains("4h"))
         assertTrue("Result should show 15 minutes: $result", result.contains("15m"))
@@ -122,50 +139,50 @@ class LocationSharingCardTest {
 
     @Test
     fun `getDurationDisplayText returns correct text for FIFTEEN_MINUTES`() {
-        val result = getDurationDisplayText("FIFTEEN_MINUTES")
+        val result = evaluate { getDurationDisplayText("FIFTEEN_MINUTES") }
         assertEquals("15 min", result)
     }
 
     @Test
     fun `getDurationDisplayText returns correct text for ONE_HOUR`() {
-        val result = getDurationDisplayText("ONE_HOUR")
+        val result = evaluate { getDurationDisplayText("ONE_HOUR") }
         assertEquals("1 hour", result)
     }
 
     @Test
     fun `getDurationDisplayText returns correct text for FOUR_HOURS`() {
-        val result = getDurationDisplayText("FOUR_HOURS")
+        val result = evaluate { getDurationDisplayText("FOUR_HOURS") }
         assertEquals("4 hours", result)
     }
 
     @Test
     fun `getDurationDisplayText returns correct text for UNTIL_MIDNIGHT`() {
-        val result = getDurationDisplayText("UNTIL_MIDNIGHT")
+        val result = evaluate { getDurationDisplayText("UNTIL_MIDNIGHT") }
         assertEquals("Until midnight", result)
     }
 
     @Test
     fun `getDurationDisplayText returns correct text for INDEFINITE`() {
-        val result = getDurationDisplayText("INDEFINITE")
+        val result = evaluate { getDurationDisplayText("INDEFINITE") }
         assertEquals("Until I stop", result)
     }
 
     @Test
     fun `getDurationDisplayText returns fallback for invalid duration`() {
-        val result = getDurationDisplayText("INVALID_DURATION")
+        val result = evaluate { getDurationDisplayText("INVALID_DURATION") }
         assertEquals("1 hour", result)
     }
 
     @Test
     fun `getDurationDisplayText returns fallback for empty string`() {
-        val result = getDurationDisplayText("")
+        val result = evaluate { getDurationDisplayText("") }
         assertEquals("1 hour", result)
     }
 
     @Test
     fun `getDurationDisplayText returns fallback for lowercase name`() {
         // Enum valueOf is case-sensitive
-        val result = getDurationDisplayText("one_hour")
+        val result = evaluate { getDurationDisplayText("one_hour") }
         assertEquals("1 hour", result)
     }
 
@@ -173,66 +190,71 @@ class LocationSharingCardTest {
 
     @Test
     fun `getPrecisionRadiusDisplayText returns Precise for 0 meters`() {
-        val result = getPrecisionRadiusDisplayText(0)
+        val result = evaluate { getPrecisionRadiusDisplayText(0) }
         assertEquals("Precise", result)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText returns Neighborhood for 1000 meters`() {
-        val result = getPrecisionRadiusDisplayText(1000)
+        val result = evaluate { getPrecisionRadiusDisplayText(1000) }
         assertEquals("Neighborhood (~1km)", result)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText returns City for 10000 meters`() {
-        val result = getPrecisionRadiusDisplayText(10000)
+        val result = evaluate { getPrecisionRadiusDisplayText(10000) }
         assertEquals("City (~10km)", result)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText returns Region for 100000 meters`() {
-        val result = getPrecisionRadiusDisplayText(100000)
+        val result = evaluate { getPrecisionRadiusDisplayText(100000) }
         assertEquals("Region (~100km)", result)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText returns km for custom large radius`() {
-        val result = getPrecisionRadiusDisplayText(5000)
+        val result = evaluate { getPrecisionRadiusDisplayText(5000) }
         assertEquals("5km", result)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText returns km for very large custom radius`() {
-        val result = getPrecisionRadiusDisplayText(50000)
+        val result = evaluate { getPrecisionRadiusDisplayText(50000) }
         assertEquals("50km", result)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText returns meters for small custom radius`() {
-        val result = getPrecisionRadiusDisplayText(500)
+        val result = evaluate { getPrecisionRadiusDisplayText(500) }
         assertEquals("500m", result)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText returns meters for very small radius`() {
-        val result = getPrecisionRadiusDisplayText(100)
+        val result = evaluate { getPrecisionRadiusDisplayText(100) }
         assertEquals("100m", result)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText handles edge case at 1000m boundary`() {
+        // Both boundaries are resolved in a single composition: the compose rule
+        // accepts only one setContent per test, so two evaluate calls would throw.
+        val (result999, result1001) =
+            evaluate {
+                getPrecisionRadiusDisplayText(999) to getPrecisionRadiusDisplayText(1001)
+            }
+
         // 999m should still show in meters
-        val result999 = getPrecisionRadiusDisplayText(999)
         assertEquals("999m", result999)
 
         // 1001m should show in km (integer division: 1001/1000 = 1)
-        val result1001 = getPrecisionRadiusDisplayText(1001)
         assertEquals("1km", result1001)
     }
 
     @Test
     fun `getPrecisionRadiusDisplayText handles minimum positive value`() {
-        val result = getPrecisionRadiusDisplayText(1)
+        val result = evaluate { getPrecisionRadiusDisplayText(1) }
         assertEquals("1m", result)
     }
 

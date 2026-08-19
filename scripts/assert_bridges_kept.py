@@ -19,24 +19,24 @@ from pathlib import Path
 
 # Every bridge class Chaquopy touches must keep its name (proves @ReflectivelyKept fired).
 BRIDGE_CLASSES = [
-    "network.columba.app.rns.host.rnode.KotlinRNodeBridge",
-    "network.columba.app.rns.host.ble.bridge.KotlinBLEBridge",
-    "network.columba.app.rns.host.usb.KotlinUSBBridge",
-    "network.columba.app.rns.backend.py.PythonEventBridge",
-    "network.columba.app.rns.backend.py.PyEventCallback",
-    "network.columba.app.rns.backend.py.PyTwoArgCallback",
-    "network.columba.app.rns.backend.py.StampGeneratorCallback",
+    "network.zamolxis.app.rns.host.rnode.KotlinRNodeBridge",
+    "network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge",
+    "network.zamolxis.app.rns.host.usb.KotlinUSBBridge",
+    "network.zamolxis.app.rns.backend.py.PythonEventBridge",
+    "network.zamolxis.app.rns.backend.py.PyEventCallback",
+    "network.zamolxis.app.rns.backend.py.PyTwoArgCallback",
+    "network.zamolxis.app.rns.backend.py.StampGeneratorCallback",
 ]
 
 # Method names Python calls on each host bridge (from the call sites in
 # rns-backend-py/src/main/python). Asserted per class so a name stripped from one
 # bridge isn't masked by the same name surviving on another.
 BRIDGE_METHODS = {
-    "network.columba.app.rns.host.rnode.KotlinRNodeBridge": {
+    "network.zamolxis.app.rns.host.rnode.KotlinRNodeBridge": {
         "connect", "disconnect", "getConnectedDeviceName", "isConnected",
         "notifyOnlineStatusChanged", "read", "setOnConnectionStateChanged",
     },
-    "network.columba.app.rns.host.ble.bridge.KotlinBLEBridge": {
+    "network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge": {
         "configurePower", "connect", "connectAsync", "disconnect", "disconnectAsync",
         "disconnectCentralAsync", "disconnectPeripheralAsync", "ensureAdvertising",
         "getPeerRssi", "requestIdentityResync", "sendAsync", "setIdentity",
@@ -45,10 +45,10 @@ BRIDGE_METHODS = {
         "setOnMtuNegotiated", "shouldConnect", "startAdvertisingAsync", "startAsync",
         "startScanningAsync", "stopAdvertisingAsync", "stopAsync", "stopScanningAsync",
     },
-    "network.columba.app.rns.host.usb.KotlinUSBBridge": {
+    "network.zamolxis.app.rns.host.usb.KotlinUSBBridge": {
         "connect", "disconnect", "findDeviceByVidPid", "isConnected", "notifyBluetoothPin", "read",
     },
-    "network.columba.app.rns.backend.py.StampGeneratorCallback": {
+    "network.zamolxis.app.rns.backend.py.StampGeneratorCallback": {
         # event_bridge.install_external_stamp_generator calls generate(workblock, cost, token) by name.
         "generate",
     },

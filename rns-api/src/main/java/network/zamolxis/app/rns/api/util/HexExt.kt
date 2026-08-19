@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
 /**
  * Hex string ↔ ByteArray extensions used everywhere a destination /

@@ -95,7 +95,7 @@ class AdbUiDriver:
         )
 
     def snapshot(self) -> UiSnapshot:
-        remote = "/sdcard/columba-e2e-window.xml"
+        remote = "/sdcard/zamolxis-e2e-window.xml"
         self.adb("shell", "uiautomator", "dump", remote)
         self.adb("pull", remote, str(self._dump_path))
         return UiSnapshot.parse(self._dump_path.read_text(encoding="utf-8"))

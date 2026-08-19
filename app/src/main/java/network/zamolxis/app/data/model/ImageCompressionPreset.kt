@@ -1,4 +1,7 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
+
+import androidx.annotation.StringRes
+import network.zamolxis.app.R
 
 /**
  * Image compression presets for adaptive network-aware compression.
@@ -12,62 +15,62 @@ package network.columba.app.data.model
  * @property description Brief description for settings UI
  */
 enum class ImageCompressionPreset(
-    val displayName: String,
+    @param:StringRes val displayNameRes: Int,
     val maxDimensionPx: Int,
     val targetSizeBytes: Long,
     val initialQuality: Int,
     val minQuality: Int,
-    val description: String,
+    @param:StringRes val descriptionRes: Int,
 ) {
     // 32KB target
     LOW(
-        displayName = "Low",
+        displayNameRes = R.string.imgcompress_preset_low,
         maxDimensionPx = 320,
         targetSizeBytes = 32 * 1024L,
         initialQuality = 60,
         minQuality = 30,
-        description = "32KB max - optimized for LoRa and BLE",
+        descriptionRes = R.string.imgcompress_preset_low_desc,
     ),
 
     // 128KB target
     MEDIUM(
-        displayName = "Medium",
+        displayNameRes = R.string.imgcompress_preset_medium,
         maxDimensionPx = 800,
         targetSizeBytes = 128 * 1024L,
         initialQuality = 75,
         minQuality = 40,
-        description = "128KB max - balanced for mixed networks",
+        descriptionRes = R.string.imgcompress_preset_medium_desc,
     ),
 
     // 512KB target
     HIGH(
-        displayName = "High",
+        displayNameRes = R.string.imgcompress_preset_high,
         maxDimensionPx = 2048,
         targetSizeBytes = 512 * 1024L,
         initialQuality = 90,
         minQuality = 50,
-        description = "512KB max - good quality for general use",
+        descriptionRes = R.string.imgcompress_preset_high_desc,
     ),
 
     // 25MB target
     ORIGINAL(
-        displayName = "Original",
+        displayNameRes = R.string.imgcompress_preset_original,
         // 8K resolution - exceeds Android Canvas limit if higher
         maxDimensionPx = 8192,
         targetSizeBytes = 25 * 1024 * 1024L,
         initialQuality = 95,
         minQuality = 90,
-        description = "25MB max - minimal compression for fast networks",
+        descriptionRes = R.string.imgcompress_preset_original_desc,
     ),
 
     // Default values (will be overridden by detection)
     AUTO(
-        displayName = "Auto",
+        displayNameRes = R.string.imgcompress_preset_auto,
         maxDimensionPx = 2048,
         targetSizeBytes = 512 * 1024L,
         initialQuality = 90,
         minQuality = 50,
-        description = "Automatically select based on enabled interfaces",
+        descriptionRes = R.string.imgcompress_preset_auto_desc,
     ),
     ;
 

@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -7,8 +7,9 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.ui.model.CodecProfile
+import androidx.test.core.app.ApplicationProvider
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.model.CodecProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -31,6 +32,8 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class CodecSelectionDialogTest {
+    private val context = ApplicationProvider.getApplicationContext<Application>()
+
     private val registerActivityRule = RegisterComponentActivityRule()
     private val composeRule = createComposeRule()
 
@@ -436,8 +439,16 @@ class CodecSelectionDialogTest {
     @Test
     fun `each CodecProfile has displayName and description`() {
         CodecProfile.entries.forEach { profile ->
-            assertTrue("displayName should not be blank", profile.displayName.isNotBlank())
-            assertTrue("description should not be blank", profile.description.isNotBlank())
+            // `@StringRes` ids now — resolve them, since a non-zero id would pass
+            // even if the underlying string were missing.
+            assertTrue(
+                "displayName should not be blank",
+                context.getString(profile.displayNameRes).isNotBlank(),
+            )
+            assertTrue(
+                "description should not be blank",
+                context.getString(profile.descriptionRes).isNotBlank(),
+            )
         }
     }
 

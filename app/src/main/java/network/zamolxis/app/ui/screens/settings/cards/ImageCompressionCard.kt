@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,9 +20,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 
 /**
  * Settings card for selecting image compression preset.
@@ -47,16 +50,14 @@ fun ImageCompressionCard(
 ) {
     android.util.Log.d("ImageCompressionCard", "Rendering: selected=$selectedPreset, detected=$detectedPreset, hasSlowInterface=$hasSlowInterface")
     CollapsibleSettingsCard(
-        title = "Image Compression",
+        title = stringResource(R.string.imagecompression_title),
         icon = Icons.Default.Image,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
     ) {
         // Description
         Text(
-            text =
-                "Select compression level for image attachments. " +
-                    "Auto mode detects your network type and selects the optimal preset.",
+            text = stringResource(R.string.imgcompress_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -100,6 +101,7 @@ fun ImageCompressionCard(
 /**
  * Build the label for a preset chip.
  */
+@Composable
 private fun buildPresetLabel(
     preset: ImageCompressionPreset,
     detectedPreset: ImageCompressionPreset?,
@@ -107,9 +109,9 @@ private fun buildPresetLabel(
 ): String {
     return when {
         preset == ImageCompressionPreset.AUTO && isSelected && detectedPreset != null -> {
-            "Auto (${detectedPreset.displayName})"
+            stringResource(R.string.imgcompress_auto_prefix, stringResource(detectedPreset.displayNameRes))
         }
-        else -> preset.displayName
+        else -> stringResource(preset.displayNameRes)
     }
 }
 
@@ -141,7 +143,7 @@ private fun PresetDescription(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = displayPreset.description,
+                text = stringResource(displayPreset.descriptionRes),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -149,8 +151,11 @@ private fun PresetDescription(
             if (displayPreset != ImageCompressionPreset.AUTO) {
                 Text(
                     text =
-                        "Max: ${formatDimension(displayPreset.maxDimensionPx)}px, " +
-                            "${formatBytes(displayPreset.targetSizeBytes)}",
+                        stringResource(
+                            R.string.imgcompress_preset_params,
+                            formatDimension(displayPreset.maxDimensionPx),
+                            formatBytes(displayPreset.targetSizeBytes),
+                        ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline,
                 )
@@ -179,13 +184,11 @@ private fun SlowInterfaceWarning() {
         ) {
             Icon(
                 imageVector = Icons.Default.Info,
-                contentDescription = "Warning",
+                contentDescription = stringResource(R.string.imagecompression_warning_cd),
                 tint = MaterialTheme.colorScheme.onErrorContainer,
             )
             Text(
-                text =
-                    "Slow interfaces (LoRa/BLE) are enabled. " +
-                        "Sending large images may take a very long time or fail.",
+                text = stringResource(R.string.imagecompression_slow),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onErrorContainer,
             )

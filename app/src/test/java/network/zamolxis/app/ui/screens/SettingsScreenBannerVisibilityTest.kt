@@ -1,10 +1,10 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
-import network.columba.app.ui.screens.settings.cards.computeSharedInstanceToggleChecked
-import network.columba.app.ui.screens.settings.cards.isSharedInstanceToggleEnabled
-import network.columba.app.ui.screens.settings.cards.shouldShowSharedInstanceBanner
-import network.columba.app.ui.theme.PresetTheme
-import network.columba.app.viewmodel.SettingsState
+import network.zamolxis.app.ui.screens.settings.cards.computeSharedInstanceToggleChecked
+import network.zamolxis.app.ui.screens.settings.cards.isSharedInstanceToggleEnabled
+import network.zamolxis.app.ui.screens.settings.cards.shouldShowSharedInstanceBanner
+import network.zamolxis.app.ui.theme.PresetTheme
+import network.zamolxis.app.viewmodel.SettingsState
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -240,7 +240,7 @@ class SettingsScreenBannerVisibilityTest {
 
     @Test
     fun `toggle shows ON when using own instance by necessity`() {
-        // BUG SCENARIO: Columba started first (no shared available), now Sideband is online
+        // BUG SCENARIO: Zamolxis started first (no shared available), now Sideband is online
         // We are using own instance (isSharedInstance=false)
         // but didn't explicitly choose it (preferOwnInstance=false)
         val state =

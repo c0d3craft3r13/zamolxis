@@ -1,15 +1,15 @@
-package network.columba.app.data.database
+package network.zamolxis.app.data.database
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
-import network.columba.app.data.config.ConfigFileParser
-import network.columba.app.data.database.dao.InterfaceDao
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.toJsonString
+import network.zamolxis.app.data.config.ConfigFileParser
+import network.zamolxis.app.data.database.dao.InterfaceDao
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.toJsonString
 import java.io.File
 import javax.inject.Provider
 

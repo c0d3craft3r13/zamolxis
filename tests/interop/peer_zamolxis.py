@@ -1,18 +1,18 @@
-"""Columba (Android emulator) peer.
+"""Zamolxis (Android emulator) peer.
 
-Drives Columba via the debug-only `TestReceiver` broadcast surface
-(`app/src/debug/java/network/columba/app/test/TestReceiver.kt`). Verifies
+Drives Zamolxis via the debug-only `TestReceiver` broadcast surface
+(`app/src/debug/java/network/zamolxis/app/test/TestReceiver.kt`). Verifies
 inbound messages by scanning `logcat` for the `rx_msg source=stream …`
 lines that `TestController.observeMessages` emits live as messages
 arrive.
 
-Sends: shell out to `adb shell am broadcast -a network.columba.test.SEND_*`.
+Sends: shell out to `adb shell am broadcast -a network.zamolxis.test.SEND_*`.
 Receives: capture `logcat` to a buffer + parse `rx_msg` lines.
 
 Image / file / telemetry sends use a small in-emulator path-staging step:
 the payload is `adb push`'d into a tmp file in the app's external files
 dir, then a `SEND_IMAGE` / `SEND_FILE` action is broadcast with the path.
-We piggy-back on the existing `network.columba.test.*` action namespace
+We piggy-back on the existing `network.zamolxis.test.*` action namespace
 but add per-payload extras here (the receiver-side code is small enough
 that the additions remain readable).
 
@@ -31,13 +31,13 @@ from dataclasses import dataclass
 from typing import Optional
 
 
-PKG = "network.columba.app.debug"
-RECEIVER = f"{PKG}/network.columba.app.test.TestReceiver"
+PKG = "network.zamolxis.app.debug"
+RECEIVER = f"{PKG}/network.zamolxis.app.test.TestReceiver"
 LOGCAT_TAG = "COLUMBA_TEST"
 
 
 @dataclass
-class ColumbaRxMsg:
+class ZamolxisRxMsg:
     """One parsed `rx_msg source=stream …` line. All values come back
     `escape()`'d by `TestController` — Unicode control-pictures replace
     whitespace so each value is a single token. We un-escape here so
@@ -49,7 +49,7 @@ class ColumbaRxMsg:
     raw_line: str
 
     @classmethod
-    def parse(cls, line: str) -> Optional["ColumbaRxMsg"]:
+    def parse(cls, line: str) -> Optional["ZamolxisRxMsg"]:
         # `rx_msg source=stream from=<hex> id=<hex> content=<escaped>`
         m = re.search(
             r"rx_msg\s+source=stream\s+from=([0-9a-fA-F]+)\s+"
@@ -67,14 +67,14 @@ class ColumbaRxMsg:
 
 
 @dataclass
-class ColumbaRxAudio:
+class ZamolxisRxAudio:
     msg_id_hex: str
     mode: int
     byte_count: int
     sha256: str
 
     @classmethod
-    def parse(cls, line: str) -> Optional["ColumbaRxAudio"]:
+    def parse(cls, line: str) -> Optional["ZamolxisRxAudio"]:
         match = re.search(
             r"rx_audio\s+id=([0-9a-fA-F]+)\s+mode=(\d+)\s+"
             r"bytes=(\d+)\s+sha256=([0-9a-fA-F]{64})",
@@ -115,8 +115,8 @@ def _unescape(s: str) -> str:
     )
 
 
-class ColumbaPeer:
-    """ADB-driven Columba peer. Construct with the emulator serial and
+class ZamolxisPeer:
+    """ADB-driven Zamolxis peer. Construct with the emulator serial and
     optionally the host rnsd address (defaults to `192.0.2.10:4242`)."""
 
     def __init__(
@@ -136,7 +136,7 @@ class ColumbaPeer:
     # ---- lifecycle -----------------------------------------------------
 
     def start(self, ready_timeout: float = 120.0) -> None:
-        """Bring Columba to a state where TestReceiver responds with a
+        """Bring Zamolxis to a state where TestReceiver responds with a
         live identity.
 
         The harness deliberately does NOT reconfigure interfaces here
@@ -149,7 +149,7 @@ class ColumbaPeer:
 
         Steps:
           1. Wake the screen.
-          2. Bring Columba to foreground via `monkey` LAUNCHER intent.
+          2. Bring Zamolxis to foreground via `monkey` LAUNCHER intent.
           3. Wait for the backend to report a live LXMF identity.
 
         `ready_timeout` covers cold-start path: a fresh-install emulator
@@ -190,7 +190,7 @@ class ColumbaPeer:
     @property
     def identity_hex(self) -> str:
         if self._identity_hex is None:
-            raise RuntimeError("Columba peer not started")
+            raise RuntimeError("Zamolxis peer not started")
         return self._identity_hex
 
     def _refresh_identity(self, timeout: float = 30.0) -> None:
@@ -216,7 +216,7 @@ class ColumbaPeer:
                     last_err = err.group(1)
             time.sleep(2.0)
         raise TimeoutError(
-            "Columba did not respond to GET_DEST within "
+            "Zamolxis did not respond to GET_DEST within "
             f"{timeout}s — last reply: dest_err reason={last_err}"
         )
 
@@ -329,15 +329,15 @@ class ColumbaPeer:
         content_predicate=None,
         timeout: float = 30.0,
         poll: float = 0.5,
-    ) -> ColumbaRxMsg:
+    ) -> ZamolxisRxMsg:
         """Block until a matching `rx_msg source=stream` line appears in
         logcat. Optional `from_hex` filters by sender; `content_predicate`
-        is `callable(ColumbaRxMsg) -> bool`."""
+        is `callable(ZamolxisRxMsg) -> bool`."""
         deadline = time.time() + timeout
         from_lc = from_hex.lower() if from_hex else None
         while time.time() < deadline:
             for line in self._read_logcat_lines():
-                msg = ColumbaRxMsg.parse(line)
+                msg = ZamolxisRxMsg.parse(line)
                 if msg is None:
                     continue
                 if from_lc and msg.source_hex != from_lc:
@@ -347,7 +347,7 @@ class ColumbaPeer:
                 return msg
             time.sleep(poll)
         raise AssertionError(
-            f"Columba did not log an rx_msg within {timeout}s "
+            f"Zamolxis did not log an rx_msg within {timeout}s "
             f"(from_hex={from_hex})"
         )
 
@@ -356,17 +356,17 @@ class ColumbaPeer:
         msg_id_hex: str,
         timeout: float = 30.0,
         poll: float = 0.5,
-    ) -> ColumbaRxAudio:
+    ) -> ZamolxisRxAudio:
         deadline = time.time() + timeout
         expected_id = msg_id_hex.lower()
         while time.time() < deadline:
             for line in self._read_logcat_lines():
-                audio = ColumbaRxAudio.parse(line)
+                audio = ZamolxisRxAudio.parse(line)
                 if audio is not None and audio.msg_id_hex == expected_id:
                     return audio
             time.sleep(poll)
         raise AssertionError(
-            f"Columba did not log rx_audio for id={msg_id_hex} within {timeout}s"
+            f"Zamolxis did not log rx_audio for id={msg_id_hex} within {timeout}s"
         )
 
     def wait_for_location(
@@ -378,11 +378,11 @@ class ColumbaPeer:
         """Block until `rx_location source=stream json={…}` appears.
 
         The `json=` value can be either:
-          - Raw JSON (Columba's own SEND_LOCATION emits a string that
+          - Raw JSON (Zamolxis's own SEND_LOCATION emits a string that
             `event_bridge.py._jsonable` passes through as a string), or
           - Hex-encoded bytes (when a peer sent `FIELD_TELEMETRY` as
             bytes, `event_bridge.py._jsonable` hex-encodes them, and
-            Columba's `routeFieldSideChannels` then `.toString()`s the
+            Zamolxis's `routeFieldSideChannels` then `.toString()`s the
             JSON value, yielding a hex string the harness has to decode).
 
         Both forms are honored — JSON parse failure on the first read
@@ -415,7 +415,7 @@ class ColumbaPeer:
                     continue
             time.sleep(poll)
         raise AssertionError(
-            f"Columba did not log an rx_location within {timeout}s"
+            f"Zamolxis did not log an rx_location within {timeout}s"
         )
 
     # ---- TestReceiver wrapping -----------------------------------------
@@ -433,7 +433,7 @@ class ColumbaPeer:
         quotes inside are encoded `'\''`)."""
         cmd = (
             "am broadcast"
-            f" -a network.columba.test.{action}"
+            f" -a network.zamolxis.test.{action}"
             f" -n {RECEIVER}"
         )
         for k, v in extras.items():
@@ -494,7 +494,7 @@ class ColumbaPeer:
         the emulator already grants `adb root`, so we can chmod 644.
         Tests on CI runners without `adb root` need a different staging
         strategy (e.g. base64-encoded extras with size cap)."""
-        local_tmp = "/tmp/columba-interop-stage.bin"
+        local_tmp = "/tmp/zamolxis-interop-stage.bin"
         with open(local_tmp, "wb") as f:
             f.write(data)
         device_name = name or f"interop-{int(time.time() * 1000)}.{ext or 'bin'}"
@@ -517,10 +517,10 @@ class ColumbaPeer:
         self.broadcast(action)
         time.sleep(1.5)
         for line in self._read_logcat_lines():
-            if f"rx_broadcast_unknown action=network.columba.test.{action}" in line:
+            if f"rx_broadcast_unknown action=network.zamolxis.test.{action}" in line:
                 raise NotImplementedError(
                     f"TestReceiver doesn't handle {action}. Add a branch in "
-                    "app/src/debug/java/network/columba/app/test/TestReceiver.kt "
+                    "app/src/debug/java/network/zamolxis/app/test/TestReceiver.kt "
                     "matching the action and routing to a TestController handler."
                 )
 

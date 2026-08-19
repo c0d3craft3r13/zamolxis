@@ -1,4 +1,4 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
 internal data class OggOpusMetadata(
     val durationMs: Int,

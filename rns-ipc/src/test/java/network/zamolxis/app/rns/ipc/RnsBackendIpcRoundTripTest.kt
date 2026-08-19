@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 import app.cash.turbine.test
 import kotlinx.coroutines.CoroutineScope
@@ -14,44 +14,44 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.ConversationLinkResult
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.DeliveryStatusUpdate
-import network.columba.app.rns.api.model.Destination
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.rns.api.model.FailedInterface
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.Link
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.LinkSpeedProbeResult
-import network.columba.app.rns.api.model.LinkStatus
-import network.columba.app.rns.api.model.MessageReceipt
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.NomadnetPageResult
-import network.columba.app.rns.api.model.PacketReceipt
-import network.columba.app.rns.api.model.PacketType
-import network.columba.app.rns.api.model.PropagationState
-import network.columba.app.rns.api.model.ReceivedMessage
-import network.columba.app.rns.api.model.ReceivedPacket
-import network.columba.app.rns.api.model.ReticulumConfig
-import network.columba.app.rns.api.model.TransferPhase
-import network.columba.app.rns.api.model.TransferProgressUpdate
-import network.columba.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.ConversationLinkResult
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
+import network.zamolxis.app.rns.api.model.Destination
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.Link
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.LinkSpeedProbeResult
+import network.zamolxis.app.rns.api.model.LinkStatus
+import network.zamolxis.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.NomadnetPageResult
+import network.zamolxis.app.rns.api.model.PacketReceipt
+import network.zamolxis.app.rns.api.model.PacketType
+import network.zamolxis.app.rns.api.model.PropagationState
+import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.TransferPhase
+import network.zamolxis.app.rns.api.model.TransferProgressUpdate
+import network.zamolxis.app.rns.api.model.VoiceCallState
 import kotlinx.coroutines.flow.Flow
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -280,7 +280,7 @@ class RnsBackendIpcRoundTripTest {
         val hash = "deadbeefdeadbeefdeadbeefdeadbeef"
         client.telephony.callState.test {
             // Initial Idle snapshot.
-            assertEquals(network.columba.app.rns.api.model.CallState.Idle, awaitItem())
+            assertEquals(network.zamolxis.app.rns.api.model.CallState.Idle, awaitItem())
 
             client.telephony.setConnecting(hash)
             advanceUntilIdle()
@@ -288,9 +288,9 @@ class RnsBackendIpcRoundTripTest {
             val next = awaitItem()
             assertTrue(
                 "expected Connecting, was $next",
-                next is network.columba.app.rns.api.model.CallState.Connecting,
+                next is network.zamolxis.app.rns.api.model.CallState.Connecting,
             )
-            assertEquals(hash, (next as network.columba.app.rns.api.model.CallState.Connecting).identityHash)
+            assertEquals(hash, (next as network.zamolxis.app.rns.api.model.CallState.Connecting).identityHash)
             cancelAndIgnoreRemainingEvents()
         }
         assertEquals(hash, fake.telephony.remoteIdentity.value)
@@ -462,8 +462,8 @@ private class FakeRnsTelephony : RnsTelephony {
     )
 
     private val _callState =
-        kotlinx.coroutines.flow.MutableStateFlow<network.columba.app.rns.api.model.CallState>(
-            network.columba.app.rns.api.model.CallState.Idle,
+        kotlinx.coroutines.flow.MutableStateFlow<network.zamolxis.app.rns.api.model.CallState>(
+            network.zamolxis.app.rns.api.model.CallState.Idle,
         )
     private val _remoteIdentity = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     private val _isMuted = kotlinx.coroutines.flow.MutableStateFlow(false)
@@ -471,7 +471,7 @@ private class FakeRnsTelephony : RnsTelephony {
     private val _isPttMode = kotlinx.coroutines.flow.MutableStateFlow(false)
     private val _isPttActive = kotlinx.coroutines.flow.MutableStateFlow(false)
 
-    override val callState: kotlinx.coroutines.flow.StateFlow<network.columba.app.rns.api.model.CallState>
+    override val callState: kotlinx.coroutines.flow.StateFlow<network.zamolxis.app.rns.api.model.CallState>
         get() = _callState
     override val remoteIdentity: kotlinx.coroutines.flow.StateFlow<String?> get() = _remoteIdentity
     override val isMuted: kotlinx.coroutines.flow.StateFlow<Boolean> get() = _isMuted
@@ -479,7 +479,7 @@ private class FakeRnsTelephony : RnsTelephony {
     override val isPttMode: kotlinx.coroutines.flow.StateFlow<Boolean> get() = _isPttMode
     override val isPttActive: kotlinx.coroutines.flow.StateFlow<Boolean> get() = _isPttActive
 
-    fun emitCallState(state: network.columba.app.rns.api.model.CallState) {
+    fun emitCallState(state: network.zamolxis.app.rns.api.model.CallState) {
         _callState.value = state
     }
 
@@ -493,10 +493,10 @@ private class FakeRnsTelephony : RnsTelephony {
 
     override suspend fun setConnecting(destinationHash: String) {
         _remoteIdentity.value = destinationHash
-        _callState.value = network.columba.app.rns.api.model.CallState.Connecting(destinationHash)
+        _callState.value = network.zamolxis.app.rns.api.model.CallState.Connecting(destinationHash)
     }
     override suspend fun setEnded() {
-        _callState.value = network.columba.app.rns.api.model.CallState.Ended
+        _callState.value = network.zamolxis.app.rns.api.model.CallState.Ended
     }
     override suspend fun setMutedLocally(muted: Boolean) { _isMuted.value = muted }
     override suspend fun setSpeakerLocally(enabled: Boolean) { _isSpeakerOn.value = enabled }
@@ -662,10 +662,10 @@ private class FakeRnsCore : RnsCore {
 }
 
 private class FakeRnsTelemetry : RnsTelemetry {
-    private val emissions = MutableSharedFlow<network.columba.app.rns.api.model.LocationTelemetry>(extraBufferCapacity = 4)
+    private val emissions = MutableSharedFlow<network.zamolxis.app.rns.api.model.LocationTelemetry>(extraBufferCapacity = 4)
     override suspend fun sendLocationTelemetry(
         destinationHash: ByteArray,
-        telemetry: network.columba.app.rns.api.model.LocationTelemetry,
+        telemetry: network.zamolxis.app.rns.api.model.LocationTelemetry,
         sourceIdentity: Identity,
         iconAppearance: IconAppearance?,
     ): Result<MessageReceipt> = Result.failure(NotImplementedError())
@@ -679,7 +679,7 @@ private class FakeRnsTelemetry : RnsTelemetry {
     override suspend fun storeOwnTelemetry(locationJson: String, iconAppearance: IconAppearance?) =
         Result.success(Unit)
     override suspend fun setTelemetryAllowedRequesters(allowedHashes: Set<String>) = Result.success(Unit)
-    override val locationTelemetryFlow: SharedFlow<network.columba.app.rns.api.model.LocationTelemetry> =
+    override val locationTelemetryFlow: SharedFlow<network.zamolxis.app.rns.api.model.LocationTelemetry> =
         emissions.asSharedFlow()
 }
 
@@ -708,7 +708,7 @@ private class FakeRnsTransportAdmin : RnsTransportAdmin {
         check(interfaceStatuses.tryEmit(payload))
     }
 
-    override fun setBatteryProfile(profile: network.columba.app.rns.api.model.BatteryProfile) {}
+    override fun setBatteryProfile(profile: network.zamolxis.app.rns.api.model.BatteryProfile) {}
     override suspend fun reloadInterfaces(configs: List<InterfaceConfig>) {}
     override suspend fun setDiscoveryEnabled(enabled: Boolean) {}
     override suspend fun setAutoconnectLimit(count: Int) {}

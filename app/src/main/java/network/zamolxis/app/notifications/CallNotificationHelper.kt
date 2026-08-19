@@ -1,4 +1,4 @@
-package network.columba.app.notifications
+package network.zamolxis.app.notifications
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -13,9 +13,9 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import network.columba.app.IncomingCallActivity
-import network.columba.app.MainActivity
-import network.columba.app.R
+import network.zamolxis.app.IncomingCallActivity
+import network.zamolxis.app.MainActivity
+import network.zamolxis.app.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
 import javax.inject.Inject
@@ -44,10 +44,10 @@ class CallNotificationHelper
             const val NOTIFICATION_ID_ONGOING_CALL = 5001
 
             // Intent actions
-            const val ACTION_ANSWER_CALL = "network.columba.app.ACTION_ANSWER_CALL"
-            const val ACTION_DECLINE_CALL = "network.columba.app.ACTION_DECLINE_CALL"
-            const val ACTION_END_CALL = "network.columba.app.ACTION_END_CALL"
-            const val ACTION_OPEN_CALL = "network.columba.app.ACTION_OPEN_CALL"
+            const val ACTION_ANSWER_CALL = "network.zamolxis.app.ACTION_ANSWER_CALL"
+            const val ACTION_DECLINE_CALL = "network.zamolxis.app.ACTION_DECLINE_CALL"
+            const val ACTION_END_CALL = "network.zamolxis.app.ACTION_END_CALL"
+            const val ACTION_OPEN_CALL = "network.zamolxis.app.ACTION_OPEN_CALL"
 
             // Intent extras
             const val EXTRA_IDENTITY_HASH = "identity_hash"
@@ -233,7 +233,7 @@ class CallNotificationHelper
                 NotificationCompat
                     .Builder(context, CHANNEL_ID_INCOMING_CALL)
                     .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle("Incoming Voice Call")
+                    .setContentTitle(context.getString(R.string.notif_call_incoming_title))
                     .setContentText(displayName)
                     .setPriority(NotificationCompat.PRIORITY_MAX)
                     .setCategory(NotificationCompat.CATEGORY_CALL)
@@ -309,8 +309,8 @@ class CallNotificationHelper
                 NotificationCompat
                     .Builder(context, CHANNEL_ID_ONGOING_CALL)
                     .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle("Voice Call")
-                    .setContentText("$displayName - $durationText")
+                    .setContentTitle(context.getString(R.string.notif_call_title))
+                    .setContentText(context.getString(R.string.notif_call_content, displayName, durationText))
                     .setPriority(NotificationCompat.PRIORITY_LOW)
                     .setCategory(NotificationCompat.CATEGORY_CALL)
                     .setOngoing(true)

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Convert Columba constellation icon to RNode framebuffer format.
+Convert Zamolxis constellation icon to RNode framebuffer format.
 
 This script renders the constellation design (nodes and connecting lines)
 from ic_launcher_foreground.xml to a 64x64 monochrome bitmap suitable
 for RNode's external framebuffer display.
 
-Output: python/columba_logo.py with columba_fb_data byte array (512 bytes)
+Output: python/zamolxis_logo.py with zamolxis_fb_data byte array (512 bytes)
 """
 
 from PIL import Image, ImageDraw
@@ -133,11 +133,11 @@ def image_to_framebuffer(img):
     return fb_data
 
 
-def format_as_python(fb_data, var_name="columba_fb_data"):
+def format_as_python(fb_data, var_name="zamolxis_fb_data"):
     """Format the byte array as a Python module."""
     lines = [
         '"""',
-        'Columba logo framebuffer data for RNode external display.',
+        'Zamolxis logo framebuffer data for RNode external display.',
         '',
         'Format: 64x64 monochrome bitmap, 512 bytes',
         '        8 pixels per byte, MSB first, row-major order',
@@ -167,7 +167,7 @@ def main():
 
     # Save preview (for debugging)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    preview_path = os.path.join(script_dir, "columba_logo_preview.png")
+    preview_path = os.path.join(script_dir, "zamolxis_logo_preview.png")
     # Scale up for better visibility
     preview = img.resize((256, 256), Image.NEAREST)
     preview.save(preview_path)
@@ -182,7 +182,7 @@ def main():
     python_code = format_as_python(fb_data)
 
     # Write output
-    output_path = os.path.join(script_dir, "..", "python", "columba_logo.py")
+    output_path = os.path.join(script_dir, "..", "python", "zamolxis_logo.py")
     output_path = os.path.normpath(output_path)
 
     with open(output_path, 'w') as f:

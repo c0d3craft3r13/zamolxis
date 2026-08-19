@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -10,10 +10,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.CallDetailsState
-import network.columba.app.viewmodel.BlockLookupState
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.CallDetailsState
+import network.zamolxis.app.viewmodel.BlockLookupState
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

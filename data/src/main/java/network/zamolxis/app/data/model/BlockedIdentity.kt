@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 /** Identity-oriented projection over destination-scoped block enforcement rows. */
 data class BlockedIdentity(

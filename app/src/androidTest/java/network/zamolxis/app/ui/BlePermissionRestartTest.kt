@@ -1,4 +1,4 @@
-package network.columba.app.ui
+package network.zamolxis.app.ui
 
 import android.Manifest
 import android.content.Context
@@ -7,7 +7,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import network.columba.app.rns.host.ReticulumService
+import network.zamolxis.app.rns.host.ReticulumService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -91,7 +91,7 @@ class BlePermissionRestartTest {
      */
     private fun createRestartBleIntent(): Intent {
         return Intent(context, ReticulumService::class.java).apply {
-            action = "network.columba.app.RESTART_BLE"
+            action = "network.zamolxis.app.RESTART_BLE"
             // Pass UUIDs for test mode (solves cross-process singleton issue)
             putExtra("test_service_uuid", "37145b00-442d-4a94-917f-8f42c5da28e3")
             putExtra("test_rx_char_uuid", "37145b00-442d-4a94-917f-8f42c5da28e5")
@@ -157,7 +157,7 @@ class BlePermissionRestartTest {
         )
         assertEquals(
             "Intent action should be RESTART_BLE",
-            "network.columba.app.RESTART_BLE",
+            "network.zamolxis.app.RESTART_BLE",
             intent.action,
         )
         // Verify test UUIDs are present for cross-process support

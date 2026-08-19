@@ -3,45 +3,45 @@
 // UnnecessarySafeCall: MockK match { it?.size } and nullable StateFlow.value patterns are defensive
 @file:Suppress("SleepInsteadOfDelay", "IgnoredReturnValue", "UnnecessarySafeCall")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagingData
-import network.columba.app.R
-import network.columba.app.audio.VoiceMessageFormat
-import network.columba.app.audio.MicrophoneAdmissionArbiter
-import network.columba.app.audio.VoiceMessageRecorder
-import network.columba.app.audio.VoiceMessageRecordingState
+import network.zamolxis.app.R
+import network.zamolxis.app.audio.VoiceMessageFormat
+import network.zamolxis.app.audio.MicrophoneAdmissionArbiter
+import network.zamolxis.app.audio.VoiceMessageRecorder
+import network.zamolxis.app.audio.VoiceMessageRecordingState
 import tech.torlando.lxst.recording.RecordedAudio
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.data.repository.ReceivedLocationRepository
-import network.columba.app.data.repository.ReplyPreview
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.DeliveryStatusUpdate
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.MessageReceipt
-import network.columba.app.ui.model.CodecProfile
-import network.columba.app.rns.api.model.TransferPhase
-import network.columba.app.rns.api.model.TransferProgressUpdate
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.service.ActiveConversationManager
-import network.columba.app.service.ConversationLinkManager
-import network.columba.app.notifications.NotificationHelper
-import network.columba.app.service.IdentityResolutionManager
-import network.columba.app.service.LocationSharingManager
-import network.columba.app.service.PropagationNodeManager
-import network.columba.app.util.FileAttachment
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.data.repository.ReceivedLocationRepository
+import network.zamolxis.app.data.repository.ReplyPreview
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.ui.model.CodecProfile
+import network.zamolxis.app.rns.api.model.TransferPhase
+import network.zamolxis.app.rns.api.model.TransferProgressUpdate
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.service.ActiveConversationManager
+import network.zamolxis.app.service.ConversationLinkManager
+import network.zamolxis.app.notifications.NotificationHelper
+import network.zamolxis.app.service.IdentityResolutionManager
+import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.util.FileAttachment
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -80,11 +80,14 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import network.zamolxis.app.data.repository.PqKeyRepository
+import network.zamolxis.app.service.pq.PqMessageSealer
+import network.zamolxis.crypto.pq.PlainReason
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.ByteArrayOutputStream
-import network.columba.app.data.repository.Message as DataMessage
+import network.zamolxis.app.data.repository.Message as DataMessage
 
 /**
  * Unit tests for MessagingViewModel.
@@ -210,10 +213,12 @@ class MessagingViewModelTest {
     private lateinit var identityRepository: IdentityRepository
     private lateinit var conversationLinkManager: ConversationLinkManager
     private lateinit var receivedLocationRepository: ReceivedLocationRepository
-    private lateinit var blockedPeerRepository: network.columba.app.data.repository.BlockedPeerRepository
+    private lateinit var blockedPeerRepository: network.zamolxis.app.data.repository.BlockedPeerRepository
     private lateinit var identityResolutionManager: IdentityResolutionManager
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var rnsTelephony: RnsTelephony
+    private lateinit var pqMessageSealer: PqMessageSealer
+    private lateinit var pqKeyRepository: PqKeyRepository
     private lateinit var viewModel: MessagingViewModel
 
     private val testPeerHash = "abcdef0123456789abcdef0123456789" // Valid 32-char hex hash
@@ -255,6 +260,13 @@ class MessagingViewModelTest {
         notificationHelper = mockk()
         every { notificationHelper.cancelNotificationForConversation(any()) } just Runs
         rnsTelephony = mockk()
+        pqMessageSealer = mockk()
+        coEvery {
+            pqMessageSealer.prepareOutgoing(any(), any(), any(), any(), any())
+        } answers { PqMessageSealer.Outgoing.Plain(arg(2), emptyMap(), PlainReason.PEER_UNSUPPORTED) }
+        coEvery { pqMessageSealer.onSendSucceeded(any(), any(), any()) } just Runs
+        pqKeyRepository = mockk()
+        coEvery { pqKeyRepository.keyChangeFingerprints(any()) } returns null
         every { rnsTelephony.callState } returns MutableStateFlow(CallState.Idle)
 
         // Mock receivedLocationRepository to return no location by default
@@ -293,7 +305,7 @@ class MessagingViewModelTest {
         every { propagationNodeManager.isSyncing } returns MutableStateFlow(false)
         every { propagationNodeManager.manualSyncResult } returns MutableSharedFlow()
         every { propagationNodeManager.syncProgress } returns
-            MutableStateFlow(network.columba.app.service.SyncProgress.Idle)
+            MutableStateFlow(network.zamolxis.app.service.SyncProgress.Idle)
         every { propagationNodeManager.currentRelay } returns MutableStateFlow(null)
         coEvery { propagationNodeManager.triggerSync() } just Runs
         coEvery { propagationNodeManager.triggerSync(silent = any()) } just Runs
@@ -375,6 +387,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                     notificationHelper,
                     rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 ).also { it.attachmentIoDispatcher = StandardTestDispatcher(testScheduler) }
             advanceUntilIdle()
             testBody()
@@ -406,6 +420,8 @@ class MessagingViewModelTest {
             identityResolutionManager,
             notificationHelper,
             rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
             microphoneArbiter,
         )
 
@@ -517,10 +533,10 @@ class MessagingViewModelTest {
     fun `peerActivity exposes durable timestamp for current conversation`() =
         runTest {
             val expected =
-                network.columba.app.data.db.entity.PeerActivityEntity(
+                network.zamolxis.app.data.db.entity.PeerActivityEntity(
                     destinationHash = testPeerHash,
                     lastReceivedAt = 12_345L,
-                    activityType = network.columba.app.data.db.entity.PeerActivityType.TELEMETRY,
+                    activityType = network.zamolxis.app.data.db.entity.PeerActivityType.TELEMETRY,
                 )
             every { conversationLinkManager.observePeerActivity(testPeerHash) } returns flowOf(expected)
             val localViewModel = createTestViewModel()
@@ -952,7 +968,7 @@ class MessagingViewModelTest {
             every { failingPropagationNodeManager.isSyncing } returns MutableStateFlow(false)
             every { failingPropagationNodeManager.manualSyncResult } returns MutableSharedFlow()
             every { failingPropagationNodeManager.syncProgress } returns
-                MutableStateFlow(network.columba.app.service.SyncProgress.Idle)
+                MutableStateFlow(network.zamolxis.app.service.SyncProgress.Idle)
             every { failingPropagationNodeManager.currentRelay } returns MutableStateFlow(null)
             coEvery { failingPropagationNodeManager.triggerSync() } just Runs
             coEvery { failingPropagationNodeManager.triggerSync(silent = any()) } just Runs
@@ -986,6 +1002,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
 
             // Attempt to send message
@@ -1474,6 +1492,8 @@ class MessagingViewModelTest {
                 identityResolutionManager,
             notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
             )
             advanceUntilIdle()
 
@@ -1550,6 +1570,8 @@ class MessagingViewModelTest {
                 identityResolutionManager,
             notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
             )
             advanceUntilIdle()
 
@@ -1624,6 +1646,8 @@ class MessagingViewModelTest {
                 identityResolutionManager,
             notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
             )
             advanceUntilIdle()
 
@@ -1686,6 +1710,8 @@ class MessagingViewModelTest {
                 identityResolutionManager,
             notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
             )
             advanceUntilIdle()
 
@@ -1762,6 +1788,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -1831,6 +1859,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -1900,6 +1930,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -1969,6 +2001,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2038,6 +2072,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2106,6 +2142,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2169,6 +2207,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2232,6 +2272,8 @@ class MessagingViewModelTest {
                     identityResolutionManager,
                 notificationHelper,
                 rnsTelephony,
+            pqMessageSealer,
+            pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2884,7 +2926,7 @@ class MessagingViewModelTest {
             val mockUri = mockk<android.net.Uri>()
 
             every { context.cacheDir } returns cacheDir
-            every { context.packageName } returns "network.columba.app"
+            every { context.packageName } returns "network.zamolxis.app"
 
             mockkStatic(androidx.core.content.FileProvider::class)
             every {
@@ -2927,7 +2969,7 @@ class MessagingViewModelTest {
             val mockUri = mockk<android.net.Uri>()
 
             every { context.cacheDir } returns cacheDir
-            every { context.packageName } returns "network.columba.app"
+            every { context.packageName } returns "network.zamolxis.app"
 
             mockkStatic(androidx.core.content.FileProvider::class)
             every {
@@ -3467,14 +3509,14 @@ class MessagingViewModelTest {
 
             val context = mockk<android.content.Context>()
             every { context.cacheDir } returns tempDir
-            every { context.packageName } returns "network.columba.app"
+            every { context.packageName } returns "network.zamolxis.app"
 
             val mockUri = mockk<android.net.Uri>()
             mockkStatic(androidx.core.content.FileProvider::class)
             every {
                 androidx.core.content.FileProvider.getUriForFile(
                     any(),
-                    eq("network.columba.app.fileprovider"),
+                    eq("network.zamolxis.app.fileprovider"),
                     any(),
                 )
             } returns mockUri
@@ -3513,14 +3555,14 @@ class MessagingViewModelTest {
 
             val context = mockk<android.content.Context>()
             every { context.cacheDir } returns tempDir
-            every { context.packageName } returns "network.columba.app"
+            every { context.packageName } returns "network.zamolxis.app"
 
             val mockUri = mockk<android.net.Uri>()
             mockkStatic(androidx.core.content.FileProvider::class)
             every {
                 androidx.core.content.FileProvider.getUriForFile(
                     any(),
-                    eq("network.columba.app.fileprovider"),
+                    eq("network.zamolxis.app.fileprovider"),
                     any(),
                 )
             } returns mockUri
@@ -3556,14 +3598,14 @@ class MessagingViewModelTest {
 
             val context = mockk<android.content.Context>()
             every { context.cacheDir } returns tempDir
-            every { context.packageName } returns "network.columba.app"
+            every { context.packageName } returns "network.zamolxis.app"
 
             val mockUri = mockk<android.net.Uri>()
             mockkStatic(androidx.core.content.FileProvider::class)
             every {
                 androidx.core.content.FileProvider.getUriForFile(
                     any(),
-                    eq("network.columba.app.fileprovider"),
+                    eq("network.zamolxis.app.fileprovider"),
                     any(),
                 )
             } returns mockUri
@@ -3606,14 +3648,14 @@ class MessagingViewModelTest {
 
             val context = mockk<android.content.Context>()
             every { context.cacheDir } returns tempDir
-            every { context.packageName } returns "network.columba.app"
+            every { context.packageName } returns "network.zamolxis.app"
 
             val mockUri = mockk<android.net.Uri>()
             mockkStatic(androidx.core.content.FileProvider::class)
             every {
                 androidx.core.content.FileProvider.getUriForFile(
                     any(),
-                    eq("network.columba.app.fileprovider"),
+                    eq("network.zamolxis.app.fileprovider"),
                     any(),
                 )
             } returns mockUri
@@ -3648,14 +3690,14 @@ class MessagingViewModelTest {
 
             val context = mockk<android.content.Context>()
             every { context.cacheDir } returns tempDir
-            every { context.packageName } returns "network.columba.app"
+            every { context.packageName } returns "network.zamolxis.app"
 
             val mockUri = mockk<android.net.Uri>()
             mockkStatic(androidx.core.content.FileProvider::class)
             every {
                 androidx.core.content.FileProvider.getUriForFile(
                     any(),
-                    eq("network.columba.app.fileprovider"),
+                    eq("network.zamolxis.app.fileprovider"),
                     any(),
                 )
             } returns mockUri
@@ -4866,7 +4908,7 @@ class MessagingViewModelTest {
     @Test
     fun `startSharingWithPeer calls location sharing manager`() =
         runViewModelTest {
-            val duration = network.columba.app.ui.model.SharingDuration.FIFTEEN_MINUTES
+            val duration = network.zamolxis.app.ui.model.SharingDuration.FIFTEEN_MINUTES
 
             val result = runCatching { viewModel.startSharingWithPeer(testPeerHash, testPeerName, duration) }
             advanceUntilIdle()
@@ -5307,7 +5349,11 @@ class MessagingViewModelTest {
             advanceUntilIdle()
 
             var preservedImage = false
-            coVerify {
+            // timeout: retryFailedMessage reads the persisted attachment inside
+            // withContext(Dispatchers.IO), which runs on the real IO pool rather than the
+            // test dispatcher, so advanceUntilIdle() can return before the send happens.
+            // Without the wait this verification races the read and fails intermittently.
+            coVerify(timeout = 5_000) {
                 rnsLxmf.sendLxmfMessageWithMethod(
                     destinationHash = any(),
                     content = "image",
@@ -5401,7 +5447,11 @@ class MessagingViewModelTest {
             advanceUntilIdle()
 
             var sentExpectedAudio = false
-            coVerify {
+            // timeout: retryFailedMessage reads the persisted attachment inside
+            // withContext(Dispatchers.IO), which runs on the real IO pool rather than the
+            // test dispatcher, so advanceUntilIdle() can return before the send happens.
+            // Without the wait this verification races the read and fails intermittently.
+            coVerify(timeout = 5_000) {
                 rnsLxmf.sendLxmfMessageWithMethod(
                     destinationHash = any(),
                     content = " ",
@@ -5572,20 +5622,20 @@ class MessagingViewModelTest {
         runTest {
             // Setup custom mock BEFORE ViewModel creation
             val progressFlow =
-                MutableStateFlow<network.columba.app.service.SyncProgress>(
-                    network.columba.app.service.SyncProgress.Idle,
+                MutableStateFlow<network.zamolxis.app.service.SyncProgress>(
+                    network.zamolxis.app.service.SyncProgress.Idle,
                 )
             every { propagationNodeManager.syncProgress } returns progressFlow
 
             val viewModel = createTestViewModel()
             advanceUntilIdle()
 
-            assertEquals(network.columba.app.service.SyncProgress.Idle, viewModel.syncProgress.value)
+            assertEquals(network.zamolxis.app.service.SyncProgress.Idle, viewModel.syncProgress.value)
 
-            progressFlow.value = network.columba.app.service.SyncProgress.Starting
+            progressFlow.value = network.zamolxis.app.service.SyncProgress.Starting
             advanceUntilIdle()
 
-            assertEquals(network.columba.app.service.SyncProgress.Starting, viewModel.syncProgress.value)
+            assertEquals(network.zamolxis.app.service.SyncProgress.Starting, viewModel.syncProgress.value)
         }
 
     @Test
@@ -5781,7 +5831,7 @@ class MessagingViewModelTest {
             coEvery {
                 conversationRepository.getReplyPreview("test-message-id", any())
             } returns
-                network.columba.app.data.repository.ReplyPreview(
+                network.zamolxis.app.data.repository.ReplyPreview(
                     messageId = "test-message-id",
                     senderName = "Test Peer",
                     contentPreview = "Hello world",

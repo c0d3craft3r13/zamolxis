@@ -1,7 +1,7 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 import android.util.Log
-import network.columba.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -26,7 +26,7 @@ class RNodeDetector(
     private val usbBridge: KotlinUSBBridge,
 ) {
     companion object {
-        private const val TAG = "Columba:RNodeDetector"
+        private const val TAG = "Zamolxis:RNodeDetector"
         private const val COMMAND_TIMEOUT_MS = 2000L
         private const val READ_POLL_INTERVAL_MS = 50L
         private const val EEPROM_WRITE_DELAY_MS = 85L // Time to wait after each EEPROM write
@@ -553,7 +553,7 @@ class RNodeDetector(
      *
      * Note: This does NOT configure TNC mode (radio parameters saved to EEPROM).
      * The device will show "Missing Config" after provisioning, which is EXPECTED
-     * and CORRECT for devices used with Reticulum apps (Columba, Sideband, MeshChat).
+     * and CORRECT for devices used with Reticulum apps (Zamolxis, Sideband, MeshChat).
      * These apps send radio parameters at runtime via KISS commands.
      *
      * TNC mode is only needed for standalone KISS TNC operation with amateur radio software.
@@ -590,7 +590,7 @@ class RNodeDetector(
 
             // Note: We intentionally do NOT configure TNC mode (radio config).
             // The device will display "Missing Config" which is normal for Reticulum apps.
-            // Columba/Sideband/MeshChat send radio parameters at runtime.
+            // Zamolxis/Sideband/MeshChat send radio parameters at runtime.
 
             // Use provided hash or try to get from device (may return zeros)
             val firmwareHash =
@@ -632,7 +632,7 @@ class RNodeDetector(
      * its configured frequency instead of "Missing Config".
      *
      * IMPORTANT: TNC mode should be DISABLED when using the RNode with Reticulum apps
-     * like Columba, Sideband, or MeshChat. These apps send radio parameters at runtime
+     * like Zamolxis, Sideband, or MeshChat. These apps send radio parameters at runtime
      * and expect the device to be in "Normal (host-controlled)" mode.
      *
      * The RNode firmware expects radio config to be set via KISS commands (CMD_FREQUENCY,

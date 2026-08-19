@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.Manifest
 import android.content.Intent
@@ -76,13 +76,15 @@ import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
-import network.columba.app.ui.components.AddContactConfirmationDialog
-import network.columba.app.util.CameraPermissionManager
-import network.columba.app.viewmodel.ContactsViewModel
+import network.zamolxis.app.ui.components.AddContactConfirmationDialog
+import network.zamolxis.app.util.CameraPermissionManager
+import network.zamolxis.app.viewmodel.ContactsViewModel
 import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 private const val TAG = "QrScannerScreen"
 
@@ -175,12 +177,12 @@ fun QrScannerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Scan QR Code") },
+                title = { Text(stringResource(R.string.qr_scan_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                         )
                     }
                 },
@@ -298,7 +300,7 @@ fun QrScannerScreen(
                                         ),
                                 ) {
                                     Text(
-                                        text = "Point camera at QR code\nIt will scan automatically",
+                                        text = stringResource(R.string.qr_point_camera),
                                         style = MaterialTheme.typography.bodyMedium,
                                         modifier = Modifier.padding(16.dp),
                                         textAlign = TextAlign.Center,
@@ -348,13 +350,13 @@ fun QrScannerScreen(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Contact Exists",
+                            contentDescription = stringResource(R.string.contact_exists_cd),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     },
                     title = {
                         Text(
-                            text = "Contact Already Added",
+                            text = stringResource(R.string.contact_already_added),
                             style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center,
                         )
@@ -381,7 +383,7 @@ fun QrScannerScreen(
                                 onBackClick()
                             },
                         ) {
-                            Text("OK")
+                            Text(stringResource(R.string.common_ok))
                         }
                     },
                 )
@@ -425,14 +427,14 @@ private fun PermissionRequiredContent(
                 onClick = onOpenSettings,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Open Settings")
+                Text(stringResource(R.string.common_open_settings))
             }
         } else {
             Button(
                 onClick = onRequestPermission,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Grant Permission")
+                Text(stringResource(R.string.qr_grant_permission))
             }
         }
     }

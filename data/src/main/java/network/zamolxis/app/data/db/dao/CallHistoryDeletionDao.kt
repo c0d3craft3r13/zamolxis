@@ -1,11 +1,11 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import network.columba.app.data.db.entity.CallHistoryDeletionEntity
+import network.zamolxis.app.data.db.entity.CallHistoryDeletionEntity
 
 @Dao
 interface CallHistoryDeletionDao {

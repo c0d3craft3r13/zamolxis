@@ -1,4 +1,4 @@
-package network.columba.app.rns.host
+package network.zamolxis.app.rns.host
 
 import android.app.Service
 import android.content.Intent
@@ -14,16 +14,16 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.host.binder.ReticulumServiceBinder
-import network.columba.app.rns.host.di.ServiceModule
-import network.columba.app.rns.host.persistence.BackendInitializer
-import network.columba.app.rns.host.persistence.PeerActivityCollector
-import network.columba.app.rns.host.rnode.KotlinRNodeBridge
-import network.columba.app.rns.host.rnode.RNodeOnlineStatusListener
-import network.columba.app.rns.host.usb.KotlinUSBBridge
-import network.columba.app.rns.host.usb.UsbConnectionListener
-import network.columba.app.rns.ipc.RnsBackendServer
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.host.binder.ReticulumServiceBinder
+import network.zamolxis.app.rns.host.di.ServiceModule
+import network.zamolxis.app.rns.host.persistence.BackendInitializer
+import network.zamolxis.app.rns.host.persistence.PeerActivityCollector
+import network.zamolxis.app.rns.host.rnode.KotlinRNodeBridge
+import network.zamolxis.app.rns.host.rnode.RNodeOnlineStatusListener
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.host.usb.UsbConnectionListener
+import network.zamolxis.app.rns.ipc.RnsBackendServer
 
 /**
  * Background service that hosts the native Reticulum stack.
@@ -42,10 +42,10 @@ class ReticulumService : Service() {
         private const val TAG = "ReticulumService"
 
         // Actions for service control
-        const val ACTION_START = "network.columba.app.service.START"
-        const val ACTION_STOP = "network.columba.app.service.STOP"
-        const val ACTION_RESTART_BLE = "network.columba.app.RESTART_BLE"
-        const val ACTION_UPDATE_NOTIFICATION = "network.columba.app.service.UPDATE_NOTIFICATION"
+        const val ACTION_START = "network.zamolxis.app.service.START"
+        const val ACTION_STOP = "network.zamolxis.app.service.STOP"
+        const val ACTION_RESTART_BLE = "network.zamolxis.app.RESTART_BLE"
+        const val ACTION_UPDATE_NOTIFICATION = "network.zamolxis.app.service.UPDATE_NOTIFICATION"
         const val EXTRA_NETWORK_STATUS = "network_status"
 
         // Grace window for treating ACTION_STOP as a stale redelivery during an
@@ -171,7 +171,7 @@ class ReticulumService : Service() {
         // ReticulumServiceBinder.kt:235-243; dual-build never carried it
         // over, so RNode disconnect was silent across both backends.
         //
-        // BLE / Classic path: ColumbaRNodeInterface._set_online (Python)
+        // BLE / Classic path: ZamolxisRNodeInterface._set_online (Python)
         // calls kotlin_bridge.notifyOnlineStatusChanged on every connect /
         // disconnect, which fans out to our listener here.
         //
@@ -281,7 +281,7 @@ class ReticulumService : Service() {
         // PythonRnsRuntime.start sees running=true on the second call and
         // silently drops the FRESH config. Skip self-init and let the UI drive.
         val isApplyingConfig =
-            getSharedPreferences("columba_prefs", MODE_PRIVATE)
+            getSharedPreferences("zamolxis_prefs", MODE_PRIVATE)
                 .getBoolean("is_applying_config", false)
         if (isApplyingConfig) {
             Log.i(TAG, "Skipping snapshot self-init — apply-in-progress; UI will drive initialize()")
@@ -302,7 +302,7 @@ class ReticulumService : Service() {
         // If the user explicitly shut down the service, don't allow START_STICKY or
         // scheduleServiceRestart() to bring it back. Check flag and stop immediately.
         val isUserShutdown =
-            getSharedPreferences("columba_prefs", MODE_PRIVATE)
+            getSharedPreferences("zamolxis_prefs", MODE_PRIVATE)
                 .getBoolean("is_user_shutdown", false)
         val isUserShutdownRestart = isUserShutdown && intent?.action != ACTION_STOP && intent?.action != ACTION_START
 
@@ -326,7 +326,7 @@ class ReticulumService : Service() {
         when (intent?.action) {
             ACTION_START -> {
                 // Clear user shutdown flag — this is an intentional start (app launch or restart)
-                getSharedPreferences("columba_prefs", MODE_PRIVATE)
+                getSharedPreferences("zamolxis_prefs", MODE_PRIVATE)
                     .edit()
                     .putBoolean("is_user_shutdown", false)
                     .apply()
@@ -354,7 +354,7 @@ class ReticulumService : Service() {
                 // user-toggled service kill) is unaffected because is_applying_config
                 // is false in those scenarios.
                 val isApplyingConfig =
-                    getSharedPreferences("columba_prefs", MODE_PRIVATE)
+                    getSharedPreferences("zamolxis_prefs", MODE_PRIVATE)
                         .getBoolean("is_applying_config", false)
                 val processAgeMs = android.os.SystemClock.elapsedRealtime() - processStartElapsedRealtimeMs
                 if (isApplyingConfig && processAgeMs < STALE_STOP_GRACE_MS) {
@@ -483,7 +483,7 @@ class ReticulumService : Service() {
 
         // Only schedule restart if the user didn't explicitly shut down the service
         val isUserShutdown =
-            getSharedPreferences("columba_prefs", MODE_PRIVATE)
+            getSharedPreferences("zamolxis_prefs", MODE_PRIVATE)
                 .getBoolean("is_user_shutdown", false)
         if (isUserShutdown) {
             Log.d(TAG, "User shutdown flag set - skipping service restart")

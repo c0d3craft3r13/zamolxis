@@ -11,7 +11,7 @@
 # Usage:
 #   run-large-attachment.sh <device-serial> [APP_ID] [SIZE_BYTES]
 #
-# Defaults: APP_ID=network.columba.app.debug (a DEBUG build is required for the
+# Defaults: APP_ID=network.zamolxis.app.debug (a DEBUG build is required for the
 # TestReceiver self-dest lookup; the attachment fix under test is identical in
 # release). SIZE_BYTES=5528860 (the size from the original crash report).
 #
@@ -19,13 +19,13 @@
 set -euo pipefail
 
 DEVICE="${1:?usage: run-large-attachment.sh <device-serial> [APP_ID] [SIZE_BYTES]}"
-APP_ID="${2:-network.columba.app.debug}"
+APP_ID="${2:-network.zamolxis.app.debug}"
 SIZE_BYTES="${3:-5528860}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEST_TAG="COLUMBA_TEST"                                   # TestController.LOGCAT_TAG
-RECEIVER="$APP_ID/network.columba.app.test.TestReceiver"  # debug-only broadcast surface
-FILE_NAME="columba-large-attach-${SIZE_BYTES}.bin"
+RECEIVER="$APP_ID/network.zamolxis.app.test.TestReceiver"  # debug-only broadcast surface
+FILE_NAME="zamolxis-large-attach-${SIZE_BYTES}.bin"
 DEST_DOWNLOAD="/sdcard/Download/$FILE_NAME"
 MSG_TOKEN="bigfile-$(date +%s)"
 PEER_NAME="Self-LargeAttach"
@@ -44,7 +44,7 @@ adb -s "$DEVICE" shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1
 SELF_HASH=""
 for attempt in $(seq 1 12); do
   adb -s "$DEVICE" logcat -c 2>/dev/null || true
-  adb -s "$DEVICE" shell am broadcast -a network.columba.test.GET_DEST -n "$RECEIVER" >/dev/null 2>&1 || true
+  adb -s "$DEVICE" shell am broadcast -a network.zamolxis.test.GET_DEST -n "$RECEIVER" >/dev/null 2>&1 || true
   sleep 3
   # Reply line under COLUMBA_TEST is `dest=<hex>` (or `dest_err reason=not_ready`).
   SELF_HASH="$(adb -s "$DEVICE" logcat -d -s "$TEST_TAG" 2>/dev/null \

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -13,8 +13,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import network.columba.app.rns.api.model.PropagationState
-import network.columba.app.rns.host.state.ServiceState
+import network.zamolxis.app.rns.api.model.PropagationState
+import network.zamolxis.app.rns.host.state.ServiceState
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
@@ -125,7 +125,7 @@ class ServiceNotificationManager(
 
         return NotificationCompat
             .Builder(context, CHANNEL_ID)
-            .setContentTitle("Columba Mesh Network")
+            .setContentTitle("Zamolxis Mesh Network")
             .setContentText(statusText)
             .setStyle(
                 NotificationCompat

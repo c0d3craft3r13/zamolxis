@@ -1,4 +1,4 @@
-package network.columba.app.util.validation
+package network.zamolxis.app.util.validation
 
 /**
  * Constants and regex patterns for input validation across the application.

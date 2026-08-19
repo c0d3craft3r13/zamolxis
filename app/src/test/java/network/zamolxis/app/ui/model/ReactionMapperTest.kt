@@ -1,4 +1,4 @@
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
 import android.app.Application
 import org.junit.Assert.assertEquals
@@ -14,7 +14,7 @@ import org.robolectric.annotation.Config
  *
  * Shape under test: flat `{emoji: [senderHex, ...]}`. The previous
  * `parseReactionsFromField16` overload-on-fieldsJson form was retired
- * by DB migration v1→v2 (see `ColumbaDatabase.MIGRATION_1_2`).
+ * by DB migration v1→v2 (see `ZamolxisDatabase.MIGRATION_1_2`).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)

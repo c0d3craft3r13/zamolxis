@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,13 +49,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import network.columba.app.ui.components.ColorPickerDialog
-import network.columba.app.util.ThemeColorGenerator
-import network.columba.app.viewmodel.ColorRole
-import network.columba.app.viewmodel.ThemeEditorViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.ColorPickerDialog
+import network.zamolxis.app.util.ThemeColorGenerator
+import network.zamolxis.app.viewmodel.ColorRole
+import network.zamolxis.app.viewmodel.ThemeEditorViewModel
 
 /**
  * Screen for creating and editing custom themes.
@@ -83,13 +85,19 @@ fun ThemeEditorScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(if (themeId == null) "Create Theme" else "Edit Theme")
+                    Text(
+                        if (themeId == null) {
+                            stringResource(R.string.themeeditor_create)
+                        } else {
+                            stringResource(R.string.themeeditor_edit)
+                        },
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                         )
                     }
                 },
@@ -98,7 +106,7 @@ fun ThemeEditorScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Cancel",
+                            contentDescription = stringResource(R.string.themeeditor_cancel_cd),
                         )
                     }
                     // Save button
@@ -111,7 +119,7 @@ fun ThemeEditorScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
-                            contentDescription = "Save",
+                            contentDescription = stringResource(R.string.themeeditor_save_cd),
                         )
                     }
                     // Save & Apply button
@@ -124,7 +132,7 @@ fun ThemeEditorScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Save & Apply",
+                            contentDescription = stringResource(R.string.themeeditor_save_apply_cd),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
@@ -152,8 +160,8 @@ fun ThemeEditorScreen(
             OutlinedTextField(
                 value = state.themeName,
                 onValueChange = { viewModel.updateThemeName(it) },
-                label = { Text("Theme Name") },
-                placeholder = { Text("My Custom Theme") },
+                label = { Text(stringResource(R.string.themeeditor_name_label)) },
+                placeholder = { Text(stringResource(R.string.themeeditor_name_placeholder)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -162,8 +170,8 @@ fun ThemeEditorScreen(
             OutlinedTextField(
                 value = state.themeDescription,
                 onValueChange = { viewModel.updateThemeDescription(it) },
-                label = { Text("Description (Optional)") },
-                placeholder = { Text("Describe your theme...") },
+                label = { Text(stringResource(R.string.themeeditor_desc_label)) },
+                placeholder = { Text(stringResource(R.string.themeeditor_desc_placeholder)) },
                 maxLines = 3,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -181,12 +189,17 @@ fun ThemeEditorScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(
-                        text = "Theme Colors",
+                        text = stringResource(R.string.themeeditor_colors),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = if (state.useHarmonizedColors) "Auto-generating harmonized colors from primary" else "Customize each color individually",
+                        text =
+                        if (state.useHarmonizedColors) {
+                            stringResource(R.string.themeeditor_harmonized)
+                        } else {
+                            stringResource(R.string.themeeditor_custom_each)
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -198,7 +211,7 @@ fun ThemeEditorScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = "Auto-harmonize colors",
+                            text = stringResource(R.string.themeeditor_autoharmonize),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Switch(
@@ -251,14 +264,14 @@ fun ThemeEditorScreen(
                                 fontWeight = FontWeight.Medium,
                             )
                             TextButton(onClick = { showColorPicker = true }) {
-                                Text("Change Color")
+                                Text(stringResource(R.string.themeeditor_change_color))
                             }
                         }
                     }
 
                     // Show color palette (clickable swatches)
                     Text(
-                        text = "Color Palette",
+                        text = stringResource(R.string.themeeditor_palette),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(top = 8.dp),
@@ -268,7 +281,7 @@ fun ThemeEditorScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         ColorSwatch(
-                            label = "Primary",
+                            label = stringResource(R.string.themeeditor_primary),
                             color = state.primarySeedColor,
                             isSelected = state.selectedColorRole == ColorRole.PRIMARY,
                             onClick = {
@@ -277,7 +290,7 @@ fun ThemeEditorScreen(
                             modifier = Modifier.weight(1f),
                         )
                         ColorSwatch(
-                            label = "Secondary",
+                            label = stringResource(R.string.themeeditor_secondary),
                             color = state.secondarySeedColor,
                             isSelected = state.selectedColorRole == ColorRole.SECONDARY,
                             onClick = {
@@ -286,7 +299,7 @@ fun ThemeEditorScreen(
                             modifier = Modifier.weight(1f),
                         )
                         ColorSwatch(
-                            label = "Tertiary",
+                            label = stringResource(R.string.themeeditor_tertiary),
                             color = state.tertiarySeedColor,
                             isSelected = state.selectedColorRole == ColorRole.TERTIARY,
                             onClick = {
@@ -311,7 +324,7 @@ fun ThemeEditorScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(
-                        text = "Theme Preview",
+                        text = stringResource(R.string.themeeditor_preview),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -324,12 +337,12 @@ fun ThemeEditorScreen(
                         Tab(
                             selected = previewMode == 0,
                             onClick = { previewMode = 0 },
-                            text = { Text("Light Mode") },
+                            text = { Text(stringResource(R.string.themeeditor_light)) },
                         )
                         Tab(
                             selected = previewMode == 1,
                             onClick = { previewMode = 1 },
-                            text = { Text("Dark Mode") },
+                            text = { Text(stringResource(R.string.themeeditor_dark)) },
                         )
                     }
 
@@ -351,14 +364,14 @@ fun ThemeEditorScreen(
     if (showColorPicker) {
         val currentColorRoleName =
             when (state.selectedColorRole) {
-                ColorRole.PRIMARY -> "Primary"
-                ColorRole.SECONDARY -> "Secondary"
-                ColorRole.TERTIARY -> "Tertiary"
+                ColorRole.PRIMARY -> stringResource(R.string.themeeditor_primary)
+                ColorRole.SECONDARY -> stringResource(R.string.themeeditor_secondary)
+                ColorRole.TERTIARY -> stringResource(R.string.themeeditor_tertiary)
             }
 
         ColorPickerDialog(
             initialColor = viewModel.getSelectedColor(),
-            title = "Pick $currentColorRoleName Color",
+            title = stringResource(R.string.themeeditor_pick_color, currentColorRoleName),
             onConfirm = { color ->
                 viewModel.updateSelectedColor(color)
             },
@@ -452,7 +465,7 @@ private fun ThemePreview(
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Text(
-                    text = "Top App Bar",
+                    text = stringResource(R.string.themeeditor_top_app_bar),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
@@ -471,7 +484,7 @@ private fun ThemePreview(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Primary",
+                    text = stringResource(R.string.themeeditor_primary),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -492,7 +505,7 @@ private fun ThemePreview(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "Secondary",
+                        text = stringResource(R.string.themeeditor_secondary),
                         color = MaterialTheme.colorScheme.onSecondary,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -509,7 +522,7 @@ private fun ThemePreview(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "Tertiary",
+                        text = stringResource(R.string.themeeditor_tertiary),
                         color = MaterialTheme.colorScheme.onTertiary,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -527,7 +540,7 @@ private fun ThemePreview(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = "Surface",
+                    text = stringResource(R.string.themeeditor_surface),
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -541,7 +554,7 @@ private fun ThemePreview(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "Surface Variant",
+                        text = stringResource(R.string.themeeditor_surface_variant),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
                     )

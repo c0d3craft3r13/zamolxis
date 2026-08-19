@@ -1,4 +1,4 @@
-package network.columba.app.ui.theme
+package network.zamolxis.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -217,7 +217,7 @@ val DynamicTertiary40 = Color(0xFF689F38) // Green
 // ============================================
 
 // Dark theme colors - True black (#000000) for OLED pixel-off savings
-val OledPrimary80 = Color(0xFFE5B6F2) // Columba lavender - High contrast on black
+val OledPrimary80 = Color(0xFFE5B6F2) // Zamolxis lavender - High contrast on black
 val OledSecondary80 = Color(0xFFD5C0D7) // Light mauve
 val OledTertiary80 = Color(0xFFB5CCBA) // Light sage/mint green
 

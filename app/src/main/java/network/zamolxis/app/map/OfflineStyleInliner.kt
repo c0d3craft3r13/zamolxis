@@ -1,4 +1,4 @@
-package network.columba.app.map
+package network.zamolxis.app.map
 
 import android.util.Log
 import org.json.JSONObject

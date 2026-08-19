@@ -1,6 +1,8 @@
-package network.columba.app.ui.screens.onboarding
+package network.zamolxis.app.ui.screens.onboarding
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
+import network.zamolxis.app.R
 
 /**
  * State for the paged onboarding flow.
@@ -27,29 +29,29 @@ data class OnboardingState(
  * Simplified version of the full InterfaceConfig for user selection.
  */
 enum class OnboardingInterfaceType(
-    val displayName: String,
-    val description: String,
-    val secondaryDescription: String? = null,
+    @param:StringRes val displayName: Int,
+    @param:StringRes val description: Int,
+    @param:StringRes val secondaryDescription: Int? = null,
 ) {
     AUTO(
-        displayName = "Local WiFi",
-        description = "Discover peers on your local network",
-        secondaryDescription = "No internet required",
+        displayName = R.string.onboarding_interface_wifi_name,
+        description = R.string.onboarding_interface_wifi_description,
+        secondaryDescription = R.string.onboarding_interface_wifi_secondary,
     ),
     BLE(
-        displayName = "Bluetooth LE",
-        description = "Connect directly to nearby devices",
-        secondaryDescription = "Requires Bluetooth permissions",
+        displayName = R.string.onboarding_interface_ble_name,
+        description = R.string.onboarding_interface_ble_description,
+        secondaryDescription = R.string.onboarding_interface_ble_secondary,
     ),
     TCP(
-        displayName = "Internet (TCP)",
-        description = "Connect to the global Reticulum network",
-        secondaryDescription = "Requires internet connection",
+        displayName = R.string.onboarding_interface_tcp_name,
+        description = R.string.onboarding_interface_tcp_description,
+        secondaryDescription = R.string.onboarding_interface_tcp_secondary,
     ),
     RNODE(
-        displayName = "LoRa Radio",
-        description = "Long-range mesh via RNode hardware",
-        secondaryDescription = "Requires external hardware - configure in Settings",
+        displayName = R.string.onboarding_interface_rnode_name,
+        description = R.string.onboarding_interface_rnode_description,
+        secondaryDescription = R.string.onboarding_interface_rnode_secondary,
     ),
 }
 

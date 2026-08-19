@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.content.Context
 import io.mockk.coEvery
@@ -8,12 +8,12 @@ import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import network.columba.app.rns.api.call.CallAttemptDirection
-import network.columba.app.rns.api.call.CallAttemptRequest
-import network.columba.app.rns.api.call.CallAttemptSnapshot
-import network.columba.app.rns.api.call.CallFailureReason
-import network.columba.app.rns.api.call.CallLifecycleRecorder
-import network.columba.app.rns.api.call.UnconnectedOutcome
+import network.zamolxis.app.rns.api.call.CallAttemptDirection
+import network.zamolxis.app.rns.api.call.CallAttemptRequest
+import network.zamolxis.app.rns.api.call.CallAttemptSnapshot
+import network.zamolxis.app.rns.api.call.CallFailureReason
+import network.zamolxis.app.rns.api.call.CallLifecycleRecorder
+import network.zamolxis.app.rns.api.call.UnconnectedOutcome
 import network.reticulum.identity.Identity
 import org.junit.After
 import org.junit.Assert.assertEquals

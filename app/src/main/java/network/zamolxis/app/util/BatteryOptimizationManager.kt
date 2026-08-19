@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.content.Context
 import android.content.Intent
@@ -12,7 +12,7 @@ import androidx.annotation.RequiresApi
 /**
  * Utility for managing battery optimization exemption.
  *
- * Columba requires battery optimization exemption to prevent Android from
+ * Zamolxis requires battery optimization exemption to prevent Android from
  * killing the background ReticulumService during Deep Doze mode, which causes
  * 6+ hour gaps in message delivery.
  */
@@ -112,7 +112,7 @@ object BatteryOptimizationManager {
         }
 
         // Check when we last prompted (avoid prompting every time)
-        val prefs = context.getSharedPreferences("columba_prefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("zamolxis_prefs", Context.MODE_PRIVATE)
         val lastPromptTime = prefs.getLong(PREFS_KEY_LAST_PROMPT, 0)
         val daysSinceLastPrompt = (System.currentTimeMillis() - lastPromptTime) / (1000 * 60 * 60 * 24)
 
@@ -128,7 +128,7 @@ object BatteryOptimizationManager {
      * Record that we prompted the user for battery exemption.
      */
     fun recordPromptShown(context: Context) {
-        val prefs = context.getSharedPreferences("columba_prefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("zamolxis_prefs", Context.MODE_PRIVATE)
         prefs.edit().putLong(PREFS_KEY_LAST_PROMPT, System.currentTimeMillis()).apply()
         Log.d(TAG, "Recorded battery exemption prompt shown")
     }

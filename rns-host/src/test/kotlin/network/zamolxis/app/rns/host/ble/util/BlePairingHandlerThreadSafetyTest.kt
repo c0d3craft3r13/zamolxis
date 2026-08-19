@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.util
+package network.zamolxis.app.rns.host.ble.util
 
 import android.content.BroadcastReceiver
 import android.content.Context

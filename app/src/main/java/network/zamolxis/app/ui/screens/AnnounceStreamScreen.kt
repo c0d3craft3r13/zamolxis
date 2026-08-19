@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +58,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -65,16 +67,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.launch
-import network.columba.app.data.repository.Announce
-import network.columba.app.rns.api.model.NodeType
-import network.columba.app.ui.components.AnnounceFilterChips
-import network.columba.app.ui.components.LocalWindowSize
-import network.columba.app.ui.components.NodeTypeBadge
-import network.columba.app.ui.components.OtherBadge
-import network.columba.app.ui.components.PeerCard
-import network.columba.app.ui.components.SearchableTopAppBar
-import network.columba.app.ui.components.simpleVerticalScrollbar
-import network.columba.app.viewmodel.AnnounceStreamViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.data.repository.Announce
+import network.zamolxis.app.rns.api.model.NodeType
+import network.zamolxis.app.ui.components.AnnounceFilterChips
+import network.zamolxis.app.ui.components.LocalWindowSize
+import network.zamolxis.app.ui.components.NodeTypeBadge
+import network.zamolxis.app.ui.components.OtherBadge
+import network.zamolxis.app.ui.components.PeerCard
+import network.zamolxis.app.ui.components.SearchableTopAppBar
+import network.zamolxis.app.ui.components.simpleVerticalScrollbar
+import network.zamolxis.app.viewmodel.AnnounceStreamViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -151,10 +154,11 @@ fun AnnounceStreamScreen(
         }
     }
 
+    val announceSentText = stringResource(R.string.announcestream_sent)
     // Show toast for announce success/error
     LaunchedEffect(announceSuccess) {
         if (announceSuccess) {
-            Toast.makeText(context, "Announce sent!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, announceSentText, Toast.LENGTH_SHORT).show()
         }
     }
     LaunchedEffect(announceError) {
@@ -166,13 +170,18 @@ fun AnnounceStreamScreen(
     Scaffold(
         topBar = {
             SearchableTopAppBar(
-                title = "Discovered Nodes",
-                subtitle = "$reachableCount nodes in range (active paths)",
+                title = stringResource(R.string.announcestream_title),
+                subtitle =
+                    pluralStringResource(
+                        R.plurals.announcestream_nodes_in_range,
+                        reachableCount,
+                        reachableCount,
+                    ),
                 isSearching = isSearching,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { viewModel.searchQuery.value = it },
                 onSearchToggle = { isSearching = !isSearching },
-                searchPlaceholder = "Search by name or hash...",
+                searchPlaceholder = stringResource(R.string.announcestream_search_placeholder),
                 additionalActions = {
                     // Filter chips toggle (matches ContactsScreen Network tab)
                     IconButton(onClick = { filtersExpanded = !filtersExpanded }) {
@@ -184,7 +193,11 @@ fun AnnounceStreamScreen(
                                     Icons.Default.FilterAlt
                                 },
                             contentDescription =
-                                if (filtersExpanded) "Hide filters" else "Show filters",
+                                if (filtersExpanded) {
+                                    stringResource(R.string.announcestream_hide_filters)
+                                } else {
+                                    stringResource(R.string.announcestream_show_filters)
+                                },
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                     }
@@ -202,7 +215,7 @@ fun AnnounceStreamScreen(
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Campaign,
-                                contentDescription = "Announce now",
+                                contentDescription = stringResource(R.string.announcestream_announce_now_cd),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                         }
@@ -212,7 +225,7 @@ fun AnnounceStreamScreen(
                         IconButton(onClick = { showOverflowMenu = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More options",
+                                contentDescription = stringResource(R.string.common_more_options),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                         }
@@ -230,7 +243,7 @@ fun AnnounceStreamScreen(
                                 },
                                 text = {
                                     Text(
-                                        text = "Clear All Announces",
+                                        text = stringResource(R.string.announcestream_clear_all),
                                         color = MaterialTheme.colorScheme.error,
                                     )
                                 },
@@ -354,7 +367,7 @@ fun AnnounceStreamScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowUp,
-                                    contentDescription = "Scroll to top",
+                                    contentDescription = stringResource(R.string.announcestream_scroll_top_cd),
                                 )
                                 Text(
                                     text = "$newAnnouncesCount",
@@ -452,7 +465,13 @@ fun PeerContextMenu(
                 )
             },
             text = {
-                Text(if (announce.isFavorite) "Remove from Saved" else "Save Peer")
+                Text(
+                    if (announce.isFavorite) {
+                        stringResource(R.string.announcestream_remove_saved)
+                    } else {
+                        stringResource(R.string.announcestream_save_peer)
+                    },
+                )
             },
             onClick = {
                 onToggleFavorite()
@@ -472,7 +491,7 @@ fun PeerContextMenu(
                     )
                 },
                 text = {
-                    Text("Start Chat")
+                    Text(stringResource(R.string.announcedetail_start_chat))
                 },
                 onClick = {
                     onStartChat()
@@ -490,7 +509,7 @@ fun PeerContextMenu(
                 )
             },
             text = {
-                Text("View Details")
+                Text(stringResource(R.string.announcestream_view_details))
             },
             onClick = {
                 onViewDetails()
@@ -511,7 +530,7 @@ fun PeerContextMenu(
             },
             text = {
                 Text(
-                    text = "Delete",
+                    text = stringResource(R.string.delete),
                     color = MaterialTheme.colorScheme.error,
                 )
             },
@@ -713,7 +732,7 @@ fun LoadingNetworkState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Loading network...",
+            text = stringResource(R.string.announcestream_loading),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -735,13 +754,13 @@ fun EmptyAnnounceState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No nodes discovered yet",
+            text = stringResource(R.string.announcestream_empty_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Listening for announces...",
+            text = stringResource(R.string.announcestream_empty_sub),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
         )
@@ -771,10 +790,10 @@ fun DeleteAnnounceDialog(
             )
         },
         title = {
-            Text("Delete Announce?")
+            Text(stringResource(R.string.announcestream_delete_title))
         },
         text = {
-            Text("Remove $peerName from the list? They will reappear when they announce again.")
+            Text(stringResource(R.string.announcestream_delete_body, peerName))
         },
         confirmButton = {
             TextButton(
@@ -784,12 +803,12 @@ fun DeleteAnnounceDialog(
                         contentColor = MaterialTheme.colorScheme.error,
                     ),
             ) {
-                Text("Delete")
+                Text(stringResource(R.string.delete))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -810,10 +829,10 @@ fun ClearAllAnnouncesDialog(
             )
         },
         title = {
-            Text("Clear All Announces?")
+            Text(stringResource(R.string.announcestream_clear_title))
         },
         text = {
-            Text("This will remove all discovered nodes from the list, except those saved in My Contacts. Nodes will reappear when they announce again.")
+            Text(stringResource(R.string.announcestream_clear_body))
         },
         confirmButton = {
             TextButton(
@@ -823,12 +842,12 @@ fun ClearAllAnnouncesDialog(
                         contentColor = MaterialTheme.colorScheme.error,
                     ),
             ) {
-                Text("Clear All")
+                Text(stringResource(R.string.announcestream_clear_all_action))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -837,12 +856,12 @@ fun ClearAllAnnouncesDialog(
 /**
  * Stable key function for announce paging lists.
  *
- * Uses [network.columba.app.data.repository.Announce.destinationHash] as the primary key so Compose can track
+ * Uses [network.zamolxis.app.data.repository.Announce.destinationHash] as the primary key so Compose can track
  * items across list re-sorts (e.g., when new announces insert at the top).
  * Falls back to appending a disambiguator only for transient Paging3 duplicates
  * (issue #542) to avoid a duplicate-key crash.
  */
-private fun LazyPagingItems<network.columba.app.data.repository.Announce>.stableKey(): (index: Int) -> Any {
+private fun LazyPagingItems<network.zamolxis.app.data.repository.Announce>.stableKey(): (index: Int) -> Any {
     val seen = mutableSetOf<String>()
     val keys =
         Array<Any>(itemCount) { index ->

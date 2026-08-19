@@ -1,16 +1,16 @@
 # Port deviations
 
-Columba is a port of the LXMF/Reticulum stack from python (`~/repos/Reticulum`,
+Zamolxis is a port of the LXMF/Reticulum stack from python (`~/repos/Reticulum`,
 `~/repos/LXMF`) to Kotlin / Android. Per `feedback-port-must-match-reference`, the kt
 port repos (`reticulum-kt`, `LXMF-kt`) mirror the python source and only diverge with
-documented justification. This file lives in the Columba app itself and tracks
-**Android-app-only divergences** — features that exist in Columba but have no python
+documented justification. This file lives in the Zamolxis app itself and tracks
+**Android-app-only divergences** — features that exist in Zamolxis but have no python
 upstream equivalent and aren't expected to back-port. The kt/swift port libraries each
 maintain their own `port-deviations.md`.
 
 ---
 
-## `InterfaceConfig.networkRestriction` (Columba-only)
+## `InterfaceConfig.networkRestriction` (Zamolxis-only)
 
 Each interface configuration carries a `networkRestriction: NetworkRestriction = ANY`
 field with values `ANY | WIFI_ONLY | CELLULAR_ONLY`. The python reference
@@ -31,7 +31,7 @@ without producing peers. All other types default to `ANY`.
 
 **Justification.** This is a mobile-specific concern (battery + bandwidth on cellular)
 that's irrelevant to the desktop python use case. Sideband (`~/repos/Sideband/sbapp/`)
-doesn't have an equivalent either. Adding it here is a deliberate Columba divergence,
+doesn't have an equivalent either. Adding it here is a deliberate Zamolxis divergence,
 not a port gap.
 
 **ETHERNET bucketing.** `TRANSPORT_ETHERNET` is treated as `WIFI_LIKE` so USB tethering

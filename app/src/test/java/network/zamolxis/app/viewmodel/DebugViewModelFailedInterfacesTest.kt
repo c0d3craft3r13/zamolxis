@@ -1,6 +1,6 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
-import network.columba.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -34,7 +34,7 @@ class DebugViewModelFailedInterfacesTest {
         val healthyInterface =
             InterfaceInfo(
                 name = "RNode",
-                type = "ColumbaRNodeInterface",
+                type = "ZamolxisRNodeInterface",
                 online = true,
                 error = null,
             )
@@ -48,7 +48,7 @@ class DebugViewModelFailedInterfacesTest {
         val offlineInterface =
             InterfaceInfo(
                 name = "RNode",
-                type = "ColumbaRNodeInterface",
+                type = "ZamolxisRNodeInterface",
                 online = false,
                 error = null,
             )
@@ -104,7 +104,7 @@ class DebugViewModelFailedInterfacesTest {
             listOf(
                 InterfaceInfo(
                     name = "RNode LoRa",
-                    type = "ColumbaRNodeInterface",
+                    type = "ZamolxisRNodeInterface",
                     online = true,
                     error = null,
                 ),
@@ -145,7 +145,7 @@ class DebugViewModelFailedInterfacesTest {
     fun `DebugInfo interfaceCount reflects merged interfaces`() {
         val interfaces =
             listOf(
-                InterfaceInfo("RNode", "ColumbaRNodeInterface", true, null),
+                InterfaceInfo("RNode", "ZamolxisRNodeInterface", true, null),
                 InterfaceInfo("BLE", "AndroidBLE", true, null),
                 InterfaceInfo("Auto", "AutoInterface", false, "Port conflict"),
             )
@@ -168,7 +168,7 @@ class DebugViewModelFailedInterfacesTest {
     fun `interface list correctly separates healthy, offline, and failed`() {
         val interfaces =
             listOf(
-                InterfaceInfo("RNode", "ColumbaRNodeInterface", online = true, error = null),
+                InterfaceInfo("RNode", "ZamolxisRNodeInterface", online = true, error = null),
                 InterfaceInfo("BLE", "AndroidBLE", online = true, error = null),
                 InterfaceInfo("AutoInterface", "AutoInterface", online = false, error = "Port conflict"),
                 InterfaceInfo("TCPClient", "TCPClient", online = false, error = null),

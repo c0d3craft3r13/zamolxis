@@ -1,6 +1,6 @@
 @file:Suppress("TooManyFunctions", "SwallowedException")
 
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -79,22 +79,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
-import network.columba.app.R
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.host.ble.util.BlePermissionManager
-import network.columba.app.rns.host.manager.CurrentTransport
-import network.columba.app.ui.components.BlePermissionBottomSheet
-import network.columba.app.ui.components.InterfaceConfigDialog
-import network.columba.app.ui.components.LocalCapabilities
-import network.columba.app.ui.components.interfaceTypeIconData
-import network.columba.app.viewmodel.InterfaceManagementViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.host.ble.util.BlePermissionManager
+import network.zamolxis.app.rns.host.manager.CurrentTransport
+import network.zamolxis.app.ui.components.BlePermissionBottomSheet
+import network.zamolxis.app.ui.components.InterfaceConfigDialog
+import network.zamolxis.app.ui.components.LocalCapabilities
+import network.zamolxis.app.ui.components.interfaceTypeIconData
+import network.zamolxis.app.viewmodel.InterfaceManagementViewModel
 
 /**
  * Screen for managing Reticulum network interfaces.
@@ -159,10 +160,10 @@ fun InterfaceManagementScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Network Interfaces") },
+                title = { Text(stringResource(R.string.ifacemgmt_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 actions = {
@@ -195,7 +196,13 @@ fun InterfaceManagementScreen(
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text(if (hotReload) "Apply Changes" else "Apply & Restart")
+                            Text(
+                        if (hotReload) {
+                            stringResource(R.string.ifacemgmt_apply)
+                        } else {
+                            stringResource(R.string.ifacemgmt_apply_restart)
+                        },
+                    )
                         }
                     }
                 },
@@ -211,7 +218,7 @@ fun InterfaceManagementScreen(
                 onClick = { showTypeSelector = true },
                 containerColor = MaterialTheme.colorScheme.primary,
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Interface")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.ifacemgmt_add_cd))
             }
         },
     ) { paddingValues ->
@@ -255,7 +262,7 @@ fun InterfaceManagementScreen(
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                                 Text(
-                                    "Enabled",
+                                    stringResource(R.string.ifacemgmt_enabled),
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                             }
@@ -266,7 +273,7 @@ fun InterfaceManagementScreen(
                                     fontWeight = FontWeight.Bold,
                                 )
                                 Text(
-                                    "Total",
+                                    stringResource(R.string.disciface_total),
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                             }
@@ -279,7 +286,7 @@ fun InterfaceManagementScreen(
                                         fontWeight = FontWeight.Bold,
                                     )
                                     Text(
-                                        "Discovered",
+                                        stringResource(R.string.ifacemgmt_discovered),
                                         style = MaterialTheme.typography.bodyMedium,
                                     )
                                 }
@@ -548,13 +555,9 @@ fun InterfaceManagementScreen(
     if (showApplyRestartConfirm) {
         AlertDialog(
             onDismissRequest = { showApplyRestartConfirm = false },
-            title = { Text("Apply & Restart") },
+            title = { Text(stringResource(R.string.ifacemgmt_apply_restart)) },
             text = {
-                Text(
-                    "Applying interface changes restarts Reticulum on this backend. " +
-                        "You'll briefly disconnect from peers, and any in-progress " +
-                        "transfers will be interrupted. This usually takes a few seconds.",
-                )
+                Text(stringResource(R.string.ifacemgmt_apply_restart_body))
             },
             confirmButton = {
                 TextButton(
@@ -563,12 +566,12 @@ fun InterfaceManagementScreen(
                         viewModel.applyChanges()
                     },
                 ) {
-                    Text("Apply & Restart")
+                    Text(stringResource(R.string.ifacemgmt_apply_restart))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showApplyRestartConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
         )
@@ -645,7 +648,7 @@ fun InterfaceCard(
             val iconData = interfaceTypeIconData(InterfaceType.fromName(interfaceEntity.type))
             Icon(
                 imageVector = iconData?.imageVector ?: Icons.Default.SettingsInputAntenna,
-                contentDescription = "$typeLabel interface",
+                contentDescription = stringResource(R.string.ifacemgmt_iface_cd, typeLabel),
                 tint = statusColor,
                 modifier = Modifier.size(32.dp),
             )
@@ -691,7 +694,7 @@ fun InterfaceCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "BLE permission required",
+                            text = stringResource(R.string.ifacemgmt_ble_perm),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                         )
@@ -701,7 +704,10 @@ fun InterfaceCard(
                                 onClick = onRequestPermissions,
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                             ) {
-                                Text("Grant", style = MaterialTheme.typography.labelSmall)
+                                Text(
+                                    stringResource(R.string.ifacemgmt_grant),
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
                             }
                         }
                     }
@@ -720,10 +726,10 @@ fun InterfaceCard(
                 Text(
                     text =
                         when {
-                            !interfaceEntity.enabled -> "Disabled"
-                            online -> "Online"
+                            !interfaceEntity.enabled -> stringResource(R.string.ifacemgmt_status_disabled)
+                            online -> stringResource(R.string.messaging_online)
                             isRestrictedDormant -> stringResource(R.string.interface_status_restricted)
-                            else -> "Offline"
+                            else -> stringResource(R.string.messaging_offline)
                         },
                     style = MaterialTheme.typography.labelSmall,
                     color =
@@ -737,7 +743,7 @@ fun InterfaceCard(
                 )
                 if (peerCount > 0) {
                     Text(
-                        text = "$peerCount peer${if (peerCount != 1) "s" else ""}",
+                        text = pluralStringResource(R.plurals.ifacemgmt_peers, peerCount, peerCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -757,7 +763,7 @@ fun InterfaceCard(
  * Indented to show hierarchy under the parent interface.
  */
 @Composable
-fun SpawnedPeerCard(info: network.columba.app.viewmodel.TransportInterfaceInfo) {
+fun SpawnedPeerCard(info: network.zamolxis.app.viewmodel.TransportInterfaceInfo) {
     val statusColor = if (info.isOnline) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
 
     Card(
@@ -787,7 +793,12 @@ fun SpawnedPeerCard(info: network.columba.app.viewmodel.TransportInterfaceInfo) 
             }
 
             Text(
-                text = if (info.isOnline) "Online" else "Offline",
+                text =
+                    if (info.isOnline) {
+                        stringResource(R.string.ifacemgmt_online)
+                    } else {
+                        stringResource(R.string.ifacemgmt_offline)
+                    },
                 style = MaterialTheme.typography.labelSmall,
                 color = statusColor,
             )
@@ -803,7 +814,7 @@ fun SpawnedPeerCard(info: network.columba.app.viewmodel.TransportInterfaceInfo) 
  */
 @Composable
 fun SharedInstanceHostCard(
-    host: network.columba.app.viewmodel.TransportInterfaceInfo,
+    host: network.zamolxis.app.viewmodel.TransportInterfaceInfo,
     clientCount: Int,
 ) {
     val statusColor =
@@ -824,7 +835,7 @@ fun SharedInstanceHostCard(
         ) {
             Icon(
                 imageVector = iconData?.imageVector ?: Icons.Default.SettingsInputAntenna,
-                contentDescription = "Shared Instance host",
+                contentDescription = stringResource(R.string.ifacemgmt_host_cd),
                 tint = statusColor,
                 modifier = Modifier.size(32.dp),
             )
@@ -832,13 +843,18 @@ fun SharedInstanceHostCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = host.name, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = if (clientCount == 1) "1 app connected" else "$clientCount apps connected",
+                    text = pluralStringResource(R.plurals.ifacemgmt_apps_connected, clientCount, clientCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(
-                text = if (host.isOnline) "Online" else "Offline",
+                text =
+                    if (host.isOnline) {
+                        stringResource(R.string.ifacemgmt_online)
+                    } else {
+                        stringResource(R.string.ifacemgmt_offline)
+                    },
                 style = MaterialTheme.typography.labelSmall,
                 color = statusColor,
             )
@@ -863,12 +879,12 @@ fun EmptyInterfacesView() {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "No interfaces configured",
+                stringResource(R.string.ifacemgmt_empty_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "Tap + to add your first network interface",
+                stringResource(R.string.ifacemgmt_empty_sub),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -940,9 +956,9 @@ fun DeleteConfirmationDialog(
                 tint = MaterialTheme.colorScheme.error,
             )
         },
-        title = { Text("Delete Interface?") },
+        title = { Text(stringResource(R.string.ifacemgmt_delete_title)) },
         text = {
-            Text("Are you sure you want to delete \"$interfaceName\"? This action cannot be undone.")
+            Text(stringResource(R.string.ifacemgmt_delete_body, interfaceName))
         },
         confirmButton = {
             Button(
@@ -952,12 +968,12 @@ fun DeleteConfirmationDialog(
                         containerColor = MaterialTheme.colorScheme.error,
                     ),
             ) {
-                Text("Delete")
+                Text(stringResource(R.string.delete))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -1080,19 +1096,19 @@ fun ApplyChangesDialog() {
                 modifier = Modifier.size(48.dp),
             )
         },
-        title = { Text("Applying Changes") },
+        title = { Text(stringResource(R.string.ifacemgmt_applying_title)) },
         text = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    "Restarting Reticulum network...",
+                    stringResource(R.string.ifacemgmt_applying_body),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "This may take a few seconds",
+                    stringResource(R.string.idmanager_restarting_sub),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1119,10 +1135,10 @@ fun ApplyErrorDialog(
                 tint = MaterialTheme.colorScheme.error,
             )
         },
-        title = { Text("Failed to Apply Changes") },
+        title = { Text(stringResource(R.string.ifacemgmt_failed_title)) },
         text = {
             Column {
-                Text("An error occurred while applying configuration changes:")
+                Text(stringResource(R.string.ifacemgmt_failed_body))
                 Spacer(Modifier.height(8.dp))
                 Text(
                     errorMessage,
@@ -1131,7 +1147,7 @@ fun ApplyErrorDialog(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Your changes have been saved to the database. Try applying them again, or restart the app.",
+                    stringResource(R.string.ifacemgmt_failed_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1139,7 +1155,7 @@ fun ApplyErrorDialog(
         },
         confirmButton = {
             Button(onClick = onDismiss) {
-                Text("OK")
+                Text(stringResource(R.string.common_ok))
             }
         },
     )
@@ -1148,14 +1164,15 @@ fun ApplyErrorDialog(
 /**
  * Get user-friendly label for interface type.
  */
+@Composable
 internal fun getInterfaceTypeLabel(type: String): String =
     when (type) {
-        "AutoInterface" -> "Auto Discovery"
-        "TCPClient" -> "TCP Client"
-        "TCPServer" -> "TCP Server"
-        "RNode" -> "RNode LoRa"
-        "UDP" -> "UDP Interface"
-        "AndroidBLE" -> "Bluetooth LE"
+        "AutoInterface" -> stringResource(R.string.ifacemgmt_type_auto)
+        "TCPClient" -> stringResource(R.string.ifacemgmt_type_tcp_client)
+        "TCPServer" -> stringResource(R.string.ifacemgmt_type_tcp_server)
+        "RNode" -> stringResource(R.string.ifacemgmt_type_rnode)
+        "UDP" -> stringResource(R.string.ifacemgmt_type_udp)
+        "AndroidBLE" -> stringResource(R.string.ifacemgmt_type_ble)
         else -> type
     }
 
@@ -1226,18 +1243,19 @@ private fun getLocalIpAddress(): Pair<String?, Boolean> {
  * in that case to avoid visual repetition.
  */
 @Suppress("CyclomaticComplexMethod") // flat when-per-type; splitting would scatter related JSON-parsing logic
+@Composable
 private fun getInterfaceDescription(interfaceEntity: InterfaceEntity): String {
     val json =
         try {
             org.json.JSONObject(interfaceEntity.configJson)
         } catch (_: Exception) {
-            return ""
-        }
+            null
+        } ?: return ""
     return when (interfaceEntity.type) {
         "AutoInterface" -> {
             val groupId = json.optString("group_id", "")
             val scope = json.optString("discovery_scope", "link")
-            if (groupId.isNotBlank()) groupId else "scope: $scope"
+            if (groupId.isNotBlank()) groupId else stringResource(R.string.ifacemgmt_summary_scope, scope)
         }
         "TCPClient" -> {
             val host = json.optString("target_host", "")
@@ -1247,7 +1265,7 @@ private fun getInterfaceDescription(interfaceEntity: InterfaceEntity): String {
         "TCPServer" -> {
             val listenPort = json.optInt("listen_port", 4242)
             val (localIp, isYggdrasil) = getLocalIpAddress()
-            val networkPrefix = if (isYggdrasil) "Yggdrasil · " else ""
+            val networkPrefix = if (isYggdrasil) stringResource(R.string.ifacemgmt_summary_ygg_prefix) else ""
             val addressDisplay = formatAddressWithPort(localIp, listenPort, isYggdrasil)
             "$networkPrefix$addressDisplay"
         }
@@ -1257,9 +1275,24 @@ private fun getInterfaceDescription(interfaceEntity: InterfaceEntity): String {
             val tcpHost = json.optString("tcp_host", "")
             val tcpPort = json.optInt("tcp_port", 7633)
             when (connectionMode) {
-                "ble" -> if (deviceName.isNotBlank()) "BLE · $deviceName" else "BLE"
-                "classic" -> if (deviceName.isNotBlank()) "Bluetooth · $deviceName" else "Bluetooth"
-                "tcp" -> if (tcpHost.isNotBlank()) "WiFi · $tcpHost:$tcpPort" else "WiFi"
+                "ble" ->
+                    if (deviceName.isNotBlank()) {
+                        stringResource(R.string.ifacemgmt_summary_ble, deviceName)
+                    } else {
+                        stringResource(R.string.ifacemgmt_summary_ble_plain)
+                    }
+                "classic" ->
+                    if (deviceName.isNotBlank()) {
+                        stringResource(R.string.ifacemgmt_summary_bt, deviceName)
+                    } else {
+                        stringResource(R.string.ifacemgmt_summary_bt_plain)
+                    }
+                "tcp" ->
+                    if (tcpHost.isNotBlank()) {
+                        stringResource(R.string.ifacemgmt_summary_wifi, "$tcpHost:$tcpPort")
+                    } else {
+                        stringResource(R.string.ifacemgmt_summary_wifi_plain)
+                    }
                 "usb" -> "USB"
                 else -> ""
             }
@@ -1272,7 +1305,11 @@ private fun getInterfaceDescription(interfaceEntity: InterfaceEntity): String {
         "AndroidBLE" -> {
             val deviceName = json.optString("device_name", "")
             val maxConns = json.optInt("max_connections", 7)
-            if (deviceName.isNotBlank()) "'$deviceName' · max $maxConns peers" else "max $maxConns peers"
+            if (deviceName.isNotBlank()) {
+            stringResource(R.string.ifacemgmt_summary_device_max_peers, deviceName, maxConns)
+        } else {
+            stringResource(R.string.ifacemgmt_summary_max_peers, maxConns)
+        }
         }
         else -> ""
     }
@@ -1295,29 +1332,29 @@ fun InterfaceTypeSelector(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Interface Type") },
+        title = { Text(stringResource(R.string.ifacemgmt_select_type)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 InterfaceTypeOption(
-                    title = "Auto Discovery",
-                    description = "Automatically discover peers on local network",
+                    title = stringResource(R.string.ifacemgmt_type_auto),
+                    description = stringResource(R.string.ifacemgmt_type_auto_desc),
                     onClick = { onTypeSelected("AutoInterface") },
                 )
                 InterfaceTypeOption(
-                    title = "TCP Client",
-                    description = "Connect to a remote Reticulum transport node",
+                    title = stringResource(R.string.ifacemgmt_type_tcp_client),
+                    description = stringResource(R.string.ifacemgmt_type_tcp_client_desc),
                     onClick = { onTypeSelected("TCPClient") },
                 )
                 InterfaceTypeOption(
-                    title = "Bluetooth LE",
-                    description = "Direct connection to Columba users and Linux ble-reticulum devices",
+                    title = stringResource(R.string.ifacemgmt_type_ble),
+                    description = stringResource(R.string.ifacemgmt_type_ble_desc),
                     onClick = { onTypeSelected("AndroidBLE") },
                 )
                 InterfaceTypeOption(
-                    title = "RNode LoRa",
-                    description = "Connects to separate RNode hardware via BLE or Bluetooth Classic",
+                    title = stringResource(R.string.ifacemgmt_type_rnode),
+                    description = stringResource(R.string.ifacemgmt_type_rnode_desc),
                     onClick = { onTypeSelected("RNode") },
                 )
 
@@ -1341,14 +1378,19 @@ fun InterfaceTypeSelector(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Advanced",
+                            text = stringResource(R.string.advanced_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = if (advancedExpanded) "Collapse" else "Expand",
+                            contentDescription =
+                        if (advancedExpanded) {
+                            stringResource(R.string.common_collapse)
+                        } else {
+                            stringResource(R.string.common_expand)
+                        },
                             modifier = Modifier.rotate(rotationAngle),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -1364,8 +1406,8 @@ fun InterfaceTypeSelector(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         InterfaceTypeOption(
-                            title = "TCP Server",
-                            description = "Accept incoming connections from other Reticulum nodes",
+                            title = stringResource(R.string.ifacemgmt_type_tcp_server),
+                            description = stringResource(R.string.ifacemgmt_type_tcp_server_desc),
                             onClick = { onTypeSelected("TCPServer") },
                         )
                     }
@@ -1375,7 +1417,7 @@ fun InterfaceTypeSelector(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -1447,7 +1489,7 @@ fun InterfaceErrorDialog(
                 tint = MaterialTheme.colorScheme.error,
             )
         },
-        title = { Text("Interface Issue") },
+        title = { Text(stringResource(R.string.ifacemgmt_issue_title)) },
         text = {
             Column {
                 Text(
@@ -1465,7 +1507,7 @@ fun InterfaceErrorDialog(
         },
         confirmButton = {
             Button(onClick = onDismiss) {
-                Text("OK")
+                Text(stringResource(R.string.common_ok))
             }
         },
     )
@@ -1523,7 +1565,7 @@ fun DiscoveredInterfacesSummaryCard(
                             },
                     )
                     Text(
-                        text = "Interface Discovery",
+                        text = stringResource(R.string.disciface_discovery),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color =
@@ -1538,7 +1580,7 @@ fun DiscoveredInterfacesSummaryCard(
                 if (isDiscoveryEnabled) {
                     if (totalCount > 0) {
                         Text(
-                            text = "$totalCount interfaces found via RNS Discovery",
+                            text = stringResource(R.string.ifacemgmt_found, totalCount),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
                         )
@@ -1550,35 +1592,35 @@ fun DiscoveredInterfacesSummaryCard(
                             if (availableCount > 0) {
                                 StatusBadge(
                                     count = availableCount,
-                                    label = "available",
+                                    label = stringResource(R.string.ifacemgmt_available),
                                     dotColor = MaterialTheme.colorScheme.primary,
                                 )
                             }
                             if (unknownCount > 0) {
                                 StatusBadge(
                                     count = unknownCount,
-                                    label = "unknown",
+                                    label = stringResource(R.string.ifacemgmt_unknown),
                                     dotColor = MaterialTheme.colorScheme.tertiary,
                                 )
                             }
                             if (staleCount > 0) {
                                 StatusBadge(
                                     count = staleCount,
-                                    label = "stale",
+                                    label = stringResource(R.string.ifacemgmt_stale),
                                     dotColor = MaterialTheme.colorScheme.outline,
                                 )
                             }
                         }
                     } else {
                         Text(
-                            text = "Discovery enabled - no interfaces found yet",
+                            text = stringResource(R.string.ifacemgmt_discovery_none),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
                         )
                     }
                 } else {
                     Text(
-                        text = "Tap to configure RNS 1.1.x interface discovery",
+                        text = stringResource(R.string.ifacemgmt_tap_discovery),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     )
@@ -1586,7 +1628,7 @@ fun DiscoveredInterfacesSummaryCard(
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "View details",
+                contentDescription = stringResource(R.string.identityscreen_view_details_cd),
                 tint =
                     if (isDiscoveryEnabled) {
                         MaterialTheme.colorScheme.onSecondaryContainer

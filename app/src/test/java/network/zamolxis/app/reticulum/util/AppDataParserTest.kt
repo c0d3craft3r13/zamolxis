@@ -1,4 +1,4 @@
-package network.columba.app.reticulum.util
+package network.zamolxis.app.reticulum.util
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

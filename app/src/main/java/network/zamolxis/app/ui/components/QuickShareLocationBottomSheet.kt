@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,9 +23,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.model.SharingDuration
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.model.SharingDuration
 
 /**
  * Simplified bottom sheet for sharing location with a single contact.
@@ -60,7 +62,7 @@ fun QuickShareLocationBottomSheet(
         ) {
             // Title
             Text(
-                text = "Share your location",
+                text = stringResource(R.string.shareloc_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
             )
@@ -69,7 +71,7 @@ fun QuickShareLocationBottomSheet(
 
             // Subtitle with contact name
             Text(
-                text = "with $contactName",
+                text = stringResource(R.string.shareloc_with_contact, contactName),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -78,7 +80,7 @@ fun QuickShareLocationBottomSheet(
 
             // Duration label
             Text(
-                text = "Duration:",
+                text = stringResource(R.string.shareloc_duration_label),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
             )
@@ -95,7 +97,7 @@ fun QuickShareLocationBottomSheet(
                     FilterChip(
                         selected = selectedDuration == duration,
                         onClick = { selectedDuration = duration },
-                        label = { Text(duration.displayText) },
+                        label = { Text(stringResource(duration.displayTextRes)) },
                     )
                 }
             }
@@ -107,7 +109,7 @@ fun QuickShareLocationBottomSheet(
                 onClick = { onStartSharing(selectedDuration) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Start Sharing")
+                Text(stringResource(R.string.shareloc_start))
             }
 
             Spacer(modifier = Modifier.height(16.dp))

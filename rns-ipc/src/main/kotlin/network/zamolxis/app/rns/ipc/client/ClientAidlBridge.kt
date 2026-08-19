@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc.client
+package network.zamolxis.app.rns.ipc.client
 
 import android.os.Bundle
 import android.os.DeadObjectException
@@ -6,15 +6,15 @@ import android.os.RemoteException
 import android.util.Log
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.suspendCancellableCoroutine
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.ipc.callback.IRnsBoolCallback
-import network.columba.app.rns.ipc.callback.IRnsByteArrayCallback
-import network.columba.app.rns.ipc.callback.IRnsFloatCallback
-import network.columba.app.rns.ipc.callback.IRnsIntCallback
-import network.columba.app.rns.ipc.callback.IRnsResultCallback
-import network.columba.app.rns.ipc.callback.IRnsStringCallback
-import network.columba.app.rns.ipc.callback.IRnsStringListCallback
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsByteArrayCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsFloatCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsIntCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringListCallback
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException

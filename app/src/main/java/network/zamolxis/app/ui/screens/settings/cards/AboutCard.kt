@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import android.content.Context
 import android.widget.Toast
@@ -28,15 +28,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import network.columba.app.R
-import network.columba.app.service.AppUpdateResult
-import network.columba.app.ui.components.CollapsibleSettingsCard
-import network.columba.app.util.SystemInfo
-import network.columba.app.util.safeOpenUrl
 import java.util.Locale
+import network.zamolxis.app.R
+import network.zamolxis.app.service.AppUpdateResult
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.util.SystemInfo
+import network.zamolxis.app.util.safeOpenUrl
 
 @Composable
 fun AboutCard(
@@ -53,7 +54,7 @@ fun AboutCard(
     val context = LocalContext.current
 
     CollapsibleSettingsCard(
-        title = "About",
+        title = stringResource(R.string.about_title),
         icon = Icons.Default.Info,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
@@ -66,18 +67,18 @@ fun AboutCard(
             // Logo and Header
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "Columba Logo",
+                contentDescription = stringResource(R.string.about_logo_cd),
                 modifier = Modifier.size(108.dp),
             )
 
             Text(
-                text = "Columba",
+                text = stringResource(R.string.about_app_name),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
             )
 
             Text(
-                text = "Native Android messaging app using Bluetooth LE, TCP, or RNode (LoRa) over LXMF and Reticulum",
+                text = stringResource(R.string.about_tagline),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -86,7 +87,7 @@ fun AboutCard(
             HorizontalDivider()
 
             // Version Information
-            InfoSection(title = "App Information") {
+            InfoSection(title = stringResource(R.string.about_app_info)) {
                 InfoRow("Version", systemInfo.appVersion)
                 InfoRow("Build Number", systemInfo.appBuildCode.toString())
                 InfoRow("Build Type", systemInfo.buildType.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() })
@@ -97,7 +98,7 @@ fun AboutCard(
             HorizontalDivider()
 
             // Device Information
-            InfoSection(title = "Device Information") {
+            InfoSection(title = stringResource(R.string.about_device_info)) {
                 InfoRow("Android Version", systemInfo.androidVersion)
                 InfoRow("API Level", systemInfo.apiLevel.toString())
                 InfoRow("Device Model", systemInfo.deviceModel)
@@ -107,7 +108,7 @@ fun AboutCard(
             HorizontalDivider()
 
             // Protocol Versions
-            InfoSection(title = "Protocol Versions") {
+            InfoSection(title = stringResource(R.string.about_protocol_versions)) {
                 if (systemInfo.reticulumVersion != null) {
                     InfoRow("Reticulum", systemInfo.reticulumVersion)
                 }
@@ -126,16 +127,16 @@ fun AboutCard(
 
             // Identity
             if (systemInfo.identityHash != null) {
-                InfoSection(title = "Identity") {
+                InfoSection(title = stringResource(R.string.identitycard_title)) {
                     InfoRow("Identity Hash", systemInfo.identityHash)
                 }
                 HorizontalDivider()
             }
 
             // Links
-            InfoSection(title = "Links & Resources") {
-                LinkButton("GitHub Repository", "https://github.com/torlando-tech/columba", context)
-                LinkButton("Report an Issue", "https://github.com/torlando-tech/columba/issues", context)
+            InfoSection(title = stringResource(R.string.about_links)) {
+                LinkButton("GitHub Repository", "https://github.com/c0d3craft3r13/zamolxis", context)
+                LinkButton("Report an Issue", "https://github.com/c0d3craft3r13/zamolxis/issues", context)
                 LinkButton("About Reticulum", "https://reticulum.network/", context)
             }
 
@@ -147,21 +148,28 @@ fun AboutCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = "MPL 2.0",
+                    text = stringResource(R.string.about_license),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "© 2025–${network.columba.app.BuildConfig.COPYRIGHT_YEAR} Columba Contributors",
+                    text = stringResource(R.string.about_copyright, network.zamolxis.app.BuildConfig.COPYRIGHT_YEAR),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                // Upstream attribution. MPL 2.0 requires the original notices to
+                // survive redistribution, so this stays visible in the shipped app.
+                Text(
+                    text = stringResource(R.string.about_forked_from),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 TextButton(
                     onClick = {
-                        openExternalUrl(context, "https://github.com/torlando-tech/columba/blob/main/LICENSE.md")
+                        openExternalUrl(context, "https://github.com/c0d3craft3r13/zamolxis/blob/main/LICENSE.md")
                     },
                 ) {
-                    Text("View License", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.about_view_license), style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -169,7 +177,7 @@ fun AboutCard(
 
             // Attribution
             Text(
-                text = "Built With",
+                text = stringResource(R.string.about_built_with),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
             )
@@ -187,14 +195,14 @@ fun AboutCard(
             HorizontalDivider()
 
             // Updates
-            InfoSection(title = "Updates") {
+            InfoSection(title = stringResource(R.string.about_updates)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "Include pre-releases",
+                        text = stringResource(R.string.about_prereleases),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -214,13 +222,13 @@ fun AboutCard(
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text("Check for Updates")
+                    Text(stringResource(R.string.about_check_updates))
                 }
 
                 when (val result = updateCheckResult) {
                     is AppUpdateResult.UpToDate ->
                         Text(
-                            text = "Up to date (v${result.currentVersion})",
+                            text = stringResource(R.string.about_up_to_date, result.currentVersion),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -231,7 +239,7 @@ fun AboutCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Text(
-                                text = "Update available: ${result.tagName}",
+                                text = stringResource(R.string.about_update_available, result.tagName),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                             TextButton(
@@ -239,7 +247,7 @@ fun AboutCard(
                                     openExternalUrl(context, result.htmlUrl)
                                 },
                             ) {
-                                Text("View Release")
+                                Text(stringResource(R.string.about_view_release))
                             }
                         }
                     is AppUpdateResult.Error ->
@@ -265,7 +273,7 @@ fun AboutCard(
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Copy System Info")
+                Text(stringResource(R.string.about_copy_sysinfo))
             }
 
             // Report Bug Button
@@ -279,7 +287,7 @@ fun AboutCard(
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Report Bug")
+                Text(stringResource(R.string.about_report_bug))
             }
         }
     }

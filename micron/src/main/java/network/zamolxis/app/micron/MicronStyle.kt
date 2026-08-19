@@ -1,4 +1,4 @@
-package network.columba.app.micron
+package network.zamolxis.app.micron
 
 data class MicronStyle(
     val foreground: MicronColor = MicronColor.Default,

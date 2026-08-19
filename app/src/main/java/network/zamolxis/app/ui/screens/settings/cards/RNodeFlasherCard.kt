@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import network.columba.app.R
-import network.columba.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 
 /**
  * Settings card for accessing the USB firmware flashers.

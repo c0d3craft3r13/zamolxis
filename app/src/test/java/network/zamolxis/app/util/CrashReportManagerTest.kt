@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
@@ -140,7 +140,7 @@ class CrashReportManagerTest {
 
             assertTrue(report.contains("## Bug Report"))
             assertTrue(report.contains("### System Information"))
-            assertTrue(report.contains("**Columba**: 3.0.7 (30007)"))
+            assertTrue(report.contains("**Zamolxis**: 3.0.7 (30007)"))
             assertTrue(report.contains("**Android**: 14 (API 34)"))
             assertTrue(report.contains("**Device**: Pixel 7 by Google"))
         }

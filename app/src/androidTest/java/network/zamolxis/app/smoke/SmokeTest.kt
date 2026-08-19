@@ -1,4 +1,4 @@
-package network.columba.app.smoke
+package network.zamolxis.app.smoke
 
 import android.content.ComponentName
 import android.content.Context
@@ -7,8 +7,8 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import network.columba.app.BuildConfig
-import network.columba.app.rns.host.ReticulumService
+import network.zamolxis.app.BuildConfig
+import network.zamolxis.app.rns.host.ReticulumService
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

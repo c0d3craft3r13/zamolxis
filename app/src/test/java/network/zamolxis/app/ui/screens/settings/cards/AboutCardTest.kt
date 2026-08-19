@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import android.app.Application
 import android.content.ActivityNotFoundException
@@ -17,11 +17,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
-import network.columba.app.R
-import network.columba.app.service.AppUpdateResult
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.ui.theme.ColumbaTheme
-import network.columba.app.util.SystemInfo
+import network.zamolxis.app.R
+import network.zamolxis.app.service.AppUpdateResult
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.theme.ZamolxisTheme
+import network.zamolxis.app.util.SystemInfo
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -77,9 +77,9 @@ class AboutCardTest {
         )
 
     @Test
-    fun `displays Columba logo`() {
+    fun `displays Zamolxis logo`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -90,13 +90,13 @@ class AboutCardTest {
             }
         }
 
-        composeTestRule.onNodeWithContentDescription("Columba Logo").assertExists()
+        composeTestRule.onNodeWithContentDescription("Zamolxis Logo").assertExists()
     }
 
     @Test
     fun `displays app name`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -107,13 +107,13 @@ class AboutCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Columba").assertExists()
+        composeTestRule.onNodeWithText("Zamolxis").assertExists()
     }
 
     @Test
     fun `displays tagline`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -132,7 +132,7 @@ class AboutCardTest {
     @Test
     fun `displays app information section header`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -149,7 +149,7 @@ class AboutCardTest {
     @Test
     fun `displays copy system info button`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -166,7 +166,7 @@ class AboutCardTest {
     @Test
     fun `displays report bug button`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -230,7 +230,7 @@ class AboutCardTest {
         composeTestRule.setContent {
             CompositionLocalProvider(LocalContext provides noExternalActivityContext) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    ColumbaTheme {
+                    ZamolxisTheme {
                         AboutCard(
                             isExpanded = true,
                             onExpandedChange = {},
@@ -259,7 +259,7 @@ class AboutCardTest {
     @Test
     fun `renders without crashing with full system info`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -271,13 +271,13 @@ class AboutCardTest {
         }
 
         // If we get here without crashing, the test passes
-        composeTestRule.onNodeWithText("Columba").assertExists()
+        composeTestRule.onNodeWithText("Zamolxis").assertExists()
     }
 
     @Test
     fun `renders without crashing with minimal system info`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -289,7 +289,7 @@ class AboutCardTest {
         }
 
         // Should still render the basic structure
-        composeTestRule.onNodeWithText("Columba").assertExists()
+        composeTestRule.onNodeWithText("Zamolxis").assertExists()
         composeTestRule.onNodeWithText("Copy System Info").assertExists()
     }
 
@@ -303,7 +303,7 @@ class AboutCardTest {
             )
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -314,7 +314,7 @@ class AboutCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Columba").assertExists()
+        composeTestRule.onNodeWithText("Zamolxis").assertExists()
     }
 
     @Test
@@ -322,7 +322,7 @@ class AboutCardTest {
         val infoWithNullIdentity = fullSystemInfo.copy(identityHash = null)
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -333,7 +333,7 @@ class AboutCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Columba").assertExists()
+        composeTestRule.onNodeWithText("Zamolxis").assertExists()
     }
 
     @Test
@@ -341,7 +341,7 @@ class AboutCardTest {
         val customVersionInfo = fullSystemInfo.copy(appVersion = "9.9.9")
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -375,7 +375,7 @@ class AboutCardTest {
             )
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -387,14 +387,14 @@ class AboutCardTest {
         }
 
         // Should still render basic structure without crashing
-        composeTestRule.onNodeWithText("Columba").assertExists()
+        composeTestRule.onNodeWithText("Zamolxis").assertExists()
         composeTestRule.onNodeWithText("Copy System Info").assertExists()
     }
 
     @Test
     fun `card contains section headers`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -416,7 +416,7 @@ class AboutCardTest {
     @Test
     fun `card contains identity section when hash is present`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -434,7 +434,7 @@ class AboutCardTest {
     @Test
     fun `card omits identity section when hash is null`() {
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},
@@ -454,7 +454,7 @@ class AboutCardTest {
         var callbackInvoked = false
 
         composeTestRule.setContent {
-            ColumbaTheme {
+            ZamolxisTheme {
                 AboutCard(
                     isExpanded = true,
                     onExpandedChange = {},

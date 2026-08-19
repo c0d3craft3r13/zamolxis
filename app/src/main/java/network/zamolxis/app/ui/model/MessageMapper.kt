@@ -1,15 +1,15 @@
 @file:Suppress("TooManyFunctions") // Message mapping requires multiple utilities for different field types
 
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import network.columba.app.data.repository.Message
-import network.columba.app.rns.api.util.LxmfFields
-import network.columba.app.util.FileUtils
-import network.columba.app.util.ImageUtils
+import network.zamolxis.app.data.repository.Message
+import network.zamolxis.app.rns.api.util.LxmfFields
+import network.zamolxis.app.util.FileUtils
+import network.zamolxis.app.util.ImageUtils
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -116,8 +116,8 @@ internal fun parseMessageRenderer(fieldsJson: String?): MessageRenderer {
  *      raw 32-byte hash (serialized to hex string by event_bridge.py
  *      `_jsonable` on the way across the JNI boundary). MeshChatX
  *      reference: `meshchat.py:16697`.
- *   2. **Legacy Columba overload** — `fields[0x10] = {reply_to: <hex>}`.
- *      Older Columba peers still send this; new Columba peers send
+ *   2. **Legacy Zamolxis overload** — `fields[0x10] = {reply_to: <hex>}`.
+ *      Older Zamolxis peers still send this; new Zamolxis peers send
  *      0x30 instead. Kept as a parser fallback so an upgrade doesn't
  *      strand un-upgraded peer threading; outbound code no longer
  *      writes this shape.
@@ -200,7 +200,7 @@ private fun parseReplyToFromField16(fieldsJson: String?): String? =
  *      `fields[0x40] = {0x00: <target hash bytes>, 0x01: <emoji UTF-8 bytes>}`
  *      (`LXMF.py` commit 764758d), with a parse-only fallback to the legacy
  *      `fields[0x10] = {"reaction_to": <hex>, "emoji": "👍", "sender": <hex>}`
- *      for un-upgraded Columba peers. One LXMF message per reaction event.
+ *      for un-upgraded Zamolxis peers. One LXMF message per reaction event.
  *      Both backends decode it via the shared `ReactionWireCodec` and the
  *      reaction routers dispatch the normalized event via
  *      `_reactionReceivedFlow` → `handleIncomingReaction`.
@@ -212,7 +212,7 @@ private fun parseReplyToFromField16(fieldsJson: String?): String? =
  *      `mergeReactionIntoReactionsJson`. Never goes on the wire.
  *
  * Pre-v2 storage overloaded `fieldsJson.field16.reactions` for this
- * blob; the v1→v2 Room migration in `ColumbaDatabase.MIGRATION_1_2`
+ * blob; the v1→v2 Room migration in `ZamolxisDatabase.MIGRATION_1_2`
  * lifts that data into the dedicated column.
  *
  * @param reactionsJson The target message's reactionsJson column value
@@ -731,7 +731,7 @@ private fun parseFileAttachments(fieldsJson: String?): List<FileAttachmentUi> {
  * Two element formats are accepted:
  *  1. Object: {"filename": "doc.pdf", "size": 12345, "data": "hex..."}
  *     or {"filename": "...", "size": ..., "_data_ref": "/path"} — used by
- *     Columba's on-disk optimized storage.
+ *     Zamolxis's on-disk optimized storage.
  *  2. Positional array (LXMF wire format from Sideband and other apps):
  *     [filename_string, data_hex_string] — 2-element tuple.
  *     Sideband serializes FIELD_FILE_ATTACHMENTS this way, so an inbound
@@ -789,12 +789,12 @@ private fun parsePositionalAttachment(
         Log.w(TAG, "Positional file attachment at $index has ${entry.length()} elements, expected >= 2")
         return null
     }
-    // Filename element: Columba (both backends) sends bytes; upstream LXMF
+    // Filename element: Zamolxis (both backends) sends bytes; upstream LXMF
     // serializers hex-encode every ByteArray field value, so what arrives
     // here is the lowercase hex of the UTF-8 filename. Sideband sends a
     // `str` filename which arrives unchanged. Decode hex when it looks
     // like hex; fall back to the raw string otherwise so Sideband interop
-    // (real strings) and Columba<->Columba (hex bytes) both render right.
+    // (real strings) and Zamolxis<->Zamolxis (hex bytes) both render right.
     val rawFilename = entry.optString(0, "unknown").ifEmpty { "unknown" }
     val filename = decodeHexFilenameOrNull(rawFilename) ?: rawFilename
     // Data is hex-encoded; each byte is 2 hex chars. If a size field is
@@ -849,7 +849,7 @@ private const val BINARY_REF_KEY = "_binary_ref"
  *
  * Supports three formats:
  * 1. Object with inline hex: {"data": "hex..."}
- * 2. Object with on-disk ref: {"_data_ref": "/path/to/5_0"} (Columba's
+ * 2. Object with on-disk ref: {"_data_ref": "/path/to/5_0"} (Zamolxis's
  *    optimized per-file storage) or {"_binary_ref": "..."}.
  * 3. LXMF positional wire format (from Sideband and the reference
  *    LXMF lib): [filename, data_hex_string]. The hex is at element [1].

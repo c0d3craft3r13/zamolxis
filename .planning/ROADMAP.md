@@ -1,4 +1,4 @@
-# Roadmap: Columba
+# Roadmap: Zamolxis
 
 ## Milestones
 

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding.pages
+package network.zamolxis.app.ui.screens.onboarding.pages
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -7,7 +7,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -45,7 +45,7 @@ class WelcomePageTest {
         }
 
         // Then
-        composeTestRule.onNodeWithContentDescription("Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Zamolxis").assertIsDisplayed()
     }
 
     @Test
@@ -59,7 +59,7 @@ class WelcomePageTest {
         }
 
         // Then
-        composeTestRule.onNodeWithText("Welcome to Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to Zamolxis").assertIsDisplayed()
     }
 
     @Test
@@ -315,8 +315,8 @@ class WelcomePageTest {
         }
 
         // Then - verify all major UI elements are present
-        composeTestRule.onNodeWithContentDescription("Columba").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Welcome to Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Zamolxis").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to Zamolxis").assertIsDisplayed()
         composeTestRule.onNodeWithText("A private messenger that requires:").assertIsDisplayed()
         composeTestRule.onNodeWithText("No phone number").assertIsDisplayed()
         composeTestRule.onNodeWithText("No email address").assertIsDisplayed()

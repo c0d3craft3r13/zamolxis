@@ -43,7 +43,7 @@ Investigate and fix UI stuttering and progressive performance degradation report
 <specifics>
 ## Specific Ideas
 
-- Interface Discovery comes from Python Reticulum 1.1.0 — Columba built UI around it
+- Interface Discovery comes from Python Reticulum 1.1.0 — Zamolxis built UI around it
 - Reporter (serialrf433) says it's correlated with Interface Discovery being enabled
 - List typically has 10-50 items (moderate size)
 - Not yet tested whether slowdown happens without Discovery enabled — worth checking during investigation

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.bridge
+package network.zamolxis.app.rns.host.ble.bridge
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager

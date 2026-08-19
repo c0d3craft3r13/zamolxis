@@ -1,44 +1,50 @@
 <p align="center">
-  <img src="./columba-icon.svg" width="200" height="200" alt="alt text" />
+  <img src="./zamolxis-icon.png" width="200" height="200" alt="Zamolxis" />
 </p>
 
-# Columba
+# Zamolxis
 
-Columba is a simple messaging and voice app for the [Reticulum](https://github.com/markqvist/Reticulum) network on Android. Send [LXMF](https://github.com/markqvist/LXMF) messages and make [LXST](https://github.com/markqvist/LXST/tree/master/LXST) voice calls without relying on the internet, cell towers, or any central servers.
+Zamolxis is a messaging and voice app for the [Reticulum](https://github.com/markqvist/Reticulum) network on Android. Send [LXMF](https://github.com/markqvist/LXMF) messages and make [LXST](https://github.com/markqvist/LXST/tree/master/LXST) voice calls without relying on the internet, cell towers, or any central servers.
 
-Built with a native Android interface and Material Design 3, Columba brings mesh networking to your pocket in a familiar, easy-to-use package.
-
-<img src="https://github.com/user-attachments/assets/77532689-3568-4224-a75d-62fb08a4ad33" width="33%"></img> <img src="https://github.com/user-attachments/assets/70804d27-6307-441f-b29f-b32ecfe72098" width="33%"></img> <img src="https://github.com/user-attachments/assets/c2d2c9ad-63da-42e0-a045-bc30ec3bb128" width="33%"></img>
+It is built for people who cannot assume the network is neutral — reporters, field operators, and anyone who would rather not route their private conversations through an infrastructure someone else controls. No accounts, no phone numbers, no directory, nothing to seize.
 
 ## What You Can Do
 
-- **Message without infrastructure** - Send messages even when the internet is down or unavailable
-- **Connect multiple ways** - Use Bluetooth LE to connect to those around you anywhere, Wifi for those at home, LoRa radio via [RNode](https://github.com/markqvist/RNode_Firmware) for those at a distance, or use TCP to connect to any Reticulum server around the world 
-- **Stay private** - End-to-end encryption with no accounts, no tracking, and no central servers
-- **Share location** - Share your location securely with others, viewable from a dedicated map
-- **Download maps for offline use** - Download or import map files. Supports vector and raster, in MBTiles format
-- **Browse NomadNetwork** - Access nomadnet pages over Reticulum networks
-- **Build your network** - Help relay traffic for others and expand the mesh
-- **Keep your identity** - Generate your messaging identity right on your device
-- **Manage multiple identities** - Easily swap between multiple identities
-- **Export and import identities** - Keep an external backup of your keys, or migrate to a new device. Import from other Reticulum clients like [Sideband](https://github.com/markqvist/Sideband)
-- **Share your identity via QR Code** - Built in QR code scanner and generator for sharing your identity with others
-- **Custom Color Themes** - Don't like the default colors? Rice to your heart's content! 
+- **Message without infrastructure** — Send messages even when the internet is down, throttled, or shut off
+- **Connect multiple ways** — Bluetooth LE for people near you, Wi-Fi at home, LoRa radio via [RNode](https://github.com/markqvist/RNode_Firmware) for distance, or TCP to reach any Reticulum node worldwide
+- **Stay private** — End-to-end encryption with no accounts, no tracking, and no central servers
+- **Share location** — Share your position securely with chosen contacts, viewable on a dedicated map
+- **Download maps for offline use** — Vector and raster maps in MBTiles format
+- **Browse NomadNetwork** — Access nomadnet pages over Reticulum
+- **Build your network** — Relay traffic for others and extend the mesh
+- **Keep your identity** — Generate your messaging identity on-device
+- **Manage multiple identities** — Swap between identities freely
+- **Export and import identities** — Back up your keys or migrate devices. Imports from other Reticulum clients such as [Sideband](https://github.com/markqvist/Sideband)
+- **Share your identity via QR code** — Built-in scanner and generator
+- **Custom color themes** — Restyle it however you like
 
 ## Getting Started
 
-Download the latest release from [Releases](https://github.com/torlando-tech/columba/releases) and install on your Android device. See [SECURITY.md](./SECURITY.md) for APK verification instructions.
+Download the latest release from [Releases](https://github.com/c0d3craft3r13/zamolxis/releases) and install it on your Android device. See [SECURITY.md](./SECURITY.md) for APK verification instructions — verify before you install.
 
-<a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/torlando-tech/columba"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="60" alt="Get it on Obtainium"></a>
-
-Alternatively, you can download the apk via [NomadNet](https://github.com/markqvist/NomadNet) at `8d1788fdb4e9f85303cfdf7481e721c7:/page/index.mu`
+<a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/c0d3craft3r13/zamolxis"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="60" alt="Get it on Obtainium"></a>
 
 ## About Reticulum
 
-[Reticulum](https://github.com/markqvist/Reticulum) is a networking stack that lets devices communicate directly with each other, forming resilient mesh networks. It is optimized for low bandwidth, high latency connections, and can communicate over nearly any medium. Columba uses [LXMF](https://github.com/markqvist/LXMF) (Lightweight Extensible Message Format) to send messages across the Reticulum network, and uses a native Android implementation of [ble-reticulum](https://github.com/torlando-tech/ble-reticulum) to enable messaging over BLE with other Android and Linux devices.
+[Reticulum](https://github.com/markqvist/Reticulum) is a networking stack that lets devices communicate directly with each other, forming resilient mesh networks. It is optimized for low bandwidth, high latency links and can run over nearly any medium. Zamolxis uses [LXMF](https://github.com/markqvist/LXMF) (Lightweight Extensible Message Format) to carry messages across the network, and a native Android implementation of [ble-reticulum](https://github.com/torlando-tech/ble-reticulum) for messaging over BLE with other Android and Linux devices.
 
 Want to learn more? Visit [Reticulum's documentation](https://reticulum.network/).
 
-## Why "Columba"
+## Why "Zamolxis"
 
-Columba, latin for "dove," is a [constellation](https://en.wikipedia.org/wiki/Columba_(constellation)) in the southern sky depicting a dove. Doves are commonly a symbol of peace and hope, and have been used as messengers throughout history. 
+Zamolxis was the god of the Dacians, associated with immortality. Herodotus tells that he withdrew into an underground chamber for three years while his people mourned him as dead — and then returned. A fitting name for a network that goes quiet and comes back.
+
+## Security
+
+Zamolxis carries private messages and identity keys. Report vulnerabilities privately through [GitHub Security Advisories](https://github.com/c0d3craft3r13/zamolxis/security/advisories/new), never as a public issue. See [SECURITY.md](./SECURITY.md) for the threat model, including what is *not* yet covered.
+
+## License
+
+Zamolxis is released under the Mozilla Public License 2.0 — see [LICENSE.md](./LICENSE.md).
+
+It is a fork of [Zamolxis](https://github.com/torlando-tech/columba) by the Zamolxis Contributors, used under the same license. The upstream project is not affiliated with Zamolxis and does not endorse it.

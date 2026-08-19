@@ -1,4 +1,4 @@
-package network.columba.app.ui
+package network.zamolxis.app.ui
 
 import android.app.Application
 import androidx.compose.ui.test.assertCountEquals
@@ -7,10 +7,10 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.TcpClientWizardTestFixtures
-import network.columba.app.ui.screens.tcpclient.TcpClientWizardScreen
-import network.columba.app.viewmodel.TcpClientWizardViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.TcpClientWizardTestFixtures
+import network.zamolxis.app.ui.screens.tcpclient.TcpClientWizardScreen
+import network.zamolxis.app.viewmodel.TcpClientWizardViewModel
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow

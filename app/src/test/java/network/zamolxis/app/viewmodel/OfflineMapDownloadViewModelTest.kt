@@ -1,16 +1,16 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.location.Location
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
-import network.columba.app.data.repository.OfflineMapRegion
-import network.columba.app.data.repository.OfflineMapRegionRepository
-import network.columba.app.map.MapLibreOfflineManager
-import network.columba.app.map.MapTileSourceManager
-import network.columba.app.map.TileDownloadManager
-import network.columba.app.repository.SettingsRepository
+import network.zamolxis.app.data.repository.OfflineMapRegion
+import network.zamolxis.app.data.repository.OfflineMapRegionRepository
+import network.zamolxis.app.map.MapLibreOfflineManager
+import network.zamolxis.app.map.MapTileSourceManager
+import network.zamolxis.app.map.TileDownloadManager
+import network.zamolxis.app.repository.SettingsRepository
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery

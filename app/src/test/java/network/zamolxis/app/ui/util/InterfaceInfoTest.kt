@@ -1,4 +1,4 @@
-package network.columba.app.ui.util
+package network.zamolxis.app.ui.util
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
@@ -180,11 +180,11 @@ class InterfaceInfoTest {
     @Test
     fun `RNode connected via BLE categorized as LoRa not Bluetooth`() {
         // RNode connected via BLE gets a name containing both "RNode" and "BLE"
-        val info = getInterfaceInfo("ColumbaRNodeInterface[RNode 5A3F BLE]")
+        val info = getInterfaceInfo("ZamolxisRNodeInterface[RNode 5A3F BLE]")
 
         assertEquals(Icons.Default.CellTower, info.icon)
         assertEquals("RNode 5A3F BLE", info.text)
-        assertEquals("ColumbaRNodeInterface", info.subtitle)
+        assertEquals("ZamolxisRNodeInterface", info.subtitle)
     }
 
     @Test

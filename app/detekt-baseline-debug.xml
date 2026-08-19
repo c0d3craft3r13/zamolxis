@@ -5,7 +5,7 @@
     <ID>ArrayPrimitive:NotificationSettingsViewModel.kt$NotificationSettingsViewModel$Array&lt;Boolean&gt;</ID>
     <ID>ComplexCondition:InterfaceManagementScreen.kt$interfaceEntity.type == "RNode" &amp;&amp; interfaceEntity.enabled &amp;&amp; isOnline == false &amp;&amp; onReconnect != null</ID>
     <ID>ComplexCondition:MainActivity.kt$!isOnWelcomeScreen &amp;&amp; !isOnMessagingScreen &amp;&amp; !isOnAnnounceDetailScreen &amp;&amp; !isOnInterfaceManagementScreen &amp;&amp; !isOnBleConnectionStatusScreen &amp;&amp; !isOnThemeManagementScreen &amp;&amp; !isOnThemeEditorScreen &amp;&amp; !isOnRNodeWizardScreen</ID>
-    <ID>CyclomaticComplexMethod:ColumbaApplication.kt$ColumbaApplication$override fun onCreate()</ID>
+    <ID>CyclomaticComplexMethod:ZamolxisApplication.kt$ZamolxisApplication$override fun onCreate()</ID>
     <ID>CyclomaticComplexMethod:ConfigFileParser.kt$ConfigFileParser$private fun parseConfigLines(lines: List&lt;String&gt;): List&lt;InterfaceConfig&gt;</ID>
     <ID>CyclomaticComplexMethod:DebugViewModel.kt$DebugViewModel$private fun fetchDebugInfo()</ID>
     <ID>CyclomaticComplexMethod:InterfaceDatabase.kt$InterfaceDatabase.Callback$private fun configToEntity( config: InterfaceConfig, displayOrder: Int, ): InterfaceEntity</ID>
@@ -20,7 +20,7 @@
     <ID>CyclomaticComplexMethod:ReticulumServiceBinder.kt$ReticulumServiceBinder$override fun getDebugInfo(): String</ID>
     <ID>ImplicitDefaultLocale:ThemeColorGenerator.kt$ThemeColorGenerator$String.format("#%06X", argb and 0xFFFFFF)</ID>
     <ID>ImplicitDefaultLocale:ThemeColorGenerator.kt$ThemeColorGenerator$String.format("#%08X", argb)</ID>
-    <ID>InjectDispatcher:ColumbaApplication.kt$ColumbaApplication$IO</ID>
+    <ID>InjectDispatcher:ZamolxisApplication.kt$ZamolxisApplication$IO</ID>
     <ID>InjectDispatcher:IdentityResolutionManager.kt$IdentityResolutionManager$IO</ID>
     <ID>InjectDispatcher:InterfaceManagementViewModel.kt$InterfaceManagementViewModel$IO</ID>
     <ID>InjectDispatcher:MessageCollector.kt$MessageCollector$IO</ID>
@@ -39,7 +39,7 @@
     <ID>InstanceOfCheckForException:ServiceNotificationManager.kt$ServiceNotificationManager$e is android.app.ForegroundServiceStartNotAllowedException</ID>
     <ID>LargeClass:RNodeWizardViewModel.kt$RNodeWizardViewModel : ViewModel</ID>
     <ID>LargeClass:ServiceReticulumProtocol.kt$ServiceReticulumProtocol : ReticulumProtocol</ID>
-    <ID>LongMethod:ColumbaApplication.kt$ColumbaApplication$override fun onCreate()</ID>
+    <ID>LongMethod:ZamolxisApplication.kt$ZamolxisApplication$override fun onCreate()</ID>
     <ID>LongMethod:ConfigFileParser.kt$ConfigFileParser$private fun parseConfigLines(lines: List&lt;String&gt;): List&lt;InterfaceConfig&gt;</ID>
     <ID>LongMethod:InterfaceRepository.kt$InterfaceRepository$fun entityToConfig(entity: InterfaceEntity): InterfaceConfig</ID>
     <ID>LongMethod:MessageCollector.kt$MessageCollector$fun startCollecting()</ID>
@@ -74,7 +74,7 @@
     <ID>ReturnCount:RNodeConfigValidator.kt$RNodeConfigValidator$fun validateConfigSilent( name: String, frequency: String, bandwidth: String, spreadingFactor: String, codingRate: String, txPower: String, stAlock: String, ltAlock: String, region: FrequencyRegion?, ): Boolean</ID>
     <ID>ReturnCount:RNodeRegionalPreset.kt$FrequencySlotCalculator$fun calculateSlotFromFrequency(region: FrequencyRegion, bandwidth: Int, frequency: Long): Int?</ID>
     <ID>ReturnCount:RNodeWizardViewModel.kt$RNodeWizardViewModel$fun getPopularPresetsForRegion(): List&lt;RNodeRegionalPreset&gt;</ID>
-    <ID>SwallowedException:ColumbaApplication.kt$ColumbaApplication$e: ClassNotFoundException</ID>
+    <ID>SwallowedException:ZamolxisApplication.kt$ZamolxisApplication$e: ClassNotFoundException</ID>
     <ID>SwallowedException:IdentityManagerViewModel.kt$IdentityManagerViewModel$e: Exception</ID>
     <ID>SwallowedException:IdentityQrCodeUtils.kt$IdentityQrCodeUtils$e: Exception</ID>
     <ID>SwallowedException:InterfaceConfigManager.kt$InterfaceConfigManager$e: Exception</ID>
@@ -89,7 +89,7 @@
     <ID>ThrowsCount:IdentityManagerViewModel.kt$IdentityManagerViewModel$fun createNewIdentity(displayName: String)</ID>
     <ID>ThrowsCount:IdentityManagerViewModel.kt$IdentityManagerViewModel$fun importIdentity( fileUri: Uri, displayName: String, )</ID>
     <ID>ThrowsCount:InterfaceRepository.kt$InterfaceRepository$fun entityToConfig(entity: InterfaceEntity): InterfaceConfig</ID>
-    <ID>ThrowsCount:ServiceReticulumProtocol.kt$ServiceReticulumProtocol$suspend fun getLxmfDestination(): Result&lt;network.columba.app.reticulum.model.Destination&gt;</ID>
+    <ID>ThrowsCount:ServiceReticulumProtocol.kt$ServiceReticulumProtocol$suspend fun getLxmfDestination(): Result&lt;network.zamolxis.app.reticulum.model.Destination&gt;</ID>
     <ID>ThrowsCount:ServiceReticulumProtocol.kt$ServiceReticulumProtocol$suspend fun getLxmfIdentity(): Result&lt;Identity&gt;</ID>
     <ID>TooGenericExceptionThrown:AnnounceStreamViewModel.kt$AnnounceStreamViewModel$throw RuntimeException("Service error: ${status.message}")</ID>
     <ID>TooGenericExceptionThrown:DebugViewModel.kt$DebugViewModel$throw RuntimeException("Could not get LXMF destination")</ID>
@@ -145,7 +145,7 @@
     <ID>UnsafeCallOnNullableType:ThemeEditorViewModel.kt$ThemeEditorViewModel$_state.value.themeId!!</ID>
     <ID>UnusedParameter:ContactsScreen.kt$contactName: String</ID>
     <ID>UnusedParameter:ContactsScreen.kt$onNavigateToConversation: (destinationHash: String) -&gt; Unit = {}</ID>
-    <ID>UnusedParameter:DebugViewModel.kt$DebugViewModel$identity: network.columba.app.reticulum.model.Identity</ID>
+    <ID>UnusedParameter:DebugViewModel.kt$DebugViewModel$identity: network.zamolxis.app.reticulum.model.Identity</ID>
     <ID>UnusedParameter:FrequencySlotStep.kt$bandwidth: Int</ID>
     <ID>UnusedParameter:IdentityManagerViewModel.kt$IdentityManagerViewModel$identityHash: String</ID>
     <ID>UnusedParameter:IdentityScreen.kt$identityHash: String?</ID>
@@ -160,16 +160,16 @@
     <ID>UnusedPrivateMember:ServiceReticulumProtocol.kt$ServiceReticulumProtocol$private fun ByteArray.toHexString(): String</ID>
     <ID>UnusedPrivateProperty:DebugViewModel.kt$DebugViewModel$private val settingsRepository: SettingsRepository</ID>
     <ID>UnusedPrivateProperty:DebugViewModel.kt$DebugViewModel$val destHash = _publicKey.value ?: return null</ID>
-    <ID>UnusedPrivateProperty:DebugViewModel.kt$DebugViewModel$val isReady = status is network.columba.app.reticulum.model.NetworkStatus.READY</ID>
-    <ID>UnusedPrivateProperty:DebugViewModel.kt$DebugViewModel$val statusString = when (status) { is network.columba.app.reticulum.model.NetworkStatus.READY -&gt; "READY" is network.columba.app.reticulum.model.NetworkStatus.INITIALIZING -&gt; "INITIALIZING" is network.columba.app.reticulum.model.NetworkStatus.SHUTDOWN -&gt; "SHUTDOWN" is network.columba.app.reticulum.model.NetworkStatus.ERROR -&gt; "ERROR: ${status.message}" else -&gt; status.toString() }</ID>
+    <ID>UnusedPrivateProperty:DebugViewModel.kt$DebugViewModel$val isReady = status is network.zamolxis.app.reticulum.model.NetworkStatus.READY</ID>
+    <ID>UnusedPrivateProperty:DebugViewModel.kt$DebugViewModel$val statusString = when (status) { is network.zamolxis.app.reticulum.model.NetworkStatus.READY -&gt; "READY" is network.zamolxis.app.reticulum.model.NetworkStatus.INITIALIZING -&gt; "INITIALIZING" is network.zamolxis.app.reticulum.model.NetworkStatus.SHUTDOWN -&gt; "SHUTDOWN" is network.zamolxis.app.reticulum.model.NetworkStatus.ERROR -&gt; "ERROR: ${status.message}" else -&gt; status.toString() }</ID>
     <ID>UnusedPrivateProperty:DebugViewModel.kt$DebugViewModel.Companion$private const val DEFAULT_IDENTITY_FILE = "default_identity"</ID>
     <ID>UnusedPrivateProperty:IdentityScreen.kt$val context = LocalContext.current</ID>
     <ID>UnusedPrivateProperty:InterfaceConfigManager.kt$InterfaceConfigManager$val serviceConnection = (reticulumProtocol as ServiceReticulumProtocol)</ID>
     <ID>UnusedPrivateProperty:InterfaceDatabase.kt$InterfaceDatabase.Callback$private val applicationScope: CoroutineScope</ID>
     <ID>UnusedPrivateProperty:InterfaceDatabase.kt$InterfaceDatabase.Callback$private val database: Provider&lt;InterfaceDatabase&gt;</ID>
     <ID>UnusedPrivateProperty:InterfaceManagementScreen.kt$var expanded by remember { mutableStateOf(false) }</ID>
-    <ID>UnusedPrivateProperty:NotificationHelper.kt$NotificationHelper.Companion$private const val ACTION_MARK_READ = "network.columba.app.ACTION_MARK_READ"</ID>
-    <ID>UnusedPrivateProperty:NotificationHelper.kt$NotificationHelper.Companion$private const val ACTION_REPLY = "network.columba.app.ACTION_REPLY"</ID>
+    <ID>UnusedPrivateProperty:NotificationHelper.kt$NotificationHelper.Companion$private const val ACTION_MARK_READ = "network.zamolxis.app.ACTION_MARK_READ"</ID>
+    <ID>UnusedPrivateProperty:NotificationHelper.kt$NotificationHelper.Companion$private const val ACTION_REPLY = "network.zamolxis.app.ACTION_REPLY"</ID>
     <ID>UnusedPrivateProperty:PythonWrapperManager.kt$PythonWrapperManager$private val scope: CoroutineScope</ID>
     <ID>UnusedPrivateProperty:QrScannerScreen.kt$var showPermissionRationale by remember { mutableStateOf(false) }</ID>
     <ID>UnusedPrivateProperty:ThemeEditorViewModel.kt$ThemeEditorViewModel.Companion$private const val TAG = "ThemeEditorViewModel"</ID>

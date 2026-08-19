@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.content.Context
 import android.content.Intent
@@ -14,7 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import network.columba.app.rns.host.ble.util.BlePermissionManager
+import network.zamolxis.app.rns.host.ble.util.BlePermissionManager
 
 /**
  * Small helper to centralize Bluetooth permission and onboarding flow for

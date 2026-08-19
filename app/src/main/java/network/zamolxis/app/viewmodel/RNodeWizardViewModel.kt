@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -24,26 +24,26 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.model.BluetoothType
-import network.columba.app.data.model.CommunitySlots
-import network.columba.app.data.model.DeviceClassifier
-import network.columba.app.data.model.DeviceTypeCache
-import network.columba.app.data.model.DiscoveredRNode
-import network.columba.app.data.model.FrequencyRegion
-import network.columba.app.data.model.FrequencyRegions
-import network.columba.app.data.model.FrequencySlotCalculator
-import network.columba.app.data.model.ModemPreset
-import network.columba.app.data.model.RNodeRegionalPreset
-import network.columba.app.data.model.RNodeRegionalPresets
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.rns.host.ble.util.BlePairingHandler
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.util.RssiThrottler
-import network.columba.app.util.validation.DeviceNameValidator
-import network.columba.app.util.validation.InputValidator
-import network.columba.app.util.validation.ValidationResult
+import network.zamolxis.app.data.model.BluetoothType
+import network.zamolxis.app.data.model.CommunitySlots
+import network.zamolxis.app.data.model.DeviceClassifier
+import network.zamolxis.app.data.model.DeviceTypeCache
+import network.zamolxis.app.data.model.DiscoveredRNode
+import network.zamolxis.app.data.model.FrequencyRegion
+import network.zamolxis.app.data.model.FrequencyRegions
+import network.zamolxis.app.data.model.FrequencySlotCalculator
+import network.zamolxis.app.data.model.ModemPreset
+import network.zamolxis.app.data.model.RNodeRegionalPreset
+import network.zamolxis.app.data.model.RNodeRegionalPresets
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.rns.host.ble.util.BlePairingHandler
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.util.RssiThrottler
+import network.zamolxis.app.util.validation.DeviceNameValidator
+import network.zamolxis.app.util.validation.InputValidator
+import network.zamolxis.app.util.validation.ValidationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -136,8 +136,8 @@ data class RNodeWizardState(
     val tcpValidationSuccess: Boolean? = null,
     val tcpValidationError: String? = null,
     // USB Serial connection fields
-    val usbDevices: List<network.columba.app.data.model.DiscoveredUsbDevice> = emptyList(),
-    val selectedUsbDevice: network.columba.app.data.model.DiscoveredUsbDevice? = null,
+    val usbDevices: List<network.zamolxis.app.data.model.DiscoveredUsbDevice> = emptyList(),
+    val selectedUsbDevice: network.zamolxis.app.data.model.DiscoveredUsbDevice? = null,
     val isUsbScanning: Boolean = false,
     val usbScanError: String? = null,
     val isRequestingUsbPermission: Boolean = false,
@@ -149,7 +149,7 @@ data class RNodeWizardState(
     val manualPinInput: String = "",
     // USB-assisted Bluetooth pairing (from Bluetooth tab)
     val isUsbAssistedPairingActive: Boolean = false,
-    val usbAssistedPairingDevices: List<network.columba.app.data.model.DiscoveredRNode> = emptyList(),
+    val usbAssistedPairingDevices: List<network.zamolxis.app.data.model.DiscoveredRNode> = emptyList(),
     val usbAssistedPairingPin: String? = null,
     val usbAssistedPairingStatus: String? = null,
     // Companion Device Association (Android 12+)
@@ -256,7 +256,7 @@ class RNodeWizardViewModel
         private val configManager: InterfaceConfigManager,
     ) : ViewModel() {
         private val flasher by lazy {
-            network.columba.app.rns.host.flasher
+            network.zamolxis.app.rns.host.flasher
                 .RNodeFlasher(context)
         }
 
@@ -284,7 +284,7 @@ class RNodeWizardViewModel
 
         // USB bridge (singleton from reticulum module)
         private val usbBridge by lazy {
-            network.columba.app.rns.host.usb.KotlinUSBBridge
+            network.zamolxis.app.rns.host.usb.KotlinUSBBridge
                 .getInstance(context)
         }
 
@@ -386,7 +386,7 @@ class RNodeWizardViewModel
                     val usbProductId = config.usbProductId
                     val usbDevice =
                         if (isUsb && usbVendorId != null && usbProductId != null) {
-                            network.columba.app.data.model.DiscoveredUsbDevice(
+                            network.zamolxis.app.data.model.DiscoveredUsbDevice(
                                 deviceId = config.usbDeviceId ?: 0,
                                 vendorId = usbVendorId,
                                 productId = usbProductId,
@@ -764,7 +764,7 @@ class RNodeWizardViewModel
         /**
          * Get community slots for the current region.
          */
-        fun getCommunitySlots(): List<network.columba.app.data.model.CommunitySlot> {
+        fun getCommunitySlots(): List<network.zamolxis.app.data.model.CommunitySlot> {
             val region = _state.value.selectedFrequencyRegion ?: return emptyList()
             return CommunitySlots.forRegion(region.id)
         }
@@ -1694,7 +1694,7 @@ class RNodeWizardViewModel
 
                     val usbDevices =
                         devices.map { device ->
-                            network.columba.app.data.model.DiscoveredUsbDevice(
+                            network.zamolxis.app.data.model.DiscoveredUsbDevice(
                                 deviceId = device.deviceId,
                                 vendorId = device.vendorId,
                                 productId = device.productId,
@@ -1732,7 +1732,7 @@ class RNodeWizardViewModel
          * Select a USB device.
          * If permission is needed, requests it first.
          */
-        fun selectUsbDevice(device: network.columba.app.data.model.DiscoveredUsbDevice) {
+        fun selectUsbDevice(device: network.zamolxis.app.data.model.DiscoveredUsbDevice) {
             if (device.hasPermission) {
                 _state.update {
                     // Auto-generate interface name if user hasn't customized it
@@ -1755,7 +1755,7 @@ class RNodeWizardViewModel
         /**
          * Request USB permission for a device.
          */
-        fun requestUsbPermission(device: network.columba.app.data.model.DiscoveredUsbDevice) {
+        fun requestUsbPermission(device: network.zamolxis.app.data.model.DiscoveredUsbDevice) {
             _state.update { it.copy(isRequestingUsbPermission = true) }
 
             usbBridge.requestPermission(device.deviceId) { granted ->
@@ -1829,7 +1829,7 @@ class RNodeWizardViewModel
                     // If not found in scan, create a placeholder device
                     // (permission will be requested when selected)
                     val placeholderDevice =
-                        network.columba.app.data.model.DiscoveredUsbDevice(
+                        network.zamolxis.app.data.model.DiscoveredUsbDevice(
                             deviceId = deviceId,
                             vendorId = vendorId,
                             productId = productId,
@@ -2898,7 +2898,7 @@ class RNodeWizardViewModel
 
                     val usbDevices =
                         devices.map { device ->
-                            network.columba.app.data.model.DiscoveredUsbDevice(
+                            network.zamolxis.app.data.model.DiscoveredUsbDevice(
                                 deviceId = device.deviceId,
                                 vendorId = device.vendorId,
                                 productId = device.productId,
@@ -3611,9 +3611,9 @@ class RNodeWizardViewModel
             val band =
                 when {
                     frequencyHz < 500_000_000 ->
-                        network.columba.app.rns.host.flasher.FrequencyBand.BAND_433
+                        network.zamolxis.app.rns.host.flasher.FrequencyBand.BAND_433
                     else ->
-                        network.columba.app.rns.host.flasher.FrequencyBand.BAND_868_915
+                        network.zamolxis.app.rns.host.flasher.FrequencyBand.BAND_868_915
                 }
 
             Log.i(TAG, "Applying transport mode: freq=$frequencyHz bw=$bandwidthHz sf=$sf cr=$cr txp=$txp")

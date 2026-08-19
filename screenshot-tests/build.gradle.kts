@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "network.columba.app.screenshot"
+    namespace = "network.zamolxis.app.screenshot"
     compileSdk = 36
 
     defaultConfig {

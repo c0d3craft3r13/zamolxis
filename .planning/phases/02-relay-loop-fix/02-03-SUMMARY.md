@@ -24,7 +24,7 @@ tech-stack:
 key-files:
   created: []
   modified:
-    - app/src/test/java/network.columba.app/service/PropagationNodeManagerTest.kt
+    - app/src/test/java/network.zamolxis.app/service/PropagationNodeManagerTest.kt
 
 key-decisions:
   - "Use MutableSharedFlow<Announce> to simulate reactive announce updates in tests"
@@ -79,7 +79,7 @@ Each task was committed atomically:
    - Test processing happens after debounce delay
 
 ## Files Created/Modified
-- `app/src/test/java/network.columba.app/service/PropagationNodeManagerTest.kt` - Added 9 new test functions covering state machine lifecycle, state guards, and debounce behavior
+- `app/src/test/java/network.zamolxis.app/service/PropagationNodeManagerTest.kt` - Added 9 new test functions covering state machine lifecycle, state guards, and debounce behavior
 
 ## Decisions Made
 None - followed plan as specified. Plan correctly identified all necessary test scenarios.
@@ -91,14 +91,14 @@ None - followed plan as specified. Plan correctly identified all necessary test 
 **1. [Rule 3 - Blocking] Fixed type mismatch in Flow declarations**
 - **Found during:** Task 1 (State machine lifecycle tests)
 - **Issue:** Used `MutableSharedFlow<List<AnnounceEntity>>` but `getAnnouncesByTypes` returns `Flow<List<Announce>>` (domain model, not entity)
-- **Fix:** Changed to `MutableSharedFlow<List<network.columba.app.data.repository.Announce>>`
-- **Files modified:** app/src/test/java/network.columba.app/service/PropagationNodeManagerTest.kt
+- **Fix:** Changed to `MutableSharedFlow<List<network.zamolxis.app.data.repository.Announce>>`
+- **Files modified:** app/src/test/java/network.zamolxis.app/service/PropagationNodeManagerTest.kt
 - **Verification:** Tests compile and pass
 - **Committed in:** 4bbf19a7 (Task 1 commit)
 
 **2. [Rule 3 - Blocking] Fixed corrupted KSP cache**
 - **Found during:** Task 1 verification
-- **Issue:** `Storage corrupted /home/tyler/repos/public/columba/app/build/kspCaches/debug/symbolLookups/lookups.tab_i`
+- **Issue:** `Storage corrupted /home/tyler/repos/public/zamolxis/app/build/kspCaches/debug/symbolLookups/lookups.tab_i`
 - **Fix:** Ran `./gradlew clean` to clear corrupted build artifacts
 - **Files modified:** None (build directory)
 - **Verification:** Subsequent builds succeeded

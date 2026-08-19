@@ -1,17 +1,17 @@
-# Columba ↔ Sideband LXMF interop suite
+# Zamolxis ↔ Sideband LXMF interop suite
 
-Pytest harness driving a **Columba app on an Android emulator** and a
+Pytest harness driving a **Zamolxis app on an Android emulator** and a
 **headless Sideband daemon on the test host** as two LXMF peers on the
 same RNS network. Exercises every protocol-meaningful message field
 upstream LXMF defines that both apps implement, in both directions.
 
 Reactions and replies are deliberately excluded — `FIELD_REACTION` (0x10)
-is Columba-specific and not present in upstream `LXMF.LXMessage`.
+is Zamolxis-specific and not present in upstream `LXMF.LXMessage`.
 Everything else round-trips.
 
 ## What it covers
 
-| Field / shape | A→B (Columba→Sideband) | B→A (Sideband→Columba) | Delivery methods |
+| Field / shape | A→B (Zamolxis→Sideband) | B→A (Sideband→Zamolxis) | Delivery methods |
 |---|---|---|---|
 | Text only | ✓ | ✓ | DIRECT, OPPORTUNISTIC, PROPAGATED† |
 | `FIELD_IMAGE` (0x06) | ✓ | ✓ | DIRECT |
@@ -31,7 +31,7 @@ outbound payload.
 
 | Peer | Send surface | Receive verification |
 |---|---|---|
-| **Columba** (Android, emulator) | `adb shell am broadcast` against the debug-only `TestReceiver` (`network.columba.test.SEND_*`) | `logcat` `rx_msg source=stream …` / `rx_location source=stream …` lines (hex-escaped, single-token) |
+| **Zamolxis** (Android, emulator) | `adb shell am broadcast` against the debug-only `TestReceiver` (`network.zamolxis.test.SEND_*`) | `logcat` `rx_msg source=stream …` / `rx_location source=stream …` lines (hex-escaped, single-token) |
 | **Sideband** (Python, headless on test host) | direct `SidebandCore.send_message(...)` / `send_with_fields(...)` calls from the test process | (a) `sqlite3` query against `app_storage/sideband.db` for the inbound row, OR (b) an LXMRouter-level inbound *tap* that captures the raw LXMessage before Sideband's filters can drop it (used for telemetry-only frames + format-mismatched fields) |
 
 Both peers share the host `rnsd`'s shared instance (port 37428) — same
@@ -39,13 +39,13 @@ transport, same path table, no NAT trickery.
 
 ### Two-sided path-readiness gate
 
-After a Columba data wipe or fresh install the new identity isn't yet
+After a Zamolxis data wipe or fresh install the new identity isn't yet
 announced to Sideband (and vice-versa). The session-scoped `interop`
 fixture re-announces both peers and blocks until:
 
-  1. Columba's RNS path table has a route to Sideband (`HAS_PATH` returns 1).
-  2. Sideband's RNS Identity cache holds Columba's public key (`RNS.Identity.recall` non-None).
-  3. Columba's RNS Identity cache holds Sideband's public key (proxied via a one-shot `SEND_DIRECT` that completes with `msg_sent` rather than stalling on `requesting path`).
+  1. Zamolxis's RNS path table has a route to Sideband (`HAS_PATH` returns 1).
+  2. Sideband's RNS Identity cache holds Zamolxis's public key (`RNS.Identity.recall` non-None).
+  3. Zamolxis's RNS Identity cache holds Sideband's public key (proxied via a one-shot `SEND_DIRECT` that completes with `msg_sent` rather than stalling on `requesting path`).
 
 Without (3), the first attachment-bearing test would time out for ~30s
 on path resolution.
@@ -55,11 +55,11 @@ on path resolution.
 `FIELD_TELEMETRY` *transport* is interop-clean — both apps put bytes in
 field 2 — but *encoding* is not:
 
-- Columba sends UTF-8 JSON (`{"lat": …, "lon": …}`).
+- Zamolxis sends UTF-8 JSON (`{"lat": …, "lon": …}`).
 - Sideband sends msgpacked `Telemeter` blobs.
 
 Neither side decodes the other's payload through its domain-specific
-decoder. Columba's `rx_location` observer expects JSON; Sideband's
+decoder. Zamolxis's `rx_location` observer expects JSON; Sideband's
 `Telemeter.from_packed` expects msgpack. The interop tests assert
 **bytes survive the round-trip**, not that they parse on the
 receiving end — that's a separate domain-decoding project.
@@ -74,7 +74,7 @@ tests/interop/
 ├── conftest.py               # session-scoped peer fixtures + path-ready gate
 ├── peer_sideband.py          # SidebandCore daemon lifecycle + DB reader +
 │                             # send wrapper + LXMRouter inbound tap
-├── peer_columba.py           # TestReceiver wrapper + logcat scanner
+├── peer_zamolxis.py           # TestReceiver wrapper + logcat scanner
 ├── verify.py                 # shared helpers (hex-unescape, field decode)
 ├── fixtures/                 # binary test payloads (tiny PNG, opus tone, text file)
 ├── test_text.py              # text-only — all 3 delivery methods × both directions
@@ -92,10 +92,10 @@ tests/interop/
 - A Python venv with upstream RNS + LXMF + the Sideband checkout importable.
   Reuses `~/.reticulum-host/venv` by default (already has RNS/LXMF installed
   for the pre-existing `lxmd` / `rnsd` / `nomadnet` daemons).
-- An `adb`-connected Android emulator with the Columba `pythonBackendDebug`
+- An `adb`-connected Android emulator with the Zamolxis `pythonBackendDebug`
   APK installed. The first arm64 emulator that `adb devices` lists is used
   unless `COLUMBA_EMULATOR_SERIAL` overrides.
-- A running host `rnsd` (the Columba dual-build's normal hub setup is fine
+- A running host `rnsd` (the Zamolxis dual-build's normal hub setup is fine
   — Sideband joins the shared instance via port 37428 automatically).
 - For PROPAGATED tests: a reachable `lxmd` propagation node. The default
   hex matches the existing launch-agent setup
@@ -105,7 +105,7 @@ tests/interop/
 
 `ADD_TCP_CLIENT` from a backgrounded broadcast fails on Android's
 `mAllowStartForeground` gate. The setup script forces a foreground
-launch, writes the interface entry, then force-restarts Columba to
+launch, writes the interface entry, then force-restarts Zamolxis to
 apply the new config:
 
 ```bash
@@ -150,14 +150,14 @@ not a stub or an LXMF mock. Importing it requires CPython + the
 Sideband repo on `PYTHONPATH`. Running it under Gradle would mean
 either bundling a CPython runtime (no) or shelling out per test
 (slower, no shared state). A pytest harness keeps the Sideband peer
-in-process for the whole session and shells out to `adb` per Columba
+in-process for the whole session and shells out to `adb` per Zamolxis
 call.
 
 ## Adding a new test
 
 1. Create / extend `fixtures/` if you need new bytes.
 2. Add a `def test_<field>_<direction>(interop, …)` in the matching file.
-3. Use `interop.columba.send_*(...)` / `interop.sideband.send_*(...)`
+3. Use `interop.zamolxis.send_*(...)` / `interop.sideband.send_*(...)`
    to originate, and `interop.<peer>.wait_for_message(...)` or
    `wait_for_tapped_message(...)` to verify. The helpers do the
    time-boxed polling + assertion.
@@ -169,8 +169,8 @@ Most spurious failures trace to one of:
 1. **`rnsd` / `lxmd` / `nomadnet` host stack wedged**. Verify via
    `lxmd --status --timeout 5` and `rnpath -t`. If a daemon's
    unresponsive, `launchctl unload && launchctl load …` the matching
-   plist and restart Columba on the emulator (`adb shell am force-stop network.columba.app.debug && monkey …`).
-2. **Columba's RNS instance has stale paths**. Symptom: Columba's send
+   plist and restart Zamolxis on the emulator (`adb shell am force-stop network.zamolxis.app.debug && monkey …`).
+2. **Zamolxis's RNS instance has stale paths**. Symptom: Zamolxis's send
    stalls on `requesting path` despite Sideband being announced.
    Fix: `setup_emulator.sh` + force-stop + relaunch.
 3. **Sideband DB lock contention**. Sideband holds a write lock during

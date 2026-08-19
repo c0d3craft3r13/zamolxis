@@ -1,9 +1,9 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
-import network.columba.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.InterfaceConfig
 import network.reticulum.transport.Transport
 
 internal object RNodeConnectionHelper {

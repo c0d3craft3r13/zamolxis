@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -6,16 +6,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.data.repository.Announce
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.NodeType
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.service.IdentityResolutionManager
-import network.columba.app.service.PropagationNodeManager
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.repository.Announce
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.NodeType
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.service.IdentityResolutionManager
+import network.zamolxis.app.service.PropagationNodeManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -55,10 +55,10 @@ class AnnounceStreamViewModel
     constructor(
         private val rnsCore: RnsCore,
         private val announceRepository: AnnounceRepository,
-        private val contactRepository: network.columba.app.data.repository.ContactRepository,
+        private val contactRepository: network.zamolxis.app.data.repository.ContactRepository,
         private val propagationNodeManager: PropagationNodeManager,
         private val identityRepository: IdentityRepository,
-        private val blockedPeerRepository: network.columba.app.data.repository.BlockedPeerRepository,
+        private val blockedPeerRepository: network.zamolxis.app.data.repository.BlockedPeerRepository,
         private val identityResolutionManager: IdentityResolutionManager,
     ) : ViewModel() {
         companion object {
@@ -113,7 +113,7 @@ class AnnounceStreamViewModel
 
         // Announces with pagination support, filtered by node types, audio filter,
         // interface types, AND search query
-        val announces: Flow<PagingData<network.columba.app.data.repository.Announce>> =
+        val announces: Flow<PagingData<network.zamolxis.app.data.repository.Announce>> =
             combine(
                 searchQuery,
                 _selectedNodeTypes,
@@ -192,9 +192,9 @@ class AnnounceStreamViewModel
                 }
             }
 
-            // Reticulum is now initialized by ColumbaApplication with config from database
+            // Reticulum is now initialized by ZamolxisApplication with config from database
             // No need to initialize here
-            Log.d(TAG, "AnnounceStreamViewModel initialized - using RNS from ColumbaApplication")
+            Log.d(TAG, "AnnounceStreamViewModel initialized - using RNS from ZamolxisApplication")
             _initializationStatus.value = "Reticulum managed by app"
 
             // Start collecting announces - but only if service is ready
@@ -262,25 +262,25 @@ class AnnounceStreamViewModel
                         withTimeoutOrNull(timeout) {
                             rnsCore.networkStatus.first { status ->
                                 when (status) {
-                                    is network.columba.app.rns.api.model.NetworkStatus.READY -> {
+                                    is network.zamolxis.app.rns.api.model.NetworkStatus.READY -> {
                                         Log.d(TAG, "Service is READY, starting announce collection")
                                         _initializationStatus.value = "Ready"
                                         true
                                     }
-                                    is network.columba.app.rns.api.model.NetworkStatus.ERROR -> {
+                                    is network.zamolxis.app.rns.api.model.NetworkStatus.ERROR -> {
                                         Log.e(TAG, "Service entered ERROR state: $status, not starting announce collection")
                                         _initializationStatus.value = "Error: ${status.message}"
                                         throw RuntimeException("Service error: ${status.message}")
                                     }
-                                    is network.columba.app.rns.api.model.NetworkStatus.CONNECTING -> {
+                                    is network.zamolxis.app.rns.api.model.NetworkStatus.CONNECTING -> {
                                         Log.d(TAG, "Service is CONNECTING, waiting...")
                                         false
                                     }
-                                    is network.columba.app.rns.api.model.NetworkStatus.SHUTDOWN -> {
+                                    is network.zamolxis.app.rns.api.model.NetworkStatus.SHUTDOWN -> {
                                         Log.d(TAG, "Service is SHUTDOWN, waiting...")
                                         false
                                     }
-                                    is network.columba.app.rns.api.model.NetworkStatus.INITIALIZING -> {
+                                    is network.zamolxis.app.rns.api.model.NetworkStatus.INITIALIZING -> {
                                         Log.d(TAG, "Service is INITIALIZING, waiting...")
                                         false
                                     }
@@ -313,7 +313,7 @@ class AnnounceStreamViewModel
                     // Extract peer name from app_data using smart parser
                     // Prefers displayName from Python's LXMF.display_name_from_app_data()
                     val peerName =
-                        network.columba.app.reticulum.util.AppDataParser.extractPeerName(
+                        network.zamolxis.app.reticulum.util.AppDataParser.extractPeerName(
                             announce.appData,
                             hashHex,
                             announce.displayName,
@@ -404,7 +404,7 @@ class AnnounceStreamViewModel
                 try {
                     val peerIdentityHash =
                         publicKey?.let {
-                            network.columba.app.data.util.HashUtils
+                            network.zamolxis.app.data.util.HashUtils
                                 .computeIdentityHash(it)
                         }
                     blockedPeerRepository.blockPeer(destinationHash, peerIdentityHash, peerName, blackholeEnabled)
@@ -609,7 +609,7 @@ class AnnounceStreamViewModel
                     kotlinx.coroutines.flow.flowOf(emptyList())
                 } else {
                     val identityHash =
-                        network.columba.app.data.util.HashUtils
+                        network.zamolxis.app.data.util.HashUtils
                             .computeIdentityHash(announce.publicKey)
                     announceRepository.getLinkedAnnouncesFlow(identityHash, destinationHash)
                 }
@@ -618,7 +618,7 @@ class AnnounceStreamViewModel
         // TODO: viewModelScope is cancelled shortly after onCleared() returns (as a
         // registered Closeable), so the coroutine launched below is likely cancelled
         // before rnsCore.shutdown() executes. Shutdown is managed by
-        // ColumbaApplication. Consider removing or moving to a separate scope.
+        // ZamolxisApplication. Consider removing or moving to a separate scope.
         override fun onCleared() {
             super.onCleared()
             // Shutdown Reticulum when ViewModel is cleared

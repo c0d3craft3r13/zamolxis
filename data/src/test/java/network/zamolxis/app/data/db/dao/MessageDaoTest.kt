@@ -1,14 +1,14 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -29,7 +29,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class MessageDaoTest {
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var messageDao: MessageDao
     private lateinit var conversationDao: ConversationDao
     private lateinit var identityDao: LocalIdentityDao
@@ -44,7 +44,7 @@ class MessageDaoTest {
     fun setup() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database =
-            Room.inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+            Room.inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
         messageDao = database.messageDao()

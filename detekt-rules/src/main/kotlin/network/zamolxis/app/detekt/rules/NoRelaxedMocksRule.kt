@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import io.gitlab.arturbosch.detekt.api.CodeSmell
 import io.gitlab.arturbosch.detekt.api.Config

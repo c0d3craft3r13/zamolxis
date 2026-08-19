@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -25,8 +25,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import network.columba.app.R
-import network.columba.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.R
+import network.zamolxis.app.rns.api.model.NetworkStatus
 
 /**
  * Pure visibility function — determines if the offline banner should be shown.

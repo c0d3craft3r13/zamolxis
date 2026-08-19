@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import io.mockk.coEvery
 import io.mockk.every
@@ -14,9 +14,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
-import network.columba.app.rns.api.call.AcceptedCallLifecycle
-import network.columba.app.rns.api.call.CallAttemptDirection
-import network.columba.app.rns.api.call.CallAttemptRequest
+import network.zamolxis.app.rns.api.call.AcceptedCallLifecycle
+import network.zamolxis.app.rns.api.call.CallAttemptDirection
+import network.zamolxis.app.rns.api.call.CallAttemptRequest
 import network.reticulum.identity.Identity
 import network.reticulum.link.Link
 import org.junit.Assert.assertEquals
@@ -113,8 +113,8 @@ class NativeInboundCallAdapterTest {
             } coAnswers {
                 val request = firstArg<CallAttemptRequest>()
                 captured += request
-                val expose = secondArg<suspend (network.columba.app.rns.api.call.CallAttemptSnapshot) -> Unit>()
-                val snapshot = network.columba.app.rns.api.call.CallAttemptSnapshot(
+                val expose = secondArg<suspend (network.zamolxis.app.rns.api.call.CallAttemptSnapshot) -> Unit>()
+                val snapshot = network.zamolxis.app.rns.api.call.CallAttemptSnapshot(
                     callAttemptId = "test-id",
                     direction = request.direction,
                     localIdentityHash = request.localIdentityHash,

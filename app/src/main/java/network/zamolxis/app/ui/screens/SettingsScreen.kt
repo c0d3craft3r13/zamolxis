@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.Manifest
 import android.content.ClipData
@@ -47,48 +47,52 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.launch
-import network.columba.app.ui.components.BackgroundLocationPermissionBottomSheet
-import network.columba.app.ui.components.LocationPermissionBottomSheet
-import network.columba.app.ui.components.ServiceRestartBanner
-import network.columba.app.ui.screens.settings.cards.AboutCard
-import network.columba.app.util.GITHUB_NEW_ISSUE_URL
-import network.columba.app.util.safeOpenUrl
-import network.columba.app.ui.screens.settings.cards.AdvancedCard
-import network.columba.app.ui.screens.settings.cards.AutoAnnounceCard
-import network.columba.app.ui.screens.settings.cards.BatteryOptimizationCard
-import network.columba.app.ui.screens.settings.cards.DataMigrationCard
-import network.columba.app.ui.screens.settings.cards.IdentityCard
-import network.columba.app.ui.screens.settings.cards.ImageCompressionCard
-import network.columba.app.ui.screens.settings.cards.LocationSharingCard
-import network.columba.app.ui.screens.settings.cards.MapSourcesCard
-import network.columba.app.ui.screens.settings.cards.MessageDeliveryRetrievalCard
-import network.columba.app.ui.screens.settings.cards.NetworkCard
-import network.columba.app.ui.screens.settings.cards.NotificationSettingsCard
-import network.columba.app.ui.screens.settings.cards.PrivacyCard
-import network.columba.app.ui.screens.settings.cards.RNodeFlasherCard
-import network.columba.app.ui.screens.settings.cards.ShareColumbaCard
-import network.columba.app.ui.screens.settings.cards.SharedInstanceBannerCard
-import network.columba.app.ui.screens.settings.cards.ThemeSelectionCard
-import network.columba.app.ui.screens.settings.cards.VoiceCallPermissionsCard
-import network.columba.app.ui.screens.settings.cards.shouldShowSharedInstanceBanner
-import network.columba.app.ui.screens.settings.dialogs.CrashReportDialog
-import network.columba.app.ui.screens.settings.dialogs.IdentityQrCodeDialog
-import network.columba.app.ui.util.LifecycleGuard
-import network.columba.app.util.CrashReport
-import network.columba.app.util.CrashReportManager
-import network.columba.app.util.DeviceInfoUtil
-import network.columba.app.util.LocationPermissionManager
-import network.columba.app.viewmodel.BlockedUsersViewModel
-import network.columba.app.viewmodel.DebugViewModel
-import network.columba.app.viewmodel.SettingsCardId
-import network.columba.app.viewmodel.SettingsViewModel
-import network.columba.app.viewmodel.SharedInstanceAccessEvent
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.BackgroundLocationPermissionBottomSheet
+import network.zamolxis.app.ui.components.LocationPermissionBottomSheet
+import network.zamolxis.app.ui.components.ServiceRestartBanner
+import network.zamolxis.app.ui.screens.settings.cards.AboutCard
+import network.zamolxis.app.ui.screens.settings.cards.AdvancedCard
+import network.zamolxis.app.ui.screens.settings.cards.AutoAnnounceCard
+import network.zamolxis.app.ui.screens.settings.cards.BatteryOptimizationCard
+import network.zamolxis.app.ui.screens.settings.cards.DataMigrationCard
+import network.zamolxis.app.ui.screens.settings.cards.IdentityCard
+import network.zamolxis.app.ui.screens.settings.cards.ImageCompressionCard
+import network.zamolxis.app.ui.screens.settings.cards.PostQuantumCard
+import network.zamolxis.app.ui.screens.settings.cards.LocationSharingCard
+import network.zamolxis.app.ui.screens.settings.cards.MapSourcesCard
+import network.zamolxis.app.ui.screens.settings.cards.MessageDeliveryRetrievalCard
+import network.zamolxis.app.ui.screens.settings.cards.NetworkCard
+import network.zamolxis.app.ui.screens.settings.cards.NotificationSettingsCard
+import network.zamolxis.app.ui.screens.settings.cards.PrivacyCard
+import network.zamolxis.app.ui.screens.settings.cards.RNodeFlasherCard
+import network.zamolxis.app.ui.screens.settings.cards.ShareZamolxisCard
+import network.zamolxis.app.ui.screens.settings.cards.SharedInstanceBannerCard
+import network.zamolxis.app.ui.screens.settings.cards.ThemeSelectionCard
+import network.zamolxis.app.ui.screens.settings.cards.VoiceCallPermissionsCard
+import network.zamolxis.app.ui.screens.settings.cards.shouldShowSharedInstanceBanner
+import network.zamolxis.app.ui.screens.settings.dialogs.CrashReportDialog
+import network.zamolxis.app.ui.screens.settings.dialogs.IdentityQrCodeDialog
+import network.zamolxis.app.ui.util.LifecycleGuard
+import network.zamolxis.app.util.CrashReport
+import network.zamolxis.app.util.CrashReportManager
+import network.zamolxis.app.util.DeviceInfoUtil
+import network.zamolxis.app.util.GITHUB_NEW_ISSUE_URL
+import network.zamolxis.app.util.LocationPermissionManager
+import network.zamolxis.app.util.safeOpenUrl
+import network.zamolxis.app.viewmodel.BlockedUsersViewModel
+import network.zamolxis.app.viewmodel.DebugViewModel
+import network.zamolxis.app.viewmodel.SettingsCardId
+import network.zamolxis.app.viewmodel.SettingsViewModel
+import network.zamolxis.app.viewmodel.SharedInstanceAccessEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -249,7 +253,7 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 colors =
                     TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -512,6 +516,13 @@ fun SettingsScreen(
                     onSortMessagesBySentTimeToggle = { viewModel.setSortMessagesBySentTime(it) },
                 )
 
+                PostQuantumCard(
+                    isExpanded = state.cardExpansionStates[SettingsCardId.POST_QUANTUM.name] ?: false,
+                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.POST_QUANTUM, it) },
+                    selectedMode = state.postQuantumMode,
+                    onModeChange = { viewModel.setPostQuantumMode(it) },
+                )
+
                 ImageCompressionCard(
                     isExpanded = state.cardExpansionStates[SettingsCardId.IMAGE_COMPRESSION.name] ?: false,
                     onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.IMAGE_COMPRESSION, it) },
@@ -519,7 +530,7 @@ fun SettingsScreen(
                     detectedPreset = state.detectedCompressionPreset,
                     hasSlowInterface =
                         state.detectedCompressionPreset ==
-                            network.columba.app.data.model.ImageCompressionPreset.LOW,
+                            network.zamolxis.app.data.model.ImageCompressionPreset.LOW,
                     onPresetChange = { viewModel.setImageCompressionPreset(it) },
                 )
 
@@ -547,7 +558,7 @@ fun SettingsScreen(
                     onNavigateToMigration = onNavigateToMigration,
                 )
 
-                ShareColumbaCard(
+                ShareZamolxisCard(
                     isExpanded = state.cardExpansionStates[SettingsCardId.SHARE_COLUMBA.name] ?: false,
                     onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.SHARE_COLUMBA, it) },
                     onNavigateToApkSharing = onNavigateToApkSharing,

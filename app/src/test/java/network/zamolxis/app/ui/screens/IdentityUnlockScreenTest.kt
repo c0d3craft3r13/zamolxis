@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.test.assertCountEquals
@@ -11,9 +11,9 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.IdentityUnlockUiState
-import network.columba.app.viewmodel.IdentityUnlockViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.IdentityUnlockUiState
+import network.zamolxis.app.viewmodel.IdentityUnlockViewModel
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain

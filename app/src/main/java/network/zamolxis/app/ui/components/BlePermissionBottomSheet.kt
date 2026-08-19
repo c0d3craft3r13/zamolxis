@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,9 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import network.zamolxis.app.R
 
 /**
  * Material 3 bottom sheet that explains Bluetooth permission requirements
@@ -69,7 +71,7 @@ fun BlePermissionBottomSheet(
                     modifier = Modifier.padding(end = 12.dp),
                 )
                 Text(
-                    text = "Bluetooth Permissions Required",
+                    text = stringResource(R.string.bleperm_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
@@ -92,7 +94,7 @@ fun BlePermissionBottomSheet(
                 horizontalArrangement = Arrangement.End,
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Not Now")
+                    Text(stringResource(R.string.bgperm_not_now))
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(onClick = onRequestPermissions) {
@@ -109,7 +111,7 @@ fun BlePermissionBottomSheet(
  */
 private fun getDefaultRationale(): String {
     return """
-        Columba uses Bluetooth Low Energy (BLE) to communicate with nearby devices in a mesh network.
+        Zamolxis uses Bluetooth Low Energy (BLE) to communicate with nearby devices in a mesh network.
 
         To enable this functionality, we need the following permissions:
 
@@ -117,6 +119,6 @@ private fun getDefaultRationale(): String {
         • Bluetooth Connect: To establish connections with peers
         • Bluetooth Advertise: To broadcast your presence to other devices
 
-        These permissions allow Columba to create a decentralized, off-grid communication network.
+        These permissions allow Zamolxis to create a decentralized, off-grid communication network.
         """.trimIndent()
 }

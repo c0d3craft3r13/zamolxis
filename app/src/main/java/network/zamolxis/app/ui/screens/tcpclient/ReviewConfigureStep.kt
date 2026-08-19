@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.tcpclient
+package network.zamolxis.app.ui.screens.tcpclient
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
@@ -26,11 +26,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.components.IfacConfigCard
-import network.columba.app.ui.components.NetworkRestrictionSelector
-import network.columba.app.viewmodel.TcpClientWizardViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.IfacConfigCard
+import network.zamolxis.app.ui.components.NetworkRestrictionSelector
+import network.zamolxis.app.viewmodel.TcpClientWizardViewModel
 
 /**
  * Step 2: Review and Configure
@@ -69,12 +71,16 @@ fun ReviewConfigureStep(viewModel: TcpClientWizardViewModel) {
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(
-                        "Server",
+                        stringResource(R.string.iface_stats_server),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                     )
                     Text(
-                        if (state.isCustomMode) "Custom Server" else state.selectedServer?.name.orEmpty(),
+                        if (state.isCustomMode) {
+                            stringResource(R.string.tcp_custom_server)
+                        } else {
+                            state.selectedServer?.name.orEmpty()
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -88,7 +94,7 @@ fun ReviewConfigureStep(viewModel: TcpClientWizardViewModel) {
         OutlinedTextField(
             value = state.interfaceName,
             onValueChange = { viewModel.updateInterfaceName(it) },
-            label = { Text("Interface Name") },
+            label = { Text(stringResource(R.string.rnode_review_iface_name)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
@@ -99,8 +105,8 @@ fun ReviewConfigureStep(viewModel: TcpClientWizardViewModel) {
         OutlinedTextField(
             value = state.targetHost,
             onValueChange = { viewModel.updateTargetHost(it) },
-            label = { Text("Target Host") },
-            placeholder = { Text("hostname or IP address") },
+            label = { Text(stringResource(R.string.tcp_target_host)) },
+            placeholder = { Text(stringResource(R.string.tcp_host_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
@@ -111,7 +117,7 @@ fun ReviewConfigureStep(viewModel: TcpClientWizardViewModel) {
         OutlinedTextField(
             value = state.targetPort,
             onValueChange = { viewModel.updateTargetPort(it) },
-            label = { Text("Target Port") },
+            label = { Text(stringResource(R.string.tcp_target_port)) },
             placeholder = { Text("4242") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -168,11 +174,11 @@ fun ReviewConfigureStep(viewModel: TcpClientWizardViewModel) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Bootstrap Interface",
+                        stringResource(R.string.tcp_bootstrap),
                         style = MaterialTheme.typography.titleSmall,
                     )
                     Text(
-                        "Auto-disconnect once better connections are discovered",
+                        stringResource(R.string.tcp_bootstrap_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -205,12 +211,11 @@ fun ReviewConfigureStep(viewModel: TcpClientWizardViewModel) {
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Connect via Tor (Orbot)",
+                            stringResource(R.string.tcp_tor),
                             style = MaterialTheme.typography.titleSmall,
                         )
                         Text(
-                            "Route through SOCKS5 proxy. Required for .onion addresses. " +
-                                "Orbot must be installed and connected.",
+                            stringResource(R.string.tcp_tor_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -230,7 +235,7 @@ fun ReviewConfigureStep(viewModel: TcpClientWizardViewModel) {
                         OutlinedTextField(
                             value = state.socksProxyHost,
                             onValueChange = { viewModel.updateSocksProxyHost(it) },
-                            label = { Text("SOCKS5 Proxy Host") },
+                            label = { Text(stringResource(R.string.tcp_socks_host)) },
                             placeholder = { Text("127.0.0.1") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -239,7 +244,7 @@ fun ReviewConfigureStep(viewModel: TcpClientWizardViewModel) {
                         OutlinedTextField(
                             value = state.socksProxyPort,
                             onValueChange = { viewModel.updateSocksProxyPort(it) },
-                            label = { Text("SOCKS5 Proxy Port") },
+                            label = { Text(stringResource(R.string.tcp_socks_port)) },
                             placeholder = { Text("9050") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,

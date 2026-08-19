@@ -9,7 +9,7 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "torlando-tech"
+      - "c0d3craft3r13"
     labels:
       - "dependencies"
       - "gradle"
@@ -41,7 +41,7 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 3
     reviewers:
-      - "torlando-tech"
+      - "c0d3craft3r13"
     labels:
       - "dependencies"
       - "github-actions"

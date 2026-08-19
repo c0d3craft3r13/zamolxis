@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -19,7 +19,7 @@ import com.google.android.gms.common.GoogleApiAvailability
  *
  * On devices without Google Play Services (custom ROMs, F-Droid builds), calling
  * FusedLocationProviderClient generates repeated warnings:
- *   W GooglePlayServicesUtil: network.columba.app required the Google Play Store, but it is missing.
+ *   W GooglePlayServicesUtil: network.zamolxis.app required the Google Play Store, but it is missing.
  *   W GoogleApiManager: The service for com.google.android.gms.internal.location.k is not available
  *
  * This utility checks availability once, logs at Info level, and provides fallback

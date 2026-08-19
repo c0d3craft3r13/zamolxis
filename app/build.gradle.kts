@@ -13,19 +13,27 @@ plugins {
 
 // Parse version from git tag (e.g., v1.2.3 -> versionName "1.2.3", versionCode calculated)
 // New scheme: major * 10M + minor * 100K + patch * 1K (+ commits for dev builds)
-fun getVersionFromTag(): Pair<Int, String> {
-    return try {
+fun getVersionFromTag(): Pair<Int, String> =
+    try {
         // Try exact tag match first (release build)
         val tagName =
-            providers.exec {
-                commandLine("git", "describe", "--tags", "--exact-match")
-            }.standardOutput.asText.get().trim()
+            providers
+                .exec {
+                    commandLine("git", "describe", "--tags", "--exact-match")
+                }.standardOutput.asText
+                .get()
+                .trim()
 
         val versionString = tagName.removePrefix("v")
         val parts = versionString.split(".")
         val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
         val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
-        val patch = parts.getOrNull(2)?.split("-")?.get(0)?.toIntOrNull() ?: 0
+        val patch =
+            parts
+                .getOrNull(2)
+                ?.split("-")
+                ?.get(0)
+                ?.toIntOrNull() ?: 0
 
         // New scheme: major * 10M + minor * 100K + patch * 1K
         val versionCode = major * 10_000_000 + minor * 100_000 + patch * 1_000
@@ -34,9 +42,12 @@ fun getVersionFromTag(): Pair<Int, String> {
         // Not on exact tag - get nearest tag + commit count
         try {
             val describe =
-                providers.exec {
-                    commandLine("git", "describe", "--tags", "--long")
-                }.standardOutput.asText.get().trim()
+                providers
+                    .exec {
+                        commandLine("git", "describe", "--tags", "--long")
+                    }.standardOutput.asText
+                    .get()
+                    .trim()
 
             // Format: v0.6.4-beta-5-g1234abc or v0.6.4-5-g1234abc
             val parts = describe.removePrefix("v").split("-")
@@ -61,17 +72,18 @@ fun getVersionFromTag(): Pair<Int, String> {
             Pair(1_000_000, "0.0.0-dev")
         }
     }
-}
 
-fun getGitCommitHash(): String {
-    return try {
-        providers.exec {
-            commandLine("git", "rev-parse", "--short=7", "HEAD")
-        }.standardOutput.asText.get().trim()
+fun getGitCommitHash(): String =
+    try {
+        providers
+            .exec {
+                commandLine("git", "rev-parse", "--short=7", "HEAD")
+            }.standardOutput.asText
+            .get()
+            .trim()
     } catch (e: Exception) {
         "unknown"
     }
-}
 
 /**
  * Return a deterministic build timestamp (epoch millis).
@@ -88,9 +100,10 @@ fun getGitCommitHash(): String {
 fun getReproducibleBuildTimestamp(): Long {
     System.getenv("SOURCE_DATE_EPOCH")?.toLongOrNull()?.let { return it * 1000L }
     return try {
-        providers.exec {
-            commandLine("git", "log", "-1", "--format=%ct")
-        }.standardOutput.asText
+        providers
+            .exec {
+                commandLine("git", "log", "-1", "--format=%ct")
+            }.standardOutput.asText
             .get()
             .trim()
             .toLong() * 1000L
@@ -104,15 +117,15 @@ fun getReproducibleBuildTimestamp(): Long {
 }
 
 val (versionCodeValue, versionNameValue) = getVersionFromTag()
-val versionCodeOverride = providers.gradleProperty("columbaVersionCode").orNull?.toIntOrNull()
-val versionNameOverride = providers.gradleProperty("columbaVersionName").orNull
+val versionCodeOverride = providers.gradleProperty("zamolxisVersionCode").orNull?.toIntOrNull()
+val versionNameOverride = providers.gradleProperty("zamolxisVersionName").orNull
 
 android {
-    namespace = "network.columba.app"
+    namespace = "network.zamolxis.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "network.columba.app"
+        applicationId = "network.zamolxis.app"
         minSdk = 24
         targetSdk = 35
         versionCode = versionCodeOverride ?: versionCodeValue
@@ -163,21 +176,30 @@ android {
             isDefault = true
             // Distinct package + label so the EXPERIMENTAL Kotlin backend can be
             // installed side-by-side with the recommended Python backend (which
-            // keeps the base `network.columba.app`). The launcher icon is also
+            // keeps the base `network.zamolxis.app`). The launcher icon is also
             // badged — see src/kotlinBackend/res/.
             applicationIdSuffix = ".kt"
             versionNameSuffix = "-kt"
             // app_name lives on the flavor (not the release buildType) so each
             // backend gets its own label. The debug buildType still overrides
-            // this with "columbatest" for instrumentation.
-            resValue("string", "app_name", "Columba (Kotlin)")
+            // this with "zamolxistest" for instrumentation.
+            resValue("string", "app_name", "Zamolxis (Kotlin)")
             buildConfigField("String", "RNS_IMPL", "\"kotlin\"")
         }
         create("pythonBackend") {
             dimension = "rnsImpl"
-            resValue("string", "app_name", "Columba")
+            resValue("string", "app_name", "Zamolxis")
             buildConfigField("String", "RNS_IMPL", "\"python\"")
         }
+    }
+
+    // XML-layout lock: HardcodedText fails the build for literal text in
+    // layouts. NOTE: this does NOT cover Compose Kotlin code — the real lock
+    // for Compose is scripts/check-hardcoded-strings.sh (wired into CI).
+    lint {
+        error += "HardcodedText"
+        abortOnError = true
+        baseline = file("lint-baseline.xml")
     }
 
     // No `missingDimensionStrategy("rnsImpl", ...)` here: `:app` and `:rns-host`
@@ -197,8 +219,10 @@ android {
             val keyAlias = System.getenv("KEY_ALIAS")
             val keyPassword = System.getenv("KEY_PASSWORD")
 
-            !keystoreFile.isNullOrEmpty() && !keystorePassword.isNullOrEmpty() &&
-                !keyAlias.isNullOrEmpty() && !keyPassword.isNullOrEmpty()
+            !keystoreFile.isNullOrEmpty() &&
+                !keystorePassword.isNullOrEmpty() &&
+                !keyAlias.isNullOrEmpty() &&
+                !keyPassword.isNullOrEmpty()
         }
 
     signingConfigs {
@@ -241,8 +265,8 @@ android {
 
     buildTypes {
         release {
-            // app_name is set per rnsImpl flavor (pythonBackend -> "Columba",
-            // kotlinBackend -> "Columba (Kotlin)") rather than here, so the two
+            // app_name is set per rnsImpl flavor (pythonBackend -> "Zamolxis",
+            // kotlinBackend -> "Zamolxis (Kotlin)") rather than here, so the two
             // backends get distinct launcher labels in release builds.
             isMinifyEnabled = true
             proguardFiles(
@@ -258,7 +282,7 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            resValue("string", "app_name", "columbatest")
+            resValue("string", "app_name", "zamolxistest")
             if (releaseSigningConfigured) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -284,15 +308,27 @@ android {
         }
     }
 
+    // Localization: keep only shipped locales in the APK. English is the
+    // source of truth (res/values), Russian ships alongside it. Adding a
+    // language = adding res/values-<locale>/, no code changes.
+    //
+    // `localeFilters` replaces `defaultConfig.resourceConfigurations`, which AGP 9
+    // deprecates for language resources; it lives on `androidResources`, not
+    // `defaultConfig`.
+    androidResources {
+        localeFilters += setOf("en", "ru")
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
         resValues = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.get()
-    }
+    // No `composeOptions { kotlinCompilerExtensionVersion = ... }`: since Kotlin 2.0
+    // the Compose compiler ships with the Kotlin plugin (`kotlin("plugin.compose")`,
+    // applied above), and AGP ignores that setting. It was pinning a stale "1.7.5"
+    // that read like a live version anyone might try to bump.
 
     packaging {
         resources {
@@ -353,11 +389,13 @@ android {
                 if (shard != null && total != null && total > 1) {
                     val testSourceDir = project.file("src/test/java")
                     val allTestClasses =
-                        project.fileTree(testSourceDir) {
-                            include("**/*Test.kt")
-                        }.files
+                        project
+                            .fileTree(testSourceDir) {
+                                include("**/*Test.kt")
+                            }.files
                             .map { f ->
-                                f.relativeTo(testSourceDir)
+                                f
+                                    .relativeTo(testSourceDir)
                                     .path
                                     .replace(File.separatorChar, '.')
                                     .removeSuffix(".kt")
@@ -404,7 +442,7 @@ sentry {
     // Auth token from environment (set in CI via GitHub secrets)
     authToken.set(System.getenv("SENTRY_AUTH_TOKEN") ?: "")
     org.set(System.getenv("SENTRY_ORG") ?: "")
-    projectName.set(System.getenv("SENTRY_PROJECT") ?: "columba")
+    projectName.set(System.getenv("SENTRY_PROJECT") ?: "zamolxis")
 
     // Enable uploads only when auth token is available
     val hasAuth = !System.getenv("SENTRY_AUTH_TOKEN").isNullOrEmpty()
@@ -450,12 +488,12 @@ dependencies {
     // Java 8+ core library desugaring runtime (java.time backport for API < 26).
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    implementation(project(":domain"))
     implementation(project(":data"))
+    implementation(project(":crypto-pq"))
     implementation(libs.lxst.kt)
     // :rns-api — the backend-seam contract (value types, sub-interfaces, AIDL).
     // Was reaching :app transitively through :reticulum until A.12 deleted that
-    // module; declared directly now since :app imports network.columba.app.rns.api.*
+    // module; declared directly now since :app imports network.zamolxis.app.rns.api.*
     // throughout. :rns-host (below) still brings the peripheral types + the
     // reticulum-kt/lxmf-kt/lxst-kt/usb-serial stack via its api() edges.
     implementation(project(":rns-api"))

@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.content.Context
 import android.content.Intent
@@ -38,8 +38,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.viewmodel.ContactMarker
-import network.columba.app.viewmodel.MarkerState
+import network.zamolxis.app.viewmodel.ContactMarker
+import network.zamolxis.app.viewmodel.MarkerState
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 /**
  * Bottom sheet displayed when tapping a contact's location marker on the map.
@@ -155,7 +157,7 @@ fun ContactLocationBottomSheet(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Directions")
+                    Text(stringResource(R.string.contactloc_directions))
                 }
 
                 Button(
@@ -168,7 +170,7 @@ fun ContactLocationBottomSheet(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Message")
+                    Text(stringResource(R.string.contactloc_message))
                 }
             }
 
@@ -187,7 +189,7 @@ fun ContactLocationBottomSheet(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "Remove from map",
+                        stringResource(R.string.contactloc_remove_from_map),
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
@@ -260,16 +262,17 @@ internal fun bearingToDirection(bearing: Float): String {
  * @param timestamp Timestamp in milliseconds since epoch
  * @return Formatted string like "Updated just now", "Updated 30s ago", "Updated 5m ago"
  */
+@Composable
 internal fun formatUpdatedTime(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
 
     return when {
-        diff < 10_000 -> "Updated just now"
-        diff < 60_000 -> "Updated ${diff / 1000}s ago"
-        diff < 3600_000 -> "Updated ${diff / 60_000}m ago"
-        diff < 86400_000 -> "Updated ${diff / 3600_000}h ago"
-        else -> "Updated ${diff / 86400_000}d ago"
+        diff < 10_000 -> stringResource(R.string.contactloc_updated_now)
+        diff < 60_000 -> stringResource(R.string.contactloc_updated_s, diff / 1000)
+        diff < 3600_000 -> stringResource(R.string.contactloc_updated_m, diff / 60_000)
+        diff < 86400_000 -> stringResource(R.string.contactloc_updated_h, diff / 3600_000)
+        else -> stringResource(R.string.contactloc_updated_d, diff / 86400_000)
     }
 }
 

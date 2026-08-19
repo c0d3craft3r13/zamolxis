@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.util
+package network.zamolxis.app.rns.host.ble.util
 
 import android.Manifest
 import android.content.Context
@@ -100,7 +100,7 @@ object BlePermissionManager {
      */
     fun getPermissionRationale(): String {
         return buildString {
-            appendLine("Columba needs Bluetooth permissions to:")
+            appendLine("Zamolxis needs Bluetooth permissions to:")
             appendLine("• Discover and connect to nearby Reticulum nodes")
             appendLine("• Create a mesh network for decentralized messaging")
             appendLine("• Send and receive encrypted messages over BLE")
@@ -108,7 +108,7 @@ object BlePermissionManager {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 appendLine("Note: Location access is NOT required. BLE is used only for mesh networking.")
             } else {
-                appendLine("Note: Location permission is required by Android for BLE scanning, but Columba does not use your location.")
+                appendLine("Note: Location permission is required by Android for BLE scanning, but Zamolxis does not use your location.")
             }
         }
     }

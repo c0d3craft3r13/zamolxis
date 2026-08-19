@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.util.Log
 import kotlinx.coroutines.Dispatchers

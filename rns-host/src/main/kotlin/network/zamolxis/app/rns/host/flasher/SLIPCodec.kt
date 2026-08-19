@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 /**
  * SLIP (Serial Line Internet Protocol) encoder/decoder for Nordic DFU.

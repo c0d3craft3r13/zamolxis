@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ipc
+package network.zamolxis.app.rns.host.ipc
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.VoiceCallState
 
 /**
  * UI-side proxy that delegates every [RnsTelephony] member to the currently-

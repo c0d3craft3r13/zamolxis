@@ -104,7 +104,7 @@ jobs:
           # Two flavor dimensions (telemetry × rnsImpl) mean Gradle writes to
           # app/build/outputs/apk/<telemetry><Backend>/release/, e.g.
           # sentryPythonBackend/release/. Output filenames:
-          #   columba-{backend}-{abi}[-no-sentry].apk
+          #   zamolxis-{backend}-{abi}[-no-sentry].apk
           # Backend is python first, then kotlin.
           APK_DIR="app/build/outputs/apk"
 
@@ -123,24 +123,24 @@ jobs:
                 filename=$(basename "$apk")
 
                 if echo "$filename" | grep -q "armeabi-v7a"; then
-                  cp "$apk" "columba-${name_backend}-armeabi-v7a${sentry_suffix}.apk"
+                  cp "$apk" "zamolxis-${name_backend}-armeabi-v7a${sentry_suffix}.apk"
                 elif echo "$filename" | grep -q "arm64-v8a"; then
-                  cp "$apk" "columba-${name_backend}-arm64-v8a${sentry_suffix}.apk"
+                  cp "$apk" "zamolxis-${name_backend}-arm64-v8a${sentry_suffix}.apk"
                 elif echo "$filename" | grep -q "x86_64"; then
-                  cp "$apk" "columba-${name_backend}-x86_64${sentry_suffix}.apk"
+                  cp "$apk" "zamolxis-${name_backend}-x86_64${sentry_suffix}.apk"
                 elif echo "$filename" | grep -q "universal"; then
-                  cp "$apk" "columba-${name_backend}-universal${sentry_suffix}.apk"
+                  cp "$apk" "zamolxis-${name_backend}-universal${sentry_suffix}.apk"
                 fi
               done
             done
           done
 
-          ls -la columba-*.apk
+          ls -la zamolxis-*.apk
           echo "✓ Renamed APKs"
 
       - name: Generate SHA256 checksums
         run: |
-          for apk in columba-*.apk; do
+          for apk in zamolxis-*.apk; do
             sha256sum "$apk" > "${apk}.sha256"
           done
           echo "✓ Generated SHA256 checksums"
@@ -149,7 +149,7 @@ jobs:
         id: sha256
         run: |
           CHECKSUMS=""
-          for checksum_file in columba-*.apk.sha256; do
+          for checksum_file in zamolxis-*.apk.sha256; do
             CHECKSUMS="${CHECKSUMS}$(cat "$checksum_file")\n"
           done
           echo "checksums<<EOF" >> $GITHUB_OUTPUT
@@ -197,27 +197,27 @@ jobs:
             The kotlin version may yield better battery life depending on your device, and comes in a smaller apk due to not requiring a python runtime.
 
             **Python backend — by architecture (with crash reporting):**
-            - `columba-official-rns-py-armeabi-v7a.apk` — Older 32-bit ARM phones (armeabi-v7a)
-            - `columba-official-rns-py-arm64-v8a.apk` — Most modern Android phones (arm64-v8a)
-            - `columba-official-rns-py-x86_64.apk` — Chromebooks & emulators (x86_64)
-            - `columba-official-rns-py-universal.apk` — Universal fallback (all architectures)
+            - `zamolxis-official-rns-py-armeabi-v7a.apk` — Older 32-bit ARM phones (armeabi-v7a)
+            - `zamolxis-official-rns-py-arm64-v8a.apk` — Most modern Android phones (arm64-v8a)
+            - `zamolxis-official-rns-py-x86_64.apk` — Chromebooks & emulators (x86_64)
+            - `zamolxis-official-rns-py-universal.apk` — Universal fallback (all architectures)
 
             **Kotlin backend — by architecture (with crash reporting):**
-            - `columba-EXPERIMENTAL-reticulum-kt-armeabi-v7a.apk` — Older 32-bit ARM phones (armeabi-v7a)
-            - `columba-EXPERIMENTAL-reticulum-kt-arm64-v8a.apk` — Most modern Android phones (arm64-v8a)
-            - `columba-EXPERIMENTAL-reticulum-kt-x86_64.apk` — Chromebooks & emulators (x86_64)
-            - `columba-EXPERIMENTAL-reticulum-kt-universal.apk` — Universal fallback (all architectures)
+            - `zamolxis-EXPERIMENTAL-reticulum-kt-armeabi-v7a.apk` — Older 32-bit ARM phones (armeabi-v7a)
+            - `zamolxis-EXPERIMENTAL-reticulum-kt-arm64-v8a.apk` — Most modern Android phones (arm64-v8a)
+            - `zamolxis-EXPERIMENTAL-reticulum-kt-x86_64.apk` — Chromebooks & emulators (x86_64)
+            - `zamolxis-EXPERIMENTAL-reticulum-kt-universal.apk` — Universal fallback (all architectures)
 
             **Telemetry variants:**
-            Each APK above also has a matching `-no-sentry` variant (e.g. `columba-official-rns-py-arm64-v8a-no-sentry.apk`) without crash reporting for maximum privacy. Sentry collects stack traces when Columba encounters errors
-            and provides helpful information to the developer to improve Columba, but is hosted at sentry.io, and is thus not the maximum privacy option.
+            Each APK above also has a matching `-no-sentry` variant (e.g. `zamolxis-official-rns-py-arm64-v8a-no-sentry.apk`) without crash reporting for maximum privacy. Sentry collects stack traces when Zamolxis encounters errors
+            and provides helpful information to the developer to improve Zamolxis, but is hosted at sentry.io, and is thus not the maximum privacy option.
 
             > **Not sure which to pick?** Most Android phones use **arm64-v8a**. If unsure, use the **universal** APK.
 
             ${{ github.event.inputs.release_notes }}
 
             ### Verification
-            See [SECURITY.md](https://github.com/torlando-tech/columba/blob/main/SECURITY.md) for verification instructions.
+            See [SECURITY.md](https://github.com/c0d3craft3r13/zamolxis/blob/main/SECURITY.md) for verification instructions.
 
             **Signing Certificate Fingerprints:**
             ```
@@ -235,8 +235,8 @@ jobs:
 
             **Note:** You may need to enable "Install from Unknown Sources" in your device settings.
           files: |
-            columba-*.apk
-            columba-*.apk.sha256
+            zamolxis-*.apk
+            zamolxis-*.apk.sha256
           draft: false
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -246,7 +246,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: app-release-${{ steps.sha.outputs.sha }}
-          path: columba-*.apk
+          path: zamolxis-*.apk
           # Short retention: these also attach to the prerelease (which doesn't
           # count toward Actions storage). 1 day keeps them handy for a quick
           # download (e.g. sideloading to a phone) without piling up the quota.

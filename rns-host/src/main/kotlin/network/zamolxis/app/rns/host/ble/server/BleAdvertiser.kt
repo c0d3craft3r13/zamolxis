@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.server
+package network.zamolxis.app.rns.host.ble.server
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -13,8 +13,8 @@ import android.os.Build
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.core.content.ContextCompat
-import network.columba.app.rns.host.ble.model.BleConstants
-import network.columba.app.rns.host.ble.model.BlePowerSettings
+import network.zamolxis.app.rns.host.ble.model.BleConstants
+import network.zamolxis.app.rns.host.ble.model.BlePowerSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -47,7 +47,7 @@ class BleAdvertiser(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
 ) {
     companion object {
-        private const val TAG = "Columba:BLE:K:Adv"
+        private const val TAG = "Zamolxis:BLE:K:Adv"
         private const val MAX_RETRY_ATTEMPTS = 5
         private const val RETRY_BACKOFF_MS = 2000L // 2 seconds
     }

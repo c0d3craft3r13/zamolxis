@@ -1,20 +1,20 @@
-# Columba Use Manual
+# Zamolxis Use Manual
 
 **Simple Installation & Setup Guide**
 
-## What is Columba?
+## What is Zamolxis?
 
-Columba is a secure, peer-to-peer messaging application designed to work **with or without the Internet**.
+Zamolxis is a secure, peer-to-peer messaging application designed to work **with or without the Internet**.
 It can operate over bluetooth, Wi-Fi, mobile data, and even radio, using a technology called **Reticulum**.
 
-Columba is especially useful when:
+Zamolxis is especially useful when:
 
 * Internet access is unreliable or unavailable
 * Privacy and encryption matter
 * You want resilient, off-grid communication
 
 Official project repository:
-[https://github.com/torlando-tech/columba](https://github.com/torlando-tech/columba)
+[https://github.com/c0d3craft3r13/zamolxis](https://github.com/c0d3craft3r13/zamolxis)
 
 ---
 
@@ -31,14 +31,14 @@ You **do not** need:
 
 ---
 
-## Step 1 – Install Columba on Android
+## Step 1 – Install Zamolxis on Android
 
 ### Option A – Install from APK
 
-1. Open the Columba GitHub page:
-   [https://github.com/torlando-tech/columba](https://github.com/torlando-tech/columba)
+1. Open the Zamolxis GitHub page:
+   [https://github.com/c0d3craft3r13/zamolxis](https://github.com/c0d3craft3r13/zamolxis)
 2. Go to **Releases**
-3. Download the latest **Columba Android APK**
+3. Download the latest **Zamolxis Android APK**
 4. On your phone:
 
    * Open **Settings → Security**
@@ -51,7 +51,7 @@ You **do not** need:
 
 ## Step 2 – First Launch
 
-When you open Columba for the first time:
+When you open Zamolxis for the first time:
 
 * The app **creates a secure identity automatically**
 * No registration is required
@@ -65,11 +65,11 @@ What happens behind the scenes:
 
 ## Step 3 – Basic Configuration
 
-Open **Settings** in Columba.
+Open **Settings** in Zamolxis.
 
 ### Network
 
-Leave defaults unless you know what you are doing. The default settings allow Columba to:
+Leave defaults unless you know what you are doing. The default settings allow Zamolxis to:
 
 * Find peers automatically
 * Switch between Internet, Local Wi-Fi, or bluetooth
@@ -109,7 +109,7 @@ If not:
 
 ## Step 5 – Offline and Mesh Usage
 
-Columba also works even when:
+Zamolxis also works even when:
 
 * Internet is down
 * Cellular service is unavailable
@@ -122,7 +122,7 @@ Examples:
 
 You do not need to change anything:
 
-* Columba and Reticulum select the best available way!!!
+* Zamolxis and Reticulum select the best available way!!!
   
 
 ## Basic Troubleshooting
@@ -134,14 +134,14 @@ You do not need to change anything:
 
 **No peers found**
 
-* Ensure both devices have Columba running
+* Ensure both devices have Zamolxis running
 * Ensure Wi-Fi or another shared medium is available
-* Restart Columba
+* Restart Zamolxis
 
 **App seems idle**
 
 * Reticulum is event-driven; silence often means no traffic, not failure
-* Restart Columba
+* Restart Zamolxis
 
 ---
 
@@ -149,7 +149,7 @@ You do not need to change anything:
 
 ## What Is Reticulum?
 
-Reticulum is the privacy focus networking system that Columba uses.
+Reticulum is the privacy focus networking system that Zamolxis uses.
 
 Think of it as:
 
@@ -183,7 +183,7 @@ Reticulum was designed for:
 * Off-grid operation
 
 
-## Why Columba + Reticulum Matters
+## Why Zamolxis + Reticulum Matters
 
 Together they provide:
 

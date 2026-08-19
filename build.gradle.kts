@@ -3,7 +3,9 @@ plugins {
     id("com.android.application") version "9.1.0" apply false
     id("com.android.library") version "9.1.0" apply false
     id("org.jetbrains.kotlin.plugin.compose") version "2.3.21" apply false
-    id("com.google.dagger.hilt.android") version "2.59.2" apply false
+    // Keep in lockstep with the `hilt` version in gradle/libs.versions.toml — the
+    // plugin and the runtime artifacts are released as a set.
+    id("com.google.dagger.hilt.android") version "2.60.1" apply false
     id("com.google.devtools.ksp") version "2.3.6" apply false
     id("org.jetbrains.kotlin.plugin.serialization") version "2.3.21" apply false
     id("io.sentry.android.gradle") version "6.1.0" apply false
@@ -68,7 +70,7 @@ subprojects {
         baseline = file("$projectDir/detekt-baseline.xml")
     }
 
-    // Add custom Columba detekt rules
+    // Add custom Zamolxis detekt rules
     dependencies {
         "detektPlugins"(project(":detekt-rules"))
     }
@@ -105,10 +107,19 @@ tasks.named<de.aaschmid.gradle.plugins.cpd.Cpd>("cpdCheck") {
     // Configure source files for all modules
     source =
         files(
+            // These must track settings.gradle.kts. The list previously named
+            // "domain/src/main/kotlin" and "reticulum/src/main/java" — one an empty
+            // module, the other deleted long ago — so CPD silently scanned two
+            // directories that did not exist and never looked at the rns-* modules.
             "app/src/main/java",
             "data/src/main/java",
-            "domain/src/main/kotlin",
-            "reticulum/src/main/java",
+            "micron/src/main/java",
+            "crypto-pq/src/main/kotlin",
+            "rns-api/src/main/java",
+            "rns-ipc/src/main/java",
+            "rns-host/src/main/kotlin",
+            "rns-backend-kt/src/main/kotlin",
+            "rns-backend-py/src/main/kotlin",
         ).asFileTree.matching {
             include("**/*.kt")
             exclude("**/generated/**")

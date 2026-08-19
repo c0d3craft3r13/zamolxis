@@ -9,12 +9,12 @@
     <application>
         <!-- Test Activity for instrumented UI tests -->
         <activity
-            android:name="network.columba.app.test.TestActivity"
+            android:name="network.zamolxis.app.test.TestActivity"
             android:exported="false" />
     </application>
 
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="network.columba.app" />
+        android:targetPackage="network.zamolxis.app" />
 
 </manifest>

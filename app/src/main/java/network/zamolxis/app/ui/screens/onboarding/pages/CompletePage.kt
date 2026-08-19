@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding.pages
+package network.zamolxis.app.ui.screens.onboarding.pages
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
@@ -38,8 +38,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.screens.onboarding.OnboardingInterfaceType
-import network.columba.app.ui.screens.settings.dialogs.IdentityQrCodeDialog
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.ui.screens.onboarding.OnboardingInterfaceType
+import network.zamolxis.app.ui.screens.settings.dialogs.IdentityQrCodeDialog
+import network.zamolxis.app.R
 
 /**
  * Complete page - shows summary and starts messaging.
@@ -84,7 +86,7 @@ fun CompletePage(
 
         // Title
         Text(
-            text = "You're all set!",
+            text = stringResource(R.string.onboarding_complete_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -110,7 +112,7 @@ fun CompletePage(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "Summary",
+                    text = stringResource(R.string.onboarding_complete_summary),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -121,29 +123,39 @@ fun CompletePage(
                 )
 
                 SummaryRow(
-                    label = "Identity",
-                    value = displayName.ifEmpty { "Anonymous Peer" },
+                    label = stringResource(R.string.onboarding_complete_identity),
+                    value = displayName.ifEmpty { stringResource(R.string.common_anonymous_peer) },
                 )
 
                 SummaryRow(
-                    label = "Networks",
+                    label = stringResource(R.string.onboarding_complete_networks),
                     value =
                         if (selectedInterfaces.isEmpty()) {
-                            "None selected"
+                            stringResource(R.string.onboarding_complete_none_selected)
                         } else {
-                            selectedInterfaces.joinToString(", ") { it.displayName }
+                            selectedInterfaces.map { stringResource(it.displayName) }.joinToString(", ")
                         },
                 )
 
                 SummaryRow(
-                    label = "Notifications",
-                    value = if (notificationsEnabled) "Enabled" else "Disabled",
+                    label = stringResource(R.string.onboarding_complete_notifications),
+                    value =
+                        stringResource(
+                            if (notificationsEnabled) R.string.common_enabled else R.string.common_disabled,
+                        ),
                     isEnabled = notificationsEnabled,
                 )
 
                 SummaryRow(
-                    label = "Battery",
-                    value = if (batteryOptimizationExempt) "Unrestricted" else "Restricted",
+                    label = stringResource(R.string.onboarding_complete_battery),
+                    value =
+                        stringResource(
+                            if (batteryOptimizationExempt) {
+                                R.string.onboarding_battery_unrestricted
+                            } else {
+                                R.string.onboarding_battery_restricted
+                            },
+                        ),
                     isEnabled = batteryOptimizationExempt,
                 )
             }
@@ -164,14 +176,14 @@ fun CompletePage(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Show QR Code")
+            Text(stringResource(R.string.onboarding_complete_show_qr))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         // QR code hint
         Text(
-            text = "Share your identity QR code to let others add you as a contact.",
+            text = stringResource(R.string.onboarding_complete_qr_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -197,7 +209,14 @@ fun CompletePage(
                 )
             } else {
                 Text(
-                    text = if (hasLoRaSelected) "Configure LoRa Radio" else "Start Messaging",
+                    text =
+                        stringResource(
+                            if (hasLoRaSelected) {
+                                R.string.onboarding_complete_configure_lora
+                            } else {
+                                R.string.onboarding_complete_start_messaging
+                            },
+                        ),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -208,21 +227,24 @@ fun CompletePage(
 
     // QR Code Dialog
     if (showQrDialog && qrCodeData != null) {
+        // Resolve strings in composable scope; onShareClick is a plain lambda.
+        val resolvedDisplayName = displayName.ifEmpty { stringResource(R.string.common_anonymous_peer) }
+        val shareText = stringResource(R.string.onboarding_share_identity_text, resolvedDisplayName, qrCodeData)
+        val shareChooserTitle = stringResource(R.string.onboarding_share_identity_chooser)
         IdentityQrCodeDialog(
-            displayName = displayName.ifEmpty { "Anonymous Peer" },
+            displayName = resolvedDisplayName,
             identityHash = identityHash,
             destinationHash = destinationHash,
             qrCodeData = qrCodeData,
             onDismiss = { showQrDialog = false },
             onShareClick = {
-                val shareText = "Add me on Reticulum:\n\n${displayName.ifEmpty { "Anonymous Peer" }}\n$qrCodeData"
                 val sendIntent =
                     Intent().apply {
                         action = Intent.ACTION_SEND
                         putExtra(Intent.EXTRA_TEXT, shareText)
                         type = "text/plain"
                     }
-                context.startActivity(Intent.createChooser(sendIntent, "Share identity"))
+                context.startActivity(Intent.createChooser(sendIntent, shareChooserTitle))
             },
         )
     }

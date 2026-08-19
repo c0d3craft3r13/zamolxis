@@ -1,25 +1,25 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.map.MapTileSourceManager
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.service.AvailableRelaysState
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.service.LocationSharingManager
-import network.columba.app.service.PropagationNodeManager
-import network.columba.app.service.TelemetryCollectorManager
-import network.columba.app.ui.theme.PresetTheme
-import network.columba.app.ui.theme.ThemeMode
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.map.MapTileSourceManager
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.service.AvailableRelaysState
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.service.TelemetryCollectorManager
+import network.zamolxis.app.ui.theme.PresetTheme
+import network.zamolxis.app.ui.theme.ThemeMode
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -66,16 +66,16 @@ class SettingsViewModelIncomingMessageLimitTest {
     private lateinit var rnsCore: RnsCore
     private lateinit var rnsLxmf: RnsLxmf
     private lateinit var rnsTransportAdmin: RnsTransportAdmin
-    private lateinit var rnsTelephony: network.columba.app.rns.api.RnsTelephony
+    private lateinit var rnsTelephony: network.zamolxis.app.rns.api.RnsTelephony
     private lateinit var interfaceConfigManager: InterfaceConfigManager
     private lateinit var propagationNodeManager: PropagationNodeManager
     private lateinit var locationSharingManager: LocationSharingManager
     private lateinit var interfaceRepository: InterfaceRepository
     private lateinit var mapTileSourceManager: MapTileSourceManager
     private lateinit var telemetryCollectorManager: TelemetryCollectorManager
-    private lateinit var contactRepository: network.columba.app.data.repository.ContactRepository
-    private lateinit var updateChecker: network.columba.app.service.UpdateChecker
-    private lateinit var crashReportManager: network.columba.app.util.CrashReportManager
+    private lateinit var contactRepository: network.zamolxis.app.data.repository.ContactRepository
+    private lateinit var updateChecker: network.zamolxis.app.service.UpdateChecker
+    private lateinit var crashReportManager: network.zamolxis.app.util.CrashReportManager
     private lateinit var context: android.content.Context
     private lateinit var viewModel: SettingsViewModel
 
@@ -187,7 +187,9 @@ class SettingsViewModelIncomingMessageLimitTest {
         every { settingsRepository.defaultSharingDurationFlow } returns MutableStateFlow("ONE_HOUR")
         every { settingsRepository.locationPrecisionRadiusFlow } returns MutableStateFlow(0)
         every { settingsRepository.preciseLocationPromptDismissedFlow } returns MutableStateFlow(false)
-        every { settingsRepository.imageCompressionPresetFlow } returns MutableStateFlow(network.columba.app.data.model.ImageCompressionPreset.AUTO)
+        every { settingsRepository.imageCompressionPresetFlow } returns MutableStateFlow(network.zamolxis.app.data.model.ImageCompressionPreset.AUTO)
+        every { settingsRepository.postQuantumModeFlow } returns
+            MutableStateFlow(network.zamolxis.crypto.pq.PqMode.OPPORTUNISTIC)
         every { settingsRepository.telemetryCollectorEnabledFlow } returns MutableStateFlow(false)
         every { settingsRepository.telemetryCollectorAddressFlow } returns MutableStateFlow<String?>(null)
         every { settingsRepository.telemetrySendIntervalSecondsFlow } returns MutableStateFlow(SettingsRepository.DEFAULT_TELEMETRY_SEND_INTERVAL_SECONDS)

@@ -41,7 +41,7 @@ human_verification:
 | `.planning/phases/01-performance-fix/01-FINDINGS.md` | Performance issues documented | ✓ VERIFIED | 3 issues documented with profiler evidence, root cause analysis, proposed fixes |
 | `data/.../AnnounceRepository.kt` | @Stable annotation on Announce class | ✓ VERIFIED | Line 19: @androidx.compose.runtime.Stable annotation present |
 | `app/.../AnnounceStreamViewModel.kt` | Python calls on IO dispatcher | ✓ VERIFIED | Line 171-173: withContext(Dispatchers.IO) wraps getPathTableHashes() |
-| `app/.../ColumbaApplication.kt` | Sentry performance monitoring config | ✓ VERIFIED | Lines 647-656: tracesSampleRate, profilesSampleRate, ANR, frame tracking configured |
+| `app/.../ZamolxisApplication.kt` | Sentry performance monitoring config | ✓ VERIFIED | Lines 647-656: tracesSampleRate, profilesSampleRate, ANR, frame tracking configured |
 | `app/.../MainActivity.kt` | JankStats integration | ✓ VERIFIED | Lines 132-150, 261-264: JankStats created, listener configured, lifecycle managed |
 | `app/build.gradle.kts` | JankStats dependency | ✓ VERIFIED | Line 357: androidx.metrics:metrics-performance:1.0.0-beta01 |
 | Profiling data | 30+ min heap dumps | ✓ VERIFIED | 4 heap dumps in profiling-data/ (baseline, T=15, T=20, T=30) |
@@ -53,7 +53,7 @@ human_verification:
 | AnnounceStreamViewModel | ReticulumProtocol | withContext(Dispatchers.IO) | ✓ WIRED | Line 171-173: Python call properly dispatched to IO thread |
 | Announce data class | Compose recomposition | @Stable annotation | ✓ WIRED | Annotation present, Compose runtime dependency added to data module |
 | JankStats | Sentry | Breadcrumb reporting | ✓ WIRED | Lines 135-145: Janky frames reported as Sentry breadcrumbs with severity levels |
-| ColumbaApplication | Sentry SDK | initializeSentry() | ✓ WIRED | Lines 641-662: Sentry initialized with performance config |
+| ZamolxisApplication | Sentry SDK | initializeSentry() | ✓ WIRED | Lines 641-662: Sentry initialized with performance config |
 | MainActivity onCreate | JankStats | createAndTrack() | ✓ WIRED | Line 263: JankStats initialized with window and listener |
 | MainActivity lifecycle | JankStats | isTrackingEnabled toggle | ✓ WIRED | Lines 272, 279: Tracking enabled in onResume, disabled in onPause |
 
@@ -128,7 +128,7 @@ All artifacts exist ✓
 - Called from coroutine context (updateReachableCount is suspend function) ✓
 
 **Sentry configuration:**
-- File: ColumbaApplication.kt
+- File: ZamolxisApplication.kt
 - Lines 641-662: Complete initializeSentry() method
 - Configuration includes: tracesSampleRate (0.1), profilesSampleRate (0.05), ANR (enabled), frame tracking (enabled)
 - Properly wrapped in try-catch with logging ✓
@@ -162,7 +162,7 @@ All artifacts exist ✓
 - No stub patterns (not just logging) ✓
 
 **Sentry → SDK wiring:**
-- SentryAndroid.init() called in ColumbaApplication.onCreate()
+- SentryAndroid.init() called in ZamolxisApplication.onCreate()
 - Options configured before initialization
 - isEnabled set based on BuildConfig.DEBUG (disabled in debug, enabled in release)
 - No missing config (DSN expected in AndroidManifest or build config per documentation) ✓
@@ -252,13 +252,13 @@ All artifacts exist ✓
 - .planning/phases/01-performance-fix/01-FINDINGS.md - Created with 3 documented issues
 
 **Fixes (Plan 01-02):**
-- data/src/main/java/network.columba.app/data/repository/AnnounceRepository.kt - Added @Stable annotation
+- data/src/main/java/network.zamolxis.app/data/repository/AnnounceRepository.kt - Added @Stable annotation
 - data/build.gradle.kts - Added Compose runtime dependency (for @Stable)
-- app/src/main/java/network.columba.app/viewmodel/AnnounceStreamViewModel.kt - Added withContext(Dispatchers.IO)
+- app/src/main/java/network.zamolxis.app/viewmodel/AnnounceStreamViewModel.kt - Added withContext(Dispatchers.IO)
 
 **Monitoring (Plan 01-03):**
-- app/src/main/java/network.columba.app/ColumbaApplication.kt - Added Sentry performance config
-- app/src/main/java/network.columba.app/MainActivity.kt - Added JankStats integration
+- app/src/main/java/network.zamolxis.app/ZamolxisApplication.kt - Added Sentry performance config
+- app/src/main/java/network.zamolxis.app/MainActivity.kt - Added JankStats integration
 - app/build.gradle.kts - Added JankStats dependency
 
 **All files are substantive implementations with no stub patterns.**

@@ -1,6 +1,6 @@
-package network.columba.app.test
+package network.zamolxis.app.test
 
-import network.columba.app.ui.model.MessageUi
+import network.zamolxis.app.ui.model.MessageUi
 
 /**
  * Test fixtures for MessageDetailScreen UI tests.

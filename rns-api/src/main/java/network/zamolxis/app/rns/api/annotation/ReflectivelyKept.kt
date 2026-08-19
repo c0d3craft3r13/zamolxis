@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.annotation
+package network.zamolxis.app.rns.api.annotation
 
 /**
  * Marks a class that is invoked **by name across a boundary R8 cannot see** —
@@ -10,7 +10,7 @@ package network.columba.app.rns.api.annotation
  *
  * **Protection is class-level.** A single rule in `app/proguard-rules.pro`:
  * ```
- * -keep @network.columba.app.rns.api.annotation.ReflectivelyKept class * { *; }
+ * -keep @network.zamolxis.app.rns.api.annotation.ReflectivelyKept class * { *; }
  * ```
  * keeps the annotated class and **all** its members — current and future — so
  * adding a method to an annotated bridge needs no further action.

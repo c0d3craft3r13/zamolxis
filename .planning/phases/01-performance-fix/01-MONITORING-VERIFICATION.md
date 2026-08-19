@@ -16,7 +16,7 @@
 
 ## Implementation Details
 
-### Sentry Configuration (ColumbaApplication.kt)
+### Sentry Configuration (ZamolxisApplication.kt)
 
 ```kotlin
 io.sentry.android.core.SentryAndroid.init(this) { options ->

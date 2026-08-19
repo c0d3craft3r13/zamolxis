@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

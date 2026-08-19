@@ -1,11 +1,11 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
-import network.columba.app.rns.api.model.AnnounceRestoreEntry
-import network.columba.app.rns.api.model.PeerIdentityEntry
+import network.zamolxis.app.rns.api.model.AnnounceRestoreEntry
+import network.zamolxis.app.rns.api.model.PeerIdentityEntry
 
 /**
  * Conversions between the Kotlin `List<Pair<String, ByteArray>>` shape that
- * the [network.columba.app.rns.api.RnsCore] / [network.columba.app.rns.api.RnsLxmf]
+ * the [network.zamolxis.app.rns.api.RnsCore] / [network.zamolxis.app.rns.api.RnsLxmf]
  * interfaces speak and the Parcelable wrapper-list shape AIDL requires
  * (`List<PeerIdentityEntry>` / `List<AnnounceRestoreEntry>`). AIDL can carry
  * neither raw `Pair` nor `List<byte[]>`; the wrappers exist solely to satisfy

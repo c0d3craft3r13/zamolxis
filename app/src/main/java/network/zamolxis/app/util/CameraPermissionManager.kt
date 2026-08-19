@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.Manifest
 import android.content.Context
@@ -76,7 +76,7 @@ object CameraPermissionManager {
      */
     fun getPermissionRationale(): String {
         return buildString {
-            appendLine("Columba needs camera access to:")
+            appendLine("Zamolxis needs camera access to:")
             appendLine("• Scan QR codes to add contacts")
             appendLine("• Read identity information from QR codes")
             appendLine()

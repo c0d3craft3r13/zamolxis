@@ -1,11 +1,11 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
-import network.columba.app.data.model.EnrichedContact
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.service.LocationSharingManager
-import network.columba.app.service.SharingSession
-import network.columba.app.ui.model.LocationSharingState
-import network.columba.app.ui.model.SharingDuration
+import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.SharingSession
+import network.zamolxis.app.ui.model.LocationSharingState
+import network.zamolxis.app.ui.model.SharingDuration
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every

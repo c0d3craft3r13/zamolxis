@@ -1,7 +1,7 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi

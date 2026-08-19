@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.net.Uri
@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import network.columba.app.MainActivity
-import network.columba.app.R
-import network.columba.app.rns.host.flasher.PyxisFirmwarePackage
-import network.columba.app.rns.host.flasher.RNodeFlasher
-import network.columba.app.rns.host.usb.UsbDeviceInfo
+import network.zamolxis.app.MainActivity
+import network.zamolxis.app.R
+import network.zamolxis.app.rns.host.flasher.PyxisFirmwarePackage
+import network.zamolxis.app.rns.host.flasher.RNodeFlasher
+import network.zamolxis.app.rns.host.usb.UsbDeviceInfo
 import javax.inject.Inject
 
 data class PyxisUpdaterUiState(

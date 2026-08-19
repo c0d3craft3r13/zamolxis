@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 /**
  * KISS (Keep It Simple, Stupid) frame encoder/decoder for RNode communication.

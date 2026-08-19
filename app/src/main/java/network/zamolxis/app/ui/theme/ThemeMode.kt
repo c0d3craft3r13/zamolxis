@@ -1,4 +1,4 @@
-package network.columba.app.ui.theme
+package network.zamolxis.app.ui.theme
 
 /**
  * Appearance mode: controls whether the light or dark variant of the

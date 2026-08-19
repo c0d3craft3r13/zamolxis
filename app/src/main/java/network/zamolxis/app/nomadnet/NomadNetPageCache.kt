@@ -1,4 +1,4 @@
-package network.columba.app.nomadnet
+package network.zamolxis.app.nomadnet
 
 import android.content.Context
 import android.util.Log

@@ -1,9 +1,9 @@
 ---
-name: columba-python-migration
+name: zamolxis-python-migration
 description: This skill should be used when working on the Strangler Fig migration of reticulum_wrapper.py, creating or modifying rns_api.py, working on RnsApiClient or ChaquopyRnsApiClient in Kotlin, extracting business logic from Python to Kotlin, modifying PythonWrapperManager, working on health monitoring, telemetry collection, RMSP, delivery state machines, message reception, link speed probing, identity file management, event/callback extraction, or any task that touches the Python-to-Kotlin migration boundary. It provides the full migration plan, phase dependencies, thin API surface, and anti-patterns to avoid.
 ---
 
-# Columba Python Migration Skill — Strangler Fig
+# Zamolxis Python Migration Skill — Strangler Fig
 
 ## Overview
 

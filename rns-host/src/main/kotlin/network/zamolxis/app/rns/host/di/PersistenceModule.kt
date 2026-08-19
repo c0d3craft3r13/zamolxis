@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.di
+package network.zamolxis.app.rns.host.di
 
 import android.content.Context
 import dagger.Module
@@ -6,12 +6,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import network.columba.app.data.db.dao.CallHistoryDao
-import network.columba.app.data.db.dao.CallHistoryDeletionDao
-import network.columba.app.rns.api.call.CallLifecycleRecorder
-import network.columba.app.rns.host.call.ServiceCallLifecycle
-import network.columba.app.rns.host.persistence.CallsFromContactsGate
-import network.columba.app.rns.host.persistence.ServiceSettingsAccessor
+import network.zamolxis.app.data.db.dao.CallHistoryDao
+import network.zamolxis.app.data.db.dao.CallHistoryDeletionDao
+import network.zamolxis.app.rns.api.call.CallLifecycleRecorder
+import network.zamolxis.app.rns.host.call.ServiceCallLifecycle
+import network.zamolxis.app.rns.host.persistence.CallsFromContactsGate
+import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
 import javax.inject.Singleton
 
 /**
@@ -24,7 +24,7 @@ import javax.inject.Singleton
  * flavor `HostBackendModule.kt`s.
  *
  * Note that [ServiceSettingsAccessor] is also constructed manually inside
- * [network.columba.app.rns.host.di.ServiceModule.createManagers] for the
+ * [network.zamolxis.app.rns.host.di.ServiceModule.createManagers] for the
  * UI-process binder path. That path predates Hilt being available to
  * `:reticulum` (it explicitly notes "Hilt doesn't work across process
  * boundaries"). Both constructions are cheap — the class is stateless above

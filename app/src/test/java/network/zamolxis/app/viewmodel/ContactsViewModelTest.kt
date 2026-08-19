@@ -1,15 +1,15 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
-import network.columba.app.data.model.EnrichedContact
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.ReceivedLocationRepository
-import network.columba.app.service.IdentityResolutionManager
-import network.columba.app.service.PropagationNodeManager
-import network.columba.app.service.RelayInfo
-import network.columba.app.test.TestFactories
+import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.ReceivedLocationRepository
+import network.zamolxis.app.service.IdentityResolutionManager
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.service.RelayInfo
+import network.zamolxis.app.test.TestFactories
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery

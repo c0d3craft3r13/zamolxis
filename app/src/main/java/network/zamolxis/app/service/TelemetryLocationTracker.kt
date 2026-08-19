@@ -1,4 +1,4 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.content.Context
 import android.location.Location
@@ -10,7 +10,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
-import network.columba.app.util.LocationCompat
+import network.zamolxis.app.util.LocationCompat
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume

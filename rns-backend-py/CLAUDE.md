@@ -15,7 +15,7 @@ The `src/main/python/` tree contains **only**:
    subclasses — they cannot be replaced by Kotlin.
 3. **Chaquopy environment stubs** — `jnius/`, `usb4a/`, `usbserial4a/`. Tiny
    shims that satisfy upstream import-time checks.
-4. **`event_bridge.py`** — the ONE Columba-authored Python file with logic
+4. **`event_bridge.py`** — the ONE Zamolxis-authored Python file with logic
    (~150 lines). A callback receiver that flattens RNS/LXMF events to dicts
    of primitives before they cross JNI.
 

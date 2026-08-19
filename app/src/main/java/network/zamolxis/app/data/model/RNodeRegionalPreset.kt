@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 import android.bluetooth.BluetoothDevice
 import java.util.Locale

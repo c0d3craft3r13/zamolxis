@@ -1,11 +1,11 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.app.Application
 import app.cash.turbine.test
-import network.columba.app.data.model.BleConnectionsState
-import network.columba.app.data.model.ConnectionType
-import network.columba.app.data.repository.BleStatusRepository
-import network.columba.app.test.BleTestFixtures
+import network.zamolxis.app.data.model.BleConnectionsState
+import network.zamolxis.app.data.model.ConnectionType
+import network.zamolxis.app.data.repository.BleStatusRepository
+import network.zamolxis.app.test.BleTestFixtures
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

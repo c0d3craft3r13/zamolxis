@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import android.content.Context
@@ -25,9 +25,9 @@ import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.VoiceHistoryState
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.VoiceHistoryState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule

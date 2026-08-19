@@ -1,4 +1,4 @@
-package network.columba.app.call
+package network.zamolxis.app.call
 
 import android.content.Context
 import android.content.Intent
@@ -29,8 +29,8 @@ class PttMediaSessionManager(
     private val onPttStateChanged: (active: Boolean) -> Unit,
 ) {
     companion object {
-        private const val TAG = "Columba:PTT"
-        private const val SESSION_TAG = "ColumbaVoicePTT"
+        private const val TAG = "Zamolxis:PTT"
+        private const val SESSION_TAG = "ZamolxisVoicePTT"
     }
 
     private var mediaSession: MediaSession? = null

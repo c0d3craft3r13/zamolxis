@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.util
+package network.zamolxis.app.rns.host.util
 
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

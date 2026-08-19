@@ -1,12 +1,12 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import io.mockk.mockk
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.host.manager.CurrentTransport
-import network.columba.app.rns.host.manager.ridesOnIpCarrier
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.host.manager.CurrentTransport
+import network.zamolxis.app.rns.host.manager.ridesOnIpCarrier
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

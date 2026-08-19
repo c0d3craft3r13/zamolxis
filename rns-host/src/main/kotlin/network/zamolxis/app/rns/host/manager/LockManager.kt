@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.content.Context
 import android.net.wifi.WifiManager
@@ -25,7 +25,7 @@ class LockManager(
     companion object {
         private const val TAG = "LockManager"
         private const val MULTICAST_LOCK_TAG = "ReticulumMulticast"
-        private const val WAKE_LOCK_TAG = "Columba::ReticulumService"
+        private const val WAKE_LOCK_TAG = "Zamolxis::ReticulumService"
         private const val WAKE_LOCK_TIMEOUT_MS = 10 * 60 * 60 * 1000L // 10 hours
     }
 

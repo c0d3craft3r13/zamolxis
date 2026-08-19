@@ -1,9 +1,9 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.AnnounceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,7 +27,7 @@ class SavedPeersViewModel
         val searchQuery = MutableStateFlow("")
 
         // Filtered saved peers based on search query
-        val savedPeers: StateFlow<List<network.columba.app.data.repository.Announce>> =
+        val savedPeers: StateFlow<List<network.zamolxis.app.data.repository.Announce>> =
             searchQuery
                 .flatMapLatest { query ->
                     if (query.isBlank()) {

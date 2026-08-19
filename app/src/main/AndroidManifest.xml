@@ -93,16 +93,17 @@
     <uses-permission android:name="android.permission.REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE" />
 
     <application
-        android:name=".ColumbaApplication"
+        android:name=".ZamolxisApplication"
         android:enableOnBackInvokedCallback="true"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"
         android:dataExtractionRules="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Columba.Splash">
+        android:theme="@style/Theme.Zamolxis.Splash">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -173,7 +174,7 @@
              Manifest merger pulls it in here so the :reticulum process registers correctly. -->
 
         <!-- RNode Companion Device Service (Android 12+) -->
-        <!-- Enables Android to recognize Columba as the companion app for RNode devices -->
+        <!-- Enables Android to recognize Zamolxis as the companion app for RNode devices -->
         <!-- System binds this service when associated RNode is in range/connected -->
         <service
             android:name=".service.RNodeCompanionService"
@@ -215,9 +216,9 @@
             android:launchMode="singleTask"
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
-            android:taskAffinity="network.columba.app.incoming_call"
+            android:taskAffinity="network.zamolxis.app.incoming_call"
             android:excludeFromRecents="true"
-            android:theme="@style/Theme.Columba" />
+            android:theme="@style/Theme.Zamolxis" />
 
         <!-- Call notification action receiver -->
         <receiver

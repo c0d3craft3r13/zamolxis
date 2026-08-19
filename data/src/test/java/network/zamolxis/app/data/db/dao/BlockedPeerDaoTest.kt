@@ -1,12 +1,12 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import app.cash.turbine.test
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.BlockedPeerEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.BlockedPeerEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -21,7 +21,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class BlockedPeerDaoTest {
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var blockedPeerDao: BlockedPeerDao
     private lateinit var identityDao: LocalIdentityDao
 
@@ -42,7 +42,7 @@ class BlockedPeerDaoTest {
                 .getApplicationContext<Context>()
         database =
             Room
-                .inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+                .inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
         blockedPeerDao = database.blockedPeerDao()

@@ -1,4 +1,4 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.model.EnrichedConversation
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.model.EnrichedConversation
 import kotlinx.coroutines.flow.Flow
 
 @Dao

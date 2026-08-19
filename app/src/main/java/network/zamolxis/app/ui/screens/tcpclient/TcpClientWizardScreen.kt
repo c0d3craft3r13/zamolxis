@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.tcpclient
+package network.zamolxis.app.ui.screens.tcpclient
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -24,10 +24,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import network.columba.app.ui.components.WizardBottomBar
-import network.columba.app.viewmodel.TcpClientWizardStep
-import network.columba.app.viewmodel.TcpClientWizardViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.WizardBottomBar
+import network.zamolxis.app.viewmodel.TcpClientWizardStep
+import network.zamolxis.app.viewmodel.TcpClientWizardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +50,8 @@ fun TcpClientWizardScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    val context = LocalContext.current
+
     // Load existing interface for editing, or set initial values from discovered interface
     LaunchedEffect(interfaceId, initialHost) {
         if (interfaceId != null) {
@@ -55,7 +60,7 @@ fun TcpClientWizardScreen(
             viewModel.setInitialValues(
                 host = initialHost,
                 port = initialPort ?: 4242,
-                name = initialName ?: "TCP Connection",
+                name = initialName ?: context.getString(R.string.tcp_default_name),
                 ifacNetname = initialIfacNetname,
                 ifacNetkey = initialIfacNetkey,
             )
@@ -85,8 +90,8 @@ fun TcpClientWizardScreen(
                 title = {
                     Text(
                         when (state.currentStep) {
-                            TcpClientWizardStep.SERVER_SELECTION -> "Choose Server"
-                            TcpClientWizardStep.REVIEW_CONFIGURE -> "Review Settings"
+                            TcpClientWizardStep.SERVER_SELECTION -> stringResource(R.string.tcp_wiz_choose_server)
+                            TcpClientWizardStep.REVIEW_CONFIGURE -> stringResource(R.string.rnode_wiz_title_review)
                         },
                     )
                 },
@@ -102,7 +107,7 @@ fun TcpClientWizardScreen(
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                         )
                     }
                 },
@@ -114,8 +119,8 @@ fun TcpClientWizardScreen(
                 totalSteps = TcpClientWizardStep.entries.size,
                 buttonText =
                     when (state.currentStep) {
-                        TcpClientWizardStep.SERVER_SELECTION -> "Next"
-                        TcpClientWizardStep.REVIEW_CONFIGURE -> "Save"
+                        TcpClientWizardStep.SERVER_SELECTION -> stringResource(R.string.rnode_wiz_next)
+                        TcpClientWizardStep.REVIEW_CONFIGURE -> stringResource(R.string.common_save)
                     },
                 canProceed = viewModel.canProceed(),
                 isSaving = state.isSaving,
@@ -156,11 +161,11 @@ fun TcpClientWizardScreen(
     state.saveError?.let { error ->
         AlertDialog(
             onDismissRequest = { viewModel.clearSaveError() },
-            title = { Text("Error") },
+            title = { Text(stringResource(R.string.rnode_wiz_error)) },
             text = { Text(error) },
             confirmButton = {
                 TextButton(onClick = { viewModel.clearSaveError() }) {
-                    Text("OK")
+                    Text(stringResource(R.string.common_ok))
                 }
             },
         )

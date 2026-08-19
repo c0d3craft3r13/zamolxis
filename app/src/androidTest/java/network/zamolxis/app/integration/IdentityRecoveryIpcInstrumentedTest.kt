@@ -1,4 +1,4 @@
-package network.columba.app.integration
+package network.zamolxis.app.integration
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
@@ -6,7 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import network.columba.app.test.TestController
+import network.zamolxis.app.test.TestController
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.rnode
+package network.zamolxis.app.rns.host.rnode
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager

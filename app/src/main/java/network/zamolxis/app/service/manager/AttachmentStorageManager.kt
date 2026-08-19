@@ -1,4 +1,4 @@
-package network.columba.app.service.manager
+package network.zamolxis.app.service.manager
 
 import android.content.Context
 import android.util.Log

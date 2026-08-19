@@ -1,4 +1,4 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import android.app.Application
 import android.content.Context
@@ -7,10 +7,10 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.model.EnrichedAnnounce
-import network.columba.app.data.model.InterfaceType
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.model.EnrichedAnnounce
+import network.zamolxis.app.data.model.InterfaceType
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -23,7 +23,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class AnnounceRepositoryTest {
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var repository: AnnounceRepository
 
     @Before
@@ -31,7 +31,7 @@ class AnnounceRepositoryTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database =
             Room
-                .inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+                .inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
         repository = AnnounceRepository(database.announceDao())

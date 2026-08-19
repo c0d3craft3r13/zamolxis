@@ -325,7 +325,7 @@ Things that couldn't be fully resolved:
 ### Primary (HIGH confidence)
 - [StateFlow and SharedFlow - Android Developers](https://developer.android.com/kotlin/flow/stateflow-and-sharedflow) - Official Android guide on SharingStarted strategies
 - [SharingStarted - Kotlin Coroutines API](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-sharing-started/) - Official API documentation for SharingStarted
-- Columba codebase: PropagationNodeManager.kt - Current implementation showing Eagerly usage
+- Zamolxis codebase: PropagationNodeManager.kt - Current implementation showing Eagerly usage
 
 ### Secondary (MEDIUM confidence)
 - [Things to know about Flow's shareIn and stateIn operators](https://manuelvivo.dev/sharein-statein) - Manuel Vivo (Android DevRel) on sharing strategies

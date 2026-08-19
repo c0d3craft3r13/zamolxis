@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import android.app.Application
 import androidx.compose.foundation.layout.Column
@@ -15,10 +15,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import network.columba.app.service.RelayInfo
-import network.columba.app.test.MessageDeliveryRetrievalTestFixtures
-import network.columba.app.test.MessageDeliveryRetrievalTestFixtures.CardConfig
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.service.RelayInfo
+import network.zamolxis.app.test.MessageDeliveryRetrievalTestFixtures
+import network.zamolxis.app.test.MessageDeliveryRetrievalTestFixtures.CardConfig
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

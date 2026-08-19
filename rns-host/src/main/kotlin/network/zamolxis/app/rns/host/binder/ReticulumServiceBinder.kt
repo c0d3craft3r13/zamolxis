@@ -1,8 +1,8 @@
-package network.columba.app.rns.host.binder
+package network.zamolxis.app.rns.host.binder
 
 import android.os.Binder
 import android.util.Log
-import network.columba.app.rns.host.state.ServiceState
+import network.zamolxis.app.rns.host.state.ServiceState
 
 /**
  * Local binder for ReticulumService.

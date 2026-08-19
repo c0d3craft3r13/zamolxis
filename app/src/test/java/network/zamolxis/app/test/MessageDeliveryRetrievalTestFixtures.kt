@@ -1,4 +1,4 @@
-package network.columba.app.test
+package network.zamolxis.app.test
 
 /**
  * Test fixtures for MessageDeliveryRetrievalCard UI tests.

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.flasher.components
+package network.zamolxis.app.ui.screens.flasher.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -21,11 +21,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import network.columba.app.viewmodel.FlasherStep
+import network.zamolxis.app.R
+import network.zamolxis.app.viewmodel.FlasherStep
 
 /**
  * Horizontal numbered stepper for the flasher wizard.
@@ -48,11 +50,11 @@ fun FlasherStepIndicator(
 ) {
     val steps =
         listOf(
-            StepInfo(FlasherStep.DEVICE_SELECTION, "Device", 1),
-            StepInfo(FlasherStep.DEVICE_DETECTION, "Detect", 2),
-            StepInfo(FlasherStep.FIRMWARE_SELECTION, "Firmware", 3),
-            StepInfo(FlasherStep.FLASH_PROGRESS, "Flash", 4),
-            StepInfo(FlasherStep.COMPLETE, "Done", 5),
+            StepInfo(FlasherStep.DEVICE_SELECTION, stringResource(R.string.flasher_step_device), 1),
+            StepInfo(FlasherStep.DEVICE_DETECTION, stringResource(R.string.flasher_step_detect), 2),
+            StepInfo(FlasherStep.FIRMWARE_SELECTION, stringResource(R.string.flasher_step_firmware), 3),
+            StepInfo(FlasherStep.FLASH_PROGRESS, stringResource(R.string.flasher_step_flash), 4),
+            StepInfo(FlasherStep.COMPLETE, stringResource(R.string.flasher_step_done), 5),
         )
 
     Column(

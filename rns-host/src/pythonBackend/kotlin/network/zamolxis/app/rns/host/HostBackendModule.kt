@@ -1,4 +1,4 @@
-package network.columba.app.rns.host
+package network.zamolxis.app.rns.host
 
 import android.content.Context
 import dagger.Module
@@ -6,17 +6,17 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.call.CallLifecycleRecorder
-import network.columba.app.rns.backend.py.ChaquopyRnsBackend
-import network.columba.app.rns.backend.py.PythonRnsTransportAdmin
-import network.columba.app.rns.host.ble.bridge.KotlinBLEBridge
-import network.columba.app.rns.host.di.LocalBackend
-import network.columba.app.rns.host.persistence.CallsFromContactsGate
-import network.columba.app.rns.host.persistence.ServiceSettingsAccessor
-import network.columba.app.rns.host.rnode.KotlinRNodeBridge
-import network.columba.app.rns.host.rnode.RNodeOnlineStatusListener
-import network.columba.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.call.CallLifecycleRecorder
+import network.zamolxis.app.rns.backend.py.ChaquopyRnsBackend
+import network.zamolxis.app.rns.backend.py.PythonRnsTransportAdmin
+import network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge
+import network.zamolxis.app.rns.host.di.LocalBackend
+import network.zamolxis.app.rns.host.persistence.CallsFromContactsGate
+import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
+import network.zamolxis.app.rns.host.rnode.KotlinRNodeBridge
+import network.zamolxis.app.rns.host.rnode.RNodeOnlineStatusListener
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
 import tech.torlando.lxst.core.CallCoordinator
 import javax.inject.Singleton
 
@@ -34,11 +34,11 @@ import javax.inject.Singleton
  * voice path is compile-wired and has a clear injection point.
  *
  * A.10: this module no longer provides the unqualified
- * [network.columba.app.rns.api.RnsBackend] binding or the six sub-interface
+ * [network.zamolxis.app.rns.api.RnsBackend] binding or the six sub-interface
  * extractors. Those moved to
- * [network.columba.app.rns.host.di.ProcessAwareBackendModule], which decides
+ * [network.zamolxis.app.rns.host.di.ProcessAwareBackendModule], which decides
  * per process whether to resolve this local backend (in `:reticulum`) or
- * return a [network.columba.app.rns.host.ipc.BoundRnsBackend] AIDL proxy
+ * return a [network.zamolxis.app.rns.host.ipc.BoundRnsBackend] AIDL proxy
  * (in UI / test). Constructing `ChaquopyRnsBackend` is what loads CPython
  * and binds sockets — confining that work to `:reticulum` is the entire
  * point of the process split.
@@ -79,7 +79,7 @@ object HostBackendModule {
             // getBleConnectionDetails() surface the UI repository consumes.
             (it.transportAdmin as? PythonRnsTransportAdmin)?.attachBleSource(bleBridge)
 
-            // Round 2 RNode: ColumbaRNodeInterface bridges to two singletons.
+            // Round 2 RNode: ZamolxisRNodeInterface bridges to two singletons.
             //   • KotlinRNodeBridge — Bluetooth Classic (SPP) + BLE GATT
             //     paths, both implemented on top of Android Bluetooth APIs.
             //   • KotlinUSBBridge   — USB-serial path (mik3y usb-serial-for-
@@ -134,7 +134,7 @@ object HostBackendModule {
      * Flavor-local [RnsBackend] view of [ChaquopyRnsBackend]. [LocalBackend]
      * qualifier disambiguates from the process-aware unqualified
      * [RnsBackend] binding in
-     * [network.columba.app.rns.host.di.ProcessAwareBackendModule].
+     * [network.zamolxis.app.rns.host.di.ProcessAwareBackendModule].
      *
      * The [eagerCallManager] dependency is intentional — it forces
      * [PythonCallManager] construction (and its init-time backend-status

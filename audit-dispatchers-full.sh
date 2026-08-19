@@ -27,22 +27,28 @@ echo "========================================" >> "$REPORT_FILE"
 echo "" >> "$REPORT_FILE"
 
 # Helper functions
+#
+# Counters use `VAR=$((VAR + 1))`, not `((VAR++))`: post-increment evaluates to the
+# OLD value, so the first call — when the counter is still 0 — makes the arithmetic
+# command exit 1 and `set -e` kills the script. That is why this script used to stop
+# at its first info() and never reached sections 4-9. audit-dispatchers.sh was
+# already fixed this way; keep the two in sync.
 violation() {
     echo -e "${RED}❌ VIOLATION:${NC} $1"
     echo "❌ VIOLATION: $1" >> "$REPORT_FILE"
-    ((VIOLATIONS++))
+    VIOLATIONS=$((VIOLATIONS + 1))
 }
 
 warning() {
     echo -e "${YELLOW}⚠️  WARNING:${NC} $1"
     echo "⚠️  WARNING: $1" >> "$REPORT_FILE"
-    ((WARNINGS++))
+    WARNINGS=$((WARNINGS + 1))
 }
 
 info() {
     echo -e "${BLUE}ℹ️  INFO:${NC} $1"
     echo "ℹ️  INFO: $1" >> "$REPORT_FILE"
-    ((INFO++))
+    INFO=$((INFO + 1))
 }
 
 success() {
@@ -61,13 +67,35 @@ section() {
     echo "═══════════════════════════════════════" >> "$REPORT_FILE"
 }
 
-# Find source directories
+# Find source directories.
+#
+# RETICULUM_SRC used to be hardcoded to `reticulum/src/main/java`. That module was
+# split into :rns-api / :rns-ipc / :rns-host / :rns-backend-kt / :rns-backend-py, so
+# the path stopped existing and every `find` below silently scanned nothing there —
+# the audit went blind to the entire RNS layer while still reporting PASS. Discover
+# the dirs instead of naming them, so the next rename can't repeat that.
+#
+# Covers main + flavor source sets (kotlinBackend/pythonBackend/sentry/noSentry) and
+# both java/ and kotlin/ roots; test source sets are excluded here and again by the
+# per-check filename filters. `find`, not `ls` + glob: under `set -euo pipefail` a
+# glob that matches nothing makes `ls` exit non-zero and kills the script.
 APP_SRC="app/src/main/java"
-RETICULUM_SRC="reticulum/src/main/java"
 DATA_SRC="data/src/main/java"
+RETICULUM_SRC=$(find . -mindepth 4 -maxdepth 4 -type d \( -name java -o -name kotlin \) -path "*/src/*" |
+    sed 's|^\./||' |
+    grep -v -E "^(app|data)/src/main/(java|kotlin)$" |
+    grep -v -E "/src/(test|androidTest)[^/]*/" |
+    sort | tr '\n' ' ' || true)
 
 # Exclude test files and build outputs
 EXCLUDE_DIRS="*/build/* */test/* */androidTest/*"
+
+# Drop `file:line:` hits that aren't code: imports, `//` comments, and — the case
+# the old filters missed — `*` KDoc continuation lines. A doc comment explaining
+# the runBlocking convention was itself reported as a violation of it.
+strip_noncode() {
+    grep -v -E "^[^:]*:[0-9]*:[[:space:]]*(import |//|\*|/\*)"
+}
 
 section "1. Checking for runBlocking in Production Code"
 
@@ -77,8 +105,7 @@ section "1. Checking for runBlocking in Production Code"
 RUNBLOCKING_MATCHES=$(find $APP_SRC $RETICULUM_SRC $DATA_SRC -name "*.kt" 2>/dev/null | \
     grep -v -E "(test|Test|build)" | \
     xargs grep -n "runBlocking" 2>/dev/null | \
-    grep -v "^[^:]*:.*import " | \
-    grep -v "^[^:]*:[0-9]*:[[:space:]]*//" | \
+    strip_noncode | \
     grep -v "THREADING: allowed" || true)
 
 if [ -z "$RUNBLOCKING_MATCHES" ]; then
@@ -95,7 +122,7 @@ section "2. Checking for Forbidden Patterns"
 GLOBALSCOPE_MATCHES=$(find $APP_SRC $RETICULUM_SRC $DATA_SRC -name "*.kt" 2>/dev/null | \
     grep -v -E "(test|Test|build)" | \
     xargs grep -n "GlobalScope" 2>/dev/null | \
-    grep -v "//" || true)
+    strip_noncode || true)
 
 if [ -z "$GLOBALSCOPE_MATCHES" ]; then
     success "No GlobalScope usage found"
@@ -109,7 +136,7 @@ fi
 UNCONFINED_MATCHES=$(find $APP_SRC $RETICULUM_SRC $DATA_SRC -name "*.kt" 2>/dev/null | \
     grep -v -E "(test|Test|build)" | \
     xargs grep -n "Dispatchers\.Unconfined" 2>/dev/null | \
-    grep -v "//" || true)
+    strip_noncode || true)
 
 if [ -z "$UNCONFINED_MATCHES" ]; then
     success "No Dispatchers.Unconfined usage found"
@@ -119,21 +146,33 @@ else
     done <<< "$UNCONFINED_MATCHES"
 fi
 
-section "3. Checking Python Initialization Uses Main.immediate"
+section "3. Checking Python Interpreter Entry Points Stay Off the Main Thread"
 
-# Find Python wrapper.callAttr("initialize") calls
-PYTHON_INIT_MATCHES=$(find $APP_SRC -name "*.kt" 2>/dev/null | \
+# This check used to require `Dispatchers.Main.immediate` around a
+# `callAttr("initialize")` call in :app. Both premises are gone: the interpreter
+# moved behind AIDL into :rns-backend-py, and that call site no longer exists
+# anywhere in the tree — so the check matched nothing and warned forever.
+#
+# The live invariant is the opposite one, documented on
+# PythonRnsRuntime.applyAndroidEnvPatches: "every PyObject call here runs on
+# Dispatchers.IO". Chaquopy calls block, so reaching the interpreter from the main
+# thread is an ANR. Flag entry points with Dispatchers.Main in the 5 preceding
+# lines (same -B 5 heuristic the other sections use).
+PYTHON_SRC=$(find rns-backend-py/src -mindepth 2 -maxdepth 2 -type d \( -name kotlin -o -name java \) 2>/dev/null |
+    grep -v -E "/src/(test|androidTest)[^/]*/" | sort | tr '\n' ' ' || true)
+
+PYTHON_MAIN_THREAD=$(find $PYTHON_SRC -name "*.kt" 2>/dev/null | \
     grep -v -E "(test|Test|build)" | \
-    xargs grep -B 5 'callAttr.*"initialize"' 2>/dev/null | \
-    grep -E "(Dispatchers\.(Main|IO|Default)|withContext)" || true)
+    xargs grep -B 5 -E 'Python\.start\(|\.callAttr\(' 2>/dev/null | \
+    grep -E "Dispatchers\.Main" || true)
 
-if echo "$PYTHON_INIT_MATCHES" | grep -q "Dispatchers\.Main\.immediate"; then
-    success "Python initialization uses Dispatchers.Main.immediate"
-elif [ -z "$PYTHON_INIT_MATCHES" ]; then
-    warning "Could not verify Python initialization dispatcher (no matches found)"
+if [ -z "$PYTHON_SRC" ]; then
+    warning "No Python backend source found (kotlinBackend-only checkout?)"
+elif [ -z "$PYTHON_MAIN_THREAD" ]; then
+    success "Python interpreter entry points do not run on Dispatchers.Main"
 else
-    violation "Python initialization may not be using Dispatchers.Main.immediate"
-    echo "  Found: $PYTHON_INIT_MATCHES"
+    violation "Python interpreter reached from Dispatchers.Main (blocking call = ANR)"
+    echo "  Found: $PYTHON_MAIN_THREAD"
 fi
 
 section "4. Checking for Undocumented Coroutine Launches"

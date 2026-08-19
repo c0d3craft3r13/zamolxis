@@ -1,13 +1,13 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -33,7 +33,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class ContactDaoRelayTest {
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var contactDao: ContactDao
     private lateinit var localIdentityDao: LocalIdentityDao
 
@@ -41,7 +41,7 @@ class ContactDaoRelayTest {
     fun setup() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database =
-            Room.inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+            Room.inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
         contactDao = database.contactDao()

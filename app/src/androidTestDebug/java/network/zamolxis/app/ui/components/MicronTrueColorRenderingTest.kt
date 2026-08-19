@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -12,9 +12,9 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import network.columba.app.micron.MicronParser
-import network.columba.app.test.TestHostActivity
-import network.columba.app.viewmodel.NomadNetBrowserViewModel.RenderingMode
+import network.zamolxis.app.micron.MicronParser
+import network.zamolxis.app.test.TestHostActivity
+import network.zamolxis.app.viewmodel.NomadNetBrowserViewModel.RenderingMode
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test

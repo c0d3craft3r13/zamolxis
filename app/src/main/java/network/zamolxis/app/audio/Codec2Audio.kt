@@ -1,4 +1,4 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
 import android.media.AudioFormat
 import android.media.AudioRecord
@@ -7,7 +7,7 @@ import android.os.SystemClock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import network.columba.app.ui.model.AudioAttachmentMode
+import network.zamolxis.app.ui.model.AudioAttachmentMode
 import tech.torlando.lxst.codec.Codec2
 import tech.torlando.lxst.codec.NativeCodec2
 import tech.torlando.lxst.recording.RecordedAudio

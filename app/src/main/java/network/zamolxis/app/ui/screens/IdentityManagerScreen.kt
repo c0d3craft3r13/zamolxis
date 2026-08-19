@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.content.Intent
 import android.net.Uri
@@ -63,19 +63,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.viewmodel.IdentityManagerUiState
-import network.columba.app.viewmodel.IdentityManagerViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import network.zamolxis.app.R
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.viewmodel.IdentityManagerUiState
+import network.zamolxis.app.viewmodel.IdentityManagerViewModel
 
 /**
  * Identity Manager screen for creating, managing, and switching identities.
@@ -184,7 +187,7 @@ fun IdentityManagerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Identity Manager") },
+                title = { Text(stringResource(R.string.idmanager_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, "Navigate back")
@@ -367,8 +370,8 @@ fun IdentityManagerScreen(
 
     if (showBackupImportDialog && selectedBackupUri != null) {
         ImportIdentityDialog(
-            title = "Import from Sideband Backup",
-            description = "Enter a display name for the identity extracted from the Sideband backup.",
+            title = stringResource(R.string.idmanager_backup_title),
+            description = stringResource(R.string.idmanager_backup_desc),
             onDismiss = {
                 showBackupImportDialog = false
                 selectedBackupUri = null
@@ -402,12 +405,12 @@ private fun ApplyingChangesDialog(message: String) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    "Restarting network service...",
+                    stringResource(R.string.idmanager_restarting),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "This may take a few seconds",
+                    stringResource(R.string.idmanager_restarting_sub),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -439,11 +442,11 @@ private fun EmptyState(
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
-                "No Identities Yet",
+                stringResource(R.string.idmanager_empty_title),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                "Create your first identity to start using Columba, or import an existing identity from a backup file.",
+                stringResource(R.string.idmanager_empty_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -451,17 +454,17 @@ private fun EmptyState(
             Button(onClick = onCreateClick) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Create New Identity")
+                Text(stringResource(R.string.idmanager_create))
             }
             OutlinedButton(onClick = onImportClick) {
                 Icon(Icons.Default.Download, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Import from File")
+                Text(stringResource(R.string.idmanager_import_file))
             }
             OutlinedButton(onClick = onPasteKeyClick) {
                 Icon(Icons.Default.ContentPaste, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Paste Key")
+                Text(stringResource(R.string.idmanager_paste_key))
             }
         }
     }
@@ -540,7 +543,7 @@ private fun IdentityCard(
                 if (isActive) {
                     Icon(
                         Icons.Default.CheckCircle,
-                        contentDescription = "Active",
+                        contentDescription = stringResource(R.string.idmanager_active_cd),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp),
                     )
@@ -557,9 +560,12 @@ private fun IdentityCard(
                     )
                     Text(
                         if (identity.lastUsedTimestamp > 0) {
-                            "Last used: ${formatTimestamp(identity.lastUsedTimestamp)}"
+                            stringResource(
+                                R.string.idmanager_last_used,
+                                formatTimestamp(identity.lastUsedTimestamp),
+                            )
                         } else {
-                            "Never used"
+                            stringResource(R.string.idmanager_never_used)
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -577,7 +583,7 @@ private fun IdentityCard(
                 ) {
                     if (!isActive) {
                         DropdownMenuItem(
-                            text = { Text("Switch to") },
+                            text = { Text(stringResource(R.string.idmanager_switch_to)) },
                             onClick = {
                                 showMenu = false
                                 onSwitchClick()
@@ -586,7 +592,7 @@ private fun IdentityCard(
                         )
                     }
                     DropdownMenuItem(
-                        text = { Text("Rename") },
+                        text = { Text(stringResource(R.string.idmanager_rename)) },
                         onClick = {
                             showMenu = false
                             onRenameClick()
@@ -594,7 +600,7 @@ private fun IdentityCard(
                         leadingIcon = { Icon(Icons.Default.Edit, null) },
                     )
                     DropdownMenuItem(
-                        text = { Text("Export as File") },
+                        text = { Text(stringResource(R.string.idmanager_export)) },
                         onClick = {
                             showMenu = false
                             onExportFileClick()
@@ -602,7 +608,7 @@ private fun IdentityCard(
                         leadingIcon = { Icon(Icons.Default.Upload, null) },
                     )
                     DropdownMenuItem(
-                        text = { Text("Copy Key as Text") },
+                        text = { Text(stringResource(R.string.idmanager_copy_key)) },
                         onClick = {
                             showMenu = false
                             onExportTextClick()
@@ -611,7 +617,7 @@ private fun IdentityCard(
                     )
                     if (!isActive) {
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = { Text(stringResource(R.string.delete)) },
                             onClick = {
                                 showMenu = false
                                 onDeleteClick()
@@ -634,15 +640,15 @@ private fun CreateIdentityDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create New Identity") },
+        title = { Text(stringResource(R.string.idmanager_create)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Enter a display name for this identity. You can use this to manage different personas or use cases.")
+                Text(stringResource(R.string.idmanager_create_desc))
                 OutlinedTextField(
                     value = displayName,
                     onValueChange = { displayName = it },
-                    label = { Text("Display Name") },
-                    placeholder = { Text("e.g., Work, Personal, Anonymous") },
+                    label = { Text(stringResource(R.string.identityscreen_display_name)) },
+                    placeholder = { Text(stringResource(R.string.idmanager_create_placeholder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -653,12 +659,12 @@ private fun CreateIdentityDialog(
                 onClick = { onCreate(displayName) },
                 enabled = displayName.isNotBlank(),
             ) {
-                Text("CREATE")
+                Text(stringResource(R.string.idmanager_create_action))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("CANCEL")
+                Text(stringResource(R.string.idmanager_cancel))
             }
         },
     )
@@ -679,7 +685,7 @@ private fun ImportIdentityDialog(
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Enter a display name for the imported identity.")
+                Text(stringResource(R.string.idmanager_import_desc))
                 Text(
                     description,
                     style = MaterialTheme.typography.bodySmall,
@@ -688,8 +694,8 @@ private fun ImportIdentityDialog(
                 OutlinedTextField(
                     value = displayName,
                     onValueChange = { displayName = it },
-                    label = { Text("Display Name") },
-                    placeholder = { Text("e.g., Backup, Restored Identity") },
+                    label = { Text(stringResource(R.string.identityscreen_display_name)) },
+                    placeholder = { Text(stringResource(R.string.idmanager_import_placeholder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -700,12 +706,12 @@ private fun ImportIdentityDialog(
                 onClick = { onImport(displayName) },
                 enabled = displayName.isNotBlank(),
             ) {
-                Text("IMPORT")
+                Text(stringResource(R.string.idmanager_import_action))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("CANCEL")
+                Text(stringResource(R.string.idmanager_cancel))
             }
         },
     )
@@ -730,15 +736,15 @@ private fun PasteKeyDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.ContentPaste, null) },
-        title = { Text("Import Key from Text") },
+        title = { Text(stringResource(R.string.idmanager_paste_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Paste a Base32-encoded identity key (e.g., from Sideband).")
+                Text(stringResource(R.string.idmanager_paste_desc))
                 OutlinedTextField(
                     value = keyText,
                     onValueChange = { keyText = it },
-                    label = { Text("Base32 Key") },
-                    placeholder = { Text("Paste identity key here...") },
+                    label = { Text(stringResource(R.string.idmanager_base32_label)) },
+                    placeholder = { Text(stringResource(R.string.idmanager_base32_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 4,
                     textStyle =
@@ -749,8 +755,8 @@ private fun PasteKeyDialog(
                 OutlinedTextField(
                     value = displayName,
                     onValueChange = { displayName = it },
-                    label = { Text("Display Name") },
-                    placeholder = { Text("e.g., Sideband Identity") },
+                    label = { Text(stringResource(R.string.identityscreen_display_name)) },
+                    placeholder = { Text(stringResource(R.string.idmanager_sideband_placeholder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -761,12 +767,12 @@ private fun PasteKeyDialog(
                 onClick = { onImport(keyText, displayName) },
                 enabled = keyText.isNotBlank() && displayName.isNotBlank(),
             ) {
-                Text("IMPORT")
+                Text(stringResource(R.string.idmanager_import_action))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("CANCEL")
+                Text(stringResource(R.string.idmanager_cancel))
             }
         },
     )
@@ -782,15 +788,16 @@ private fun ExportTextDialog(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val shareKeyTitle = stringResource(R.string.idmanager_share_key_title)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Key, null) },
-        title = { Text("Identity Key") },
+        title = { Text(stringResource(R.string.idmanager_key_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "This key can be imported in Sideband or another Columba instance.",
+                    stringResource(R.string.idmanager_key_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -821,7 +828,7 @@ private fun ExportTextDialog(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("Copy")
+                        Text(stringResource(R.string.common_copy))
                     }
                     OutlinedButton(
                         onClick = {
@@ -831,7 +838,7 @@ private fun ExportTextDialog(
                                     putExtra(Intent.EXTRA_TEXT, base32String)
                                 }
                             context.startActivity(
-                                Intent.createChooser(shareIntent, "Share Identity Key"),
+                                Intent.createChooser(shareIntent, shareKeyTitle),
                             )
                         },
                         modifier = Modifier.weight(1f),
@@ -842,14 +849,14 @@ private fun ExportTextDialog(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("Share")
+                        Text(stringResource(R.string.myidentity_share))
                     }
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("DONE")
+                Text(stringResource(R.string.idmanager_done))
             }
         },
     )
@@ -868,17 +875,17 @@ private fun ImportTypeDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Download, null) },
-        title = { Text("Import Identity") },
+        title = { Text(stringResource(R.string.idmanager_import_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Choose how to import your identity:")
+                Text(stringResource(R.string.idmanager_import_choose))
                 Button(
                     onClick = onImportFromFile,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(Icons.Default.Key, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("From Identity File")
+                    Text(stringResource(R.string.idmanager_from_file))
                 }
                 Button(
                     onClick = onImportFromBackup,
@@ -886,7 +893,7 @@ private fun ImportTypeDialog(
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("From Sideband Backup")
+                    Text(stringResource(R.string.idmanager_from_backup))
                 }
                 Button(
                     onClick = onPasteKey,
@@ -894,14 +901,14 @@ private fun ImportTypeDialog(
                 ) {
                     Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Paste Base32 Key")
+                    Text(stringResource(R.string.idmanager_from_paste))
                 }
             }
         },
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("CANCEL")
+                Text(stringResource(R.string.idmanager_cancel))
             }
         },
     )
@@ -917,24 +924,33 @@ private fun SwitchIdentityDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.SwapHoriz, null) },
-        title = { Text("Switch Identity?") },
+        title = { Text(stringResource(R.string.idmanager_switch_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Switching to \"${identity.displayName}\" will restart the network service.")
-                Text("You will see only the conversations, contacts, and messages associated with this identity.")
+                Text(stringResource(R.string.idmanager_switch_body, identity.displayName))
+                Text(stringResource(R.string.idmanager_switch_note))
                 Spacer(Modifier.height(8.dp))
-                Text("Current: ${currentIdentity?.displayName ?: "None"}", style = MaterialTheme.typography.bodySmall)
-                Text("New: ${identity.displayName}", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    stringResource(
+                        R.string.myidentity_current,
+                        currentIdentity?.displayName ?: stringResource(R.string.idmanager_none),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Text(
+                    stringResource(R.string.idmanager_switch_new, identity.displayName),
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("SWITCH")
+                Text(stringResource(R.string.idmanager_switch_action))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("CANCEL")
+                Text(stringResource(R.string.idmanager_cancel))
             }
         },
     )
@@ -949,17 +965,17 @@ private fun DeleteIdentityDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error) },
-        title = { Text("Delete Identity?") },
+        title = { Text(stringResource(R.string.idmanager_delete_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("This action cannot be undone", style = MaterialTheme.typography.titleSmall)
-                Text("Deleting \"${identity.displayName}\" will permanently remove:")
-                Text("- Identity keys")
-                Text("- All conversations")
-                Text("- All contacts")
-                Text("- All messages")
+                Text(stringResource(R.string.idmanager_delete_warning), style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.idmanager_delete_body, identity.displayName))
+                Text(stringResource(R.string.idmanager_delete_keys))
+                Text(stringResource(R.string.idmanager_delete_convos))
+                Text(stringResource(R.string.idmanager_delete_contacts))
+                Text(stringResource(R.string.idmanager_delete_msgs))
                 Spacer(Modifier.height(8.dp))
-                Text("Export this identity first if you want to back it up.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.idmanager_delete_hint), style = MaterialTheme.typography.bodySmall)
             }
         },
         confirmButton = {
@@ -970,12 +986,12 @@ private fun DeleteIdentityDialog(
                         contentColor = MaterialTheme.colorScheme.error,
                     ),
             ) {
-                Text("DELETE")
+                Text(stringResource(R.string.idmanager_delete_action))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("CANCEL")
+                Text(stringResource(R.string.idmanager_cancel))
             }
         },
     )
@@ -991,19 +1007,19 @@ private fun RenameIdentityDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Rename Identity") },
+        title = { Text(stringResource(R.string.idmanager_rename_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Enter a new display name:")
+                Text(stringResource(R.string.idmanager_rename_desc))
                 OutlinedTextField(
                     value = newName,
                     onValueChange = { newName = it },
-                    label = { Text("Display Name") },
+                    label = { Text(stringResource(R.string.identityscreen_display_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    "Identity: ${identity.identityHash.take(16)}...",
+                    stringResource(R.string.idmanager_identity_line, identity.identityHash.take(16)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1014,26 +1030,30 @@ private fun RenameIdentityDialog(
                 onClick = { onRename(newName) },
                 enabled = newName.isNotBlank() && newName != identity.displayName,
             ) {
-                Text("SAVE")
+                Text(stringResource(R.string.idmanager_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("CANCEL")
+                Text(stringResource(R.string.idmanager_cancel))
             }
         },
     )
 }
 
+@Composable
 private fun formatTimestamp(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
 
     return when {
-        diff < 60_000 -> "Just now"
-        diff < 3600_000 -> "${diff / 60_000} minutes ago"
-        diff < 86400_000 -> "${diff / 3600_000} hours ago"
-        diff < 604800_000 -> "${diff / 86400_000} days ago"
+        diff < 60_000 -> stringResource(R.string.time_just_now)
+        diff < 3600_000 ->
+            pluralStringResource(R.plurals.time_minutes_ago, (diff / 60_000).toInt(), diff / 60_000)
+        diff < 86400_000 ->
+            pluralStringResource(R.plurals.time_hours_ago, (diff / 3600_000).toInt(), diff / 3600_000)
+        diff < 604800_000 ->
+            pluralStringResource(R.plurals.time_days_ago, (diff / 86400_000).toInt(), diff / 86400_000)
         else -> SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
     }
 }

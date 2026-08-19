@@ -1,6 +1,6 @@
-package network.columba.app
+package network.zamolxis.app
 
-import network.columba.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsLxmf
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -20,7 +20,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for ColumbaApplication startup behavior.
+ * Unit tests for ZamolxisApplication startup behavior.
  * Tests timeout handling and utility functions used during initialization.
  *
  * A.10b removed the legacy `getStatus()` / stale-config-flag startup branch —
@@ -30,7 +30,7 @@ import org.junit.Test
  * verification path survives, now routed through [RnsLxmf].
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ColumbaApplicationTest {
+class ZamolxisApplicationTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var mockRnsLxmf: RnsLxmf
@@ -51,7 +51,7 @@ class ColumbaApplicationTest {
 
     @Test
     fun `IPC_TIMEOUT_MS is set to 5 seconds`() {
-        assertEquals(5000L, ColumbaApplication.IPC_TIMEOUT_MS)
+        assertEquals(5000L, ZamolxisApplication.IPC_TIMEOUT_MS)
     }
 
     // ========== Timeout Behavior Tests ==========
@@ -60,7 +60,7 @@ class ColumbaApplicationTest {
     fun `withTimeoutOrNull for getLxmfIdentity returns identity when fast`() =
         runTest {
             // Arrange
-            val mockIdentity = mockk<network.columba.app.rns.api.model.Identity>()
+            val mockIdentity = mockk<network.zamolxis.app.rns.api.model.Identity>()
             coEvery { mockRnsLxmf.getLxmfIdentity() } coAnswers {
                 delay(100)
                 Result.success(mockIdentity)
@@ -68,7 +68,7 @@ class ColumbaApplicationTest {
 
             // Act
             val result =
-                withTimeoutOrNull(ColumbaApplication.IPC_TIMEOUT_MS) {
+                withTimeoutOrNull(ZamolxisApplication.IPC_TIMEOUT_MS) {
                     mockRnsLxmf.getLxmfIdentity().getOrNull()
                 }
             advanceUntilIdle()
@@ -82,7 +82,7 @@ class ColumbaApplicationTest {
     fun `getLxmfIdentity returns identity when mock succeeds`() =
         runTest {
             // Arrange
-            val mockIdentity = mockk<network.columba.app.rns.api.model.Identity>()
+            val mockIdentity = mockk<network.zamolxis.app.rns.api.model.Identity>()
             coEvery { mockRnsLxmf.getLxmfIdentity() } returns Result.success(mockIdentity)
 
             // Act
@@ -98,7 +98,7 @@ class ColumbaApplicationTest {
 
     @Test
     fun `toHexString converts byte array correctly`() {
-        // These are the private extension functions from ColumbaApplication
+        // These are the private extension functions from ZamolxisApplication
         // Testing the logic pattern they implement
         val bytes = byteArrayOf(0x12, 0x34, 0xAB.toByte(), 0xCD.toByte())
         val expected = "1234abcd"

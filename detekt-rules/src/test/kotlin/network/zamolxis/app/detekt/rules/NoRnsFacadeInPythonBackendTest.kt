@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

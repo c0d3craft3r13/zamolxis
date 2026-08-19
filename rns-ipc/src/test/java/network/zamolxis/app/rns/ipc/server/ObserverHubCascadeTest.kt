@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc.server
+package network.zamolxis.app.rns.ipc.server
 
 import android.os.Binder
 import android.os.DeadObjectException

@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals

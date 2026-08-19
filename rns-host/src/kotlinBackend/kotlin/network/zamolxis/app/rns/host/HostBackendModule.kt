@@ -1,4 +1,4 @@
-package network.columba.app.rns.host
+package network.zamolxis.app.rns.host
 
 import android.content.Context
 import android.util.Log
@@ -7,18 +7,18 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.call.CallLifecycleRecorder
-import network.columba.app.rns.host.call.ServiceCallLifecycle
-import network.columba.app.rns.backend.kt.CallPrivacyBridge
-import network.columba.app.rns.backend.kt.NativeRnsBackend
-import network.columba.app.rns.backend.kt.RNodeHostBridge
-import network.columba.app.rns.host.call.rnode.BluetoothLeConnection
-import network.columba.app.rns.host.call.rnode.ColumbaLogo
-import network.columba.app.rns.host.di.LocalBackend
-import network.columba.app.rns.host.persistence.CallsFromContactsGate
-import network.columba.app.rns.host.persistence.ServiceSettingsAccessor
-import network.columba.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.call.CallLifecycleRecorder
+import network.zamolxis.app.rns.host.call.ServiceCallLifecycle
+import network.zamolxis.app.rns.backend.kt.CallPrivacyBridge
+import network.zamolxis.app.rns.backend.kt.NativeRnsBackend
+import network.zamolxis.app.rns.backend.kt.RNodeHostBridge
+import network.zamolxis.app.rns.host.call.rnode.BluetoothLeConnection
+import network.zamolxis.app.rns.host.call.rnode.ZamolxisLogo
+import network.zamolxis.app.rns.host.di.LocalBackend
+import network.zamolxis.app.rns.host.persistence.CallsFromContactsGate
+import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Singleton
@@ -34,11 +34,11 @@ import javax.inject.Singleton
  * Gradle's project dep graph — see the [RNodeHostBridge] kdoc).
  *
  * A.10: this module no longer provides the unqualified
- * [network.columba.app.rns.api.RnsBackend] binding or the six sub-interface
+ * [network.zamolxis.app.rns.api.RnsBackend] binding or the six sub-interface
  * extractors. Those moved to
- * [network.columba.app.rns.host.di.ProcessAwareBackendModule], which decides
+ * [network.zamolxis.app.rns.host.di.ProcessAwareBackendModule], which decides
  * per process whether to resolve this local backend (in `:reticulum`) or
- * return a [network.columba.app.rns.host.ipc.BoundRnsBackend] AIDL proxy
+ * return a [network.zamolxis.app.rns.host.ipc.BoundRnsBackend] AIDL proxy
  * (in UI / test). The flavor module's role is now purely to construct the
  * concrete backend; the process branching is centralized.
  */
@@ -54,7 +54,7 @@ object HostBackendModule {
 
     /**
      * Bridge adapter wrapping the shared [CallsFromContactsGate] +
-     * [ServiceSettingsAccessor] (provided by [network.columba.app.rns.host.di.PersistenceModule])
+     * [ServiceSettingsAccessor] (provided by [network.zamolxis.app.rns.host.di.PersistenceModule])
      * behind the [CallPrivacyBridge] interface that `:rns-backend-kt`
      * declares. `:rns-backend-kt` cannot import these classes directly
      * (Gradle dep graph would cycle), so we adapt here.
@@ -91,7 +91,7 @@ object HostBackendModule {
      * Flavor-local [RnsBackend] view of [NativeRnsBackend]. [LocalBackend]
      * qualifier disambiguates from the process-aware unqualified
      * [RnsBackend] binding in
-     * [network.columba.app.rns.host.di.ProcessAwareBackendModule].
+     * [network.zamolxis.app.rns.host.di.ProcessAwareBackendModule].
      */
     @Provides
     @Singleton
@@ -150,5 +150,5 @@ internal class AndroidRNodeHostBridge(
         return bleConn.connect()
     }
 
-    override fun rnodeFramebufferData(): ByteArray = ColumbaLogo.FB_DATA
+    override fun rnodeFramebufferData(): ByteArray = ZamolxisLogo.FB_DATA
 }

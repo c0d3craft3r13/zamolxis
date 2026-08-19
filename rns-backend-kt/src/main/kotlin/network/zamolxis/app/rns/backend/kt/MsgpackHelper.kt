@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import org.msgpack.core.MessagePacker
 import org.msgpack.core.MessageUnpacker

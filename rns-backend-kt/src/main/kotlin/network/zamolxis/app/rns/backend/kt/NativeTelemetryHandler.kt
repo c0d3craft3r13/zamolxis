@@ -1,26 +1,26 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
-import network.columba.app.rns.api.model.ConversationLinkResult
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.DeliveryStatusUpdate
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.rns.api.model.FailedInterface
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.LocationTelemetry
-import network.columba.app.rns.api.model.MessageReceipt
-import network.columba.app.rns.api.model.PropagationState
-import network.columba.app.rns.api.model.ReceivedMessage
-import network.columba.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.rns.api.model.ConversationLinkResult
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.rns.api.model.PropagationState
+import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.VoiceCallState
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.util.AppDataParser
-import network.columba.app.rns.api.util.LxmfFields
-import network.columba.app.rns.api.util.TelemeterCodec
-import network.columba.app.rns.api.util.hexToBytes
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.AppDataParser
+import network.zamolxis.app.rns.api.util.LxmfFields
+import network.zamolxis.app.rns.api.util.TelemeterCodec
+import network.zamolxis.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.util.toHex
 import network.reticulum.lxmf.LXMessage
 import org.json.JSONObject
 
@@ -37,7 +37,7 @@ internal class NativeTelemetryHandler(
         private const val TAG = "NativeReticulumProtocol"
         private const val LOCATION_SHARE_TYPE = "location_share"
         // Upstream LXMF FIELD_CUSTOM_META — Sideband ignores this field entirely
-        // (zero refs in sbapp/sideband/core.py). Previously 0x70 (Columba-
+        // (zero refs in sbapp/sideband/core.py). Previously 0x70 (Zamolxis-
         // invented unassigned ID, risked collision with future upstream
         // assignments). See LocationTelemetry.COLUMBA_META_FIELD_ID for the
         // shared canonical value.
@@ -258,7 +258,7 @@ internal class NativeTelemetryHandler(
      * here would only be visible in a peer-to-peer interop test, by
      * which time it's already shipped.
      *
-     * Falls back to JSON-in-bytes parsing for legacy Columba peers
+     * Falls back to JSON-in-bytes parsing for legacy Zamolxis peers
      * that pre-date the Telemeter-format migration.
      */
     private fun unpackLocationFromMsgpack(data: ByteArray): JSONObject? {
@@ -274,7 +274,7 @@ internal class NativeTelemetryHandler(
                 .put("speed", decoded.speed)
                 .put("bearing", decoded.bearing)
         }
-        // Legacy JSON-in-bytes fallback — pre-Phase-1 Columba peers
+        // Legacy JSON-in-bytes fallback — pre-Phase-1 Zamolxis peers
         // sent JSON instead of Telemeter msgpack. Drop on next major.
         return runCatching { JSONObject(String(data, Charsets.UTF_8)) }.getOrNull()
     }

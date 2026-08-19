@@ -1,16 +1,28 @@
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.util.Calendar
 
 /**
  * Unit tests for SharingDuration enum.
+ *
+ * The display text moved to `@StringRes displayTextRes`, so the wording assertions
+ * resolve the resource against the default (English) locale rather than reading a
+ * literal off the enum. Asserting the resolved text — not the bare resource id —
+ * keeps these tests checking what the user actually sees.
  */
+@RunWith(RobolectricTestRunner::class)
 class SharingDurationTest {
+    private val context = ApplicationProvider.getApplicationContext<Application>()
+
     @Test
     fun `SharingDuration has five entries`() {
         assertEquals(5, SharingDuration.entries.size)
@@ -18,27 +30,27 @@ class SharingDurationTest {
 
     @Test
     fun `FIFTEEN_MINUTES has correct display text`() {
-        assertEquals("15 min", SharingDuration.FIFTEEN_MINUTES.displayText)
+        assertEquals("15 min", context.getString(SharingDuration.FIFTEEN_MINUTES.displayTextRes))
     }
 
     @Test
     fun `ONE_HOUR has correct display text`() {
-        assertEquals("1 hour", SharingDuration.ONE_HOUR.displayText)
+        assertEquals("1 hour", context.getString(SharingDuration.ONE_HOUR.displayTextRes))
     }
 
     @Test
     fun `FOUR_HOURS has correct display text`() {
-        assertEquals("4 hours", SharingDuration.FOUR_HOURS.displayText)
+        assertEquals("4 hours", context.getString(SharingDuration.FOUR_HOURS.displayTextRes))
     }
 
     @Test
     fun `UNTIL_MIDNIGHT has correct display text`() {
-        assertEquals("Until midnight", SharingDuration.UNTIL_MIDNIGHT.displayText)
+        assertEquals("Until midnight", context.getString(SharingDuration.UNTIL_MIDNIGHT.displayTextRes))
     }
 
     @Test
     fun `INDEFINITE has correct display text`() {
-        assertEquals("Until I stop", SharingDuration.INDEFINITE.displayText)
+        assertEquals("Until I stop", context.getString(SharingDuration.INDEFINITE.displayTextRes))
     }
 
     @Test

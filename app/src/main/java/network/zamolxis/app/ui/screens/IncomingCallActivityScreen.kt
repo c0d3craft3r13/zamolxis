@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -47,7 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import network.columba.app.R
+import network.zamolxis.app.R
 
 private val AnswerCallGreen = Color(0xFF4CAF50)
 

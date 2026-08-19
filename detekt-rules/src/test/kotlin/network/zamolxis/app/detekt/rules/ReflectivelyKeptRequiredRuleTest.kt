@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import io.github.detekt.test.utils.compileContentForTest
 import io.gitlab.arturbosch.detekt.api.Config
@@ -20,7 +20,7 @@ class ReflectivelyKeptRequiredRuleTest {
     fun `flags a fun interface in rns-backend-py without the annotation`() {
         val source =
             """
-            package network.columba.app.rns.backend.py
+            package network.zamolxis.app.rns.backend.py
             import com.chaquo.python.PyObject
             fun interface PyThreeArgCallback {
                 fun onEvent(a: PyObject, b: PyObject, c: PyObject)
@@ -29,7 +29,7 @@ class ReflectivelyKeptRequiredRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/repo/rns-backend-py/src/main/kotlin/network/columba/app/rns/backend/py/PyThreeArgCallback.kt",
+                "/repo/rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/PyThreeArgCallback.kt",
             )
         assertEquals(1, findings.size, "Unannotated Chaquopy SAM should be flagged")
         assertEquals("ReflectivelyKeptRequired", findings[0].issue.id)
@@ -39,9 +39,9 @@ class ReflectivelyKeptRequiredRuleTest {
     fun `allows a fun interface in rns-backend-py with the annotation`() {
         val source =
             """
-            package network.columba.app.rns.backend.py
+            package network.zamolxis.app.rns.backend.py
             import com.chaquo.python.PyObject
-            import network.columba.app.rns.api.annotation.ReflectivelyKept
+            import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
             @ReflectivelyKept
             fun interface PyThreeArgCallback {
                 fun onEvent(a: PyObject, b: PyObject, c: PyObject)
@@ -50,7 +50,7 @@ class ReflectivelyKeptRequiredRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/repo/rns-backend-py/src/main/kotlin/network/columba/app/rns/backend/py/PyThreeArgCallback.kt",
+                "/repo/rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/PyThreeArgCallback.kt",
             )
         assertEquals(0, findings.size, "Annotated SAM must not be flagged")
     }
@@ -59,7 +59,7 @@ class ReflectivelyKeptRequiredRuleTest {
     fun `flags a Kotlin Bridge class without the annotation`() {
         val source =
             """
-            package network.columba.app.rns.host.thing
+            package network.zamolxis.app.rns.host.thing
             class KotlinThingBridge {
                 fun doThing() = Unit
             }
@@ -67,7 +67,7 @@ class ReflectivelyKeptRequiredRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/repo/rns-host/src/main/kotlin/network/columba/app/rns/host/thing/KotlinThingBridge.kt",
+                "/repo/rns-host/src/main/kotlin/network/zamolxis/app/rns/host/thing/KotlinThingBridge.kt",
             )
         assertEquals(1, findings.size, "Unannotated Kotlin*Bridge should be flagged")
     }
@@ -76,8 +76,8 @@ class ReflectivelyKeptRequiredRuleTest {
     fun `allows a Kotlin Bridge class with the annotation`() {
         val source =
             """
-            package network.columba.app.rns.host.thing
-            import network.columba.app.rns.api.annotation.ReflectivelyKept
+            package network.zamolxis.app.rns.host.thing
+            import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
             @ReflectivelyKept
             class KotlinThingBridge {
                 fun doThing() = Unit
@@ -86,7 +86,7 @@ class ReflectivelyKeptRequiredRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/repo/rns-host/src/main/kotlin/network/columba/app/rns/host/thing/KotlinThingBridge.kt",
+                "/repo/rns-host/src/main/kotlin/network/zamolxis/app/rns/host/thing/KotlinThingBridge.kt",
             )
         assertEquals(0, findings.size, "Annotated Kotlin*Bridge must not be flagged")
     }
@@ -97,7 +97,7 @@ class ReflectivelyKeptRequiredRuleTest {
         // Python-invoked, must not trip the rule.
         val source =
             """
-            package network.columba.app.rns.host.rnode
+            package network.zamolxis.app.rns.host.rnode
             internal class AndroidRNodeHostBridge {
                 interface ProgressCallback { fun onProgress(p: Int) }
                 inner class GattCallback
@@ -106,7 +106,7 @@ class ReflectivelyKeptRequiredRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/repo/rns-host/src/kotlinBackend/kotlin/network/columba/app/rns/host/rnode/AndroidRNodeHostBridge.kt",
+                "/repo/rns-host/src/kotlinBackend/kotlin/network/zamolxis/app/rns/host/rnode/AndroidRNodeHostBridge.kt",
             )
         assertEquals(0, findings.size, "Non-Chaquopy callbacks/bridges must not be flagged")
     }
@@ -115,7 +115,7 @@ class ReflectivelyKeptRequiredRuleTest {
     fun `does not flag a fun interface outside the python backend package`() {
         val source =
             """
-            package network.columba.app.viewmodel
+            package network.zamolxis.app.viewmodel
             fun interface ClickHandler {
                 fun onClick()
             }
@@ -123,7 +123,7 @@ class ReflectivelyKeptRequiredRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/repo/app/src/main/java/network/columba/app/viewmodel/ClickHandler.kt",
+                "/repo/app/src/main/java/network/zamolxis/app/viewmodel/ClickHandler.kt",
             )
         assertEquals(0, findings.size, "fun interfaces outside :rns-backend-py are unrelated")
     }
@@ -132,7 +132,7 @@ class ReflectivelyKeptRequiredRuleTest {
     fun `flagged message names the annotation`() {
         val source =
             """
-            package network.columba.app.rns.backend.py
+            package network.zamolxis.app.rns.backend.py
             import com.chaquo.python.PyObject
             fun interface PyThreeArgCallback {
                 fun onEvent(a: PyObject, b: PyObject, c: PyObject)
@@ -141,7 +141,7 @@ class ReflectivelyKeptRequiredRuleTest {
         val findings =
             findingsFor(
                 source,
-                "/repo/rns-backend-py/src/main/kotlin/network/columba/app/rns/backend/py/PyThreeArgCallback.kt",
+                "/repo/rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/PyThreeArgCallback.kt",
             )
         assertEquals(1, findings.size)
         assertTrue(

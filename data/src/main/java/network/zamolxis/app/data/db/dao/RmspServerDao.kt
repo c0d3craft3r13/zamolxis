@@ -1,10 +1,10 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import network.columba.app.data.db.entity.RmspServerEntity
+import network.zamolxis.app.data.db.entity.RmspServerEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

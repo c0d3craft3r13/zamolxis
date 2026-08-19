@@ -1,8 +1,8 @@
-package network.columba.app
+package network.zamolxis.app
 
 import android.app.Application
 import android.content.Intent
-import network.columba.app.notifications.NotificationHelper
+import network.zamolxis.app.notifications.NotificationHelper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals

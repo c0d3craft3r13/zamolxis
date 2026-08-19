@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.content.Context
 import io.mockk.clearAllMocks
@@ -6,7 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
-import network.columba.app.rns.host.ble.bridge.KotlinBLEBridge
+import network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

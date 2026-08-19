@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -47,12 +48,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.data.repository.Announce
-import network.columba.app.ui.theme.MeshConnected
-import network.columba.app.ui.theme.MeshLimited
-import network.columba.app.ui.theme.MeshOffline
-import network.columba.app.util.formatTimeSince
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.repository.Announce
+import network.zamolxis.app.ui.theme.MeshConnected
+import network.zamolxis.app.ui.theme.MeshLimited
+import network.zamolxis.app.ui.theme.MeshOffline
+import network.zamolxis.app.util.formatTimeSince
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 /**
  * Shared peer card component used by both AnnounceStreamScreen and SavedPeersScreen.
@@ -136,11 +140,12 @@ fun PeerCard(
                     )
 
                     // Time since last seen - update adaptively based on how recent it is
-                    var timeSinceText by remember { mutableStateOf(formatTimeSince(announce.lastSeenTimestamp)) }
+                    val context = LocalContext.current
+                    var timeSinceText by remember { mutableStateOf(formatTimeSince(context, announce.lastSeenTimestamp)) }
 
                     LaunchedEffect(announce.lastSeenTimestamp) {
                         // Update immediately when timestamp changes
-                        timeSinceText = formatTimeSince(announce.lastSeenTimestamp)
+                        timeSinceText = formatTimeSince(context, announce.lastSeenTimestamp)
 
                         // Adaptive update frequency: more frequent for recent times, less for old ones
                         while (true) {
@@ -161,7 +166,7 @@ fun PeerCard(
                                 }
 
                             delay(delayMs)
-                            timeSinceText = formatTimeSince(announce.lastSeenTimestamp)
+                            timeSinceText = formatTimeSince(context, announce.lastSeenTimestamp)
                         }
                     }
                     Row(
@@ -300,7 +305,7 @@ fun SignalStrengthIndicator(
 
         // Hop count
         Text(
-            text = "$hops ${if (hops == 1) "hop" else "hops"}",
+            text = pluralStringResource(R.plurals.msgdetail_hops, hops, hops),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 10.sp,
@@ -411,7 +416,7 @@ fun OtherBadge() {
         color = color.copy(alpha = 0.15f),
     ) {
         Text(
-            text = "Other",
+            text = stringResource(R.string.peercard_other),
             style = MaterialTheme.typography.labelSmall,
             color = color,
             fontWeight = FontWeight.SemiBold,

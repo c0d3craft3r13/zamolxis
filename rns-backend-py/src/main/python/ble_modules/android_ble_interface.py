@@ -19,7 +19,7 @@ in the `~/.reticulum/interfaces/` directory and configured in `config`.
 This file is a thin wrapper that configures and initializes the generic
 `BLEInterface` with the `AndroidBLEDriver`.
 
-Author: Columba Project
+Author: Zamolxis Project
 License: MIT
 """
 

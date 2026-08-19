@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import io.gitlab.arturbosch.detekt.api.CodeSmell
 import io.gitlab.arturbosch.detekt.api.Config
@@ -80,7 +80,7 @@ class NoRnsFacadeInPythonBackend(
          * renaming it is a deliberate act that would also touch this rule.
          */
         private const val ANCHOR_FILE =
-            "/rns-backend-py/src/main/kotlin/network/columba/app/rns/backend/py/ChaquopyRnsBackend.kt"
+            "/rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/ChaquopyRnsBackend.kt"
 
         private val FACADE_PATTERN = Regex("^rns_.*\\.py$")
 

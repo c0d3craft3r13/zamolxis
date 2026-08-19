@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -21,15 +21,15 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.BlockedPeerRepository
-import network.columba.app.data.repository.CallHistoryRepository
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.api.model.VoiceCallState
-import network.columba.app.ui.model.CodecProfile
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.BlockedPeerRepository
+import network.zamolxis.app.data.repository.CallHistoryRepository
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.ui.model.CodecProfile
 
 enum class BlockLookupState { LOADING, BLOCKED, UNBLOCKED, ERROR }
 

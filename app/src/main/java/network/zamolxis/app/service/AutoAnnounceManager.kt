@@ -1,10 +1,10 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.util.Log
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.di.ApplicationScope
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.RnsCore
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.di.ApplicationScope
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.RnsCore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -32,8 +32,26 @@ class AutoAnnounceManager
         private val settingsRepository: SettingsRepository,
         private val identityRepository: IdentityRepository,
         private val rnsCore: RnsCore,
+        private val pqKeyRepository: network.zamolxis.app.data.repository.PqKeyRepository,
         @ApplicationScope private val scope: CoroutineScope,
     ) {
+        /**
+         * The active identity's post-quantum fingerprint, or null.
+         *
+         * Advertised so peers learn sealing is possible before anyone writes. A
+         * failure here must not stop the announce — being unreachable is a worse
+         * outcome than being reachable without the hint.
+         */
+        private suspend fun currentPqFingerprint(): ByteArray? =
+            runCatching {
+                identityRepository.getActiveIdentitySync()?.identityHash?.let { identityHash ->
+                    pqKeyRepository.ourFingerprint(identityHash)
+                }
+            }.getOrElse {
+                Log.w(TAG, "Could not read post-quantum fingerprint; announcing without it", it)
+                null
+            }
+
         companion object {
             private const val TAG = "AutoAnnounceManager"
             private const val RANDOMIZATION_RANGE_MINUTES = 60 // ±1 hour in minutes
@@ -128,7 +146,8 @@ class AutoAnnounceManager
                     val effectiveDisplayName = displayName ?: "Anonymous Peer"
                     Log.d(TAG, "Triggering auto-announce...")
 
-                    val result = rnsCore.triggerAutoAnnounce(effectiveDisplayName)
+                    val result =
+                        rnsCore.triggerAutoAnnounce(effectiveDisplayName, currentPqFingerprint())
 
                     if (result.isSuccess) {
                         // Update last announce timestamp

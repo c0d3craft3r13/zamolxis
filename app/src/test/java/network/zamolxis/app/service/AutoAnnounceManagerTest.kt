@@ -1,11 +1,12 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.app.Application
 import app.cash.turbine.test
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.RnsCore
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.RnsCore
 import io.mockk.clearAllMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,7 @@ class AutoAnnounceManagerTest {
     private lateinit var mockSettingsRepository: SettingsRepository
     private lateinit var mockIdentityRepository: IdentityRepository
     private lateinit var mockRnsCore: RnsCore
+    private lateinit var mockPqKeyRepository: network.zamolxis.app.data.repository.PqKeyRepository
     private lateinit var manager: AutoAnnounceManager
 
     @Before
@@ -59,12 +61,15 @@ class AutoAnnounceManagerTest {
         every { mockSettingsRepository.autoAnnounceIntervalHoursFlow } returns flowOf(3)
         every { mockSettingsRepository.networkChangeAnnounceTimeFlow } returns flowOf(null)
         every { mockIdentityRepository.activeIdentity } returns flowOf(null)
+        mockPqKeyRepository = mockk()
+        coEvery { mockPqKeyRepository.ourFingerprint(any()) } returns null
 
         manager =
             AutoAnnounceManager(
                 mockSettingsRepository,
                 mockIdentityRepository,
                 mockRnsCore,
+                mockPqKeyRepository,
                 testScope,
             )
     }
@@ -284,6 +289,7 @@ class AutoAnnounceManagerTest {
                     mockSettingsRepository,
                     mockIdentityRepository,
                     mockRnsCore,
+                    mockPqKeyRepository,
                     testScope,
                 )
 

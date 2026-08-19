@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding.pages
+package network.zamolxis.app.ui.screens.onboarding.pages
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -9,8 +9,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.ui.screens.onboarding.OnboardingInterfaceType
+import androidx.test.core.app.ApplicationProvider
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.screens.onboarding.OnboardingInterfaceType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -28,6 +29,8 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class ConnectivityPageTest {
+    private val context = ApplicationProvider.getApplicationContext<Application>()
+
     private val registerActivityRule = RegisterComponentActivityRule()
     private val composeRule = createComposeRule()
 
@@ -91,7 +94,7 @@ class ConnectivityPageTest {
         }
 
         // Then
-        composeTestRule.onNodeWithText(OnboardingInterfaceType.AUTO.displayName).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(OnboardingInterfaceType.AUTO.displayName)).assertIsDisplayed()
     }
 
     @Test
@@ -109,7 +112,7 @@ class ConnectivityPageTest {
         }
 
         // Then
-        composeTestRule.onNodeWithText(OnboardingInterfaceType.BLE.displayName).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(OnboardingInterfaceType.BLE.displayName)).assertIsDisplayed()
     }
 
     @Test
@@ -127,7 +130,7 @@ class ConnectivityPageTest {
         }
 
         // Then - scroll to make visible if needed
-        composeTestRule.onNodeWithText(OnboardingInterfaceType.TCP.displayName)
+        composeTestRule.onNodeWithText(context.getString(OnboardingInterfaceType.TCP.displayName))
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -147,7 +150,7 @@ class ConnectivityPageTest {
         }
 
         // Then - scroll to make visible if needed
-        composeTestRule.onNodeWithText(OnboardingInterfaceType.RNODE.displayName)
+        composeTestRule.onNodeWithText(context.getString(OnboardingInterfaceType.RNODE.displayName))
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -190,7 +193,7 @@ class ConnectivityPageTest {
         }
 
         // Then
-        composeTestRule.onNodeWithText(OnboardingInterfaceType.AUTO.description).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(OnboardingInterfaceType.AUTO.description)).assertIsDisplayed()
     }
 
     @Test
@@ -208,7 +211,7 @@ class ConnectivityPageTest {
         }
 
         // Then
-        composeTestRule.onNodeWithText(OnboardingInterfaceType.BLE.description).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(OnboardingInterfaceType.BLE.description)).assertIsDisplayed()
     }
 
     @Test
@@ -226,7 +229,7 @@ class ConnectivityPageTest {
         }
 
         // Then - scroll to make visible
-        composeTestRule.onNodeWithText(OnboardingInterfaceType.TCP.description)
+        composeTestRule.onNodeWithText(context.getString(OnboardingInterfaceType.TCP.description))
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -246,7 +249,7 @@ class ConnectivityPageTest {
         }
 
         // Then - scroll to make visible
-        composeTestRule.onNodeWithText(OnboardingInterfaceType.RNODE.description)
+        composeTestRule.onNodeWithText(context.getString(OnboardingInterfaceType.RNODE.description))
             .performScrollTo()
             .assertIsDisplayed()
     }

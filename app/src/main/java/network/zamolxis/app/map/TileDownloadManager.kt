@@ -1,4 +1,4 @@
-package network.columba.app.map
+package network.zamolxis.app.map
 
 import android.content.Context
 import android.util.Log
@@ -777,7 +777,7 @@ class TileDownloadManager(
         const val MAX_RETRIES = 3
         const val RETRY_DELAY_MS = 1000L
         const val AVERAGE_TILE_SIZE_BYTES = 15_000L
-        const val USER_AGENT = "Columba/1.0 (Android; Offline Maps)"
+        const val USER_AGENT = "Zamolxis/1.0 (Android; Offline Maps)"
         const val CONNECT_TIMEOUT_MS = 30_000
         const val READ_TIMEOUT_MS = 30_000
 

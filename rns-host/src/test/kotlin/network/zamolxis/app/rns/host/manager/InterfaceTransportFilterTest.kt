@@ -1,11 +1,11 @@
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.net.ConnectivityManager
 import android.net.Network
 import io.mockk.every
 import io.mockk.mockk
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.di
+package network.zamolxis.app.rns.host.di
 
 import android.content.Context
 import android.util.Log
@@ -12,20 +12,20 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.host.ipc.BoundRnsBackend
-import network.columba.app.rns.host.process.ProcessDetector
-import network.columba.app.rns.host.process.ProcessType
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.host.ipc.BoundRnsBackend
+import network.zamolxis.app.rns.host.process.ProcessDetector
+import network.zamolxis.app.rns.host.process.ProcessType
 
 /**
  * The single canonical [RnsBackend] / sub-interface binding for the whole
- * Columba app.
+ * Zamolxis app.
  *
  * Both flavor `HostBackendModule`s contribute a [LocalBackend]-qualified
  * concrete impl (`ChaquopyRnsBackend` / `NativeRnsBackend`). This module sits
@@ -35,11 +35,11 @@ import network.columba.app.rns.host.process.ProcessType
  *   That's the process that hosts the live RNS stack; constructing the local
  *   backend resolves the `Lazy`, which is intentional — it pre-warms the
  *   backend ahead of the first UI `initialize(config)` call.
- * - In the UI process (`network.columba.app[.debug]`) → return
+ * - In the UI process (`network.zamolxis.app[.debug]`) → return
  *   [BoundRnsBackend], an AIDL proxy that delegates every call to the
  *   `:reticulum`-process backend via the existing
- *   [network.columba.app.rns.host.ReticulumServiceConnection] +
- *   [network.columba.app.rns.ipc.RnsBackendClient] surface. The `Lazy` is
+ *   [network.zamolxis.app.rns.host.ReticulumServiceConnection] +
+ *   [network.zamolxis.app.rns.ipc.RnsBackendClient] surface. The `Lazy` is
  *   never resolved on this side, so `ChaquopyRnsBackend.<init>` never runs in
  *   the UI pid and Python is never loaded there.
  * - In test environments → same as UI (the AIDL surface is exercised against

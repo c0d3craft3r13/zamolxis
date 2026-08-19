@@ -1,23 +1,23 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 import android.content.Context
 import androidx.room.withTransaction
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.dao.AnnounceDao
-import network.columba.app.data.db.dao.BlockedPeerDao
-import network.columba.app.data.db.dao.ContactDao
-import network.columba.app.data.db.dao.ConversationDao
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.dao.MessageDao
-import network.columba.app.data.db.dao.PeerActivityDao
-import network.columba.app.data.db.dao.PeerIconDao
-import network.columba.app.data.db.dao.PeerIdentityDao
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.util.HashUtils
-import network.columba.app.rns.host.di.ServiceDatabaseProvider
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.dao.AnnounceDao
+import network.zamolxis.app.data.db.dao.BlockedPeerDao
+import network.zamolxis.app.data.db.dao.ContactDao
+import network.zamolxis.app.data.db.dao.ConversationDao
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.dao.MessageDao
+import network.zamolxis.app.data.db.dao.PeerActivityDao
+import network.zamolxis.app.data.db.dao.PeerIconDao
+import network.zamolxis.app.data.db.dao.PeerIdentityDao
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.util.HashUtils
+import network.zamolxis.app.rns.host.di.ServiceDatabaseProvider
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -50,7 +50,7 @@ import org.junit.Test
 class ServicePersistenceManagerTest {
     private lateinit var context: Context
     private lateinit var testScope: TestScope
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var announceDao: AnnounceDao
     private lateinit var blockedPeerDao: BlockedPeerDao
     private lateinit var contactDao: ContactDao

@@ -1,7 +1,7 @@
 // Context, BluetoothManager, BluetoothAdapter, BluetoothGatt are Android framework classes
 @file:Suppress("NoRelaxedMocks")
 
-package network.columba.app.rns.host.ble
+package network.zamolxis.app.rns.host.ble
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGatt
@@ -11,11 +11,11 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
-import network.columba.app.rns.host.ble.bridge.KotlinBLEBridge
-import network.columba.app.rns.host.ble.client.BleGattClient
-import network.columba.app.rns.host.ble.model.BleConstants
-import network.columba.app.rns.host.ble.server.BleGattServer
-import network.columba.app.rns.host.ble.util.BleOperationQueue
+import network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge
+import network.zamolxis.app.rns.host.ble.client.BleGattClient
+import network.zamolxis.app.rns.host.ble.model.BleConstants
+import network.zamolxis.app.rns.host.ble.server.BleGattServer
+import network.zamolxis.app.rns.host.ble.util.BleOperationQueue
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

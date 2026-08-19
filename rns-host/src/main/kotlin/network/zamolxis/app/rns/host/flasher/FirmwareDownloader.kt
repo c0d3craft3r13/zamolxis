@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
@@ -17,13 +17,13 @@ import java.net.URL
  */
 class FirmwareDownloader {
     companion object {
-        private const val TAG = "Columba:FirmwareDownload"
+        private const val TAG = "Zamolxis:FirmwareDownload"
         private const val GITHUB_API_BASE = "https://api.github.com/repos"
         private const val CONNECT_TIMEOUT_MS = 15000
         private const val READ_TIMEOUT_MS = 60000
 
         // User agent for GitHub API
-        private const val USER_AGENT = "Columba-RNode-Flasher/1.0"
+        private const val USER_AGENT = "Zamolxis-RNode-Flasher/1.0"
     }
 
     private fun githubReleasesUrl(source: FirmwareSource): String {

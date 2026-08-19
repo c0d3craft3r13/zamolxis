@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.content.Context
 import android.util.Log

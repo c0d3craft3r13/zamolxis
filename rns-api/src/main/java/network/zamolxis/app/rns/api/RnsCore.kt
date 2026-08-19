@@ -1,21 +1,21 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.ConversationLinkResult
-import network.columba.app.rns.api.model.Destination
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.Link
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.LinkSpeedProbeResult
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.PacketReceipt
-import network.columba.app.rns.api.model.PacketType
-import network.columba.app.rns.api.model.ReceivedPacket
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.ConversationLinkResult
+import network.zamolxis.app.rns.api.model.Destination
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.Link
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.LinkSpeedProbeResult
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.PacketReceipt
+import network.zamolxis.app.rns.api.model.PacketType
+import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 
 /**
  * RNS protocol primitives: lifecycle, identity, destination, packet, link,
@@ -105,7 +105,18 @@ interface RnsCore {
      * free to short-circuit to the cached LXMF identity rather than
      * re-deriving on every call.
      */
-    suspend fun triggerAutoAnnounce(displayName: String): Result<Unit>
+    /**
+     * Announce this identity's LXMF destinations.
+     *
+     * @param pqFingerprint the 16-byte hybrid post-quantum key fingerprint, or
+     *   null when there is none. Advertising it lets peers know sealing is
+     *   possible before the first message; the key itself is far too large to put
+     *   in a message the whole mesh rebroadcasts.
+     */
+    suspend fun triggerAutoAnnounce(
+        displayName: String,
+        pqFingerprint: ByteArray? = null,
+    ): Result<Unit>
 
     // ==================== Packet operations ====================
 

@@ -69,7 +69,7 @@ jobs:
       - name: Build Release AAB (Play Store)
         # Reuses compiled classes/resources from the assemble step above, so
         # this is fast (~1m) despite the multi-flavor project. Only the
-        # pythonBackend flavor is built: it's the appId (network.columba.app)
+        # pythonBackend flavor is built: it's the appId (network.zamolxis.app)
         # registered with the Play Console listing — kotlinBackend (`.kt`
         # suffix) isn't published there.
         timeout-minutes: 15
@@ -110,7 +110,7 @@ jobs:
           # Two flavor dimensions (telemetry × rnsImpl) mean Gradle writes to
           # app/build/outputs/apk/<telemetry><Backend>/release/, e.g.
           # sentryPythonBackend/release/. Output filenames:
-          #   columba-{version}-{backend}-{abi}[-no-sentry].apk
+          #   zamolxis-{version}-{backend}-{abi}[-no-sentry].apk
           # Backend is python first, then kotlin.
           APK_DIR="app/build/outputs/apk"
 
@@ -129,19 +129,19 @@ jobs:
                 filename=$(basename "$apk")
 
                 if echo "$filename" | grep -q "armeabi-v7a"; then
-                  cp "$apk" "columba-${VERSION}-${name_backend}-armeabi-v7a${sentry_suffix}.apk"
+                  cp "$apk" "zamolxis-${VERSION}-${name_backend}-armeabi-v7a${sentry_suffix}.apk"
                 elif echo "$filename" | grep -q "arm64-v8a"; then
-                  cp "$apk" "columba-${VERSION}-${name_backend}-arm64-v8a${sentry_suffix}.apk"
+                  cp "$apk" "zamolxis-${VERSION}-${name_backend}-arm64-v8a${sentry_suffix}.apk"
                 elif echo "$filename" | grep -q "x86_64"; then
-                  cp "$apk" "columba-${VERSION}-${name_backend}-x86_64${sentry_suffix}.apk"
+                  cp "$apk" "zamolxis-${VERSION}-${name_backend}-x86_64${sentry_suffix}.apk"
                 elif echo "$filename" | grep -q "universal"; then
-                  cp "$apk" "columba-${VERSION}-${name_backend}-universal${sentry_suffix}.apk"
+                  cp "$apk" "zamolxis-${VERSION}-${name_backend}-universal${sentry_suffix}.apk"
                 fi
               done
             done
           done
 
-          ls -la columba-*.apk
+          ls -la zamolxis-*.apk
           echo "✓ Renamed APKs"
 
       - name: Rename AAB with version
@@ -149,15 +149,15 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           cp app/build/outputs/bundle/sentryPythonBackendRelease/app-sentry-pythonBackend-release.aab \
-            "columba-${VERSION}-official-rns-py.aab"
-          sha256sum "columba-${VERSION}-official-rns-py.aab" > "columba-${VERSION}-official-rns-py.aab.sha256"
+            "zamolxis-${VERSION}-official-rns-py.aab"
+          sha256sum "zamolxis-${VERSION}-official-rns-py.aab" > "zamolxis-${VERSION}-official-rns-py.aab.sha256"
           echo "✓ Renamed AAB"
 
       - name: Generate SHA256 checksums
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          for apk in columba-*.apk; do
+          for apk in zamolxis-*.apk; do
             sha256sum "$apk" > "${apk}.sha256"
           done
           echo "✓ Generated SHA256 checksums"
@@ -168,7 +168,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           CHECKSUMS=""
-          for checksum_file in columba-*.apk.sha256; do
+          for checksum_file in zamolxis-*.apk.sha256; do
             CHECKSUMS="${CHECKSUMS}$(cat "$checksum_file")\n"
           done
           echo "checksums<<EOF" >> $GITHUB_OUTPUT
@@ -310,15 +310,15 @@ jobs:
           # along as a release asset: those don't count against Actions
           # storage quota the way workflow artifacts do.
           files: |
-            columba-*.apk
-            columba-*.apk.sha256
-            columba-*.aab
-            columba-*.aab.sha256
+            zamolxis-*.apk
+            zamolxis-*.apk.sha256
+            zamolxis-*.aab
+            zamolxis-*.aab.sha256
           draft: true
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
           generate_release_notes: true
           body: |
-            ## Columba ${{ steps.version.outputs.version }}
+            ## Zamolxis ${{ steps.version.outputs.version }}
 
             ### Installation
             Pick a **backend**, then download the APK matching your device's CPU architecture.
@@ -332,22 +332,22 @@ jobs:
             #### Python backend (`official-rns-py`)
             | APK | Architecture | Devices |
             |-----|-------------|---------|
-            | [`columba-${{ steps.version.outputs.version }}-official-rns-py-armeabi-v7a.apk`](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-official-rns-py-armeabi-v7a.apk) | armeabi-v7a | Older 32-bit ARM phones & tablets |
-            | [`columba-${{ steps.version.outputs.version }}-official-rns-py-arm64-v8a.apk`](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-official-rns-py-arm64-v8a.apk) | arm64-v8a | Most modern Android phones & tablets |
-            | [`columba-${{ steps.version.outputs.version }}-official-rns-py-x86_64.apk`](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-official-rns-py-x86_64.apk) | x86_64 | Chromebooks, emulators, some tablets |
-            | [`columba-${{ steps.version.outputs.version }}-official-rns-py-universal.apk`](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-official-rns-py-universal.apk) | All | Universal fallback (larger download) |
+            | [`zamolxis-${{ steps.version.outputs.version }}-official-rns-py-armeabi-v7a.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-official-rns-py-armeabi-v7a.apk) | armeabi-v7a | Older 32-bit ARM phones & tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-official-rns-py-arm64-v8a.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-official-rns-py-arm64-v8a.apk) | arm64-v8a | Most modern Android phones & tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-official-rns-py-x86_64.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-official-rns-py-x86_64.apk) | x86_64 | Chromebooks, emulators, some tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-official-rns-py-universal.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-official-rns-py-universal.apk) | All | Universal fallback (larger download) |
 
             #### Kotlin backend (`EXPERIMENTAL-reticulum-kt`)
             | APK | Architecture | Devices |
             |-----|-------------|---------|
-            | [`columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-armeabi-v7a.apk`](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-armeabi-v7a.apk) | armeabi-v7a | Older 32-bit ARM phones & tablets |
-            | [`columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a.apk`](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a.apk) | arm64-v8a | Most modern Android phones & tablets |
-            | [`columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-x86_64.apk`](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-x86_64.apk) | x86_64 | Chromebooks, emulators, some tablets |
-            | [`columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-universal.apk`](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-universal.apk) | All | Universal fallback (larger download) |
+            | [`zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-armeabi-v7a.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-armeabi-v7a.apk) | armeabi-v7a | Older 32-bit ARM phones & tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a.apk) | arm64-v8a | Most modern Android phones & tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-x86_64.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-x86_64.apk) | x86_64 | Chromebooks, emulators, some tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-universal.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-universal.apk) | All | Universal fallback (larger download) |
 
             **Telemetry variants:**
-            Each APK above also has a `-no-sentry` variant without crash reporting for maximum privacy — append `-no-sentry` to any download link above (e.g. the most common builds: [Python arm64-v8a no-sentry](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-official-rns-py-arm64-v8a-no-sentry.apk) · [Kotlin arm64-v8a no-sentry](${{ steps.version.outputs.dl }}/columba-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a-no-sentry.apk)). Sentry collects stack traces when Columba encounters errors
-            and provides helpful information to the developer to improve Columba, but is hosted at sentry.io, and is thus not the maximum privacy option.
+            Each APK above also has a `-no-sentry` variant without crash reporting for maximum privacy — append `-no-sentry` to any download link above (e.g. the most common builds: [Python arm64-v8a no-sentry](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-official-rns-py-arm64-v8a-no-sentry.apk) · [Kotlin arm64-v8a no-sentry](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a-no-sentry.apk)). Sentry collects stack traces when Zamolxis encounters errors
+            and provides helpful information to the developer to improve Zamolxis, but is hosted at sentry.io, and is thus not the maximum privacy option.
 
             > **Not sure which to pick?** Most Android phones use **arm64-v8a**. If unsure, use the **universal** APK.
 
@@ -371,8 +371,8 @@ jobs:
       - name: Upload APKs as workflow artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: columba-${{ steps.version.outputs.version }}-apks
-          path: columba-*.apk
+          name: zamolxis-${{ steps.version.outputs.version }}-apks
+          path: zamolxis-*.apk
           # Short retention: these duplicate the Release assets (which don't count
           # toward Actions storage). 1 day keeps them handy for a quick download
           # (e.g. sideloading to a phone) without piling up against the quota.

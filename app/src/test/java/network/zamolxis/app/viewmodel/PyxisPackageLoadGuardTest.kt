@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

@@ -1,6 +1,9 @@
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
-import network.columba.app.rns.api.model.LinkSpeedProbeResult
+import androidx.annotation.StringRes
+import network.zamolxis.app.R
+
+import network.zamolxis.app.rns.api.model.LinkSpeedProbeResult
 
 /**
  * Audio codec profiles for voice calls.
@@ -12,50 +15,50 @@ import network.columba.app.rns.api.model.LinkSpeedProbeResult
  */
 enum class CodecProfile(
     val code: Int,
-    val displayName: String,
-    val description: String,
+    @param:StringRes val displayNameRes: Int,
+    @param:StringRes val descriptionRes: Int,
     val isExperimental: Boolean = false,
 ) {
     BANDWIDTH_ULTRA_LOW(
         code = 0x10,
-        displayName = "Ultra Low Bandwidth",
-        description = "Codec2 700C - Best for very slow connections",
+        displayNameRes = R.string.codec_bw_ultra_low,
+        descriptionRes = R.string.codec_bw_ultra_low_desc,
     ),
     BANDWIDTH_VERY_LOW(
         code = 0x20,
-        displayName = "Very Low Bandwidth",
-        description = "Codec2 1600 - Good for slow connections",
+        displayNameRes = R.string.codec_bw_very_low,
+        descriptionRes = R.string.codec_bw_very_low_desc,
     ),
     BANDWIDTH_LOW(
         code = 0x30,
-        displayName = "Low Bandwidth",
-        description = "Codec2 3200 - Balanced for limited bandwidth",
+        displayNameRes = R.string.codec_bw_low,
+        descriptionRes = R.string.codec_bw_low_desc,
     ),
     QUALITY_MEDIUM(
         code = 0x40,
-        displayName = "Medium Quality",
-        description = "Opus - Good balance of quality and bandwidth",
+        displayNameRes = R.string.codec_quality_medium,
+        descriptionRes = R.string.codec_quality_medium_desc,
     ),
     QUALITY_HIGH(
         code = 0x50,
-        displayName = "High Quality",
-        description = "Opus - Higher fidelity audio",
+        displayNameRes = R.string.codec_quality_high,
+        descriptionRes = R.string.codec_quality_high_desc,
     ),
     QUALITY_MAX(
         code = 0x60,
-        displayName = "Maximum Quality",
-        description = "Opus - Best audio, requires more bandwidth",
+        displayNameRes = R.string.codec_quality_max,
+        descriptionRes = R.string.codec_quality_max_desc,
     ),
     LATENCY_LOW(
         code = 0x80,
-        displayName = "Low Latency",
-        description = "Opus - Reduced delay, 20ms frames",
+        displayNameRes = R.string.codec_latency_low,
+        descriptionRes = R.string.codec_latency_low_desc,
         isExperimental = true,
     ),
     LATENCY_ULTRA_LOW(
         code = 0x70,
-        displayName = "Ultra Low Latency",
-        description = "Opus - Minimized delay, 10ms frames",
+        displayNameRes = R.string.codec_latency_ultra_low,
+        descriptionRes = R.string.codec_latency_ultra_low_desc,
         isExperimental = true,
     ),
     ;

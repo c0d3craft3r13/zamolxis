@@ -1,6 +1,6 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
-import network.columba.app.viewmodel.ContactMarker
+import network.zamolxis.app.viewmodel.ContactMarker
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

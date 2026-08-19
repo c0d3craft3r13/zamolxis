@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Columba Android App - Build and Deploy Script
+# Zamolxis Android App - Build and Deploy Script
 # Builds the app and deploys it to a connected Android device via ADB
 
 set -e  # Exit on error
@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # Configuration
 APP_MODULE="app"
 APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
-PACKAGE_NAME="network.columba.app"
+PACKAGE_NAME="network.zamolxis.app"
 MAIN_ACTIVITY="${PACKAGE_NAME}.MainActivity"
 
 # Functions
@@ -78,7 +78,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Main script
-print_header "Columba Build & Deploy"
+print_header "Zamolxis Build & Deploy"
 
 # Step 1: Clean build (optional)
 if [ "$CLEAN" = true ]; then

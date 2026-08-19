@@ -1,7 +1,7 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
 /**
- * LXMF protocol field IDs Columba reads or writes.
+ * LXMF protocol field IDs Zamolxis reads or writes.
  *
  * The numeric values are upstream LXMF spec (`LXMF/LXMF.py`). Centralised
  * here so both backends (kotlin-native + python-flavor) and the UI process
@@ -10,7 +10,7 @@ package network.columba.app.rns.api.util
  * `PythonRnsLxmf`, `PythonRnsTelemetry`) plus referenced via lxmf-kt's
  * `LXMFConstants` on the kotlin backend.
  *
- * Only fields Columba *actually uses* on the wire are listed; the full
+ * Only fields Zamolxis *actually uses* on the wire are listed; the full
  * LXMF surface (audio modes, propagation metadata IDs, states, ...) lives
  * in lxmf-kt's `LXMFConstants` for the native backend and isn't relevant
  * to the Python flavor.
@@ -20,7 +20,7 @@ object LxmfFields {
      * LXMF app name for delivery destinations — matches
      * `LXMF.LXMRouter.APP_NAME` upstream and the kotlin port's
      * `LXMFConstants.APP_NAME`. Combined with [DELIVERY_ASPECT] this is the
-     * `<identity>.lxmf.delivery` destination Columba peers send to.
+     * `<identity>.lxmf.delivery` destination Zamolxis peers send to.
      */
     const val APP_NAME = "lxmf"
 
@@ -86,7 +86,7 @@ object LxmfFields {
      * One reaction per LXMessage on the wire; the receiver aggregates
      * per-target-message locally (the flat `reactionsJson` column) for UI
      * rendering. Outbound writes this shape only; inbound parsing falls back
-     * to the legacy [FIELD_REACTION_LEGACY] for un-upgraded Columba peers —
+     * to the legacy [FIELD_REACTION_LEGACY] for un-upgraded Zamolxis peers —
      * see `ReactionWireCodec`.
      */
     const val FIELD_REACTION = 0x40
@@ -108,7 +108,7 @@ object LxmfFields {
      * LXMF standardised the field. `0x10` also now sits inside upstream's
      * reserved `0x00`–`0x80` range, so squatting it risks a future
      * collision. Kept on the inbound path so reactions from un-upgraded
-     * Columba peers still resolve — see `ReactionWireCodec`.
+     * Zamolxis peers still resolve — see `ReactionWireCodec`.
      */
     const val FIELD_REACTION_LEGACY = 0x10
 
@@ -116,11 +116,11 @@ object LxmfFields {
      * Reply-target message hash — `fields[0x30] = ByteArray(32)` raw
      * bytes (NOT a hex string). MeshChatX format
      * (`meshchat.py:16697`). Saves ~32 bytes on the wire per reply vs.
-     * the hex-string-in-dict overload Columba previously used at 0x10.
+     * the hex-string-in-dict overload Zamolxis previously used at 0x10.
      *
      * Inbound parse may also fall back to a legacy
      * `fields[0x10] = {reply_to: "<hex>"}` shape for un-upgraded
-     * Columba peers — see `MessageMapper.parseReplyToFromFields`.
+     * Zamolxis peers — see `MessageMapper.parseReplyToFromFields`.
      */
     const val FIELD_REPLY_HASH = 0x30
 
@@ -137,12 +137,12 @@ object LxmfFields {
     /**
      * Upstream LXMF `FIELD_CUSTOM_META` (0xFD) — documented extension point
      * for app-specific metadata that other LXMF clients should ignore.
-     * Columba uses this to carry the `cease` / `expires` / `approxRadius`
+     * Zamolxis uses this to carry the `cease` / `expires` / `approxRadius`
      * extras that ride alongside a Sideband-compatible
      * [FIELD_TELEMETRY] location share. Sideband's `core.py` has zero
      * references to FIELD_CUSTOM_* — interop-safe.
      *
-     * Previously this was a Columba-invented `0x70`; flipped to upstream's
+     * Previously this was a Zamolxis-invented `0x70`; flipped to upstream's
      * canonical 0xFD because invented field IDs in the unassigned range
      * risk collision if upstream LXMF later assigns them. See also
      * [LocationTelemetry.COLUMBA_META_FIELD_ID].

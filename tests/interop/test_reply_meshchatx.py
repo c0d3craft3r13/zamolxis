@@ -1,7 +1,7 @@
-"""Columba ↔ MeshChatX reply round-trip — wire-format interop.
+"""Zamolxis ↔ MeshChatX reply round-trip — wire-format interop.
 
 Both apps now share the same wire format for replies (MeshChatX
-upstream; Columba adopted it in the v2 reply migration):
+upstream; Zamolxis adopted it in the v2 reply migration):
 
   - fields[0x30] = bytes.fromhex(reply_to_hash)  # 32-byte target hash
   - fields[0x31] = reply_quoted_content.encode("utf-8")  # inline quote
@@ -9,9 +9,9 @@ upstream; Columba adopted it in the v2 reply migration):
 Tests skip when `MESHCHATX_SRC` env var is unset (no MeshChatX runtime
 available). See `peer_meshchatx.py` for the subprocess driver.
 
-The MeshChatX→Columba direction exercises Columba's *receive* path,
+The MeshChatX→Zamolxis direction exercises Zamolxis's *receive* path,
 which is the more interesting interop boundary (this is what GitHub
-issue #926 is asking us to fix). The Columba→MeshChatX direction is
+issue #926 is asking us to fix). The Zamolxis→MeshChatX direction is
 gated on a `SEND_REPLY` TestReceiver action that isn't on the debug
 surface yet — those tests skip until it lands.
 """
@@ -23,7 +23,7 @@ import time
 import pytest
 
 
-def _columba_has_send_reply(columba_peer) -> bool:
+def _zamolxis_has_send_reply(zamolxis_peer) -> bool:
     """Probe-by-broadcast to see if TestReceiver knows SEND_REPLY.
 
     There's no introspection endpoint on TestReceiver, so we send a
@@ -33,8 +33,8 @@ def _columba_has_send_reply(columba_peer) -> bool:
     is unknown and the dispatch fell through.
     """
     try:
-        columba_peer.clear_logcat()
-        columba_peer.broadcast(
+        zamolxis_peer.clear_logcat()
+        zamolxis_peer.broadcast(
             "SEND_REPLY",
             to="00" * 16,
             text="",
@@ -42,10 +42,10 @@ def _columba_has_send_reply(columba_peer) -> bool:
             reply_quoted_content="",
         )
         time.sleep(1.5)
-        for line in columba_peer._read_logcat_lines():
+        for line in zamolxis_peer._read_logcat_lines():
             # We don't care about success — only that the receiver
             # acknowledged the action (i.e. it's in the `when` branch).
-            if "rx_broadcast action=network.columba.test.SEND_REPLY" in line:
+            if "rx_broadcast action=network.zamolxis.test.SEND_REPLY" in line:
                 # A second confirmation: the dispatch must produce
                 # *some* downstream log (msg_sent, error, etc.) within
                 # the wait window. If we only see the rx_broadcast and
@@ -53,7 +53,7 @@ def _columba_has_send_reply(columba_peer) -> bool:
                 # handler isn't (treat as not-yet-wired).
                 return any(
                     keyword in candidate
-                    for candidate in columba_peer._read_logcat_lines()
+                    for candidate in zamolxis_peer._read_logcat_lines()
                     for keyword in ("msg_sent", "reply_send_err")
                 )
         return False
@@ -62,23 +62,23 @@ def _columba_has_send_reply(columba_peer) -> bool:
 
 
 @pytest.mark.timeout(120)
-def test_reply_meshchatx_to_columba_wire_format(meshchatx_interop):
-    """MeshChatX sends a reply with canonical 0x30/0x31 → Columba's
+def test_reply_meshchatx_to_zamolxis_wire_format(meshchatx_interop):
+    """MeshChatX sends a reply with canonical 0x30/0x31 → Zamolxis's
     inbound TestController records the receipt.
 
-    This test verifies the *Columba receive path* for MeshChatX-format
-    replies. Columba's `parseReplyToFromFields` and
+    This test verifies the *Zamolxis receive path* for MeshChatX-format
+    replies. Zamolxis's `parseReplyToFromFields` and
     `parseReplyQuoteFromFields` decode the fields downstream of this;
     the interop check here is that the bytes arrive intact and aren't
     silently dropped by the lxmf-kt / chaquopy bridge.
     """
     pair = meshchatx_interop
 
-    # Step 1 — anchor message Columba → MeshChatX. We need MeshChatX
+    # Step 1 — anchor message Zamolxis → MeshChatX. We need MeshChatX
     # to have an in-conversation message-hash to reply *to*; sending
-    # the anchor from Columba ensures MeshChatX's DB has it.
+    # the anchor from Zamolxis ensures MeshChatX's DB has it.
     anchor_content = f"col_anchor_{int(time.time() * 1000)}"
-    anchor_send = pair.columba.send_text(
+    anchor_send = pair.zamolxis.send_text(
         pair.meshchatx_hex,
         anchor_content,
         method="OPPORTUNISTIC",
@@ -86,7 +86,7 @@ def test_reply_meshchatx_to_columba_wire_format(meshchatx_interop):
     anchor_hash = anchor_send.msg_id_hex
 
     pair.meshchatx.wait_for_message(
-        from_hex=pair.columba_hex,
+        from_hex=pair.zamolxis_hex,
         predicate=lambda m: m.content == anchor_content,
         timeout=60,
     )
@@ -95,22 +95,22 @@ def test_reply_meshchatx_to_columba_wire_format(meshchatx_interop):
     # `send_reply` puts canonical 0x30 + 0x31 on the wire per
     # `meshchat.py:16697-16699`.
     reply_content = f"mcx_reply_{int(time.time() * 1000)}"
-    pair.columba.clear_logcat()
+    pair.zamolxis.clear_logcat()
     pair.meshchatx.send_reply(
-        dest_hex=pair.columba_hex,
+        dest_hex=pair.zamolxis_hex,
         content=reply_content,
         reply_to_hash=anchor_hash,
         reply_quoted_content=anchor_content,
     )
 
-    # Step 3 — Columba records the inbound reply as a normal rx_msg.
+    # Step 3 — Zamolxis records the inbound reply as a normal rx_msg.
     # The content payload made it; the reply-specific fields are
     # carried in fieldsJson and read by `parseReplyToFromFields` /
     # `parseReplyQuoteFromFields` downstream in MessageMapper. We
     # don't (yet) surface those parsed fields on TestController, so
     # this assertion is content-only — extend once the rx_msg log
     # line carries `reply_to=<hex>`.
-    msg = pair.columba.wait_for_message(
+    msg = pair.zamolxis.wait_for_message(
         from_hex=pair.meshchatx_hex,
         content_predicate=lambda m: m.content == reply_content,
         timeout=60,
@@ -120,32 +120,32 @@ def test_reply_meshchatx_to_columba_wire_format(meshchatx_interop):
 
 
 @pytest.mark.timeout(120)
-def test_reply_columba_to_meshchatx_wire_format(meshchatx_interop):
-    """Columba sends a reply → MeshChatX decodes canonical 0x30/0x31.
+def test_reply_zamolxis_to_meshchatx_wire_format(meshchatx_interop):
+    """Zamolxis sends a reply → MeshChatX decodes canonical 0x30/0x31.
 
     Gated on the `SEND_REPLY` TestReceiver action; skips until that
-    action lands on the Columba debug surface.
+    action lands on the Zamolxis debug surface.
     """
     pair = meshchatx_interop
 
-    if not _columba_has_send_reply(pair.columba):
+    if not _zamolxis_has_send_reply(pair.zamolxis):
         pytest.skip(
-            "Columba TestReceiver does not expose SEND_REPLY yet. "
-            "Wire it via `network.columba.test.SEND_REPLY` to enable."
+            "Zamolxis TestReceiver does not expose SEND_REPLY yet. "
+            "Wire it via `network.zamolxis.test.SEND_REPLY` to enable."
         )
 
     anchor_content = f"mcx_anchor_{int(time.time() * 1000)}"
-    anchor_send = pair.meshchatx.send_text(pair.columba_hex, anchor_content)
+    anchor_send = pair.meshchatx.send_text(pair.zamolxis_hex, anchor_content)
     anchor_hash = anchor_send["lxmf_message"]["hash"]
 
-    pair.columba.wait_for_message(
+    pair.zamolxis.wait_for_message(
         from_hex=pair.meshchatx_hex,
         content_predicate=lambda m: m.content == anchor_content,
         timeout=60,
     )
 
     reply_content = f"col_reply_{int(time.time() * 1000)}"
-    pair.columba.broadcast(
+    pair.zamolxis.broadcast(
         "SEND_REPLY",
         to=pair.meshchatx_hex,
         text=reply_content,
@@ -154,7 +154,7 @@ def test_reply_columba_to_meshchatx_wire_format(meshchatx_interop):
     )
 
     msg = pair.meshchatx.wait_for_message(
-        from_hex=pair.columba_hex,
+        from_hex=pair.zamolxis_hex,
         predicate=lambda m: m.content == reply_content,
         timeout=60,
     )

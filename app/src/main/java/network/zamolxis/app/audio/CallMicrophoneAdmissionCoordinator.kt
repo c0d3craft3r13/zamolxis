@@ -1,8 +1,8 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
-import network.columba.app.di.ApplicationScope
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
+import network.zamolxis.app.di.ApplicationScope
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject

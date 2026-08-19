@@ -1,6 +1,6 @@
 @file:Suppress("InjectDispatcher")
 
-package network.columba.app.reticulum.protocol
+package network.zamolxis.app.reticulum.protocol
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

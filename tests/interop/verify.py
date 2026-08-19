@@ -80,7 +80,7 @@ def icon_appearance(fields: dict) -> tuple[str, bytes, bytes]:
 
 def telemetry_blob(fields: dict) -> bytes:
     """`FIELD_TELEMETRY` carries opaque bytes — but apps that wrote it
-    sometimes pass through a `str` (Columba's `sendLocationTelemetry`
+    sometimes pass through a `str` (Zamolxis's `sendLocationTelemetry`
     hands the JSON in as a string and LXMF's msgpacker keeps it that
     way). Return bytes uniformly so tests assert against a normalized
     shape."""

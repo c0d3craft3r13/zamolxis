@@ -1,11 +1,11 @@
-package network.columba.app.test
+package network.zamolxis.app.test
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import network.columba.app.BuildConfig
-import network.columba.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.BuildConfig
+import network.zamolxis.app.rns.api.model.DeliveryMethod
 
 /**
  * Debug-only BroadcastReceiver that exposes the [TestController] surface
@@ -20,13 +20,13 @@ import network.columba.app.rns.api.model.DeliveryMethod
  * escapes a `scope.launch` — the harness should treat this as a hard
  * failure for whichever command was in flight.
  *
- *   network.columba.test.GET_DEST                     -> dest=<hex> | dest_err reason=not_ready
- *   network.columba.test.HAS_PATH       --es to       -> has_path to=<hex> result=0|1
- *   network.columba.test.SEND_DIRECT    --es to,text  -> msg_sent id=<hex> method=DIRECT
- *   network.columba.test.SEND_OPP       --es to,text  -> msg_sent id=<hex> method=OPPORTUNISTIC
- *   network.columba.test.SEND_PROP      --es to,text  -> msg_sent id=<hex> method=PROPAGATED
- *   network.columba.test.GET_MSG_STATE  --es id       -> msg_state id=<hex> state=<…> | msg_state_err reason=missing_id
- *   network.columba.test.GET_RX                       -> N×rx_msg source=drain lines + rx_drain count=N
+ *   network.zamolxis.test.GET_DEST                     -> dest=<hex> | dest_err reason=not_ready
+ *   network.zamolxis.test.HAS_PATH       --es to       -> has_path to=<hex> result=0|1
+ *   network.zamolxis.test.SEND_DIRECT    --es to,text  -> msg_sent id=<hex> method=DIRECT
+ *   network.zamolxis.test.SEND_OPP       --es to,text  -> msg_sent id=<hex> method=OPPORTUNISTIC
+ *   network.zamolxis.test.SEND_PROP      --es to,text  -> msg_sent id=<hex> method=PROPAGATED
+ *   network.zamolxis.test.GET_MSG_STATE  --es id       -> msg_state id=<hex> state=<…> | msg_state_err reason=missing_id
+ *   network.zamolxis.test.GET_RX                       -> N×rx_msg source=drain lines + rx_drain count=N
  *
  * NOTE: `rx_msg` lines also stream live from the observer at message
  * arrival, tagged `source=stream`. A harness that only cares about
@@ -36,20 +36,20 @@ import network.columba.app.rns.api.model.DeliveryMethod
  * or `rx_msg source=drain`. All values are escape()'d — whitespace
  * becomes a Unicode Control-Picture sentinel so values are always
  * single tokens.
- *   network.columba.test.RX_CLEAR                     -> rx_cleared
- *   network.columba.test.ANNOUNCE                     -> announced dest=<hex> | announce_err …
- *   network.columba.test.LIST_INTERFACES              -> N×interface lines + interface_list_done count=N
- *   network.columba.test.DISABLE_ALL_INTERFACES       -> interfaces_disabled count=N applied=true
- *   network.columba.test.DISABLE_INTERFACE  --es name -> interface_disabled name=<…> id=<n> applied=true
- *   network.columba.test.ENABLE_INTERFACE   --es name -> interface_enabled  name=<…> id=<n> applied=true
- *   network.columba.test.ADD_TCP_CLIENT     --es name,host,port -> interface_added name=<…> id=<n> type=TCPClient … applied=true
- *   network.columba.test.REMOVE_INTERFACE   --es name -> interface_removed name=<…> id=<n> applied=true
- *   network.columba.test.SET_PROP_NODE      --es hex  -> prop_node_set hex=<…> | prop_node_err …
- *   network.columba.test.SYNC_PROP                    -> prop_sync_started state=<n> messages_received=<n>
- *   network.columba.test.SEND_IMAGE  --es to,text,path,fmt          -> img_sent id=<hex> | img_send_err …
- *   network.columba.test.SEND_FILE   --es to,text,path,name         -> file_sent id=<hex> | file_send_err …
- *   network.columba.test.SEND_AUDIO  --es to,text,path,codec        -> audio_sent id=<hex> | audio_send_err …
- *   network.columba.test.SEND_ICON   --es to,text,icon,fg,bg        -> icon_sent id=<hex> | icon_send_err …
+ *   network.zamolxis.test.RX_CLEAR                     -> rx_cleared
+ *   network.zamolxis.test.ANNOUNCE                     -> announced dest=<hex> | announce_err …
+ *   network.zamolxis.test.LIST_INTERFACES              -> N×interface lines + interface_list_done count=N
+ *   network.zamolxis.test.DISABLE_ALL_INTERFACES       -> interfaces_disabled count=N applied=true
+ *   network.zamolxis.test.DISABLE_INTERFACE  --es name -> interface_disabled name=<…> id=<n> applied=true
+ *   network.zamolxis.test.ENABLE_INTERFACE   --es name -> interface_enabled  name=<…> id=<n> applied=true
+ *   network.zamolxis.test.ADD_TCP_CLIENT     --es name,host,port -> interface_added name=<…> id=<n> type=TCPClient … applied=true
+ *   network.zamolxis.test.REMOVE_INTERFACE   --es name -> interface_removed name=<…> id=<n> applied=true
+ *   network.zamolxis.test.SET_PROP_NODE      --es hex  -> prop_node_set hex=<…> | prop_node_err …
+ *   network.zamolxis.test.SYNC_PROP                    -> prop_sync_started state=<n> messages_received=<n>
+ *   network.zamolxis.test.SEND_IMAGE  --es to,text,path,fmt          -> img_sent id=<hex> | img_send_err …
+ *   network.zamolxis.test.SEND_FILE   --es to,text,path,name         -> file_sent id=<hex> | file_send_err …
+ *   network.zamolxis.test.SEND_AUDIO  --es to,text,path,codec        -> audio_sent id=<hex> | audio_send_err …
+ *   network.zamolxis.test.SEND_ICON   --es to,text,icon,fg,bg        -> icon_sent id=<hex> | icon_send_err …
  *
  * Dispatch happens off the main thread via [TestController]'s coroutine
  * scope, so we don't need [BroadcastReceiver.goAsync]; the broadcast
@@ -99,24 +99,24 @@ class TestReceiver : BroadcastReceiver() {
         val app = context.applicationContext
         Log.i(TestController.LOGCAT_TAG, "rx_broadcast action=$action")
         when (action) {
-            "network.columba.test.GET_DEST" ->
+            "network.zamolxis.test.GET_DEST" ->
                 TestController.handleGetDest(app)
 
-            "network.columba.test.HAS_PATH" -> {
+            "network.zamolxis.test.HAS_PATH" -> {
                 val to = intent.getStringExtra("to") ?: ""
                 TestController.handleHasPath(app, to)
             }
 
-            "network.columba.test.SEND_DIRECT" ->
+            "network.zamolxis.test.SEND_DIRECT" ->
                 dispatchSend(app, intent, DeliveryMethod.DIRECT)
 
-            "network.columba.test.SEND_OPP" ->
+            "network.zamolxis.test.SEND_OPP" ->
                 dispatchSend(app, intent, DeliveryMethod.OPPORTUNISTIC)
 
-            "network.columba.test.SEND_PROP" ->
+            "network.zamolxis.test.SEND_PROP" ->
                 dispatchSend(app, intent, DeliveryMethod.PROPAGATED)
 
-            "network.columba.test.SEND_LOCATION" -> {
+            "network.zamolxis.test.SEND_LOCATION" -> {
                 val to = intent.getStringExtra("to") ?: ""
                 val json = intent.getStringExtra("json") ?: ""
                 if (to.isEmpty() || json.isEmpty()) {
@@ -129,7 +129,7 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.SEND_IMAGE" -> {
+            "network.zamolxis.test.SEND_IMAGE" -> {
                 val to = intent.getStringExtra("to") ?: ""
                 val text = intent.getStringExtra("text") ?: ""
                 val path = intent.getStringExtra("path") ?: ""
@@ -144,7 +144,7 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.SEND_FILE" -> {
+            "network.zamolxis.test.SEND_FILE" -> {
                 val to = intent.getStringExtra("to") ?: ""
                 val text = intent.getStringExtra("text") ?: ""
                 val path = intent.getStringExtra("path") ?: ""
@@ -159,7 +159,7 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.SEND_AUDIO" -> {
+            "network.zamolxis.test.SEND_AUDIO" -> {
                 val to = intent.getStringExtra("to") ?: ""
                 val text = intent.getStringExtra("text") ?: ""
                 val path = intent.getStringExtra("path") ?: ""
@@ -174,7 +174,7 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.SEND_ICON" -> {
+            "network.zamolxis.test.SEND_ICON" -> {
                 val to = intent.getStringExtra("to") ?: ""
                 val text = intent.getStringExtra("text") ?: ""
                 val icon = intent.getStringExtra("icon") ?: ""
@@ -190,7 +190,7 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.GET_MSG_STATE" -> {
+            "network.zamolxis.test.GET_MSG_STATE" -> {
                 val id = intent.getStringExtra("id") ?: ""
                 if (id.isEmpty()) {
                     Log.i(
@@ -202,22 +202,22 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.GET_RX" ->
+            "network.zamolxis.test.GET_RX" ->
                 TestController.handleGetRx(app)
 
-            "network.columba.test.RX_CLEAR" ->
+            "network.zamolxis.test.RX_CLEAR" ->
                 TestController.handleRxClear(app)
 
-            "network.columba.test.ANNOUNCE" ->
+            "network.zamolxis.test.ANNOUNCE" ->
                 TestController.handleAnnounce(app)
 
-            "network.columba.test.LIST_INTERFACES" ->
+            "network.zamolxis.test.LIST_INTERFACES" ->
                 TestController.handleListInterfaces(app)
 
-            "network.columba.test.DISABLE_ALL_INTERFACES" ->
+            "network.zamolxis.test.DISABLE_ALL_INTERFACES" ->
                 TestController.handleDisableAllInterfaces(app)
 
-            "network.columba.test.DISABLE_INTERFACE" -> {
+            "network.zamolxis.test.DISABLE_INTERFACE" -> {
                 val name = intent.getStringExtra("name") ?: ""
                 if (name.isEmpty()) {
                     Log.i(
@@ -229,7 +229,7 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.ENABLE_INTERFACE" -> {
+            "network.zamolxis.test.ENABLE_INTERFACE" -> {
                 val name = intent.getStringExtra("name") ?: ""
                 if (name.isEmpty()) {
                     Log.i(
@@ -241,7 +241,7 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.ADD_TCP_CLIENT" -> {
+            "network.zamolxis.test.ADD_TCP_CLIENT" -> {
                 val name = intent.getStringExtra("name") ?: ""
                 val host = intent.getStringExtra("host") ?: ""
                 val port = intent.getStringExtra("port")?.toIntOrNull() ?: -1
@@ -256,15 +256,15 @@ class TestReceiver : BroadcastReceiver() {
                 }
             }
 
-            "network.columba.test.SET_PROP_NODE" -> {
+            "network.zamolxis.test.SET_PROP_NODE" -> {
                 val hex = intent.getStringExtra("hex") ?: ""
                 TestController.handleSetPropNode(app, hex)
             }
 
-            "network.columba.test.SYNC_PROP" ->
+            "network.zamolxis.test.SYNC_PROP" ->
                 TestController.handleSyncProp(app)
 
-            "network.columba.test.REMOVE_INTERFACE" -> {
+            "network.zamolxis.test.REMOVE_INTERFACE" -> {
                 val name = intent.getStringExtra("name") ?: ""
                 if (name.isEmpty()) {
                     Log.i(

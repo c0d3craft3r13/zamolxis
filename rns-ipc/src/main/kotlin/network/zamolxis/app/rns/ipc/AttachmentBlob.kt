@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 import android.os.ParcelFileDescriptor
 import java.io.BufferedInputStream

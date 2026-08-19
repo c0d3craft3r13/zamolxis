@@ -1,6 +1,6 @@
-package network.columba.app.util.validation
+package network.zamolxis.app.util.validation
 
-import network.columba.app.util.validation.InputValidator.safeHexToBytes
+import network.zamolxis.app.util.validation.InputValidator.safeHexToBytes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

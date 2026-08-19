@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Backup configuration for Columba
+  Backup configuration for Zamolxis
 
   SECURITY POLICY:
-  - Room databases (columba_database, interface_database, reticulum.db): BACKED UP
-    * columba_database: identities (Keystore-wrapped private keys),
+  - Room databases (zamolxis_database, interface_database, reticulum.db): BACKED UP
+    * zamolxis_database: identities (Keystore-wrapped private keys),
       conversations, messages, contacts, settings.
     * interface_database: user-configured RNS interfaces.
     * reticulum.db: RNS routing state (paths, announces, packet

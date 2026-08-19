@@ -1,6 +1,6 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
-import network.columba.app.util.isPyxisUpdateFilename
+import network.zamolxis.app.util.isPyxisUpdateFilename
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -82,8 +82,8 @@ class MessagingScreenLinkUtilsTest {
         listOf(
             "javascript:alert(1)",
             "data:text/html,<script>alert(1)</script>",
-            "file:///data/data/network.columba.app/files/private",
-            "content://network.columba.app/private",
+            "file:///data/data/network.zamolxis.app/files/private",
+            "content://network.zamolxis.app/private",
             "intent://example/#Intent;scheme=https;end",
         ).forEach { unsafe -> assertNull(unsafe, toSafeBrowsableUrl(unsafe)) }
     }

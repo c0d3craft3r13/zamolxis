@@ -1,4 +1,4 @@
-package network.columba.app.micron
+package network.zamolxis.app.micron
 
 sealed class MicronElement {
     data class Text(

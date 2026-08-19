@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-event_bridge.py — the ONE Columba-authored Python module with logic.
+event_bridge.py — the ONE Zamolxis-authored Python module with logic.
 ====================================================================
 
 Upstream RNS/LXMF fire their callbacks on internal threads that already hold
@@ -48,11 +48,11 @@ _COMMAND_TELEMETRY_REQUEST = 0x01
 # short enough that stale fixes don't accumulate forever.
 _COLLECTOR_RETENTION_SECONDS = 24 * 60 * 60
 
-# Telemeter encode/decode used to live here (~190 lines of Columba-
+# Telemeter encode/decode used to live here (~190 lines of Zamolxis-
 # authored Python). It moved to `rns-api/.../util/TelemeterCodec.kt`
 # so both backends — Kotlin-native and Python-Chaquopy — share one
 # implementation of the Sideband-interop bit-format. The Python tree
-# now stays at "ONE Columba-authored file with logic" per
+# now stays at "ONE Zamolxis-authored file with logic" per
 # rns-backend-py's CLAUDE.md slim-Python rule.
 
 
@@ -79,7 +79,7 @@ def apply_android_env_patches():
     would raise off-thread, while still honouring it if ever called on the
     main thread. Idempotent.
     """
-    if getattr(signal, "_columba_android_patched", False):
+    if getattr(signal, "_zamolxis_android_patched", False):
         return
     _real_signal = signal.signal
 
@@ -98,7 +98,7 @@ def apply_android_env_patches():
             return None
 
     signal.signal = _safe_signal
-    signal._columba_android_patched = True
+    signal._zamolxis_android_patched = True
 
     # Bump TCPConnection.CONNECT_TIMEOUT for the Android RNodeInterface.
     # Upstream hardcodes both to 5.0s as a class constant
@@ -148,7 +148,7 @@ def get_ble_bridge():
 
 # Slot for the KotlinRNodeBridge instance (Classic SPP / BLE GATT to RNode
 # hardware). Populated by Kotlin via `set_rnode_bridge(...)` at runtime
-# start, consulted by `columba_rnode_interface.ColumbaRNodeInterface.
+# start, consulted by `zamolxis_rnode_interface.ZamolxisRNodeInterface.
 # _get_kotlin_bridge()` when the interface's connection initialiser runs.
 # Replaces the legacy v0.10.x `reticulum_wrapper.kotlin_rnode_bridge`
 # accessor — the dual-build's slim-Python rule has no reticulum_wrapper to
@@ -217,7 +217,7 @@ def deploy_bundled_interfaces(storage_path):
         ("ble_reticulum", "BLEInterface.py", interfaces_dir, "BLEInterface.py"),
         ("ble_modules", "android_ble_interface.py", interfaces_dir, "AndroidBLE.py"),
         ("ble_modules", "android_ble_driver.py", drivers_dir, "android_ble_driver.py"),
-        # ColumbaRNodeInterface deployment is handled separately below the
+        # ZamolxisRNodeInterface deployment is handled separately below the
         # loop — it lives at the top level of the slim Python tree (not
         # inside a package) so `pkgutil.get_data` can't reach it. We read
         # the module's __file__ post-import instead.
@@ -247,7 +247,7 @@ def deploy_bundled_interfaces(storage_path):
                 RNS.LOG_ERROR,
             )
 
-    # ColumbaRNodeInterface — Columba-authored RNS.Interface subclass that
+    # ZamolxisRNodeInterface — Zamolxis-authored RNS.Interface subclass that
     # speaks KISS to RNode LoRa hardware over Bluetooth Classic/BLE/USB.
     # The interface module sits at the top level of the slim Python tree
     # rather than inside a package because it doesn't depend on a sibling
@@ -263,8 +263,8 @@ def deploy_bundled_interfaces(storage_path):
     # source never does. Stick with the loader API.
     #
     # The destination is renamed snake_case → PascalCase
-    # (columba_rnode_interface.py → ColumbaRNodeInterface.py) so it matches
-    # the `type = ColumbaRNodeInterface` directive emitted by RnsConfigFile.
+    # (zamolxis_rnode_interface.py → ZamolxisRNodeInterface.py) so it matches
+    # the `type = ZamolxisRNodeInterface` directive emitted by RnsConfigFile.
     # Failure is logged but non-fatal: BLE/USB RNode support is degraded,
     # the rest of the stack still comes up. Bumped to LOG_NOTICE +
     # unconditional print so the success/failure is visible in `python.
@@ -273,28 +273,28 @@ def deploy_bundled_interfaces(storage_path):
     import inspect
     import traceback
     try:
-        import columba_rnode_interface as _crni_mod
+        import zamolxis_rnode_interface as _crni_mod
         src = inspect.getsource(_crni_mod)
-        dest = os.path.join(interfaces_dir, "ColumbaRNodeInterface.py")
+        dest = os.path.join(interfaces_dir, "ZamolxisRNodeInterface.py")
         with open(dest, "w") as f:
             f.write(src)
         RNS.log(
-            f"event_bridge: deployed ColumbaRNodeInterface.py "
+            f"event_bridge: deployed ZamolxisRNodeInterface.py "
             f"({len(src)} bytes) to {dest}",
             RNS.LOG_NOTICE,
         )
         print(
-            f"event_bridge: deployed ColumbaRNodeInterface.py "
+            f"event_bridge: deployed ZamolxisRNodeInterface.py "
             f"({len(src)} bytes)",
             flush=True,
         )
     except Exception as e:  # noqa: BLE001
         RNS.log(
-            f"event_bridge: failed to deploy ColumbaRNodeInterface.py: {e}",
+            f"event_bridge: failed to deploy ZamolxisRNodeInterface.py: {e}",
             RNS.LOG_ERROR,
         )
         print(
-            f"event_bridge: FAILED to deploy ColumbaRNodeInterface.py: {e}",
+            f"event_bridge: FAILED to deploy ZamolxisRNodeInterface.py: {e}",
             flush=True,
         )
         traceback.print_exc()
@@ -302,11 +302,11 @@ def deploy_bundled_interfaces(storage_path):
 
 def reset_reticulum_for_restart():
     """Reset RNS.Reticulum + RNS.Transport process-global state so a fresh
-    Reticulum() can be constructed after a stop — Columba's "Apply & Restart".
+    Reticulum() can be constructed after a stop — Zamolxis's "Apply & Restart".
 
     RNS is built as a desktop daemon: Reticulum and Transport keep singleton +
     global state in class attributes and never reset them (the OS process is
-    expected to exit). Columba restarts the RNS stack in-process, so without
+    expected to exit). Zamolxis restarts the RNS stack in-process, so without
     this:
       - the second `Reticulum()` raises
         `OSError("Attempt to reinitialise Reticulum, when it was already
@@ -487,8 +487,8 @@ def _hex(b):
     return bytes(b).hex()
 
 
-# The Telemeter codec (pack_telemetry_location, pack_columba_meta,
-# unpack_telemetry_location, unpack_columba_meta,
+# The Telemeter codec (pack_telemetry_location, pack_zamolxis_meta,
+# unpack_telemetry_location, unpack_zamolxis_meta,
 # _assemble_location_telemetry_json, _format_icon_appearance) was
 # removed when the codec moved to
 # `rns-api/.../util/TelemeterCodec.kt`. Both backends share that one
@@ -533,10 +533,10 @@ def _emit(callback, payload):
         RNS.log(f"event_bridge: onEvent dispatch failed: {e}", RNS.LOG_ERROR)
 
 
-# Aspects Columba tracks. RNS's announce handler with `aspect_filter = None`
+# Aspects Zamolxis tracks. RNS's announce handler with `aspect_filter = None`
 # receives every announce but is not told which aspect matched, so we resolve
 # it by recomputing the destination hash for each known aspect — pure RNS
-# protocol code, no Columba app-logic.
+# protocol code, no Zamolxis app-logic.
 _KNOWN_ASPECTS = ("lxmf.delivery", "lxmf.propagation", "nomadnetwork.node", "lxst.telephony")
 
 
@@ -587,7 +587,7 @@ def _announce_enrichment(destination_hash, identity, app_data):
     """Python-only enrichment for an announce: matched aspect + current hops.
 
     The kotlin event-bridge side derives display name + stamp costs from the
-    raw `app_data` bytes via the shared `network.columba.app.rns.api.util.
+    raw `app_data` bytes via the shared `network.zamolxis.app.rns.api.util.
     AppDataParser` (same parser the native kotlin backend uses), so neither
     field is computed here — keeping the parsing in one place means the two
     backends cannot drift on its rules.
@@ -617,7 +617,7 @@ class _AnnounceHandler:
     """RNS announce handler — `aspect_filter = None` catches every aspect.
 
     RNS calls `received_announce` on the Transport thread; we resolve the
-    aspect, and — for the four aspects Columba tracks — flatten and hand the
+    aspect, and — for the four aspects Zamolxis tracks — flatten and hand the
     announce off to Kotlin. Announces for any other aspect are dropped (see
     `received_announce`).
     """
@@ -634,7 +634,7 @@ class _AnnounceHandler:
         is_path_response=False,
     ):
         enrichment = _announce_enrichment(destination_hash, announced_identity, app_data)
-        # Only surface announces for aspects Columba tracks. This matches the
+        # Only surface announces for aspects Zamolxis tracks. This matches the
         # kotlin backend's RichAnnounceHandler, which returns False (drops the
         # announce) when no known aspect matches. `aspect_filter = None` above
         # means RNS hands us *every* announce, including ones from unrelated
@@ -693,7 +693,7 @@ def set_incoming_message_size_limit(limit_kb):
 
     Enforcement is a *post-reassembly* drop in `_lxmf_delivery_callback`: LXMF
     fully reassembles a message before invoking its delivery callback, so an
-    oversized message is rejected before it reaches the Columba UI / storage,
+    oversized message is rejected before it reaches the Zamolxis UI / storage,
     but the bandwidth + CPU of receiving it cannot be saved — upstream LXMF
     exposes no pre-reassembly hook. This degradation-vs-kotlin is recorded in
     the RNS dual-build handoff doc.
@@ -718,7 +718,7 @@ def _signal_metrics(interface_obj):
 
     BLE per-peer RSSI lookup (v0.10.x's `BLEPeerInterface` -> `parent.driver.
     get_peer_rssi(peer_address)` special case) is intentionally NOT ported here:
-    BLE-on-Python interface deployment is a separate task — once a Columba
+    BLE-on-Python interface deployment is a separate task — once a Zamolxis
     BLE driver lands Python-side, this helper grows the `BLEPeerInterface`
     branch then.
 
@@ -777,7 +777,7 @@ def _local_lxmf_destination():
 
     `LXMRouter` exposes registered delivery destinations as a
     `delivery_destinations` dict (keyed by destination hash, value is the
-    `RNS.Destination` instance). Columba registers exactly one identity
+    `RNS.Destination` instance). Zamolxis registers exactly one identity
     per process via `LXMRouter.register_delivery_identity` — we want that
     sole destination as both the `source` for outbound LXMessages and the
     key (its `hexhash`) for storing the host's own telemetry. Returns the
@@ -911,7 +911,7 @@ def _send_telemetry_stream_response(requester_hash_bytes, requester_identity, ti
     `timebase` is the request's timebase int — entries with
     `received_at >= timebase` are included (0 / None means "all").
 
-    Mirrors `release/v0.10.x`'s shape so a Columba <-> Columba host /
+    Mirrors `release/v0.10.x`'s shape so a Zamolxis <-> Zamolxis host /
     member pair on either branch interops over the same wire format.
     """
     delivery_dest = _local_lxmf_destination()
@@ -1066,7 +1066,7 @@ def _lxmf_delivery_callback(message):
         # side gets one `fields_json` string instead of a JNI hop per value.
         #
         # FIELD_TELEMETRY (0x02) used to get pre-assembled into a
-        # Columba JSON shape here; that work moved to
+        # Zamolxis JSON shape here; that work moved to
         # `rns-api/.../util/TelemeterCodec.kt` and
         # `PythonEventBridge.assembleLocationTelemetry` decodes the
         # raw msgpack bytes Kotlin-side. The Python tree now passes
@@ -1366,12 +1366,12 @@ def attach_lxmessage_callbacks(
         # report failure to Kotlin.
         if (
             getattr(msg, "try_propagation_on_fail", False)
-            and not getattr(msg, "_columba_propagation_retry_attempted", False)
+            and not getattr(msg, "_zamolxis_propagation_retry_attempted", False)
             and _lxmf_router is not None
             and getattr(_lxmf_router, "outbound_propagation_node", None) is not None
             and getattr(msg, "desired_method", None) != LXMF.LXMessage.PROPAGATED
         ):
-            msg._columba_propagation_retry_attempted = True
+            msg._zamolxis_propagation_retry_attempted = True
             # Clear retry flag so a second failure doesn't loop.
             msg.try_propagation_on_fail = False
             # Sideband resets the upstream-LXMF send-state for a fresh try as

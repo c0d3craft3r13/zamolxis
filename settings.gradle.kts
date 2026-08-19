@@ -11,19 +11,29 @@ plugins {
     // pythonBackend flavor builds regardless of the developer's default JDK — its
     // Hilt-generated Java makes javac read LXST-kt's Java 21 bytecode, which a
     // JDK <21 javac can't load. CI uses JDK 25; 21 is the local floor.
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
+    //
+    // 1.0.0 is the floor for Gradle 9: earlier versions (0.10.0 and below) reference
+    // the removed `JvmVendorSpec.IBM_SEMERU`, so provisioning dies at configuration
+    // time with `NoSuchFieldError` instead of downloading the toolchain. CI never
+    // saw it because its runners ship a JDK 21 that auto-detection finds first.
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        // Vendored Reticulum stack (reticulum-kt / LXMF-kt / LXST-kt), checked into
+        // libs/ as a plain Maven layout. Listed FIRST so a fresh clone builds with no
+        // network and never depends on JitPack still being willing to serve those
+        // repos. Refresh with scripts/vendor-libs.sh after bumping a version.
+        maven { url = uri("$rootDir/libs") }
         google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") } // Reticulum-kt / LXMF-kt / LXST-kt + usb-serial-for-android
+        maven { url = uri("https://jitpack.io") } // usb-serial-for-android; fallback for the vendored stack
     }
 }
 
-rootProject.name = "columba"
+rootProject.name = "zamolxis"
 
 // Opt-in composite-build override: point reticulum-kt/LXMF-kt/LXST-kt
 // at a local checkout for a tight edit-build-install loop. Enable with
@@ -59,8 +69,8 @@ System.getenv("LOCAL_LXST_KT")?.let {
 
 include(":app")
 include(":data")
-include(":domain")
 include(":micron")
+include(":crypto-pq")
 include(":rns-api")
 include(":rns-ipc")
 include(":rns-host")

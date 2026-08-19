@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.bluetooth.BluetoothAdapter
 import android.util.Log
@@ -20,20 +20,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.data.model.BleConnectionsState
-import network.columba.app.data.repository.BleStatusRepository
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.host.manager.CurrentTransport
-import network.columba.app.rns.host.manager.filterByTransport
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.service.manager.InterfaceTransportObserver
-import network.columba.app.util.validation.InputValidator
-import network.columba.app.util.validation.ValidationResult
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.data.model.BleConnectionsState
+import network.zamolxis.app.data.repository.BleStatusRepository
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.host.manager.CurrentTransport
+import network.zamolxis.app.rns.host.manager.filterByTransport
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.service.manager.InterfaceTransportObserver
+import network.zamolxis.app.util.validation.InputValidator
+import network.zamolxis.app.util.validation.ValidationResult
 import org.json.JSONObject
 import javax.inject.Inject
 
@@ -1304,7 +1304,7 @@ class InterfaceManagementViewModel
                                 // the user sees stale offline cards for up to 5s.
                                 // Two-shot poll: 500ms catches builtin interfaces
                                 // that come up during Reticulum() construction;
-                                // 3500ms catches ColumbaRNodeInterface which runs
+                                // 3500ms catches ZamolxisRNodeInterface which runs
                                 // its start() (BLE connect + radio configure) in
                                 // a daemon thread spawned at the end of __init__.
                                 viewModelScope.launch(ioDispatcher) {

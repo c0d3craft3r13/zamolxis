@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -16,8 +17,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
-import network.columba.app.R
-import network.columba.app.ui.theme.MaterialDesignIcons
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.theme.MaterialDesignIcons
 
 /**
  * Material Design Icons font family.
@@ -73,6 +74,7 @@ fun ProfileIcon(
             // Calculate font size - icon should be about 60% of the container
             val density = LocalDensity.current
             val fontSize = with(density) { (size * 0.6f).toSp() }
+            val profileIconCd = stringResource(R.string.profile_icon_cd)
 
             Box(
                 modifier =
@@ -80,7 +82,7 @@ fun ProfileIcon(
                         .size(size)
                         .clip(CircleShape)
                         .background(bgColor)
-                        .semantics { contentDescription = "Profile icon" },
+                        .semantics { contentDescription = profileIconCd },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

@@ -1,9 +1,9 @@
 @file:Suppress("SwallowedException") // Test file intentionally catches exceptions to verify handling
 
-package network.columba.app.service
+package network.zamolxis.app.service
 
-import network.columba.app.rns.host.binder.ReticulumServiceBinder
-import network.columba.app.rns.host.persistence.ServiceSettingsAccessor
+import network.zamolxis.app.rns.host.binder.ReticulumServiceBinder
+import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery

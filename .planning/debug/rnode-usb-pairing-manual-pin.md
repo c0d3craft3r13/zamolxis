@@ -1,6 +1,6 @@
 ---
 status: verifying
-trigger: "rnode-usb-pairing-manual-pin - After manually entering the Bluetooth PIN shown on the RNode OLED (because Heltec v3 doesn't send PIN over serial), the pairing doesn't complete within Columba"
+trigger: "rnode-usb-pairing-manual-pin - After manually entering the Bluetooth PIN shown on the RNode OLED (because Heltec v3 doesn't send PIN over serial), the pairing doesn't complete within Zamolxis"
 created: 2026-01-23T13:50:00Z
 updated: 2026-01-23T13:50:00Z
 ---
@@ -62,4 +62,4 @@ verification: Build successful, APK deployed to device. Ready for user testing. 
 4. Observe: App should now re-send pairing command, wait 500ms, then start BLE scan
 5. Expected: RNode should be found via BLE scan and pairing should complete
 files_changed:
-  - app/src/main/java/network.columba.app/viewmodel/RNodeWizardViewModel.kt: Modified submitManualPin() to re-enter pairing mode before BLE scan
+  - app/src/main/java/network.zamolxis.app/viewmodel/RNodeWizardViewModel.kt: Modified submitManualPin() to re-enter pairing mode before BLE scan

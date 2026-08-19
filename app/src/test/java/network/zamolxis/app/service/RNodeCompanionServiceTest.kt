@@ -1,7 +1,7 @@
 // AssociationInfo is a final Android framework class; relaxed mocking required
 @file:Suppress("NoRelaxedMocks")
 
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.app.Application
 import android.companion.AssociationInfo

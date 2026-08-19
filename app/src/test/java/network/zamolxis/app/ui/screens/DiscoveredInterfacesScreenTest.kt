@@ -1,13 +1,14 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -23,7 +24,7 @@ import org.robolectric.annotation.Config
  *
  * Tests cover:
  * - isYggdrasilAddress() helper function for IPv6 address detection
- * - formatInterfaceType() helper function for interface type display
+ * - evaluate { formatInterfaceType() } helper function for interface type display
  * - InterfaceTypeIcon composable for different interface types
  * - Connected badge visibility logic
  * - Info icon visibility for special networks (Yggdrasil, I2P)
@@ -38,6 +39,18 @@ class DiscoveredInterfacesScreenTest {
     val ruleChain: RuleChain = RuleChain.outerRule(registerActivityRule).around(composeRule)
 
     val composeTestRule get() = composeRule
+
+    /**
+     * formatInterfaceType / formatLastHeard became `@Composable` when the wording moved to `stringResource`, so it can
+     * only be called from a composition. This evaluates it inside the compose rule and
+     * hands the value back to the assertions, which are otherwise unchanged — the
+     * resources carry the same English wording the function used to build by hand.
+     */
+    private fun <T : Any> evaluate(block: @Composable () -> T): T {
+        lateinit var captured: T
+        composeRule.setContent { captured = block() }
+        return captured
+    }
 
     // ========== isYggdrasilAddress Tests ==========
 
@@ -100,42 +113,42 @@ class DiscoveredInterfacesScreenTest {
 
     @Test
     fun `formatInterfaceType TCPServerInterface returns TCP Server`() {
-        assertEquals("TCP Server", formatInterfaceType("TCPServerInterface"))
+        assertEquals("TCP Server", evaluate { formatInterfaceType("TCPServerInterface") })
     }
 
     @Test
     fun `formatInterfaceType TCPClientInterface returns TCP Client`() {
-        assertEquals("TCP Client", formatInterfaceType("TCPClientInterface"))
+        assertEquals("TCP Client", evaluate { formatInterfaceType("TCPClientInterface") })
     }
 
     @Test
     fun `formatInterfaceType BackboneInterface returns Backbone TCP`() {
-        assertEquals("Backbone (TCP)", formatInterfaceType("BackboneInterface"))
+        assertEquals("Backbone (TCP)", evaluate { formatInterfaceType("BackboneInterface") })
     }
 
     @Test
     fun `formatInterfaceType I2PInterface returns I2P`() {
-        assertEquals("I2P", formatInterfaceType("I2PInterface"))
+        assertEquals("I2P", evaluate { formatInterfaceType("I2PInterface") })
     }
 
     @Test
     fun `formatInterfaceType RNodeInterface returns RNode LoRa`() {
-        assertEquals("RNode (LoRa)", formatInterfaceType("RNodeInterface"))
+        assertEquals("RNode (LoRa)", evaluate { formatInterfaceType("RNodeInterface") })
     }
 
     @Test
     fun `formatInterfaceType WeaveInterface returns Weave LoRa`() {
-        assertEquals("Weave (LoRa)", formatInterfaceType("WeaveInterface"))
+        assertEquals("Weave (LoRa)", evaluate { formatInterfaceType("WeaveInterface") })
     }
 
     @Test
     fun `formatInterfaceType KISSInterface returns KISS`() {
-        assertEquals("KISS", formatInterfaceType("KISSInterface"))
+        assertEquals("KISS", evaluate { formatInterfaceType("KISSInterface") })
     }
 
     @Test
     fun `formatInterfaceType unknown type returns type unchanged`() {
-        assertEquals("UnknownType", formatInterfaceType("UnknownType"))
+        assertEquals("UnknownType", evaluate { formatInterfaceType("UnknownType") })
     }
 
     // ========== InterfaceTypeIcon Tests ==========
@@ -313,38 +326,38 @@ class DiscoveredInterfacesScreenTest {
 
     @Test
     fun `formatLastHeard with zero timestamp returns Never`() {
-        assertEquals("Never", formatLastHeard(0L))
+        assertEquals("Never", evaluate { formatLastHeard(0L) })
     }
 
     @Test
     fun `formatLastHeard with recent timestamp returns just now`() {
         val now = System.currentTimeMillis() / 1000
-        assertEquals("just now", formatLastHeard(now - 30))
+        assertEquals("just now", evaluate { formatLastHeard(now - 30) })
     }
 
     @Test
     fun `formatLastHeard with 5 minutes ago returns min ago`() {
         val now = System.currentTimeMillis() / 1000
-        assertEquals("5 min ago", formatLastHeard(now - 300))
+        assertEquals("5 min ago", evaluate { formatLastHeard(now - 300) })
     }
 
     @Test
     fun `formatLastHeard with 2 hours ago returns hours ago`() {
         val now = System.currentTimeMillis() / 1000
-        assertEquals("2 hours ago", formatLastHeard(now - 7200))
+        assertEquals("2 hours ago", evaluate { formatLastHeard(now - 7200) })
     }
 
     @Test
     fun `formatLastHeard with 3 days ago returns days ago`() {
         val now = System.currentTimeMillis() / 1000
-        assertEquals("3 days ago", formatLastHeard(now - 259200))
+        assertEquals("3 days ago", evaluate { formatLastHeard(now - 259200) })
     }
 
     @Test
     fun `formatLastHeard with old timestamp returns formatted date`() {
         // Use a fixed timestamp from the past (Jan 15, 2024)
         val oldTimestamp = 1705344000L // Jan 15, 2024
-        val result = formatLastHeard(oldTimestamp)
+        val result = evaluate { formatLastHeard(oldTimestamp) }
         // Should return formatted date like "Jan 15"
         assertTrue(result.contains("Jan"))
     }

@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -89,7 +89,7 @@ class InterfaceTypeTest {
     fun `fromName returns RNODE for BLE-connected RNode interfaces`() {
         // RNode connected via BLE gets a name containing both "RNode" and "BLE"
         // Must resolve to RNODE, not BLE
-        assertEquals(InterfaceType.RNODE, InterfaceType.fromName("ColumbaRNodeInterface[RNode 5A3F BLE]"))
+        assertEquals(InterfaceType.RNODE, InterfaceType.fromName("ZamolxisRNodeInterface[RNode 5A3F BLE]"))
         assertEquals(InterfaceType.RNODE, InterfaceType.fromName("RNodeInterface[RNode ABC1 BLE]"))
         assertEquals(InterfaceType.RNODE, InterfaceType.fromName("RNodeMultiInterface[/dev/ttyUSB0]"))
     }

@@ -1,4 +1,4 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.app.ActivityManager
 import android.content.Context
@@ -13,20 +13,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.di.ApplicationScope
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.LogLevel
-import network.columba.app.rns.api.model.ReticulumConfig
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.host.ReticulumService
-import network.columba.app.service.manager.InterfaceTransportObserver
-import network.columba.app.rns.host.manager.filterByTransport
-import network.columba.app.rns.host.persistence.ReticulumConfigSnapshot
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.di.ApplicationScope
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.LogLevel
+import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.host.ReticulumService
+import network.zamolxis.app.service.manager.InterfaceTransportObserver
+import network.zamolxis.app.rns.host.manager.filterByTransport
+import network.zamolxis.app.rns.host.persistence.ReticulumConfigSnapshot
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -52,10 +52,10 @@ class InterfaceConfigManager
         private val rnsTransportAdmin: RnsTransportAdmin,
         private val interfaceRepository: InterfaceRepository,
         private val identityRepository: IdentityRepository,
-        private val identityKeyProvider: network.columba.app.data.crypto.IdentityKeyProvider,
+        private val identityKeyProvider: network.zamolxis.app.data.crypto.IdentityKeyProvider,
         private val conversationRepository: ConversationRepository,
         private val messageCollector: MessageCollector,
-        private val database: ColumbaDatabase,
+        private val database: ZamolxisDatabase,
         private val settingsRepository: SettingsRepository,
         private val autoAnnounceManager: AutoAnnounceManager,
         private val identityResolutionManager: IdentityResolutionManager,
@@ -84,7 +84,7 @@ class InterfaceConfigManager
             // Apply flag lifecycle: set in Step 3, cleared HERE in finally. Keeping
             // the flag set across the whole apply (not just until initialize returns)
             // matters for two cross-process races:
-            //  • ColumbaApplication.onCreate in the UI process — sees a stale flag
+            //  • ZamolxisApplication.onCreate in the UI process — sees a stale flag
             //    on the next cold start and clears it via isStaleFlag(); a clean
             //    apply just lets this finally cover the exit.
             //  • ReticulumService.onStartCommand in :reticulum — when an Android
@@ -97,7 +97,7 @@ class InterfaceConfigManager
             //    the cascade.
             val clearApplyFlag: () -> Unit = {
                 context
-                    .getSharedPreferences("columba_prefs", Context.MODE_PRIVATE)
+                    .getSharedPreferences("zamolxis_prefs", Context.MODE_PRIVATE)
                     .edit()
                     .putBoolean("is_applying_config", false)
                     .commit()
@@ -129,12 +129,12 @@ class InterfaceConfigManager
                             "${enabledInterfaces.size} active for transport=$transport",
                     )
 
-                    // Step 3: Set flag to prevent ColumbaApplication from auto-initializing on service restart
+                    // Step 3: Set flag to prevent ZamolxisApplication from auto-initializing on service restart
                     // CRITICAL: Use commit() not apply() to ensure flag is written to disk BEFORE service starts
                     // Service runs in separate process and needs to read this from disk
                     Log.d(TAG, "Step 3: Setting config apply flag (synchronous write)...")
                     context
-                        .getSharedPreferences("columba_prefs", Context.MODE_PRIVATE)
+                        .getSharedPreferences("zamolxis_prefs", Context.MODE_PRIVATE)
                         .edit()
                         .putBoolean("is_applying_config", true)
                         .commit() // Synchronous write - blocks until written to disk
@@ -225,7 +225,7 @@ class InterfaceConfigManager
                     // Step 7: Start service again (fresh process, no port conflicts)
                     // Clear user shutdown flag so the service starts normally
                     context
-                        .getSharedPreferences("columba_prefs", Context.MODE_PRIVATE)
+                        .getSharedPreferences("zamolxis_prefs", Context.MODE_PRIVATE)
                         .edit()
                         .putBoolean("is_user_shutdown", false)
                         .commit()
@@ -271,12 +271,12 @@ class InterfaceConfigManager
                     Log.d(TAG, "Step 9: Initializing Reticulum with new configuration...")
 
                     // Load active identity and decrypt its key in memory — same pattern
-                    // ColumbaApplication uses on cold start. Writing the raw key to
+                    // ZamolxisApplication uses on cold start. Writing the raw key to
                     // files/reticulum/identity_<hash> here would recreate the plaintext
                     // file on every interface toggle, defeating the on-disk scrub.
                     //
                     // The is_applying_config flag was set synchronously in Step 3 to keep
-                    // ColumbaApplication.onCreate from racing us to reinitialize. The
+                    // ZamolxisApplication.onCreate from racing us to reinitialize. The
                     // outer try/finally clears it on every exit path (success, throw,
                     // timeout), so individual early-return branches just throw.
                     val activeIdentity = identityRepository.getActiveIdentitySync()
@@ -369,7 +369,7 @@ class InterfaceConfigManager
 
                             // Refresh the persisted snapshot with the config we just
                             // applied. Without this, the snapshot only ever reflects
-                            // ColumbaApplication.onCreate's cold-start config — so any
+                            // ZamolxisApplication.onCreate's cold-start config — so any
                             // field changed via Apply & Restart (e.g. shareInstanceHosting)
                             // silently reverts the next time the OS reaps and START_STICKY-
                             // restarts the :reticulum process from the stale snapshot.
@@ -425,7 +425,7 @@ class InterfaceConfigManager
                 messageCollector.startCollecting()
                 Log.d(TAG, "✓ Message collector started")
 
-                // Step 12: Restart managers (same as ColumbaApplication.onCreate)
+                // Step 12: Restart managers (same as ZamolxisApplication.onCreate)
                 Log.d(TAG, "Step 12: Restarting managers...")
                 autoAnnounceManager.start()
                 identityResolutionManager.start(applicationScope)
@@ -463,7 +463,7 @@ class InterfaceConfigManager
          */
         fun setPendingChanges(hasPending: Boolean) {
             context
-                .getSharedPreferences("columba_prefs", Context.MODE_PRIVATE)
+                .getSharedPreferences("zamolxis_prefs", Context.MODE_PRIVATE)
                 .edit()
                 .putBoolean("has_pending_interface_changes", hasPending)
                 .apply()
@@ -474,7 +474,7 @@ class InterfaceConfigManager
          * @return true if there were pending changes, false otherwise
          */
         fun checkAndClearPendingChanges(): Boolean {
-            val prefs = context.getSharedPreferences("columba_prefs", Context.MODE_PRIVATE)
+            val prefs = context.getSharedPreferences("zamolxis_prefs", Context.MODE_PRIVATE)
             val hasPending = prefs.getBoolean("has_pending_interface_changes", false)
             if (hasPending) {
                 prefs.edit().putBoolean("has_pending_interface_changes", false).apply()

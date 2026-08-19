@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.tcpclient
+package network.zamolxis.app.ui.screens.tcpclient
 
 import android.app.Application
 import androidx.activity.OnBackPressedDispatcher
@@ -11,10 +11,10 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.TcpClientWizardTestFixtures
-import network.columba.app.viewmodel.TcpClientWizardStep
-import network.columba.app.viewmodel.TcpClientWizardViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.TcpClientWizardTestFixtures
+import network.zamolxis.app.viewmodel.TcpClientWizardStep
+import network.zamolxis.app.viewmodel.TcpClientWizardViewModel
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just

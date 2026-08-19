@@ -18,10 +18,10 @@ import pytest
 from ui_driver import AdbUiDriver, UiSnapshot
 
 
-PKG = "network.columba.app.debug"
-ACTIVITY = f"{PKG}/network.columba.app.MainActivity"
-RECEIVER = f"{PKG}/network.columba.app.test.TestReceiver"
-FILE_NAME = "columba-progress-e2e.bin"
+PKG = "network.zamolxis.app.debug"
+ACTIVITY = f"{PKG}/network.zamolxis.app.MainActivity"
+RECEIVER = f"{PKG}/network.zamolxis.app.test.TestReceiver"
+FILE_NAME = "zamolxis-progress-e2e.bin"
 FILE_SIZE = 1024 * 1024
 
 
@@ -56,7 +56,7 @@ def logcat(driver: AdbUiDriver) -> str:
 
 
 def broadcast(driver: AdbUiDriver, action: str, **extras: str) -> None:
-    args = ["shell", "am", "broadcast", "-n", RECEIVER, "-a", f"network.columba.test.{action}"]
+    args = ["shell", "am", "broadcast", "-n", RECEIVER, "-a", f"network.zamolxis.test.{action}"]
     for key, value in extras.items():
         args.extend(("--es", key, value))
     driver.adb(*args)
@@ -331,7 +331,7 @@ def test_real_resource_progress_reaches_outgoing_bubble(tmp_path: Path) -> None:
         driver.click_text("Start Chat")
         driver.wait_description("Attach", timeout=30)
 
-        payload = hashlib.shake_256(b"columba-transfer-progress-e2e").digest(FILE_SIZE)
+        payload = hashlib.shake_256(b"zamolxis-transfer-progress-e2e").digest(FILE_SIZE)
         payload_path = tmp_path / FILE_NAME
         payload_path.write_bytes(payload)
         expected_sha = hashlib.sha256(payload).hexdigest()
@@ -368,7 +368,7 @@ def test_real_resource_progress_reaches_outgoing_bubble(tmp_path: Path) -> None:
             driver.screenshot("final-screen.png")
             (artifact_dir / "logcat.log").write_text(logcat(driver), encoding="utf-8")
             driver.adb("shell", "rm", "-f", f"/sdcard/Download/{FILE_NAME}")
-            driver.adb("shell", "rm", "-f", "/sdcard/columba-e2e-window.xml")
+            driver.adb("shell", "rm", "-f", "/sdcard/zamolxis-e2e-window.xml")
         except (OSError, subprocess.SubprocessError):
             pass
         for process in (peer.proxy, peer.receiver):

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 /**
  * Represents a firmware source for the RNode flasher.

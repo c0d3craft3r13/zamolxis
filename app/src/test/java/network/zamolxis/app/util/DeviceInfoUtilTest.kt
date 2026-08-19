@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
@@ -79,7 +79,7 @@ class DeviceInfoUtilTest {
 
         val formatted = DeviceInfoUtil.formatForClipboard(info)
 
-        assertTrue(formatted.contains("Columba 3.0.1 (30001)"))
+        assertTrue(formatted.contains("Zamolxis 3.0.1 (30001)"))
         assertTrue(formatted.contains("Build: abc1234 (2025-01-16 10:30)"))
         assertTrue(formatted.contains("Android 14 (API 34)"))
         assertTrue(formatted.contains("Device: Pixel 7 by Google"))
@@ -110,7 +110,7 @@ class DeviceInfoUtilTest {
 
         val formatted = DeviceInfoUtil.formatForClipboard(info)
 
-        assertTrue(formatted.contains("Columba 3.0.1 (30001)"))
+        assertTrue(formatted.contains("Zamolxis 3.0.1 (30001)"))
         assertTrue(formatted.contains("Build: xyz9999"))
         assertTrue(formatted.contains("Android 13 (API 33)"))
         assertTrue(formatted.contains("Device: Samsung S21 by Samsung"))
@@ -144,7 +144,7 @@ class DeviceInfoUtilTest {
 
         // Should have 8 lines total (app, build, android, device, identity, reticulum, lxmf, ble)
         assertEquals(8, lines.size)
-        assertTrue(lines[0].startsWith("Columba"))
+        assertTrue(lines[0].startsWith("Zamolxis"))
         assertTrue(lines[1].startsWith("Build:"))
         assertTrue(lines[2].startsWith("Android"))
         assertTrue(lines[3].startsWith("Device:"))
@@ -225,7 +225,7 @@ class DeviceInfoUtilTest {
         assertTrue(formatted.contains("### Protocol Versions"))
 
         // Should contain Markdown bold syntax
-        assertTrue(formatted.contains("**Columba**"))
+        assertTrue(formatted.contains("**Zamolxis**"))
         assertTrue(formatted.contains("**Android**"))
         assertTrue(formatted.contains("**Device**"))
     }
@@ -326,7 +326,7 @@ class DeviceInfoUtilTest {
 
         val formatted = DeviceInfoUtil.formatForBugReport(info)
 
-        assertTrue(formatted.contains("**Columba**: 3.0.7 (30007)"))
+        assertTrue(formatted.contains("**Zamolxis**: 3.0.7 (30007)"))
         assertTrue(formatted.contains("**Build**: xyz9999 (2025-01-16 10:30)"))
         assertTrue(formatted.contains("**Build Type**: release"))
         assertTrue(formatted.contains("**Android**: 13 (API 33)"))

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding
+package network.zamolxis.app.ui.screens.onboarding
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -7,9 +7,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.DebugViewModel
-import network.columba.app.viewmodel.OnboardingViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.DebugViewModel
+import network.zamolxis.app.viewmodel.OnboardingViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -42,7 +42,7 @@ class OnboardingPagerScreenTest {
     // Index of the CompletePage for the current build flavor. The crash-reporting opt-in
     // page is inserted before CompletePage in the sentry flavor, so this is not a constant.
     private val completePageIndex =
-        onboardingPages(network.columba.app.BuildConfig.CRASH_REPORTING_AVAILABLE)
+        onboardingPages(network.zamolxis.app.BuildConfig.CRASH_REPORTING_AVAILABLE)
             .indexOf(OnboardingPage.COMPLETE)
 
     // ========== Test 1: Initial render shows welcome page (page 0) ==========
@@ -64,7 +64,7 @@ class OnboardingPagerScreenTest {
         }
 
         // Then - Welcome page content is displayed
-        composeTestRule.onNodeWithText("Welcome to Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to Zamolxis").assertIsDisplayed()
     }
 
     @Test
@@ -221,7 +221,7 @@ class OnboardingPagerScreenTest {
         // Then - PageIndicator renders ONBOARDING_PAGE_COUNT dots (5 dots)
         // The dots are rendered as Box elements with CircleShape, so we verify indirectly
         // by checking the welcome page is on page 0 of 5 total pages
-        composeTestRule.onNodeWithText("Welcome to Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to Zamolxis").assertIsDisplayed()
     }
 
     // ========== Test 4: Pager contains all 5 pages ==========
@@ -243,7 +243,7 @@ class OnboardingPagerScreenTest {
         }
 
         // Then - Page 0 is WelcomePage
-        composeTestRule.onNodeWithText("Welcome to Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to Zamolxis").assertIsDisplayed()
     }
 
     @Test
@@ -551,7 +551,7 @@ class OnboardingPagerScreenTest {
         }
 
         // Then - When loading, the welcome text should NOT be displayed
-        composeTestRule.onNodeWithText("Welcome to Columba").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Welcome to Zamolxis").assertDoesNotExist()
     }
 
     // ========== Additional Tests: Skip Button Hidden on Last Page ==========
@@ -736,7 +736,7 @@ class OnboardingPagerScreenTest {
 
         // Then - The screen rendered and reached its initial RESUMED state (real
         // outcome — without RESUMED, DisposableEffect never registers the observer).
-        composeTestRule.onNodeWithText("Welcome to Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to Zamolxis").assertIsDisplayed()
 
         // And - All three permission re-checks are wired through the observer.
         // checkBatteryOptimizationStatus also fires from the existing LaunchedEffect(Unit),

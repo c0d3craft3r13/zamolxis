@@ -10,7 +10,7 @@ from unittest import mock
 
 INTERFACE_PATH = (
     Path(__file__).resolve().parents[2]
-    / "main/python/columba_rnode_interface.py"
+    / "main/python/zamolxis_rnode_interface.py"
 )
 
 
@@ -94,12 +94,12 @@ class RNodeReconnectTests(unittest.TestCase):
         sys.modules["RNS.Interfaces.Interface"] = interface_module
 
         spec = importlib.util.spec_from_file_location(
-            "columba_rnode_reconnect_test", INTERFACE_PATH
+            "zamolxis_rnode_reconnect_test", INTERFACE_PATH
         )
         assert spec is not None and spec.loader is not None
         cls.module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cls.module)
-        cls.Interface = cls.module.ColumbaRNodeInterface
+        cls.Interface = cls.module.ZamolxisRNodeInterface
 
     def new_interface(self):
         interface = self.Interface.__new__(self.Interface)

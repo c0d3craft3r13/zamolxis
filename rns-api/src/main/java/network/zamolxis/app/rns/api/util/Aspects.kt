@@ -1,7 +1,7 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
 /**
- * Announce aspect strings Columba tracks.
+ * Announce aspect strings Zamolxis tracks.
  *
  * Reticulum destinations identify themselves by an aspect (e.g.
  * `"lxmf.delivery"`) — the same string is the source of truth for routing,
@@ -28,6 +28,6 @@ object Aspects {
     /** LXST telephony / voice call destination. */
     const val LXST_TELEPHONY = "lxst.telephony"
 
-    /** Every aspect Columba tracks — handy for set-membership tests. */
+    /** Every aspect Zamolxis tracks — handy for set-membership tests. */
     val ALL: Set<String> = setOf(LXMF_DELIVERY, LXMF_PROPAGATION, NOMADNET_NODE, LXST_TELEPHONY)
 }

@@ -1,12 +1,12 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.service.LocationSharingManager
-import network.columba.app.ui.model.LocationSharingState
-import network.columba.app.ui.model.SharingDuration
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.ui.model.LocationSharingState
+import network.zamolxis.app.ui.model.SharingDuration
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

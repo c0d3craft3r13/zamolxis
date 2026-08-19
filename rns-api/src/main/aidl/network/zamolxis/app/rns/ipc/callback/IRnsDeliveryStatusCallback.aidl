@@ -1,7 +1,7 @@
 // Observer callback for Flow<DeliveryStatusUpdate> (RnsLxmf.observeDeliveryStatus).
-package network.columba.app.rns.ipc.callback;
+package network.zamolxis.app.rns.ipc.callback;
 
-import network.columba.app.rns.api.model.DeliveryStatusUpdate;
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate;
 
 oneway interface IRnsDeliveryStatusCallback {
     void onDeliveryStatus(in DeliveryStatusUpdate update);

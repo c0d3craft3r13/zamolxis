@@ -1,13 +1,13 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.CallHistoryEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -22,7 +22,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class CallHistoryDaoTest {
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var callHistoryDao: CallHistoryDao
     private lateinit var callHistoryDeletionDao: CallHistoryDeletionDao
     private lateinit var identityDao: LocalIdentityDao
@@ -42,7 +42,7 @@ class CallHistoryDaoTest {
                 .getApplicationContext<Context>()
         database =
             Room
-                .inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+                .inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
         callHistoryDao = database.callHistoryDao()
@@ -157,7 +157,7 @@ class CallHistoryDaoTest {
     }
 
     @Test
-    fun `failCallAttempt persists Columba-observed reason`() = runTest {
+    fun `failCallAttempt persists Zamolxis-observed reason`() = runTest {
         callHistoryDao.insertInitial(attempt(direction = "OUTGOING"))
         assertTrue(callHistoryDao.failCallAttempt(ATTEMPT, 150, "NETWORK_UNAVAILABLE"))
         val row = callHistoryDao.getByAttemptId(ATTEMPT)!!
@@ -172,7 +172,7 @@ class CallHistoryDaoTest {
         callHistoryDao.insertInitial(attempt(identityHash = IDENTITY))
         assertEquals(1, callHistoryDao.getForExport(IDENTITY).size)
         assertEquals(0, callHistoryDao.getForExport(IDENTITY_2).size)
-        assertEquals(emptyList<network.columba.app.data.model.CallHistoryRecord>(), callHistoryDao.observeHistory(IDENTITY_2, "").first())
+        assertEquals(emptyList<network.zamolxis.app.data.model.CallHistoryRecord>(), callHistoryDao.observeHistory(IDENTITY_2, "").first())
     }
 
     // ===== Deletion authority & non-resurrection =====

@@ -1,11 +1,11 @@
-package network.columba.app.notifications
+package network.zamolxis.app.notifications
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import network.columba.app.ColumbaApplication
-import network.columba.app.MainActivity
+import network.zamolxis.app.ZamolxisApplication
+import network.zamolxis.app.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -77,7 +77,7 @@ class CallActionReceiver : BroadcastReceiver() {
         actionType: String,
     ) {
         val pendingResult = goAsync()
-        val app = context.applicationContext as? ColumbaApplication
+        val app = context.applicationContext as? ZamolxisApplication
 
         if (app == null) {
             Log.e(TAG, "Failed to $actionType call: Application not available")

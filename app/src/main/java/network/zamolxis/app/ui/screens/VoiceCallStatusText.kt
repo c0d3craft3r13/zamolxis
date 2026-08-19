@@ -1,11 +1,11 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.annotation.StringRes
 import androidx.compose.ui.res.stringResource
-import network.columba.app.R
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.viewmodel.CallInitiationFailure
+import network.zamolxis.app.R
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.viewmodel.CallInitiationFailure
 
 @Composable
 internal fun voiceCallStatusText(

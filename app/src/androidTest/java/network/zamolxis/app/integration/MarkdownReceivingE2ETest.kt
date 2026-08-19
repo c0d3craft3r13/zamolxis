@@ -1,4 +1,4 @@
-package network.columba.app.integration
+package network.zamolxis.app.integration
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -25,15 +25,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.Message
-import network.columba.app.data.storage.AttachmentStorageManager
-import network.columba.app.ui.model.MessageRenderer
-import network.columba.app.ui.model.toMessageUi
-import network.columba.app.ui.screens.MessageBubble
-import network.columba.app.ui.theme.ColumbaTheme
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.Message
+import network.zamolxis.app.data.storage.AttachmentStorageManager
+import network.zamolxis.app.ui.model.MessageRenderer
+import network.zamolxis.app.ui.model.toMessageUi
+import network.zamolxis.app.ui.screens.MessageBubble
+import network.zamolxis.app.ui.theme.ZamolxisTheme
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -60,7 +60,7 @@ class MarkdownReceivingE2ETest {
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     private lateinit var context: Context
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var repository: ConversationRepository
 
     @Before
@@ -69,7 +69,7 @@ class MarkdownReceivingE2ETest {
             context = InstrumentationRegistry.getInstrumentation().targetContext
             database =
                 Room
-                    .inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+                    .inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                     .allowMainThreadQueries()
                     .build()
             repository =
@@ -104,7 +104,7 @@ class MarkdownReceivingE2ETest {
     fun receivedMarkdown_formatsHeadingsEmphasisQuotesListsAndLinks() {
         val markdown =
             """
-            # Welcome to Columba
+            # Welcome to Zamolxis
 
             **Secure mesh messaging** with *Markdown*.
 
@@ -117,7 +117,7 @@ class MarkdownReceivingE2ETest {
             """.trimIndent()
 
         val message = persistAndReadInboundMessage("markdown-formatting", markdown)
-        renderReceivedMessage(message, readyText = "Welcome to Columba")
+        renderReceivedMessage(message, readyText = "Welcome to Zamolxis")
 
         composeRule.onNodeWithTag(MARKDOWN_TAG, useUnmergedTree = true).assertExists()
         assertOrRecordGolden("received-markdown-formatting.png")
@@ -200,7 +200,7 @@ class MarkdownReceivingE2ETest {
         readyText: String,
     ) {
         composeRule.setContent {
-            ColumbaTheme(darkTheme = false) {
+            ZamolxisTheme(darkTheme = false) {
                 val clipboardManager = LocalClipboardManager.current
                 Box(
                     modifier =

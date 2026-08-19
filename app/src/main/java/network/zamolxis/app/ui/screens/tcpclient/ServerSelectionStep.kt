@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.tcpclient
+package network.zamolxis.app.ui.screens.tcpclient
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,11 +24,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.data.model.TcpCommunityServer
-import network.columba.app.ui.components.CustomSettingsCard
-import network.columba.app.viewmodel.TcpClientWizardViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.TcpCommunityServer
+import network.zamolxis.app.ui.components.CustomSettingsCard
+import network.zamolxis.app.viewmodel.TcpClientWizardViewModel
 
 /**
  * Step 1: Server Selection
@@ -48,14 +50,14 @@ fun ServerSelectionStep(viewModel: TcpClientWizardViewModel) {
     ) {
         // Header
         Text(
-            text = "Choose Server",
+            text = stringResource(R.string.tcp_wiz_choose_server),
             style = MaterialTheme.typography.headlineSmall,
         )
 
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Select a community server or enter custom connection details.",
+            text = stringResource(R.string.tcp_choose_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -80,8 +82,8 @@ fun ServerSelectionStep(viewModel: TcpClientWizardViewModel) {
             // Custom option
             item {
                 CustomSettingsCard(
-                    title = "Custom",
-                    description = "Enter server details manually",
+                    title = stringResource(R.string.tcp_custom_title),
+                    description = stringResource(R.string.tcp_custom_desc),
                     isSelected = state.isCustomMode,
                     onClick = { viewModel.enableCustomMode() },
                 )
@@ -155,7 +157,7 @@ private fun ServerCard(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.common_selected),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }

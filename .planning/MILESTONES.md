@@ -1,4 +1,4 @@
-# Project Milestones: Columba
+# Project Milestones: Zamolxis
 
 ## v0.7.3 Bug Fixes (Shipped: 2026-01-28)
 

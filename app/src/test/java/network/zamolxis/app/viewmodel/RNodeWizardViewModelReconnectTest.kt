@@ -2,16 +2,16 @@
 // explicitly stubbing all methods is not practical
 @file:Suppress("NoRelaxedMocks")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
-import network.columba.app.data.model.BluetoothType
-import network.columba.app.data.model.DiscoveredRNode
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.service.InterfaceConfigManager
+import network.zamolxis.app.data.model.BluetoothType
+import network.zamolxis.app.data.model.DiscoveredRNode
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.service.InterfaceConfigManager
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk

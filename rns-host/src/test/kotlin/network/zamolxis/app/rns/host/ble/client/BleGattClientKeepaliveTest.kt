@@ -2,14 +2,14 @@
 // (tests focus on keepalive counter logic via reflection, queue operations are incidental)
 @file:Suppress("NoRelaxedMocks")
 
-package network.columba.app.rns.host.ble.client
+package network.zamolxis.app.rns.host.ble.client
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.content.Context
-import network.columba.app.rns.host.ble.model.BleConstants
-import network.columba.app.rns.host.ble.util.BleOperationQueue
+import network.zamolxis.app.rns.host.ble.model.BleConstants
+import network.zamolxis.app.rns.host.ble.util.BleOperationQueue
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -222,7 +222,7 @@ class BleGattClientKeepaliveTest {
 
         val connectionDataClass =
             Class.forName(
-                "network.columba.app.rns.host.ble.client.BleGattClient\$ConnectionData",
+                "network.zamolxis.app.rns.host.ble.client.BleGattClient\$ConnectionData",
             )
 
         // Find constructor with parameters:

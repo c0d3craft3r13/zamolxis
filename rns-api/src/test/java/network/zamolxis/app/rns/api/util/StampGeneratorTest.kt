@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
 import android.app.Application
 import kotlinx.coroutines.test.runTest

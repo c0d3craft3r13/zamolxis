@@ -1,4 +1,4 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
 import android.content.Context
 import android.media.MediaPlayer
@@ -21,8 +21,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
-import network.columba.app.ui.model.AudioAttachmentLoader
-import network.columba.app.ui.model.AudioAttachmentUi
+import network.zamolxis.app.ui.model.AudioAttachmentLoader
+import network.zamolxis.app.ui.model.AudioAttachmentUi
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 

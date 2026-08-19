@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.call
+package network.zamolxis.app.rns.host.call
 
 import java.util.UUID
 import javax.inject.Inject

@@ -1,6 +1,6 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
-import network.columba.app.repository.SettingsRepository
+import network.zamolxis.app.repository.SettingsRepository
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify

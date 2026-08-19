@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.foundation.layout.width
@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
-import network.columba.app.audio.VoiceMessagePlayerState
-import network.columba.app.audio.VoiceMessageRecordingState
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.audio.VoiceMessagePlayerState
+import network.zamolxis.app.audio.VoiceMessageRecordingState
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test

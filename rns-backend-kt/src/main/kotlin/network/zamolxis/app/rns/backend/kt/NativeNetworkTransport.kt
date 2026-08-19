@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.util.Log
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.toHex
 import network.reticulum.common.DestinationDirection
 import network.reticulum.common.DestinationType
 import network.reticulum.destination.Destination

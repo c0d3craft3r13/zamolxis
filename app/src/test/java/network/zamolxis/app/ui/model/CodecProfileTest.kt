@@ -1,7 +1,8 @@
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
 import android.app.Application
-import network.columba.app.rns.api.model.LinkSpeedProbeResult
+import androidx.test.core.app.ApplicationProvider
+import network.zamolxis.app.rns.api.model.LinkSpeedProbeResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -485,9 +486,18 @@ class CodecProfileTest {
 
     @Test
     fun `each CodecProfile has displayName and description`() {
+        // displayName/description are `@StringRes` ids now; resolving them keeps this
+        // test meaningful — a non-zero id would pass even if the string were missing.
+        val context = ApplicationProvider.getApplicationContext<Application>()
         CodecProfile.entries.forEach { profile ->
-            assertTrue("displayName should not be blank", profile.displayName.isNotBlank())
-            assertTrue("description should not be blank", profile.description.isNotBlank())
+            assertTrue(
+                "displayName should not be blank",
+                context.getString(profile.displayNameRes).isNotBlank(),
+            )
+            assertTrue(
+                "description should not be blank",
+                context.getString(profile.descriptionRes).isNotBlank(),
+            )
         }
     }
 

@@ -1,8 +1,8 @@
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.content.Context
 import android.util.Log
-import network.columba.app.rns.host.ble.bridge.KotlinBLEBridge
+import network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge
 import org.json.JSONArray
 import org.json.JSONObject
 

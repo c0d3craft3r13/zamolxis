@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import io.gitlab.arturbosch.detekt.api.CodeSmell
 import io.gitlab.arturbosch.detekt.api.Config
@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassOrObject
 
 /**
- * Requires `@network.columba.app.rns.api.annotation.ReflectivelyKept` on the
+ * Requires `@network.zamolxis.app.rns.api.annotation.ReflectivelyKept` on the
  * Chaquopy bridge shapes, so R8 cannot rename/strip a class that Python invokes
  * by name in a minified release build.
  *
@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
  * exactly the inbound-voice `PyTwoArgCallback` regression that motivated this.
  *
  * **What it flags** (in `:rns-backend-py` / `:rns-host` only):
- *  1. a `fun interface` in the `network.columba.app.rns.backend.py` package —
+ *  1. a `fun interface` in the `network.zamolxis.app.rns.backend.py` package —
  *     the Chaquopy callback SAM shape (`PyEventCallback`, `PyTwoArgCallback`);
  *  2. a class/object named `Kotlin*Bridge` — the host-bridge naming convention
  *     (`KotlinBLEBridge`, `KotlinRNodeBridge`, `KotlinUSBBridge`).
@@ -65,7 +65,7 @@ class ReflectivelyKeptRequiredRule(
                         ":rns-backend-py, or a Kotlin*Bridge class) but is not annotated " +
                         "@ReflectivelyKept. Without it, R8 renames/strips it in release builds " +
                         "and the by-name Python call fails silently — add " +
-                        "@network.columba.app.rns.api.annotation.ReflectivelyKept (class-level, " +
+                        "@network.zamolxis.app.rns.api.annotation.ReflectivelyKept (class-level, " +
                         "so it keeps all current and future members).",
             ),
         )
@@ -85,7 +85,7 @@ class ReflectivelyKeptRequiredRule(
         if (!ktClass.isInterface()) return false
         if (!ktClass.hasModifier(KtTokens.FUN_KEYWORD)) return false
         return classOrObject.containingKtFile.packageFqName.asString()
-            .startsWith("network.columba.app.rns.backend.py")
+            .startsWith("network.zamolxis.app.rns.backend.py")
     }
 
     private fun hasReflectivelyKept(classOrObject: KtClassOrObject): Boolean =

@@ -2,15 +2,15 @@
 // explicitly stubbing all methods is not practical
 @file:Suppress("NoRelaxedMocks")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.SharedPreferences
 import app.cash.turbine.test
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.service.InterfaceConfigManager
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.service.InterfaceConfigManager
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers

@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -11,11 +11,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.model.EnrichedContact
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.TestFactories
-import network.columba.app.ui.model.SharingDuration
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.TestFactories
+import network.zamolxis.app.ui.model.SharingDuration
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule

@@ -1,11 +1,11 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.rns.host.di.ServiceDatabaseProvider
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.rns.host.di.ServiceDatabaseProvider
 
 /**
  * Decides whether an inbound LXST link request should be silently dropped
@@ -50,7 +50,7 @@ class CallsFromContactsGate(
         const val TAG = "CallsFromContactsGate"
     }
 
-    private val database: ColumbaDatabase by lazy { ServiceDatabaseProvider.getDatabase(context) }
+    private val database: ZamolxisDatabase by lazy { ServiceDatabaseProvider.getDatabase(context) }
     private val contactDao by lazy { database.contactDao() }
     private val localIdentityDao by lazy { database.localIdentityDao() }
 

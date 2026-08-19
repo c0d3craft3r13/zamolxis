@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Locales the app ships translations for. Android 13+ reads this to populate
+  the per-app language picker (Settings > Apps > Zamolxis > Language), so a
+  user on an English phone can pick Russian without changing the system
+  language.
+
+  Keep in lockstep with `androidResources.localeFilters` in app/build.gradle.kts
+  and the res/values-<locale>/ directories: a locale listed here but filtered
+  out of the APK shows up in the picker and then renders in English.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="ru" />
+</locale-config>

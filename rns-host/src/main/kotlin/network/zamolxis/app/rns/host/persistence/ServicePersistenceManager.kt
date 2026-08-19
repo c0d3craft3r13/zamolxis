@@ -1,20 +1,20 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 import android.content.Context
 import android.util.Log
 import androidx.room.withTransaction
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.AnnounceInterfaceSightingEntity
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.db.entity.PeerActivityType
-import network.columba.app.data.db.entity.PeerIdentityEntity
-import network.columba.app.data.util.HashUtils
-import network.columba.app.data.util.TextSanitizer
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.rns.host.di.ServiceDatabaseProvider
-import network.columba.app.rns.host.util.PeerNameResolver
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.AnnounceInterfaceSightingEntity
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.db.entity.PeerActivityType
+import network.zamolxis.app.data.db.entity.PeerIdentityEntity
+import network.zamolxis.app.data.util.HashUtils
+import network.zamolxis.app.data.util.TextSanitizer
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.rns.host.di.ServiceDatabaseProvider
+import network.zamolxis.app.rns.host.util.PeerNameResolver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -66,7 +66,7 @@ class ServicePersistenceManager(
             false
         }
 
-    private val database: ColumbaDatabase by lazy {
+    private val database: ZamolxisDatabase by lazy {
         ServiceDatabaseProvider.getDatabase(context)
     }
 

@@ -19,11 +19,11 @@
 # InterfaceConfigManager calling rnsCore.initialize(config) explicitly.
 # One sees running.get() == true from the other and short-circuits with a
 # stale config / "Backend not ready". Logcat from both pids
-# (network.columba.app.debug and network.columba.app.debug:reticulum) is
+# (network.zamolxis.app.debug and network.zamolxis.app.debug:reticulum) is
 # captured by the harness across the Apply & Restart window.
 #
 # Preconditions:
-#   - App network.columba.app.debug installed on emulator-5554 (python build).
+#   - App network.zamolxis.app.debug installed on emulator-5554 (python build).
 #   - Onboarding already completed (launchApp lands on the Chats tab,
 #     not the Welcome wizard).
 #
@@ -98,7 +98,7 @@
 #     state is on-screen (success OR the dialog), so even if the
 #     race outcome changes we still get useful evidence.
 
-appId: network.columba.app.debug
+appId: network.zamolxis.app.debug
 name: 10-tcp-rnode-apply-restart
 tags:
   - py-backend
@@ -111,7 +111,7 @@ tags:
 # leaving us on the wrong screen. clearState would wipe onboarding and
 # break the precondition, so use stopApp only.
 - launchApp:
-    appId: network.columba.app.debug
+    appId: network.zamolxis.app.debug
     clearKeychain: false
     stopApp: true
     clearState: false

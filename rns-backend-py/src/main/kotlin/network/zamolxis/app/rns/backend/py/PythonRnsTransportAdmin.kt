@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import android.util.Log
 import com.chaquo.python.PyObject
@@ -6,11 +6,11 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.rns.api.model.FailedInterface
-import network.columba.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.InterfaceConfig
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -95,9 +95,9 @@ class PythonRnsTransportAdmin(
     // (push -> _bleConnectionsFlow) and query it (pull -> getBleConnectionDetails).
     // replay=1 means a UI subscriber that opens Network Status *after* a peer
     // connected still sees the current peers.
-    @Volatile private var bleSource: network.columba.app.rns.api.BleConnectionSource? = null
+    @Volatile private var bleSource: network.zamolxis.app.rns.api.BleConnectionSource? = null
     private val bleListener =
-        network.columba.app.rns.api.BleConnectionsListener { json -> _bleConnectionsFlow.tryEmit(json) }
+        network.zamolxis.app.rns.api.BleConnectionsListener { json -> _bleConnectionsFlow.tryEmit(json) }
 
     /**
      * Attach the host-side BLE bridge as the live connection source. Idempotent:
@@ -108,7 +108,7 @@ class PythonRnsTransportAdmin(
      * two sources (which would double-emit on [_bleConnectionsFlow]).
      */
     @Synchronized
-    fun attachBleSource(source: network.columba.app.rns.api.BleConnectionSource) {
+    fun attachBleSource(source: network.zamolxis.app.rns.api.BleConnectionSource) {
         bleSource?.removeBleConnectionsListener(bleListener)
         bleSource = source
         source.addBleConnectionsListener(bleListener)
@@ -326,7 +326,7 @@ class PythonRnsTransportAdmin(
             // Reticulum.get_interface_stats() reads optional fields from every
             // interface. One third-party/runtime interface missing one of those
             // fields can therefore hide stats for every healthy interface.
-            // collectInterfaces() reads only Columba's required fields and
+            // collectInterfaces() reads only Zamolxis's required fields and
             // isolates failures to the malformed interface.
             interfaceStatsFromSnapshot(collectInterfaces(), interfaceName)
         }

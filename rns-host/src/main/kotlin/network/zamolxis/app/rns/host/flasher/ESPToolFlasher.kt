@@ -1,7 +1,7 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 import android.util.Log
-import network.columba.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -89,7 +89,7 @@ class ESPToolFlasher(
     ) : Exception(message)
 
     companion object {
-        private const val TAG = "Columba:ESPTool"
+        private const val TAG = "Zamolxis:ESPTool"
 
         // Baud rates
         private const val INITIAL_BAUD = 115200

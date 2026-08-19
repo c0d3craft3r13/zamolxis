@@ -1,4 +1,4 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import android.app.Application
 import android.content.Context
@@ -14,14 +14,14 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
-import network.columba.app.data.crypto.IdentityKeyEncryptor
-import network.columba.app.data.database.InterfaceDatabase
-import network.columba.app.data.database.dao.InterfaceDao
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.CallHistoryEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.service.PropagationNodeManager
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
+import network.zamolxis.app.data.database.InterfaceDatabase
+import network.zamolxis.app.data.database.dao.InterfaceDao
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.service.PropagationNodeManager
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -41,14 +41,14 @@ import java.util.zip.ZipOutputStream
 @Suppress("NoRelaxedMocks") // External migration collaborators are irrelevant to the Room import assertions.
 class MigrationCallHistoryImportTest {
     private lateinit var context: Context
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var importer: MigrationImporter
     private val json = Json { encodeDefaults = true }
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        database = Room.inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java).allowMainThreadQueries().build()
+        database = Room.inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java).allowMainThreadQueries().build()
         val interfaceDao = mockk<InterfaceDao>(relaxed = true)
         every { interfaceDao.getAllInterfaces() } returns flowOf(emptyList())
         val interfaceDatabase = mockk<InterfaceDatabase>(relaxed = true)
@@ -462,7 +462,7 @@ class MigrationCallHistoryImportTest {
     }
 
     private fun writeTempFile(bytes: ByteArray): Uri {
-        val file = File.createTempFile("call_history_transfer_", ".columba", context.cacheDir)
+        val file = File.createTempFile("call_history_transfer_", ".zamolxis", context.cacheDir)
         file.writeBytes(bytes)
         file.deleteOnExit()
         return Uri.fromFile(file)

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +16,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 
 /**
  * Feature flag to enable/disable RMSP UI.
@@ -56,20 +59,20 @@ fun MapSourcesCard(
     val showWarning = !httpEnabled && !effectiveRmspEnabled && !hasOfflineMaps
 
     CollapsibleSettingsCard(
-        title = "Map",
+        title = stringResource(R.string.mapsources_title),
         icon = Icons.Default.Map,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
     ) {
         // Description
         Text(
-            text = "Configure how map tiles are fetched. Offline maps take priority when available.",
+            text = stringResource(R.string.mapsources_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Text(
-            text = "Sources",
+            text = stringResource(R.string.mapsources_sources),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -78,8 +81,8 @@ fun MapSourcesCard(
 
         // HTTP source toggle
         MapSourceToggle(
-            title = "HTTP (OpenFreeMap)",
-            description = "Fetch tiles from the internet",
+            title = stringResource(R.string.mapsources_http_title),
+            description = stringResource(R.string.mapsources_http_desc),
             enabled = httpEnabled,
             onEnabledChange = { enabled ->
                 if (enabled || canDisableHttp) {
@@ -92,12 +95,16 @@ fun MapSourcesCard(
         // RMSP source toggle - controlled by feature flag
         if (RMSP_FEATURE_ENABLED) {
             MapSourceToggle(
-                title = "RMSP (Mesh Network)",
+                title = stringResource(R.string.mapsources_rmsp_title),
                 description =
                     if (rmspServerCount > 0) {
-                        "$rmspServerCount server${if (rmspServerCount != 1) "s" else ""} available"
+                        pluralStringResource(
+                            R.plurals.mapsources_rmsp_servers,
+                            rmspServerCount,
+                            rmspServerCount,
+                        )
                     } else {
-                        "Fetch tiles from Reticulum mesh"
+                        stringResource(R.string.mapsources_rmsp_desc)
                     },
                 enabled = rmspEnabled,
                 onEnabledChange = { enabled ->
@@ -110,7 +117,7 @@ fun MapSourcesCard(
         }
 
         Text(
-            text = "Settings",
+            text = stringResource(R.string.mapsources_settings),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -119,8 +126,8 @@ fun MapSourcesCard(
 
         // Marker declutter toggle
         MapSourceToggle(
-            title = "Marker declutter",
-            description = "Spread overlapping markers for readability",
+            title = stringResource(R.string.mapsources_declutter),
+            description = stringResource(R.string.mapsources_declutter_desc),
             enabled = markerDeclutterEnabled,
             onEnabledChange = onMarkerDeclutterEnabledChange,
         )
@@ -137,11 +144,11 @@ fun MapSourcesCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
-                    contentDescription = "Warning",
+                    contentDescription = stringResource(R.string.mapsources_warning_cd),
                     tint = MaterialTheme.colorScheme.error,
                 )
                 Text(
-                    text = "No map tiles will load until a source is enabled or offline maps are downloaded",
+                    text = stringResource(R.string.mapsources_no_tiles),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -151,7 +158,7 @@ fun MapSourcesCard(
         // Offline maps info
         if (hasOfflineMaps) {
             Text(
-                text = "Offline maps available - they will be used when location is covered",
+                text = stringResource(R.string.mapsources_offline_available),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
             )

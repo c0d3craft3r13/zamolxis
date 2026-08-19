@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

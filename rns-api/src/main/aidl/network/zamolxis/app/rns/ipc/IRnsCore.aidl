@@ -18,27 +18,27 @@
 //   - restorePeerIdentities / restoreAnnounceIdentities
 //                       → "count": int
 //   - Result<Unit>      → Bundle.EMPTY
-package network.columba.app.rns.ipc;
+package network.zamolxis.app.rns.ipc;
 
-import network.columba.app.rns.api.model.AnnounceRestoreEntry;
-import network.columba.app.rns.api.model.Destination;
-import network.columba.app.rns.api.model.DestinationType;
-import network.columba.app.rns.api.model.Direction;
-import network.columba.app.rns.api.model.Identity;
-import network.columba.app.rns.api.model.Link;
-import network.columba.app.rns.api.model.PacketType;
-import network.columba.app.rns.api.model.PeerIdentityEntry;
-import network.columba.app.rns.api.model.ReticulumConfig;
-import network.columba.app.rns.ipc.callback.IRnsAnnounceCallback;
-import network.columba.app.rns.ipc.callback.IRnsBoolCallback;
-import network.columba.app.rns.ipc.callback.IRnsByteArrayCallback;
-import network.columba.app.rns.ipc.callback.IRnsIntCallback;
-import network.columba.app.rns.ipc.callback.IRnsLinkEventCallback;
-import network.columba.app.rns.ipc.callback.IRnsNetworkStatusCallback;
-import network.columba.app.rns.ipc.callback.IRnsPacketCallback;
-import network.columba.app.rns.ipc.callback.IRnsResultCallback;
-import network.columba.app.rns.ipc.callback.IRnsStringCallback;
-import network.columba.app.rns.ipc.callback.IRnsStringListCallback;
+import network.zamolxis.app.rns.api.model.AnnounceRestoreEntry;
+import network.zamolxis.app.rns.api.model.Destination;
+import network.zamolxis.app.rns.api.model.DestinationType;
+import network.zamolxis.app.rns.api.model.Direction;
+import network.zamolxis.app.rns.api.model.Identity;
+import network.zamolxis.app.rns.api.model.Link;
+import network.zamolxis.app.rns.api.model.PacketType;
+import network.zamolxis.app.rns.api.model.PeerIdentityEntry;
+import network.zamolxis.app.rns.api.model.ReticulumConfig;
+import network.zamolxis.app.rns.ipc.callback.IRnsAnnounceCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsByteArrayCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsIntCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsLinkEventCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsNetworkStatusCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsPacketCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsStringCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsStringListCallback;
 
 oneway interface IRnsCore {
     // ==================== Initialization & lifecycle ====================
@@ -81,7 +81,11 @@ oneway interface IRnsCore {
 
     void announceDestination(in Destination destination, in @nullable byte[] appData, in IRnsResultCallback cb);
 
-    void triggerAutoAnnounce(String displayName, in IRnsResultCallback cb);
+    // pqFingerprint: 16-byte hybrid post-quantum key fingerprint, or null when the
+    // identity has none. Only the fingerprint travels in an announce — the key
+    // itself is 1216 bytes and every transport node on the mesh rebroadcasts
+    // announces, so it rides along with the first message instead.
+    void triggerAutoAnnounce(String displayName, in @nullable byte[] pqFingerprint, in IRnsResultCallback cb);
 
     // ==================== Packet operations ====================
 
@@ -154,7 +158,7 @@ oneway interface IRnsCore {
     void unblackholeIdentity(String identityHashHex, in IRnsResultCallback cb);
 
     // TODO(A.10): registerAlternativeRelayHandler + registerServiceInitListener
-    // land here when the ColumbaApplication mutable closures are replaced with
+    // land here when the ZamolxisApplication mutable closures are replaced with
     // AIDL callback registrations. Deferred until the Kotlin RnsCore interface
     // gains the matching register* methods.
 }

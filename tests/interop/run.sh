@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Convenience runner for the Columba ↔ Sideband interop suite.
+# Convenience runner for the Zamolxis ↔ Sideband interop suite.
 #
 # Defaults match the existing dev setup on this machine. Override via env:
 #

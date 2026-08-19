@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.ContentResolver
 import android.content.Context
@@ -22,10 +22,10 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.RnsCore
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.RnsCore
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

@@ -1,12 +1,15 @@
-package network.columba.app.ui.util
+package network.zamolxis.app.ui.util
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.runtime.Composable
 import androidx.compose.material.icons.filled.SignalCellular4Bar
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.SignalCellularConnectedNoInternet0Bar
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import java.util.Locale
+import network.zamolxis.app.R
 
 // Color constants for signal quality indicators
 private val ColorExcellent = Color(0xFF4CAF50) // Green
@@ -39,42 +42,43 @@ data class SignalQualityInfo(
  * @param rssi RSSI value in dBm (typically -30 to -120)
  * @return SignalQualityInfo with appropriate icon, color, and text
  */
+@Composable
 fun getRssiInfo(rssi: Int): SignalQualityInfo =
     when {
         rssi > -50 ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellular4Bar,
                 color = ColorExcellent,
-                text = "Excellent ($rssi dBm)",
-                subtitle = "Very strong signal",
+                text = stringResource(R.string.signal_rssi_excellent, rssi),
+                subtitle = stringResource(R.string.signal_rssi_excellent_sub),
             )
         rssi > -70 ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellular4Bar,
                 color = ColorGood,
-                text = "Good ($rssi dBm)",
-                subtitle = "Strong signal",
+                text = stringResource(R.string.signal_rssi_good, rssi),
+                subtitle = stringResource(R.string.signal_rssi_good_sub),
             )
         rssi > -85 ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellularAlt,
                 color = ColorFair,
-                text = "Fair ($rssi dBm)",
-                subtitle = "Moderate signal strength",
+                text = stringResource(R.string.signal_rssi_fair, rssi),
+                subtitle = stringResource(R.string.signal_rssi_fair_sub),
             )
         rssi > -100 ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellularAlt,
                 color = ColorPoor,
-                text = "Weak ($rssi dBm)",
-                subtitle = "Low signal, may be unreliable",
+                text = stringResource(R.string.signal_rssi_weak, rssi),
+                subtitle = stringResource(R.string.signal_rssi_weak_sub),
             )
         else ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellularConnectedNoInternet0Bar,
                 color = ColorVeryPoor,
-                text = "Very Weak ($rssi dBm)",
-                subtitle = "Marginal signal at edge of range",
+                text = stringResource(R.string.signal_rssi_very_weak, rssi),
+                subtitle = stringResource(R.string.signal_rssi_very_weak_sub),
             )
     }
 
@@ -91,6 +95,7 @@ fun getRssiInfo(rssi: Int): SignalQualityInfo =
  * @param snr SNR value in dB (typically -20 to +20)
  * @return SignalQualityInfo with appropriate icon, color, and text
  */
+@Composable
 fun getSnrInfo(snr: Float): SignalQualityInfo {
     val snrStr = String.format(Locale.US, "%.1f", snr)
     return when {
@@ -98,36 +103,36 @@ fun getSnrInfo(snr: Float): SignalQualityInfo {
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellular4Bar,
                 color = ColorExcellent,
-                text = "Excellent ($snrStr dB)",
-                subtitle = "Clear signal, very low noise",
+                text = stringResource(R.string.signal_snr_excellent, snrStr),
+                subtitle = stringResource(R.string.signal_snr_excellent_sub),
             )
         snr > 5f ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellular4Bar,
                 color = ColorGood,
-                text = "Good ($snrStr dB)",
-                subtitle = "Low noise level",
+                text = stringResource(R.string.signal_snr_good, snrStr),
+                subtitle = stringResource(R.string.signal_snr_good_sub),
             )
         snr > 0f ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellularAlt,
                 color = ColorFair,
-                text = "Fair ($snrStr dB)",
-                subtitle = "Moderate noise level",
+                text = stringResource(R.string.signal_snr_fair, snrStr),
+                subtitle = stringResource(R.string.signal_snr_fair_sub),
             )
         snr > -5f ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellularAlt,
                 color = ColorPoor,
-                text = "Poor ($snrStr dB)",
-                subtitle = "High noise, may be unreliable",
+                text = stringResource(R.string.signal_snr_poor, snrStr),
+                subtitle = stringResource(R.string.signal_snr_poor_sub),
             )
         else ->
             SignalQualityInfo(
                 icon = Icons.Default.SignalCellularConnectedNoInternet0Bar,
                 color = ColorVeryPoor,
-                text = "Very Poor ($snrStr dB)",
-                subtitle = "Very noisy, at decodability limit",
+                text = stringResource(R.string.signal_snr_very_poor, snrStr),
+                subtitle = stringResource(R.string.signal_snr_very_poor_sub),
             )
     }
 }

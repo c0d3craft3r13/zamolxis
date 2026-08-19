@@ -33,7 +33,7 @@
 # `extendedWaitUntil: "IP Address"` step won't match because the wizard
 # is still on the Choose Server screen at that point.
 
-appId: network.columba.app.debug
+appId: network.zamolxis.app.debug
 name: setup-add-tcp-host-interface
 tags:
   - py-backend
@@ -41,7 +41,7 @@ tags:
   - work-in-progress
 ---
 - launchApp:
-    appId: network.columba.app.debug
+    appId: network.zamolxis.app.debug
     stopApp: true
 - extendedWaitUntil:
     visible: "Chats"

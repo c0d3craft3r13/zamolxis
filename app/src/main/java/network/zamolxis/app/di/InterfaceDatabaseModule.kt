@@ -1,4 +1,4 @@
-package network.columba.app.di
+package network.zamolxis.app.di
 
 import android.content.Context
 import androidx.room.Room
@@ -11,20 +11,20 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import network.columba.app.data.database.InterfaceDatabase
-import network.columba.app.data.database.dao.InterfaceDao
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.service.AutoAnnounceManager
-import network.columba.app.service.IdentityResolutionManager
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.service.MessageCollector
-import network.columba.app.service.PropagationNodeManager
+import network.zamolxis.app.data.database.InterfaceDatabase
+import network.zamolxis.app.data.database.dao.InterfaceDao
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.service.AutoAnnounceManager
+import network.zamolxis.app.service.IdentityResolutionManager
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.service.MessageCollector
+import network.zamolxis.app.service.PropagationNodeManager
 import javax.inject.Provider
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -116,15 +116,15 @@ object InterfaceDatabaseModule {
         rnsTransportAdmin: RnsTransportAdmin,
         interfaceRepository: InterfaceRepository,
         identityRepository: IdentityRepository,
-        identityKeyProvider: network.columba.app.data.crypto.IdentityKeyProvider,
+        identityKeyProvider: network.zamolxis.app.data.crypto.IdentityKeyProvider,
         conversationRepository: ConversationRepository,
         messageCollector: MessageCollector,
-        database: ColumbaDatabase,
+        database: ZamolxisDatabase,
         settingsRepository: SettingsRepository,
         autoAnnounceManager: AutoAnnounceManager,
         identityResolutionManager: IdentityResolutionManager,
         propagationNodeManager: PropagationNodeManager,
-        transportObserver: network.columba.app.service.manager.InterfaceTransportObserver,
+        transportObserver: network.zamolxis.app.service.manager.InterfaceTransportObserver,
         @ApplicationScope applicationScope: CoroutineScope,
     ): InterfaceConfigManager =
         InterfaceConfigManager(

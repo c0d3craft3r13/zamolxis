@@ -1,7 +1,7 @@
 // Observer callback for SharedFlow<PropagationState> (RnsLxmf.propagationStateFlow).
-package network.columba.app.rns.ipc.callback;
+package network.zamolxis.app.rns.ipc.callback;
 
-import network.columba.app.rns.api.model.PropagationState;
+import network.zamolxis.app.rns.api.model.PropagationState;
 
 oneway interface IRnsPropagationStateCallback {
     void onPropagationState(in PropagationState state);

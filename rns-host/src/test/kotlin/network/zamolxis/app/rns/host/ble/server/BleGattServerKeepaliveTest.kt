@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.server
+package network.zamolxis.app.rns.host.ble.server
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job

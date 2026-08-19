@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 /**
  * Check if a coordinate value is valid (non-null and non-zero).

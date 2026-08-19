@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.state
+package network.zamolxis.app.rns.host.state
 
 import java.util.concurrent.atomic.AtomicReference
 

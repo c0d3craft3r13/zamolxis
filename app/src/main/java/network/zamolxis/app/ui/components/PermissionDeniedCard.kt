@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.content.Context
 import android.content.Intent
@@ -21,10 +21,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import network.zamolxis.app.R
 
 /**
  * Card displaying a message when Bluetooth permissions are permanently denied,
@@ -67,7 +69,7 @@ fun PermissionDeniedCard(
                     modifier = Modifier.padding(end = 12.dp),
                 )
                 Text(
-                    text = "Permissions Required",
+                    text = stringResource(R.string.perm_required_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onErrorContainer,
@@ -94,7 +96,7 @@ fun PermissionDeniedCard(
                     Button(
                         onClick = { openAppSettings(context) },
                     ) {
-                        Text("Open Settings")
+                        Text(stringResource(R.string.perm_open_settings))
                     }
                 }
             }
@@ -107,9 +109,9 @@ fun PermissionDeniedCard(
  */
 private fun getDefaultPermissionDeniedMessage(): String {
     return """
-        Bluetooth permissions have been denied. To use BLE features in Columba, please grant Bluetooth permissions in your device settings.
+        Bluetooth permissions have been denied. To use BLE features in Zamolxis, please grant Bluetooth permissions in your device settings.
 
-        Without these permissions, Columba cannot discover or connect to nearby devices via Bluetooth.
+        Without these permissions, Zamolxis cannot discover or connect to nearby devices via Bluetooth.
         """.trimIndent()
 }
 

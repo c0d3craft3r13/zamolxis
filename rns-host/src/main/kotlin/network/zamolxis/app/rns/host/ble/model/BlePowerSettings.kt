@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.model
+package network.zamolxis.app.rns.host.ble.model
 
 data class BlePowerSettings(
     val preset: BlePowerPreset = BlePowerPreset.BALANCED,

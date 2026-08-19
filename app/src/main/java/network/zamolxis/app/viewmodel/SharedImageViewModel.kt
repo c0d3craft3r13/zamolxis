@@ -1,9 +1,9 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
-import network.columba.app.util.FileUtils
+import network.zamolxis.app.util.FileUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

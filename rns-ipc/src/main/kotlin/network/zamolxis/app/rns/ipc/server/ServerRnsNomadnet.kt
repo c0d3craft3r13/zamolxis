@@ -1,16 +1,16 @@
-package network.columba.app.rns.ipc.server
+package network.zamolxis.app.rns.ipc.server
 
 import android.os.Bundle
 import kotlinx.coroutines.CoroutineScope
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsNomadnet
-import network.columba.app.rns.ipc.callback.IRnsBoolCallback
-import network.columba.app.rns.ipc.callback.IRnsFloatCallback
-import network.columba.app.rns.ipc.callback.IRnsFloatEventCallback
-import network.columba.app.rns.ipc.callback.IRnsResultCallback
-import network.columba.app.rns.ipc.callback.IRnsStringCallback
-import network.columba.app.rns.ipc.callback.IRnsStringEventCallback
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsNomadnet
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsFloatCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsFloatEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringEventCallback
 
 internal class ServerRnsNomadnet(
     private val impl: RnsNomadnet,

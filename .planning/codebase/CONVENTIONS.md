@@ -37,7 +37,7 @@
 - Trim trailing whitespace
 
 **Linting:**
-- Tool: `detekt` (1.23.8) with custom Columba rules
+- Tool: `detekt` (1.23.8) with custom Zamolxis rules
 - Tool: `ktlint` (1.0.1) in advisory mode (non-blocking)
 - Baseline: `detekt-baseline.xml` captures pre-existing issues; new code must pass checks
 - Run verification: `./gradlew detektCheck ktlintCheck`
@@ -62,7 +62,7 @@
 2. Blank line
 3. Standard library imports (e.g., `java.*`, `kotlin.*`)
 4. Third-party imports (Android framework, Dagger, kotlinx, etc.)
-5. Project-local imports (`network.columba.app.*`)
+5. Project-local imports (`network.zamolxis.app.*`)
 6. Blank line
 7. Code
 
@@ -70,14 +70,14 @@
 
 Example from `BleStatusRepository.kt`:
 ```kotlin
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.util.Log
-import network.columba.app.data.model.BleConnectionInfo
-import network.columba.app.data.model.BleConnectionsState
-import network.columba.app.reticulum.protocol.ReticulumProtocol
+import network.zamolxis.app.data.model.BleConnectionInfo
+import network.zamolxis.app.data.model.BleConnectionsState
+import network.zamolxis.app.reticulum.protocol.ReticulumProtocol
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONArray

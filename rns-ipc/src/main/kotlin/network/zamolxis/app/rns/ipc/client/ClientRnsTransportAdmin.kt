@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc.client
+package network.zamolxis.app.rns.ipc.client
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -13,16 +13,16 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.rns.api.model.FailedInterface
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsTransportAdmin
-import network.columba.app.rns.ipc.callback.IRnsStringEventCallback
-import network.columba.app.rns.ipc.callback.IRnsUnitEventCallback
-import network.columba.app.rns.ipc.toAnyMap
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsTransportAdmin
+import network.zamolxis.app.rns.ipc.callback.IRnsStringEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsUnitEventCallback
+import network.zamolxis.app.rns.ipc.toAnyMap
 
 internal class ClientRnsTransportAdmin(
     private val remote: IRnsTransportAdmin,

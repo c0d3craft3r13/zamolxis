@@ -1,9 +1,10 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
-import network.columba.app.data.db.dao.RmspServerDao
-import network.columba.app.data.db.entity.RmspServerEntity
+import network.zamolxis.app.data.db.dao.RmspServerDao
+import network.zamolxis.app.data.db.entity.RmspServerEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -71,7 +72,10 @@ data class RmspServer(
             size < 1024 -> "$size B"
             size < 1024 * 1024 -> "${size / 1024} KB"
             size < 1024 * 1024 * 1024 -> "${size / (1024 * 1024)} MB"
-            else -> "%.1f GB".format(size / (1024.0 * 1024.0 * 1024.0))
+            // Locale.US, not the default locale: the unit label ("GB") is hardcoded
+            // English, so formatting the number with a locale-specific separator
+            // produced mixed output like "2,0 GB" on a comma-decimal device.
+            else -> String.format(Locale.US, "%.1f GB", size / (1024.0 * 1024.0 * 1024.0))
         }
     }
 

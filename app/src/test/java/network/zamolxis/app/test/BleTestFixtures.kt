@@ -1,7 +1,7 @@
-package network.columba.app.test
+package network.zamolxis.app.test
 
-import network.columba.app.data.model.BleConnectionInfo
-import network.columba.app.data.model.ConnectionType
+import network.zamolxis.app.data.model.BleConnectionInfo
+import network.zamolxis.app.data.model.ConnectionType
 
 /**
  * Test fixtures and factory functions for BLE connection testing.

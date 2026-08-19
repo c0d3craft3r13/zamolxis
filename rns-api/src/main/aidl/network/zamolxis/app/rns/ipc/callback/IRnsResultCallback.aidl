@@ -7,9 +7,9 @@
 // Errors are typed via RnsError — :rns-ipc translates these into
 // Result.failure(RnsException(err)) on the UI side so callers keep the
 // familiar `result.fold` shape.
-package network.columba.app.rns.ipc.callback;
+package network.zamolxis.app.rns.ipc.callback;
 
-import network.columba.app.rns.api.RnsError;
+import network.zamolxis.app.rns.api.RnsError;
 
 oneway interface IRnsResultCallback {
     void onSuccess(in Bundle resultPayload);

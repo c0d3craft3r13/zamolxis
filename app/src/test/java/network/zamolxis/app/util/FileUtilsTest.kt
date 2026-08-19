@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AudioFile

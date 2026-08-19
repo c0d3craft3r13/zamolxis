@@ -1,4 +1,4 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import android.app.Application
 import android.content.Context
@@ -6,13 +6,13 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
 import kotlinx.coroutines.test.runTest
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.db.entity.PeerActivityType
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.db.entity.PeerActivityType
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -25,13 +25,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class PeerActivityDaoTest {
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var dao: PeerActivityDao
 
     @Before
     fun setup() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        database = Room.inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+        database = Room.inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
             .allowMainThreadQueries()
             .build()
         dao = database.peerActivityDao()
@@ -75,13 +75,13 @@ class PeerActivityDaoTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "peer-activity-restart-test"
         context.deleteDatabase(name)
-        var persistentDb = Room.databaseBuilder(context, ColumbaDatabase::class.java, name)
+        var persistentDb = Room.databaseBuilder(context, ZamolxisDatabase::class.java, name)
             .allowMainThreadQueries()
             .build()
         persistentDb.peerActivityDao().recordActivity("peer", 77L, PeerActivityType.MESSAGE)
         persistentDb.close()
 
-        persistentDb = Room.databaseBuilder(context, ColumbaDatabase::class.java, name)
+        persistentDb = Room.databaseBuilder(context, ZamolxisDatabase::class.java, name)
             .allowMainThreadQueries()
             .build()
         assertEquals(77L, persistentDb.peerActivityDao().getActivity("peer")?.lastReceivedAt)

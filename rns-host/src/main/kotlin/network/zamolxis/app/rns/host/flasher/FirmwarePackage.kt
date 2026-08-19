@@ -1,6 +1,6 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.toHex
 import android.content.Context
 import android.util.Log
 import kotlinx.serialization.Serializable
@@ -158,7 +158,7 @@ data class FirmwarePackage(
     }
 
     companion object {
-        private const val TAG = "Columba:FirmwarePackage"
+        private const val TAG = "Zamolxis:FirmwarePackage"
 
         /**
          * Calculate SHA256 hash of a file.
@@ -333,7 +333,7 @@ class FirmwareRepository(
     private val context: Context,
 ) {
     companion object {
-        private const val TAG = "Columba:FirmwareRepo"
+        private const val TAG = "Zamolxis:FirmwareRepo"
         private const val FIRMWARE_DIR = "firmware"
 
         // Bundled firmware versions (update when new firmware is released)

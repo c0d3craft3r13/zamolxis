@@ -2,11 +2,11 @@
 
 ## Overview
 
-Enable importing contacts using just a destination hash (32 hex characters) from Sideband's "Copy Address" feature, in addition to the existing full `lxma://` URL format. This enables seamless contact sharing between Sideband and Columba users.
+Enable importing contacts using just a destination hash (32 hex characters) from Sideband's "Copy Address" feature, in addition to the existing full `lxma://` URL format. This enables seamless contact sharing between Sideband and Zamolxis users.
 
 ## Problem Statement
 
-Sideband's "Copy Address" feature only copies the LXMF destination hash (32 hex characters), but Columba currently requires the full `lxma://hash:pubkey` format (~165 characters) which includes both the destination hash and the 128-character public key. This makes it difficult for users to import contacts from Sideband.
+Sideband's "Copy Address" feature only copies the LXMF destination hash (32 hex characters), but Zamolxis currently requires the full `lxma://hash:pubkey` format (~165 characters) which includes both the destination hash and the 128-character public key. This makes it difficult for users to import contacts from Sideband.
 
 ### Technical Background
 
@@ -49,7 +49,7 @@ Detect input format in the Add Contact Manually dialog and handle accordingly:
 
 ### 1. Data Model Changes
 
-**File:** `data/src/main/java/network.columba.app/data/db/entity/ContactEntity.kt`
+**File:** `data/src/main/java/network.zamolxis.app/data/db/entity/ContactEntity.kt`
 
 #### Add ContactStatus Enum
 
@@ -116,7 +116,7 @@ val MIGRATION_X_Y = object : Migration(X, Y) {
 
 ### 2. Validation Changes
 
-**File:** `app/src/main/java/network.columba.app/util/validation/InputValidator.kt`
+**File:** `app/src/main/java/network.zamolxis.app/util/validation/InputValidator.kt`
 
 #### Add IdentityInput Sealed Class
 
@@ -206,7 +206,7 @@ fun parseIdentityInput(input: String): ValidationResult<IdentityInput> {
 
 ### 3. Repository Changes
 
-**File:** `data/src/main/java/network.columba.app/data/repository/ContactRepository.kt`
+**File:** `data/src/main/java/network.zamolxis.app/data/repository/ContactRepository.kt`
 
 #### Add New Methods
 
@@ -329,7 +329,7 @@ interface ContactDao {
 
 ### 4. ViewModel Changes
 
-**File:** `app/src/main/java/network.columba.app/viewmodel/ContactsViewModel.kt`
+**File:** `app/src/main/java/network.zamolxis.app/viewmodel/ContactsViewModel.kt`
 
 #### Add Result Sealed Class
 
@@ -460,7 +460,7 @@ suspend fun retryIdentityResolution(destinationHash: String) {
 
 ### 5. Reticulum Service Integration
 
-**File:** `reticulum/src/main/java/network.columba.app/reticulum/ReticulumService.kt`
+**File:** `reticulum/src/main/java/network.zamolxis.app/reticulum/ReticulumService.kt`
 
 #### Add Identity Resolution Methods
 
@@ -534,7 +534,7 @@ data class Identity(
 
 ### 6. UI Changes
 
-**File:** `app/src/main/java/network.columba.app/ui/screens/ContactsScreen.kt`
+**File:** `app/src/main/java/network.zamolxis.app/ui/screens/ContactsScreen.kt`
 
 #### 6.1 Update ManualEntryDialog
 
@@ -672,7 +672,7 @@ fun PendingContactInfoDialog(onDismiss: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Columba is now searching the network for their public key. " +
+                    "Zamolxis is now searching the network for their public key. " +
                     "You'll be able to message them once their identity is found.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -876,11 +876,11 @@ fun PendingContactBottomSheet(
             // Explanation
             Text(
                 text = if (isUnresolved)
-                    "Columba couldn't find this contact's public key on the network. " +
+                    "Zamolxis couldn't find this contact's public key on the network. " +
                     "They may need to come online and announce their presence, or the " +
                     "destination hash may be incorrect."
                 else
-                    "Columba is searching the Reticulum network for this contact's " +
+                    "Zamolxis is searching the Reticulum network for this contact's " +
                     "public key. You'll be able to message them once their identity " +
                     "is found. This typically happens when they come online.",
                 style = MaterialTheme.typography.bodyMedium,
@@ -944,10 +944,10 @@ fun PendingContactBottomSheet(
 
 ### 7. Background Identity Resolution
 
-**File:** `app/src/main/java/network.columba.app/service/IdentityResolutionWorker.kt` (new file)
+**File:** `app/src/main/java/network.zamolxis.app/service/IdentityResolutionWorker.kt` (new file)
 
 ```kotlin
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.content.Context
 import android.util.Log
@@ -955,9 +955,9 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.reticulum.ReticulumService
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.reticulum.ReticulumService
 import java.util.concurrent.TimeUnit
 
 /**
@@ -1091,7 +1091,7 @@ class IdentityResolutionWorker @AssistedInject constructor(
 
 ### 8. Application Initialization
 
-**File:** `app/src/main/java/network.columba.app/ColumbaApplication.kt`
+**File:** `app/src/main/java/network.zamolxis.app/ZamolxisApplication.kt`
 
 Add worker scheduling in `onCreate()`:
 
@@ -1154,7 +1154,7 @@ override fun onCreate() {
 | `ContactsViewModel.kt` | Add `AddContactResult`, `addContact()`, `retryIdentityResolution()` |
 | `ContactsScreen.kt` | Update dialog, add pending indicators, add bottom sheet |
 | `ReticulumService.kt` | Add `recallIdentity()`, `requestPath()` |
-| `ColumbaApplication.kt` | Schedule identity resolution worker |
+| `ZamolxisApplication.kt` | Schedule identity resolution worker |
 | Database migration | Add `status` column with default `ACTIVE` |
 
 ### New Files

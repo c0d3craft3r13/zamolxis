@@ -1,4 +1,4 @@
-package network.columba.app.data.db.dao
+package network.zamolxis.app.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -6,8 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
-import network.columba.app.data.db.entity.PeerActivityEntity
-import network.columba.app.data.db.entity.PeerActivityEventEntity
+import network.zamolxis.app.data.db.entity.PeerActivityEntity
+import network.zamolxis.app.data.db.entity.PeerActivityEventEntity
 
 @Dao
 interface PeerActivityDao {
@@ -17,7 +17,7 @@ interface PeerActivityDao {
      * move last-seen backwards or change the winning event type.
      *
      * This deliberately avoids SQLite's newer `ON CONFLICT DO UPDATE` syntax:
-     * Columba supports API 24, whose bundled SQLite predates that syntax.
+     * Zamolxis supports API 24, whose bundled SQLite predates that syntax.
      */
     @Transaction
     suspend fun recordActivity(

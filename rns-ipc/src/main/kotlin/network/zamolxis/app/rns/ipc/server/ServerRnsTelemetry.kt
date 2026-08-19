@@ -1,15 +1,15 @@
-package network.columba.app.rns.ipc.server
+package network.zamolxis.app.rns.ipc.server
 
 import android.os.Bundle
 import kotlinx.coroutines.CoroutineScope
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.LocationTelemetry
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsTelemetry
-import network.columba.app.rns.ipc.callback.IRnsLocationTelemetryCallback
-import network.columba.app.rns.ipc.callback.IRnsResultCallback
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsTelemetry
+import network.zamolxis.app.rns.ipc.callback.IRnsLocationTelemetryCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback
 
 internal class ServerRnsTelemetry(
     private val impl: RnsTelemetry,

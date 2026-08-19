@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -24,28 +24,28 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import network.columba.app.BuildConfig
-import network.columba.app.data.model.EnrichedContact
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.map.MapTileSourceManager
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.service.AvailableRelaysState
-import network.columba.app.service.PropagationNodeManager
-import network.columba.app.service.RelayInfo
-import network.columba.app.service.TelemetryCollectorManager
-import network.columba.app.ui.theme.AppTheme
-import network.columba.app.ui.theme.PresetTheme
-import network.columba.app.ui.theme.ThemeMode
+import network.zamolxis.app.BuildConfig
+import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.map.MapTileSourceManager
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.service.AvailableRelaysState
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.service.RelayInfo
+import network.zamolxis.app.service.TelemetryCollectorManager
+import network.zamolxis.app.ui.theme.AppTheme
+import network.zamolxis.app.ui.theme.PresetTheme
+import network.zamolxis.app.ui.theme.ThemeMode
 import javax.inject.Inject
 
 /**
@@ -63,6 +63,7 @@ enum class SettingsCardId {
     MAP_SOURCES,
     MESSAGE_DELIVERY,
     IMAGE_COMPRESSION,
+    POST_QUANTUM,
     THEME,
     BATTERY,
     DATA_MIGRATION,
@@ -155,7 +156,7 @@ data class SettingsState(
     val isHostingShareInstanceConflict: Boolean = false,
     // Location sharing state
     val locationSharingEnabled: Boolean = true,
-    val activeSharingSessions: List<network.columba.app.service.SharingSession> = emptyList(),
+    val activeSharingSessions: List<network.zamolxis.app.service.SharingSession> = emptyList(),
     val defaultSharingDuration: String = "ONE_HOUR",
     val locationPrecisionRadius: Int = 0,
     val preciseLocationPromptDismissed: Boolean = false,
@@ -169,6 +170,7 @@ data class SettingsState(
     val incomingMessageSizeLimitKb: Int = 1024,
     // Image compression state
     val imageCompressionPreset: ImageCompressionPreset = ImageCompressionPreset.AUTO,
+    val postQuantumMode: network.zamolxis.crypto.pq.PqMode = network.zamolxis.crypto.pq.PqMode.OPPORTUNISTIC,
     /** Optimal preset based on interfaces */
     val detectedCompressionPreset: ImageCompressionPreset? = null,
     // Map source state
@@ -203,7 +205,7 @@ data class SettingsState(
     val cardExpansionStates: Map<String, Boolean> =
         SettingsCardId.entries.associate { it.name to false },
     // Update checker state
-    val updateCheckResult: network.columba.app.service.AppUpdateResult = network.columba.app.service.AppUpdateResult.Idle,
+    val updateCheckResult: network.zamolxis.app.service.AppUpdateResult = network.zamolxis.app.service.AppUpdateResult.Idle,
     val includePrereleaseUpdates: Boolean = false,
     // Message sort order: false = received time (default), true = sent time
     val sortMessagesBySentTime: Boolean = false,
@@ -222,16 +224,16 @@ class SettingsViewModel
         private val rnsCore: RnsCore,
         private val rnsLxmf: RnsLxmf,
         private val rnsTransportAdmin: RnsTransportAdmin,
-        private val rnsTelephony: network.columba.app.rns.api.RnsTelephony,
-        private val interfaceConfigManager: network.columba.app.service.InterfaceConfigManager,
+        private val rnsTelephony: network.zamolxis.app.rns.api.RnsTelephony,
+        private val interfaceConfigManager: network.zamolxis.app.service.InterfaceConfigManager,
         private val propagationNodeManager: PropagationNodeManager,
-        private val locationSharingManager: network.columba.app.service.LocationSharingManager,
+        private val locationSharingManager: network.zamolxis.app.service.LocationSharingManager,
         private val interfaceRepository: InterfaceRepository,
         private val mapTileSourceManager: MapTileSourceManager,
         private val telemetryCollectorManager: TelemetryCollectorManager,
         private val contactRepository: ContactRepository,
-        private val updateChecker: network.columba.app.service.UpdateChecker,
-        private val crashReportManager: network.columba.app.util.CrashReportManager,
+        private val updateChecker: network.zamolxis.app.service.UpdateChecker,
+        private val crashReportManager: network.zamolxis.app.util.CrashReportManager,
     ) : ViewModel() {
         companion object {
             private const val TAG = "SettingsViewModel"
@@ -265,10 +267,10 @@ class SettingsViewModel
 
         /**
          * The active RNS backend's capabilities — forwards [RnsBackend.capabilities].
-         * `ColumbaNavigation` provides this into `LocalCapabilities` above the
+         * `ZamolxisNavigation` provides this into `LocalCapabilities` above the
          * NavHost so any screen can capability-gate its UI (Phase D).
          */
-        val capabilities: StateFlow<network.columba.app.rns.api.BackendCapabilities> =
+        val capabilities: StateFlow<network.zamolxis.app.rns.api.BackendCapabilities> =
             rnsBackend.capabilities
 
         // Track when we first noticed shared instance disconnected
@@ -281,6 +283,7 @@ class SettingsViewModel
             // Always load location sharing settings (not dependent on monitors)
             loadLocationSharingSettings()
             loadImageCompressionSettings()
+            loadPostQuantumSettings()
             // Load map source settings
             loadMapSourceSettings()
             // Load notifications enabled setting
@@ -416,7 +419,7 @@ class SettingsViewModel
                         settingsRepository.themeModeFlow,
                     ) { flows ->
                         @Suppress("UNCHECKED_CAST")
-                        val activeIdentity = flows[0] as network.columba.app.data.db.entity.LocalIdentityEntity?
+                        val activeIdentity = flows[0] as network.zamolxis.app.data.db.entity.LocalIdentityEntity?
 
                         @Suppress("UNCHECKED_CAST")
                         val autoAnnounceEnabled = flows[1] as Boolean
@@ -662,7 +665,7 @@ class SettingsViewModel
                     Log.i(
                         TAG,
                         "Detected shared instance went offline - " +
-                            "Columba auto-switched to own instance",
+                            "Zamolxis auto-switched to own instance",
                     )
                     true
                 } else {
@@ -1046,7 +1049,7 @@ class SettingsViewModel
                     // Set shutdown flag so restart mechanisms (onDestroy, START_STICKY) stay stopped
                     // Use commit() to ensure flag is on disk before service process reads it
                     context
-                        .getSharedPreferences("columba_prefs", android.content.Context.MODE_PRIVATE)
+                        .getSharedPreferences("zamolxis_prefs", android.content.Context.MODE_PRIVATE)
                         .edit()
                         .putBoolean("is_user_shutdown", true)
                         .commit()
@@ -1059,8 +1062,8 @@ class SettingsViewModel
 
                     // Send ACTION_STOP to actually stop the foreground service and remove notification
                     val stopIntent =
-                        android.content.Intent(context, network.columba.app.rns.host.ReticulumService::class.java).apply {
-                            action = network.columba.app.rns.host.ReticulumService.ACTION_STOP
+                        android.content.Intent(context, network.zamolxis.app.rns.host.ReticulumService::class.java).apply {
+                            action = network.zamolxis.app.rns.host.ReticulumService.ACTION_STOP
                         }
                     androidx.core.content.ContextCompat
                         .startForegroundService(context, stopIntent)
@@ -1113,7 +1116,7 @@ class SettingsViewModel
         /**
          * Restart service after shared instance went offline.
          * Called automatically when we detect shared instance is no longer available.
-         * After restart, Python will detect no shared instance and use Columba's own interfaces.
+         * After restart, Python will detect no shared instance and use Zamolxis's own interfaces.
          * Keeps wasUsingSharedInstance = true to show informational banner after restart.
          */
         private fun restartServiceAfterSharedInstanceLost() {
@@ -1131,7 +1134,7 @@ class SettingsViewModel
                         .applyInterfaceChanges(
                             onServiceReady = { _state.value = _state.value.copy(isRestarting = false) },
                         ).onSuccess {
-                            Log.i(TAG, "Service restart completed - now using Columba's own instance")
+                            Log.i(TAG, "Service restart completed - now using Zamolxis's own instance")
                         }.onFailure { error ->
                             Log.e(TAG, "Service restart failed: ${error.message}", error)
                         }.getOrThrow()
@@ -1156,7 +1159,7 @@ class SettingsViewModel
 
         /**
          * Toggle the prefer own instance setting.
-         * When enabled, Columba will use its own RNS instance even if a shared one is available.
+         * When enabled, Zamolxis will use its own RNS instance even if a shared one is available.
          */
         fun togglePreferOwnInstance(preferOwn: Boolean) {
             viewModelScope.launch {
@@ -1363,7 +1366,7 @@ class SettingsViewModel
 
         /**
          * React to a shared-instance availability poll result: update
-         * `sharedInstanceOnline`, auto-restart onto Columba's own instance if a
+         * `sharedInstanceOnline`, auto-restart onto Zamolxis's own instance if a
          * shared instance we were using went offline, clear the informational
          * "was using shared" flag when it returns, and toggle the "newly
          * available" banner. Extracted from [startSharedInstanceAvailabilityMonitor]
@@ -1386,7 +1389,7 @@ class SettingsViewModel
                     Log.i(
                         TAG,
                         "Shared instance went offline while we were using it - " +
-                            "restarting with Columba's own instance",
+                            "restarting with Zamolxis's own instance",
                     )
                     // Copy from _state.value, NOT currentState: the
                     // updateHostingShareInstanceState() call earlier
@@ -1402,7 +1405,7 @@ class SettingsViewModel
                             isRestarting = true,
                         )
                     // Restart service - Python will detect no shared instance
-                    // and initialize with Columba's own interfaces
+                    // and initialize with Zamolxis's own interfaces
                     restartServiceAfterSharedInstanceLost()
                 } else {
                     _state.value = _state.value.copy(sharedInstanceOnline = isOnline)
@@ -1835,7 +1838,7 @@ class SettingsViewModel
             viewModelScope.launch {
                 settingsRepository.setCrashReportingConsent(enabled)
                 crashReportManager.setCrashReportingConsentMirror(enabled)
-                network.columba.app.telemetry.CrashReporterProvider
+                network.zamolxis.app.telemetry.CrashReporterProvider
                     .create()
                     .setEnabled(enabled)
                 Log.d(TAG, "Crash reporting ${if (enabled) "enabled" else "disabled"}")
@@ -2094,6 +2097,15 @@ class SettingsViewModel
         /**
          * Load image compression settings and start monitoring for changes.
          */
+        /** Keeps the post-quantum card in step with the stored preference. */
+        private fun loadPostQuantumSettings() {
+            viewModelScope.launch {
+                settingsRepository.postQuantumModeFlow.collect { mode ->
+                    _state.value = _state.value.copy(postQuantumMode = mode)
+                }
+            }
+        }
+
         private fun loadImageCompressionSettings() {
             viewModelScope.launch {
                 // Load saved preset
@@ -2134,6 +2146,13 @@ class SettingsViewModel
          *
          * @param preset The compression preset to use
          */
+        fun setPostQuantumMode(mode: network.zamolxis.crypto.pq.PqMode) {
+            viewModelScope.launch {
+                settingsRepository.savePostQuantumMode(mode)
+                Log.d(TAG, "Post-quantum mode set to: ${mode.name}")
+            }
+        }
+
         fun setImageCompressionPreset(preset: ImageCompressionPreset) {
             viewModelScope.launch {
                 settingsRepository.saveImageCompressionPreset(preset)
@@ -2468,11 +2487,11 @@ class SettingsViewModel
         }
 
         fun checkForUpdates(includePrerelease: Boolean = _state.value.includePrereleaseUpdates) {
-            _state.update { it.copy(updateCheckResult = network.columba.app.service.AppUpdateResult.Checking) }
+            _state.update { it.copy(updateCheckResult = network.zamolxis.app.service.AppUpdateResult.Checking) }
             viewModelScope.launch {
                 val result = updateChecker.check(includePrerelease)
                 _state.update { it.copy(updateCheckResult = result) }
-                if (result !is network.columba.app.service.AppUpdateResult.Error) {
+                if (result !is network.zamolxis.app.service.AppUpdateResult.Error) {
                     settingsRepository.setLastUpdateCheckTime(System.currentTimeMillis())
                 }
             }

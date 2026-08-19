@@ -1,4 +1,4 @@
-package network.columba.app.startup
+package network.zamolxis.app.startup
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -11,7 +11,7 @@ import javax.inject.Singleton
  * during interface configuration changes.
  *
  * When InterfaceConfigManager applies configuration changes, it sets this flag to prevent
- * ColumbaApplication from auto-initializing the service with stale config. This manager
+ * ZamolxisApplication from auto-initializing the service with stale config. This manager
  * provides methods to check, clear, and detect stale flags.
  */
 @Singleton
@@ -21,7 +21,7 @@ class ConfigApplyFlagManager
         @ApplicationContext private val context: Context,
     ) {
         companion object {
-            internal const val PREFS_NAME = "columba_prefs"
+            internal const val PREFS_NAME = "zamolxis_prefs"
             internal const val KEY_IS_APPLYING_CONFIG = "is_applying_config"
         }
 

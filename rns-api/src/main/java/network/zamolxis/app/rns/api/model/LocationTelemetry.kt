@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.model
+package network.zamolxis.app.rns.api.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.IgnoredOnParcel
@@ -20,7 +20,7 @@ import kotlinx.parcelize.Parcelize
  *     lat/lon/alt/speed/bearing/accuracy + last_update>]}`. Sideband's
  *     `Telemeter.from_packed` accepts this directly.
  *   - `FIELD_CUSTOM_META` (0xFD) — msgpack
- *     `{cease?, expires?, approxRadius?, ts?}` for Columba-specific
+ *     `{cease?, expires?, approxRadius?, ts?}` for Zamolxis-specific
  *     extras. Sideband ignores this field entirely.
  *
  * Marshaling between this data class and the LXMF wire format happens
@@ -34,7 +34,7 @@ import kotlinx.parcelize.Parcelize
  * @property acc Accuracy in meters
  * @property ts Timestamp when location was captured (millis since epoch)
  * @property altitude Altitude in meters above sea level (Telemeter field;
- *   0.0 when the sender didn't supply or the recipient is pre-Telemeter Columba)
+ *   0.0 when the sender didn't supply or the recipient is pre-Telemeter Zamolxis)
  * @property speed Speed over ground in m/s (Telemeter field)
  * @property bearing Direction of travel in degrees from true north
  * @property expires When sharing ends (millis since epoch), null for indefinite
@@ -75,13 +75,13 @@ data class LocationTelemetry(
          * for app-specific metadata; Sideband ignores it entirely (zero
          * references in `sbapp/sideband/core.py`).
          *
-         * Previously this was `0x70` (a Columba-invented unassigned ID
+         * Previously this was `0x70` (a Zamolxis-invented unassigned ID
          * that risked collision if upstream LXMF later assigned numbers
          * in the unassigned range).
          */
         const val COLUMBA_META_FIELD_ID = 0xFD
 
-        /** Legacy field ID for backwards compatibility with old Columba clients */
+        /** Legacy field ID for backwards compatibility with old Zamolxis clients */
         const val LEGACY_FIELD_ID = 7
     }
 }

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding.pages
+package network.zamolxis.app.ui.screens.onboarding.pages
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -35,7 +35,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.screens.onboarding.OnboardingInterfaceType
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.ui.screens.onboarding.OnboardingInterfaceType
+import network.zamolxis.app.R
 
 /**
  * Connectivity page - allows user to select which network interfaces to enable.
@@ -72,7 +74,7 @@ fun ConnectivityPage(
 
         // Title
         Text(
-            text = "How will you connect?",
+            text = stringResource(R.string.onboarding_connectivity_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -83,7 +85,7 @@ fun ConnectivityPage(
 
         // Subtitle
         Text(
-            text = "Select the networks you'd like to use:",
+            text = stringResource(R.string.onboarding_connectivity_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -108,8 +110,8 @@ fun ConnectivityPage(
             icon = Icons.Default.Bluetooth,
             statusText =
                 when {
-                    blePermissionsDenied -> "Permissions denied"
-                    blePermissionsGranted -> "Permissions granted"
+                    blePermissionsDenied -> stringResource(R.string.onboarding_ble_permissions_denied)
+                    blePermissionsGranted -> stringResource(R.string.onboarding_ble_permissions_granted)
                     else -> null
                 },
             statusIsError = blePermissionsDenied,
@@ -137,7 +139,7 @@ fun ConnectivityPage(
 
         // Helper text
         Text(
-            text = "You can configure these later in Settings",
+            text = stringResource(R.string.onboarding_connectivity_later),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -158,7 +160,7 @@ fun ConnectivityPage(
                         .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Back")
+                Text(stringResource(R.string.common_back))
             }
 
             Button(
@@ -169,7 +171,7 @@ fun ConnectivityPage(
                         .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Continue")
+                Text(stringResource(R.string.common_continue))
             }
         }
 
@@ -251,7 +253,7 @@ private fun InterfaceCard(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
-                    text = interfaceType.displayName,
+                    text = stringResource(interfaceType.displayName),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     color =
@@ -262,7 +264,7 @@ private fun InterfaceCard(
                         },
                 )
                 Text(
-                    text = interfaceType.description,
+                    text = stringResource(interfaceType.description),
                     style = MaterialTheme.typography.bodyMedium,
                     color =
                         if (enabled) {
@@ -273,7 +275,7 @@ private fun InterfaceCard(
                 )
                 interfaceType.secondaryDescription?.let { secondary ->
                     Text(
-                        text = secondary,
+                        text = stringResource(secondary),
                         style = MaterialTheme.typography.bodySmall,
                         color =
                             if (enabled) {

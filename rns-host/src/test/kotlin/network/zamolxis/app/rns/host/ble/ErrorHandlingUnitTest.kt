@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble
+package network.zamolxis.app.rns.host.ble
 
 import io.mockk.*
 import kotlinx.coroutines.CancellationException

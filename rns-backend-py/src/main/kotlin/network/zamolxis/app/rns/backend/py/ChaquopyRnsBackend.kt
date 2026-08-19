@@ -1,17 +1,17 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
 import tech.torlando.lxst.core.CallCoordinator
 
 /**
@@ -44,7 +44,7 @@ class ChaquopyRnsBackend(
         // Defense-in-depth A.10 assertion: this constructor MUST only run in
         // the `:reticulum` FGS process. Constructing it elsewhere means the
         // process-aware Hilt module
-        // (`network.columba.app.rns.host.di.ProcessAwareBackendModule`)
+        // (`network.zamolxis.app.rns.host.di.ProcessAwareBackendModule`)
         // resolved the local backend in the UI process, which would cause
         // CPython to load + AutoInterface UDP sockets to bind in the wrong
         // pid. Debug-only — release builds skip the check so a defensive bug

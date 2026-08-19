@@ -1,12 +1,12 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.util.Log
-import network.columba.app.rns.host.flasher.FirmwareDownloader
-import network.columba.app.rns.host.flasher.FirmwareSource
-import network.columba.app.rns.host.flasher.FrequencyBand
-import network.columba.app.rns.host.flasher.RNodeBoard
-import network.columba.app.rns.host.flasher.RNodeFlasher
+import network.zamolxis.app.rns.host.flasher.FirmwareDownloader
+import network.zamolxis.app.rns.host.flasher.FirmwareSource
+import network.zamolxis.app.rns.host.flasher.FrequencyBand
+import network.zamolxis.app.rns.host.flasher.RNodeBoard
+import network.zamolxis.app.rns.host.flasher.RNodeFlasher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -20,12 +20,12 @@ internal class FlasherTncHelper(
     private val state: MutableStateFlow<FlasherUiState>,
 ) {
     companion object {
-        private const val TAG = "Columba:FlasherTnc"
+        private const val TAG = "Zamolxis:FlasherTnc"
     }
 
     // ==================== TNC Configuration ====================
 
-    fun selectTncRegion(region: network.columba.app.data.model.FrequencyRegion) {
+    fun selectTncRegion(region: network.zamolxis.app.data.model.FrequencyRegion) {
         state.update {
             it.copy(
                 tncSelectedRegion = region,
@@ -35,7 +35,7 @@ internal class FlasherTncHelper(
         }
     }
 
-    fun selectTncPreset(preset: network.columba.app.data.model.ModemPreset) {
+    fun selectTncPreset(preset: network.zamolxis.app.data.model.ModemPreset) {
         state.update {
             it.copy(
                 tncSelectedPreset = preset,
@@ -199,7 +199,7 @@ internal class FlasherTncHelper(
     // ==================== Flash Completion ====================
 
     fun handleFlashComplete(
-        deviceInfo: network.columba.app.rns.host.flasher.RNodeDeviceInfo?,
+        deviceInfo: network.zamolxis.app.rns.host.flasher.RNodeDeviceInfo?,
         tncConfigOnlyMode: Boolean,
     ): Boolean {
         val currentState = state.value
@@ -228,13 +228,13 @@ internal class FlasherTncHelper(
             val defaultRegion =
                 when (currentState.selectedBand) {
                     FrequencyBand.BAND_433 ->
-                        network.columba.app.data.model.FrequencyRegions.regions
+                        network.zamolxis.app.data.model.FrequencyRegions.regions
                             .find { it.id == "eu_433" }
                     else ->
-                        network.columba.app.data.model.FrequencyRegions.regions
+                        network.zamolxis.app.data.model.FrequencyRegions.regions
                             .find { it.id == "us_915" }
                 }
-            val defaultPreset = network.columba.app.data.model.ModemPreset.DEFAULT
+            val defaultPreset = network.zamolxis.app.data.model.ModemPreset.DEFAULT
             state.update {
                 it.copy(
                     currentStep = FlasherStep.TNC_CONFIGURATION,

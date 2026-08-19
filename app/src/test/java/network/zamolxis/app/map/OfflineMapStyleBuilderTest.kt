@@ -1,4 +1,4 @@
-package network.columba.app.map
+package network.zamolxis.app.map
 
 import org.json.JSONObject
 import org.junit.Assert.assertEquals

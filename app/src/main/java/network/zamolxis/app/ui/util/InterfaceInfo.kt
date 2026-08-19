@@ -1,4 +1,4 @@
-package network.columba.app.ui.util
+package network.zamolxis.app.ui.util
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.SettingsInputAntenna
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
-import network.columba.app.data.model.InterfaceType
+import network.zamolxis.app.data.model.InterfaceType
 
 data class InterfaceInfo(
     val icon: ImageVector,
@@ -27,10 +27,10 @@ enum class InterfaceCategory(
     val markerColor: Int,
 ) {
     AUTO(Icons.Default.Wifi, com.composables.icons.lucide.R.drawable.lucide_ic_wifi, "Local Network", 0xFF2E7D32.toInt()),
-    TCP(Icons.Default.Public, network.columba.app.R.drawable.ic_public_24, "TCP/IP", 0xFF1565C0.toInt()),
+    TCP(Icons.Default.Public, network.zamolxis.app.R.drawable.ic_public_24, "TCP/IP", 0xFF1565C0.toInt()),
     BLUETOOTH(Icons.Default.Bluetooth, com.composables.icons.lucide.R.drawable.lucide_ic_bluetooth, "Bluetooth", 0xFF283593.toInt()),
     LORA(Icons.Default.CellTower, com.composables.icons.lucide.R.drawable.lucide_ic_antenna, "LoRa Radio", 0xFFE64A19.toInt()),
-    I2P(Icons.Default.Cloud, network.columba.app.R.drawable.ic_incognito_24, "I2P", 0xFF7B1FA2.toInt()),
+    I2P(Icons.Default.Cloud, network.zamolxis.app.R.drawable.ic_incognito_24, "I2P", 0xFF7B1FA2.toInt()),
     YGGDRASIL(Icons.Default.Cloud, com.composables.icons.lucide.R.drawable.lucide_ic_tree_pine, "Yggdrasil", 0xFF00695C.toInt()),
     SERIAL(Icons.Default.SettingsInputAntenna, com.composables.icons.lucide.R.drawable.lucide_ic_antenna, "Serial", 0xFF616161.toInt()),
     UNKNOWN(Icons.Default.SettingsInputAntenna, com.composables.icons.lucide.R.drawable.lucide_ic_antenna, "", 0xFF9E9E9E.toInt()),
@@ -81,7 +81,7 @@ internal fun categorizeInterface(interfaceName: String): InterfaceCategory = cat
  *
  * Sources the transport classification from the canonical
  * [InterfaceType] (single source of truth — see
- * `network.columba.app.data.model.InterfaceType.fromName`), then layers
+ * `network.zamolxis.app.data.model.InterfaceType.fromName`), then layers
  * on UI-only sub-categories ([InterfaceCategory.YGGDRASIL] from host
  * inspection, [InterfaceCategory.I2P] / [InterfaceCategory.SERIAL] from
  * legacy substring matches that don't map to a configurable

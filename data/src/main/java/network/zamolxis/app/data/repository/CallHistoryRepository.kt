@@ -1,4 +1,4 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import network.columba.app.data.db.dao.CallHistoryDao
-import network.columba.app.data.db.dao.CallHistoryDeletionDao
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.dao.PeerIconDao
-import network.columba.app.data.model.CallHistoryRecord
+import network.zamolxis.app.data.db.dao.CallHistoryDao
+import network.zamolxis.app.data.db.dao.CallHistoryDeletionDao
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.dao.PeerIconDao
+import network.zamolxis.app.data.model.CallHistoryRecord
 
 @Singleton
 @OptIn(ExperimentalCoroutinesApi::class)

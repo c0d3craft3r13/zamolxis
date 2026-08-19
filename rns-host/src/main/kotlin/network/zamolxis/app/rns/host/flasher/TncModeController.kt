@@ -1,7 +1,7 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 import android.util.Log
-import network.columba.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +19,7 @@ class TncModeController(
     private val flashState: MutableStateFlow<RNodeFlasher.FlashState>,
 ) {
     companion object {
-        private const val TAG = "Columba:TncMode"
+        private const val TAG = "Zamolxis:TncMode"
     }
 
     /**

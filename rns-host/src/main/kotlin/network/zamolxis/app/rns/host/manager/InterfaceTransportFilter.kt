@@ -1,12 +1,12 @@
 @file:Suppress("MatchingDeclarationName") // file groups CurrentTransport + filterByTransport + helpers; the filter is the focus
 
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
 
 /**
  * The Android transport class the device's currently-active default network reports.

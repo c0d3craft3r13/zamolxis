@@ -1,8 +1,8 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 import kotlinx.coroutines.flow.StateFlow
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.VoiceCallState
 
 /**
  * Voice call surface (LXST — Link eXtensible Stream Transport).

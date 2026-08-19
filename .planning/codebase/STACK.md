@@ -57,7 +57,7 @@
 
 **Build & Quality:**
 - ktlint 1.0.1 - Kotlin code linting
-- Detekt 1.23.8 - Static analysis (custom Columba rules in `detekt-rules/`)
+- Detekt 1.23.8 - Static analysis (custom Zamolxis rules in `detekt-rules/`)
 - CPD 7.7.0 - Copy-paste detection
 - detekt-rules module - Custom Kotlin analysis rules
 
@@ -126,8 +126,8 @@
 - Compose compiler extension: 1.7.5
 
 **Android Configuration:**
-- Namespace: `network.columba.app`
-- Application ID: `network.columba.app`
+- Namespace: `network.zamolxis.app`
+- Application ID: `network.zamolxis.app`
 - Supported ABIs: arm64-v8a (64-bit only, x86_64 disabled due to pycodec2 wheel resolution)
 - Features: Compose enabled, AIDL enabled, BuildConfig enabled
 - Resources: R class namespacing enabled, AndroidX enabled

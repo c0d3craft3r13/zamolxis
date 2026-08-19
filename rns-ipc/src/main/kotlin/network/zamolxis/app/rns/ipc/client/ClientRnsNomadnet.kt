@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc.client
+package network.zamolxis.app.rns.ipc.client
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
@@ -9,14 +9,14 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.api.model.NomadnetPageResult
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsNomadnet
-import network.columba.app.rns.ipc.callback.IRnsFloatEventCallback
-import network.columba.app.rns.ipc.callback.IRnsStringEventCallback
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.api.model.NomadnetPageResult
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsNomadnet
+import network.zamolxis.app.rns.ipc.callback.IRnsFloatEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringEventCallback
 
 internal class ClientRnsNomadnet(
     private val remote: IRnsNomadnet,

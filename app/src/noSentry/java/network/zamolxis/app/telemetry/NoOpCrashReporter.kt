@@ -1,4 +1,4 @@
-package network.columba.app.telemetry
+package network.zamolxis.app.telemetry
 
 import android.content.Context
 

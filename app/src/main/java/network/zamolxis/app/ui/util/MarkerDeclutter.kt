@@ -1,4 +1,4 @@
-package network.columba.app.ui.util
+package network.zamolxis.app.ui.util
 
 /**
  * Result of decluttering: the original position and the (possibly offset) display position.

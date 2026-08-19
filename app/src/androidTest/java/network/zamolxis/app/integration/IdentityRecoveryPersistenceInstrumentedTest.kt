@@ -1,4 +1,4 @@
-package network.columba.app.integration
+package network.zamolxis.app.integration
 
 import android.content.Context
 import androidx.room.Room
@@ -7,14 +7,14 @@ import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import network.columba.app.data.crypto.IdentityKeyEncryptor
-import network.columba.app.data.crypto.IdentityKeyMigrator
-import network.columba.app.data.crypto.IdentityKeyProvider
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.repository.IdentityRepository
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
+import network.zamolxis.app.data.crypto.IdentityKeyMigrator
+import network.zamolxis.app.data.crypto.IdentityKeyProvider
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.repository.IdentityRepository
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -34,7 +34,7 @@ class IdentityRecoveryPersistenceInstrumentedTest {
     private val recoveredKey = ByteArray(64) { index -> (index + 1).toByte() }
 
     private lateinit var context: Context
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var repository: IdentityRepository
 
     @Before
@@ -42,7 +42,7 @@ class IdentityRecoveryPersistenceInstrumentedTest {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         database =
             Room
-                .inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java)
+                .inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
         val encryptor = IdentityKeyEncryptor()

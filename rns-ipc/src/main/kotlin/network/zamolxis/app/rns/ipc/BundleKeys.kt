@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 /**
  * Bundle payload keys shared by `:rns-ipc`'s client and server adapters when

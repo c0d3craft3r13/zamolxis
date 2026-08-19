@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.call
+package network.zamolxis.app.rns.api.call
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher

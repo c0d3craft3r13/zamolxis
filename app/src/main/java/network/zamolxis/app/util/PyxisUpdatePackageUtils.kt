@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 internal fun isPyxisUpdateFilename(filename: String): Boolean {
     val normalized = filename.trim().lowercase()

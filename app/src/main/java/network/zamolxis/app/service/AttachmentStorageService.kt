@@ -1,14 +1,14 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.ui.model.getImageMetadata
-import network.columba.app.ui.model.loadFileAttachmentData
-import network.columba.app.ui.model.loadFileAttachmentMetadata
-import network.columba.app.ui.model.loadImageData
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.ui.model.getImageMetadata
+import network.zamolxis.app.ui.model.loadFileAttachmentData
+import network.zamolxis.app.ui.model.loadFileAttachmentMetadata
+import network.zamolxis.app.ui.model.loadImageData
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -1,5 +1,5 @@
 """
-Columba RNode Interface
+Zamolxis RNode Interface
 
 A simplified RNode interface that uses the KotlinRNodeBridge for Bluetooth
 communication. This interface implements the KISS protocol for communicating
@@ -143,9 +143,9 @@ class KISS:
         return bytes(result)
 
 
-class ColumbaRNodeInterface:
+class ZamolxisRNodeInterface:
     """
-    RNode interface for Columba using KotlinRNodeBridge.
+    RNode interface for Zamolxis using KotlinRNodeBridge.
 
     This interface handles KISS protocol communication with RNode hardware
     over Bluetooth Classic (SPP/RFCOMM) or Bluetooth Low Energy (BLE GATT).
@@ -295,7 +295,7 @@ class ColumbaRNodeInterface:
         # Validate configuration
         self._validate_config()
 
-        RNS.log(f"ColumbaRNodeInterface '{name}' initialized", RNS.LOG_DEBUG)
+        RNS.log(f"ZamolxisRNodeInterface '{name}' initialized", RNS.LOG_DEBUG)
 
     def _get_kotlin_bridge(self):
         """Get the Kotlin RNode bridge from the wrapper."""
@@ -525,7 +525,7 @@ class ColumbaRNodeInterface:
             self._set_online(True)
             RNS.log(f"RNode '{self.name}' is online", RNS.LOG_INFO)
 
-            # Display Columba logo on RNode if enabled
+            # Display Zamolxis logo on RNode if enabled
             self._display_logo()
         else:
             raise IOError("Radio configuration validation failed")
@@ -756,17 +756,17 @@ class ColumbaRNodeInterface:
         RNS.log(f"{self} Sent 64x64 image to RNode framebuffer", RNS.LOG_DEBUG)
 
     def _display_logo(self):
-        """Display or disable the Columba logo on RNode based on settings."""
+        """Display or disable the Zamolxis logo on RNode based on settings."""
         if self.enable_framebuffer:
             try:
-                from columba_logo import columba_fb_data
-                self.display_image(columba_fb_data)
+                from zamolxis_logo import zamolxis_fb_data
+                self.display_image(zamolxis_fb_data)
                 # Delay before enable command to ensure framebuffer data is processed
                 time.sleep(0.05)
                 self.enable_external_framebuffer()
-                RNS.log(f"{self} Displayed Columba logo on RNode", RNS.LOG_DEBUG)
+                RNS.log(f"{self} Displayed Zamolxis logo on RNode", RNS.LOG_DEBUG)
             except ImportError:
-                RNS.log(f"{self} columba_logo module not found, skipping logo display", RNS.LOG_WARNING)
+                RNS.log(f"{self} zamolxis_logo module not found, skipping logo display", RNS.LOG_WARNING)
             except Exception as e:
                 RNS.log(f"{self} Failed to display logo: {e}", RNS.LOG_WARNING)
         else:
@@ -1255,4 +1255,4 @@ class ColumbaRNodeInterface:
             return False
 
     def __str__(self):
-        return f"ColumbaRNodeInterface[{self.name}]"
+        return f"ZamolxisRNodeInterface[{self.name}]"

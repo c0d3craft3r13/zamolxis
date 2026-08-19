@@ -1,10 +1,10 @@
-package network.columba.app.data.crypto
+package network.zamolxis.app.data.crypto
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

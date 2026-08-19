@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.call
+package network.zamolxis.app.rns.api.call
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -154,7 +154,7 @@ class AcceptedCallLifecycle(
         submit(AcceptedCallObservation.FinalizeUnconnected(outcome.first, outcome.second))
     }
 
-    /** Persist a Columba-observed prerequisite failure for an owned never-connected attempt. */
+    /** Persist a Zamolxis-observed prerequisite failure for an owned never-connected attempt. */
     @Suppress("ReturnCount")
     fun failCallAttempt(
         callAttemptId: String,

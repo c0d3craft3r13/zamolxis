@@ -1,9 +1,9 @@
 @file:Suppress("UseOrEmpty", "UnsafeCast")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.FailedInterface
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -25,7 +25,7 @@ class DebugViewModelFetchTest {
             listOf(
                 mapOf(
                     "name" to "RNode LoRa",
-                    "type" to "ColumbaRNodeInterface",
+                    "type" to "ZamolxisRNodeInterface",
                     "online" to true,
                 ),
                 mapOf(
@@ -48,7 +48,7 @@ class DebugViewModelFetchTest {
 
         val rnode = activeInterfaces[0]
         assertEquals("RNode LoRa", rnode.name)
-        assertEquals("ColumbaRNodeInterface", rnode.type)
+        assertEquals("ZamolxisRNodeInterface", rnode.type)
         assertTrue(rnode.online)
         assertNull(rnode.error)
 
@@ -124,7 +124,7 @@ class DebugViewModelFetchTest {
     fun `debug info state creation with all fields`() {
         val interfaces =
             listOf(
-                InterfaceInfo("RNode", "ColumbaRNodeInterface", true, null),
+                InterfaceInfo("RNode", "ZamolxisRNodeInterface", true, null),
                 InterfaceInfo("Auto", "AutoInterface", false, "Port conflict"),
             )
 
@@ -132,7 +132,7 @@ class DebugViewModelFetchTest {
             DebugInfo(
                 initialized = true,
                 reticulumAvailable = true,
-                storagePath = "/data/user/0/network.columba.app/files",
+                storagePath = "/data/user/0/network.zamolxis.app/files",
                 interfaceCount = interfaces.size,
                 interfaces = interfaces,
                 transportEnabled = true,
@@ -143,7 +143,7 @@ class DebugViewModelFetchTest {
 
         assertTrue(debugInfo.initialized)
         assertTrue(debugInfo.reticulumAvailable)
-        assertEquals("/data/user/0/network.columba.app/files", debugInfo.storagePath)
+        assertEquals("/data/user/0/network.zamolxis.app/files", debugInfo.storagePath)
         assertEquals(2, debugInfo.interfaceCount)
         assertTrue(debugInfo.transportEnabled)
         assertTrue(debugInfo.multicastLockHeld)
@@ -176,7 +176,7 @@ class DebugViewModelFetchTest {
     fun `merging active and failed interfaces produces correct combined list`() {
         val activeInterfaces =
             listOf(
-                InterfaceInfo("RNode", "ColumbaRNodeInterface", true, null),
+                InterfaceInfo("RNode", "ZamolxisRNodeInterface", true, null),
                 InterfaceInfo("BLE", "AndroidBLE", true, null),
             )
 
@@ -370,7 +370,7 @@ class DebugViewModelFetchTest {
                 "storage_path" to "/data/app",
                 "interfaces" to
                     listOf(
-                        mapOf("name" to "RNode", "type" to "ColumbaRNodeInterface", "online" to true),
+                        mapOf("name" to "RNode", "type" to "ZamolxisRNodeInterface", "online" to true),
                     ),
                 "transport_enabled" to true,
                 "multicast_lock_held" to true,
@@ -397,10 +397,10 @@ class DebugViewModelFetchTest {
             mapOf(
                 "initialized" to true,
                 "reticulum_available" to true,
-                "storage_path" to "/data/user/0/network.columba.app/files",
+                "storage_path" to "/data/user/0/network.zamolxis.app/files",
                 "interfaces" to
                     listOf(
-                        mapOf("name" to "RNode LoRa", "type" to "ColumbaRNodeInterface", "online" to true),
+                        mapOf("name" to "RNode LoRa", "type" to "ZamolxisRNodeInterface", "online" to true),
                         mapOf("name" to "Bluetooth", "type" to "AndroidBLE", "online" to false),
                     ),
                 "transport_enabled" to false,
@@ -461,7 +461,7 @@ class DebugViewModelFetchTest {
         // Verify the complete result
         assertTrue(debugInfoResult.initialized)
         assertTrue(debugInfoResult.reticulumAvailable)
-        assertEquals("/data/user/0/network.columba.app/files", debugInfoResult.storagePath)
+        assertEquals("/data/user/0/network.zamolxis.app/files", debugInfoResult.storagePath)
         assertEquals(3, debugInfoResult.interfaceCount)
         assertEquals(3, debugInfoResult.interfaces.size)
         assertEquals(false, debugInfoResult.transportEnabled)
@@ -587,7 +587,7 @@ class DebugViewModelFetchTest {
                 interfaceCount = 3,
                 interfaces =
                     listOf(
-                        InterfaceInfo("RNode", "ColumbaRNodeInterface", true, null),
+                        InterfaceInfo("RNode", "ZamolxisRNodeInterface", true, null),
                     ),
                 transportEnabled = true,
                 multicastLockHeld = true,

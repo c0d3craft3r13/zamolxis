@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 /**
  * CRC16-CCITT implementation for Nordic DFU protocol.

@@ -1,4 +1,4 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import android.content.Context
 import android.net.Uri
@@ -10,23 +10,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import network.columba.app.data.crypto.IdentityKeyEncryptor
-import network.columba.app.data.crypto.WrongPasswordException
-import network.columba.app.data.database.InterfaceDatabase
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.db.entity.CustomThemeEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.db.entity.MessageEntity
-import network.columba.app.data.db.entity.PeerIdentityEntity
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.data.util.HashUtils
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.service.PropagationNodeManager
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
+import network.zamolxis.app.data.crypto.WrongPasswordException
+import network.zamolxis.app.data.database.InterfaceDatabase
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.db.entity.CustomThemeEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.db.entity.PeerIdentityEntity
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.util.HashUtils
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.service.PropagationNodeManager
 import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
@@ -46,7 +46,7 @@ class MigrationImporter
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
-        private val database: ColumbaDatabase,
+        private val database: ZamolxisDatabase,
         private val interfaceDatabase: InterfaceDatabase,
         private val settingsRepository: SettingsRepository,
         private val propagationNodeManager: PropagationNodeManager,
@@ -141,7 +141,7 @@ class MigrationImporter
         /**
          * Import data from a migration bundle file.
          *
-         * @param uri URI to the .columba file
+         * @param uri URI to the .zamolxis file
          * @param onProgress Callback for progress updates (0.0 to 1.0)
          * @param importPassword Password to decrypt identity keys (required if keysEncrypted=true)
          * @return ImportResult indicating success or failure
@@ -408,7 +408,7 @@ class MigrationImporter
         ): Int {
             val entities =
                 messages.map { msg ->
-                    // Bundles exported by older Columba builds carry
+                    // Bundles exported by older Zamolxis builds carry
                     // reactions inside `fieldsJson.field16.reactions`
                     // and have no `reactionsJson` field; lift them out
                     // on import so the row lands in the v2+ shape.
@@ -419,7 +419,7 @@ class MigrationImporter
                             val fieldsJson = msg.fieldsJson
                             if (fieldsJson != null) {
                                 val split =
-                                    network.columba.app.data.db.ColumbaDatabase
+                                    network.zamolxis.app.data.db.ZamolxisDatabase
                                         .splitReactionsOutOfFieldsJson(fieldsJson)
                                 if (split != null) split else fieldsJson to null
                             } else {
@@ -698,7 +698,7 @@ class MigrationImporter
                     val manifestJson = extractManifestFromZip(java.io.ByteArrayInputStream(zipBytes))
                     manifestJson?.let { json.decodeFromString<MigrationBundle>(it) to zipBytes }
                 }
-            } catch (e: network.columba.app.migration.WrongPasswordException) {
+            } catch (e: network.zamolxis.app.migration.WrongPasswordException) {
                 Log.e(TAG, "Wrong password for encrypted export", e)
                 throw e
             } catch (e: WrongPasswordException) {

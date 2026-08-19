@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.model
+package network.zamolxis.app.rns.api.model
 
 sealed class ReticulumError : Exception() {
     data class NetworkError(override val message: String) : ReticulumError()

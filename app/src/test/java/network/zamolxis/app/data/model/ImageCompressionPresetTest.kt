@@ -1,13 +1,20 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Unit tests for ImageCompressionPreset enum.
+ *
+ * Robolectric-backed because displayName/description are `@StringRes` ids now and
+ * the wording checks resolve them against the default-locale resources.
  */
+@RunWith(RobolectricTestRunner::class)
 class ImageCompressionPresetTest {
     @Test
     fun `all presets have valid maxDimension values`() {
@@ -112,16 +119,17 @@ class ImageCompressionPresetTest {
 
     @Test
     fun `all presets have non-empty displayName and description`() {
+        // Resolve the `@StringRes` ids rather than asserting on the ids themselves —
+        // a non-zero id would pass even if the underlying string were missing.
+        val context = ApplicationProvider.getApplicationContext<Application>()
         ImageCompressionPreset.entries.forEach { preset ->
-            assertNotNull("Preset ${preset.name} should have displayName", preset.displayName)
             assertTrue(
                 "Preset ${preset.name} displayName should not be empty",
-                preset.displayName.isNotEmpty(),
+                context.getString(preset.displayNameRes).isNotEmpty(),
             )
-            assertNotNull("Preset ${preset.name} should have description", preset.description)
             assertTrue(
                 "Preset ${preset.name} description should not be empty",
-                preset.description.isNotEmpty(),
+                context.getString(preset.descriptionRes).isNotEmpty(),
             )
         }
     }

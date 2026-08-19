@@ -1,4 +1,4 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
@@ -7,22 +7,22 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import network.columba.app.data.db.dao.PeerIconDao
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.db.entity.PeerIconEntity
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.data.repository.AnnounceRepository
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.notifications.NotificationHelper
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.host.util.PeerNameResolver
+import network.zamolxis.app.data.db.dao.PeerIconDao
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.db.entity.PeerIconEntity
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.repository.AnnounceRepository
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.notifications.NotificationHelper
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.host.util.PeerNameResolver
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import network.columba.app.data.repository.Message as DataMessage
+import network.zamolxis.app.data.repository.Message as DataMessage
 
 /**
  * Application-level service that continuously collects messages and announces from the Reticulum protocol
@@ -38,6 +38,11 @@ import network.columba.app.data.repository.Message as DataMessage
  * - UI updates via repository flows
  * - De-duplication to avoid double-persistence
  */
+// LongParameterList: this collector is the single place that turns inbound
+// protocol events into stored rows and notifications, so it legitimately needs
+// every repository involved. Grouping them into a holder would hide the
+// dependencies from the graph without reducing them.
+@Suppress("LongParameterList")
 @Singleton
 class MessageCollector
     @Inject
@@ -50,6 +55,8 @@ class MessageCollector
         private val identityRepository: IdentityRepository,
         private val notificationHelper: NotificationHelper,
         private val peerIconDao: PeerIconDao,
+        private val pqMessageSealer: network.zamolxis.app.service.pq.PqMessageSealer,
+        private val pqKeyRepository: network.zamolxis.app.data.repository.PqKeyRepository,
     ) {
         companion object {
             private const val TAG = "MessageCollector"
@@ -159,7 +166,12 @@ class MessageCollector
                                     notificationHelper.notifyMessageReceived(
                                         destinationHash = sourceHash,
                                         peerName = peerName,
-                                        messagePreview = receivedMessage.content.take(100),
+                                        // From the stored row, not the wire message.
+                                        // This branch fires for a message already
+                                        // persisted, and what was persisted is the
+                                        // unsealed text — the wire copy of a sealed
+                                        // message has an empty content slot.
+                                        messagePreview = existingMessage.content.take(100),
                                         isFavorite = isFavorite,
                                     )
                                     Log.d(TAG, "Posted notification for already-persisted unread message")
@@ -197,6 +209,21 @@ class MessageCollector
                         val sourceHash = receivedMessage.sourceHash.joinToString("") { "%02x".format(it) }
                         Log.d(TAG, "Received new message #${_messagesCollected.value} from $sourceHash")
 
+                        // Post-quantum layer: unseal the content and take in any key
+                        // the sender attached. Returns the content unchanged for
+                        // ordinary messages, so this is a no-op for the vast
+                        // majority of traffic.
+                        val pqIncoming = unsealIfNeeded(receivedMessage, sourceHash)
+                        if (pqIncoming == null) {
+                            // A sealed message we could not open. Storing the
+                            // ciphertext as if it were text would show the user
+                            // gibberish and bury the failure; dropping it keeps the
+                            // conversation honest, and the sender's delivery proof
+                            // still tells them it arrived.
+                            Log.e(TAG, "Dropping unreadable sealed message from $sourceHash")
+                            return@collect
+                        }
+
                         // Create data message for storage
                         val now = System.currentTimeMillis()
                         val dataMessage =
@@ -204,7 +231,7 @@ class MessageCollector
                                 id = receivedMessage.messageHash,
                                 // From sender's perspective
                                 destinationHash = sourceHash,
-                                content = receivedMessage.content,
+                                content = pqIncoming.content,
                                 // Use sender's timestamp for display; receivedAt for sort ordering
                                 timestamp = receivedMessage.timestamp,
                                 isFromMe = false,
@@ -287,8 +314,11 @@ class MessageCollector
                                 notificationHelper.notifyMessageReceived(
                                     destinationHash = sourceHash,
                                     peerName = peerName,
-                                    // Truncate preview
-                                    messagePreview = receivedMessage.content.take(100),
+                                    // The unsealed content, not the raw message: a
+                                    // sealed message carries an empty content slot,
+                                    // so the raw value would notify the user about a
+                                    // message that looks blank.
+                                    messagePreview = pqIncoming.content.take(100),
                                     isFavorite = isFavorite,
                                 )
                                 Log.d(TAG, "Posted notification for message (favorite: $isFavorite)")
@@ -339,8 +369,21 @@ class MessageCollector
                         // Extract name from app_data using smart parser
                         // Prefers displayName from Python's LXMF.display_name_from_app_data()
                         val appData = announce.appData
+
+                        // A post-quantum fingerprint in the announce means this peer
+                        // can read sealed messages. Recorded against the destination
+                        // hash, which is what the send path keys on.
+                        network.zamolxis.app.rns.api.util.AppDataParser
+                            .parsePqFingerprint(appData)
+                            ?.let { fingerprint ->
+                                try {
+                                    pqKeyRepository.recordAnnouncedFingerprint(peerHash, fingerprint)
+                                } catch (e: Exception) {
+                                    Log.w(TAG, "Could not record post-quantum fingerprint for $peerHash", e)
+                                }
+                            }
                         val peerName =
-                            network.columba.app.reticulum.util.AppDataParser.extractPeerName(
+                            network.zamolxis.app.reticulum.util.AppDataParser.extractPeerName(
                                 appData,
                                 peerHash,
                                 announce.displayName,
@@ -364,7 +407,7 @@ class MessageCollector
                             val propagationTransferLimitKb =
                                 if (announce.nodeType.name == "PROPAGATION_NODE") {
                                     val metadata =
-                                        network.columba.app.reticulum.util.AppDataParser
+                                        network.zamolxis.app.reticulum.util.AppDataParser
                                             .extractPropagationNodeMetadata(appData)
                                     metadata.transferLimitKb
                                 } else {
@@ -461,6 +504,53 @@ class MessageCollector
         /**
          * Get peer name with fallback - uses PeerNameResolver for consistent lookup across the app
          */
+        /**
+         * Run an inbound message through the post-quantum layer.
+         *
+         * @return the content to store, or null when a sealed message could not be
+         *   opened. A message with no post-quantum fields comes back unchanged.
+         *
+         * Any failure inside the layer degrades to "store what arrived": a fault in
+         * the cryptography must not swallow ordinary messages.
+         */
+        private suspend fun unsealIfNeeded(
+            receivedMessage: network.zamolxis.app.rns.api.model.ReceivedMessage,
+            sourceHash: String,
+        ): network.zamolxis.app.service.pq.PqMessageSealer.Incoming? {
+            val fields = network.zamolxis.app.service.pq.PqFieldsJson.extract(receivedMessage.fieldsJson)
+            if (fields.isEmpty()) {
+                return network.zamolxis.app.service.pq.PqMessageSealer.Incoming(
+                    content = receivedMessage.content,
+                    wasSealed = false,
+                )
+            }
+
+            val identityHash =
+                runCatching { identityRepository.getActiveIdentitySync()?.identityHash }.getOrNull()
+            if (identityHash == null) {
+                Log.w(TAG, "No active identity; storing message from $sourceHash as received")
+                return network.zamolxis.app.service.pq.PqMessageSealer.Incoming(
+                    content = receivedMessage.content,
+                    wasSealed = false,
+                )
+            }
+
+            return runCatching {
+                pqMessageSealer.processIncoming(
+                    identityHash = identityHash,
+                    peerHash = sourceHash,
+                    fallbackContent = receivedMessage.content,
+                    fields = fields,
+                )
+            }.getOrElse {
+                Log.e(TAG, "Post-quantum processing failed for message from $sourceHash", it)
+                network.zamolxis.app.service.pq.PqMessageSealer.Incoming(
+                    content = receivedMessage.content,
+                    wasSealed = false,
+                )
+            }
+        }
+
         private suspend fun getPeerNameWithFallback(peerHash: String): String {
             val resolvedName =
                 PeerNameResolver.resolve(

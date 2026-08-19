@@ -1,8 +1,8 @@
-package network.columba.app.test
+package network.zamolxis.app.test
 
-import network.columba.app.data.repository.Announce
-import network.columba.app.ui.model.MessageUi
-import network.columba.app.ui.model.ReplyPreviewUi
+import network.zamolxis.app.data.repository.Announce
+import network.zamolxis.app.ui.model.MessageUi
+import network.zamolxis.app.ui.model.ReplyPreviewUi
 
 /**
  * Test fixtures for MessagingScreen UI tests.

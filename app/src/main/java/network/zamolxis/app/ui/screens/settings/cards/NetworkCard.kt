@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,8 +17,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 
 /**
  * Network settings card for viewing status and managing interfaces.
@@ -29,9 +32,9 @@ import network.columba.app.ui.components.CollapsibleSettingsCard
  * @param onManageInterfaces Callback when "Manage Interfaces" is clicked
  * @param onBleConnections Callback when "BLE Connections" is clicked
  * @param isSharedInstance When true, interface management is disabled because
- *                         Columba is connected to a shared RNS instance
+ *                         Zamolxis is connected to a shared RNS instance
  * @param sharedInstanceOnline Whether the shared instance is currently reachable.
- *                             When false and isSharedInstance is true, Columba has
+ *                             When false and isSharedInstance is true, Zamolxis has
  *                             switched to its own instance and interfaces can be managed.
  */
 @Composable
@@ -48,14 +51,14 @@ fun NetworkCard(
     // If shared instance went offline, we're now using our own instance
     val interfacesDisabled = isSharedInstance && sharedInstanceOnline
     CollapsibleSettingsCard(
-        title = "Network",
+        title = stringResource(R.string.networkcard_title),
         icon = Icons.Default.Sensors,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
     ) {
         // Description for Network Status
         Text(
-            text = "Monitor your Reticulum network status, active interfaces, BLE connections, and connection diagnostics.",
+            text = stringResource(R.string.networkcard_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -93,7 +96,7 @@ fun NetworkCard(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("View Network Status")
+            Text(stringResource(R.string.networkcard_view_status))
         }
 
         // Secondary action - Manage Interfaces (disabled when using shared instance)
@@ -108,7 +111,7 @@ fun NetworkCard(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Manage Interfaces")
+            Text(stringResource(R.string.networkcard_manage_interfaces))
         }
 
         // Secondary action - BLE Connections (status view; always enabled)
@@ -122,7 +125,7 @@ fun NetworkCard(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("BLE Connections")
+            Text(stringResource(R.string.networkcard_ble_connections))
         }
     }
 }

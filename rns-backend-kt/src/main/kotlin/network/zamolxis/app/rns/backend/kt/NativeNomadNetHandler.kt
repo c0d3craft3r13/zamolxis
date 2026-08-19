@@ -1,9 +1,9 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
-import network.columba.app.rns.api.util.hexToBytes
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.util.toHex
 import network.reticulum.common.DestinationDirection
 import network.reticulum.transport.Transport
 import org.msgpack.core.MessagePack
@@ -34,7 +34,7 @@ internal class NativeNomadNetHandler(
         path: String,
         formDataJson: String?,
         timeoutSeconds: Float,
-    ): Result<network.columba.app.rns.api.model.NomadnetPageResult> =
+    ): Result<network.zamolxis.app.rns.api.model.NomadnetPageResult> =
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             runCatching {
                 nomadnetCancelled = false
@@ -275,7 +275,7 @@ internal class NativeNomadNetHandler(
         data: ByteArray,
         metadata: ByteArray?,
         safePath: String,
-    ): network.columba.app.rns.api.model.NomadnetPageResult {
+    ): network.zamolxis.app.rns.api.model.NomadnetPageResult {
         val fileMeta = metadata?.let { parseNomadnetFileMetadata(it) }
         if (fileMeta != null) {
             val rawName = fileMeta["name"] as? String ?: safePath.substringAfterLast("/")
@@ -296,7 +296,7 @@ internal class NativeNomadNetHandler(
                 "Rejected path traversal attempt in NomadNet download: $rawName"
             }
             outFile.writeBytes(data)
-            return network.columba.app.rns.api.model.NomadnetPageResult(
+            return network.zamolxis.app.rns.api.model.NomadnetPageResult(
                 content = "",
                 path = safePath,
                 type = "file",
@@ -305,7 +305,7 @@ internal class NativeNomadNetHandler(
                 fileSize = data.size.toLong(),
             )
         }
-        return network.columba.app.rns.api.model.NomadnetPageResult(
+        return network.zamolxis.app.rns.api.model.NomadnetPageResult(
             content = String(data, Charsets.UTF_8),
             path = safePath,
             type = "page",

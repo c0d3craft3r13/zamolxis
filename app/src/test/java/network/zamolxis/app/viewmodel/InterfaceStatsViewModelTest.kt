@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.hardware.usb.UsbDevice
@@ -6,10 +6,10 @@ import android.hardware.usb.UsbManager
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.service.InterfaceConfigManager
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.service.InterfaceConfigManager
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every

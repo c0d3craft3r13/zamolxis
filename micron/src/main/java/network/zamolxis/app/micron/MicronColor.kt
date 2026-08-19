@@ -1,4 +1,4 @@
-package network.columba.app.micron
+package network.zamolxis.app.micron
 
 /**
  * Represents a color in Micron markup.

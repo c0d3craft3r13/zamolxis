@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.process
+package network.zamolxis.app.rns.host.process
 
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
@@ -11,7 +11,7 @@ import org.robolectric.RobolectricTestRunner
  * Verifies [ProcessDetector]'s process-type classification.
  *
  * The Espresso classpath probe matches the existing
- * `ColumbaApplication.isRunningInTest()` heuristic — it fires for instrumented
+ * `ZamolxisApplication.isRunningInTest()` heuristic — it fires for instrumented
  * tests where Espresso lives on the loader, but NOT for Robolectric unit
  * tests (whose loader contains Robolectric, not Espresso). The fall-through
  * branch reads the process name, which under Robolectric resolves to a name

@@ -1,13 +1,13 @@
-package network.columba.app.startup
+package network.zamolxis.app.startup
 
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.service.manager.InterfaceTransportObserver
-import network.columba.app.rns.host.manager.filterByTransport
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.service.manager.InterfaceTransportObserver
+import network.zamolxis.app.rns.host.manager.filterByTransport
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
@@ -16,7 +16,7 @@ import javax.inject.Singleton
 
 /**
  * Loads startup configuration from repositories in parallel for faster app initialization.
- * Extracted from ColumbaApplication to enable unit testing.
+ * Extracted from ZamolxisApplication to enable unit testing.
  */
 @Singleton
 class StartupConfigLoader

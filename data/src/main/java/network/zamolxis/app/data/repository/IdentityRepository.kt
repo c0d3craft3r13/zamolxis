@@ -1,4 +1,4 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import android.content.Context
 import android.net.Uri
@@ -8,12 +8,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import network.columba.app.data.crypto.IdentityKeyEncryptor
-import network.columba.app.data.crypto.IdentityKeyMigrator
-import network.columba.app.data.crypto.IdentityKeyProvider
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
+import network.zamolxis.app.data.crypto.IdentityKeyMigrator
+import network.zamolxis.app.data.crypto.IdentityKeyProvider
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,7 +29,7 @@ class IdentityRepository
     @Inject
     constructor(
         private val identityDao: LocalIdentityDao,
-        private val database: ColumbaDatabase,
+        private val database: ZamolxisDatabase,
         @ApplicationContext private val context: Context,
         private val ioDispatcher: CoroutineDispatcher,
         private val keyEncryptor: IdentityKeyEncryptor,

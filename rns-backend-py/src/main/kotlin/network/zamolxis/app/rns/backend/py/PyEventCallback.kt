@@ -1,7 +1,7 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import com.chaquo.python.PyObject
-import network.columba.app.rns.api.annotation.ReflectivelyKept
+import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
 
 /**
  * Single-method event sink that `event_bridge.py` invokes for each flattened

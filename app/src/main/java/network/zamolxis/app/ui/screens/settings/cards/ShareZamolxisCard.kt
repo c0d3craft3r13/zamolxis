@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,24 +12,26 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 
 @Composable
-fun ShareColumbaCard(
+fun ShareZamolxisCard(
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     onNavigateToApkSharing: () -> Unit,
 ) {
     CollapsibleSettingsCard(
-        title = "Share Columba",
+        title = stringResource(R.string.sharezamolxis_title),
         icon = Icons.Default.Share,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
     ) {
         Text(
-            text = "Share the Columba app with someone nearby. " +
-                "The other person scans a QR code to download and install the app directly from your phone.",
+            text = stringResource(R.string.sharezamolxis_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -44,7 +46,7 @@ fun ShareColumbaCard(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Share Columba APK")
+            Text(stringResource(R.string.sharezamolxis_share_apk))
         }
     }
 }

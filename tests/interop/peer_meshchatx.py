@@ -3,7 +3,7 @@
 Drives a MeshChatX instance running in `--headless --no-https` mode via
 its HTTP API (default `127.0.0.1:8000`). Used to exercise the
 reply / reaction interop paths that Sideband does not implement,
-since both Columba and MeshChatX share the same per-event wire
+since both Zamolxis and MeshChatX share the same per-event wire
 format for those features:
 
   - reply:   `fields[0x30] = bytes(reply_to_hash)`,
@@ -62,7 +62,7 @@ class MeshChatXPeer:
         meshchatx_src: path to the MeshChatX source directory (the one
             containing `meshchatx/meshchat.py`).
         reticulum_config_dir: shared RNS config directory so this peer
-            and Columba run over the same transport.
+            and Zamolxis run over the same transport.
         port: HTTP server port. Defaults to 8765 (off MeshChatX's
             usual 8000 so a developer-running instance doesn't collide).
         storage_dir: optional storage dir for MeshChatX's SQLite DB.
@@ -108,7 +108,7 @@ class MeshChatXPeer:
 
         # `--no-https` so we don't need a self-signed cert dance; this
         # is a localhost-only test rig so plain HTTP is fine.
-        # `--reticulum-config-dir` shares transport with Columba.
+        # `--reticulum-config-dir` shares transport with Zamolxis.
         # `--no-crash-recovery` so test failures don't leave behind a
         # zombie recovery prompt.
         cmd = [
@@ -225,7 +225,7 @@ class MeshChatXPeer:
 
         On the wire this puts `fields[0x30] = bytes.fromhex(reply_to_hash)`
         and `fields[0x31] = reply_quoted_content.encode('utf-8')` — the
-        same format Columba writes after the v2 reply migration.
+        same format Zamolxis writes after the v2 reply migration.
         """
         return self._http_post(
             "/api/v1/lxmf-messages/send",
@@ -249,7 +249,7 @@ class MeshChatXPeer:
         """POST /api/v1/lxmf-messages/reactions.
 
         On the wire this puts `fields[0x10] = {reaction_to, emoji, sender}`
-        on an otherwise-empty message — same format Columba uses.
+        on an otherwise-empty message — same format Zamolxis uses.
         """
         return self._http_post(
             "/api/v1/lxmf-messages/reactions",

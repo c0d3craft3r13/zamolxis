@@ -1,4 +1,4 @@
-package network.columba.app.data.crypto
+package network.zamolxis.app.data.crypto
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -31,13 +31,13 @@ import javax.inject.Singleton
 @Singleton
 class IdentityKeyEncryptor
     @Inject
-    constructor() {
+    constructor() : SecretBlobEncryptor {
         companion object {
             private const val TAG = "IdentityKeyEncryptor"
 
             // Android Keystore configuration
             private const val ANDROID_KEYSTORE = "AndroidKeyStore"
-            private const val KEY_ALIAS = "columba_identity_master_key"
+            private const val KEY_ALIAS = "zamolxis_identity_master_key"
 
             // Encryption parameters
             private const val AES_KEY_SIZE = 256
@@ -52,6 +52,15 @@ class IdentityKeyEncryptor
             // Version bytes
             const val VERSION_DEVICE_ONLY: Byte = 0x01
             const val VERSION_DEVICE_AND_PASSWORD: Byte = 0x02
+
+            /**
+             * Device-only protection for a secret of arbitrary length.
+             *
+             * A distinct version byte from [VERSION_DEVICE_ONLY] on purpose: the
+             * two formats are otherwise identical on the wire, and a blob of one
+             * kind must never be silently accepted where the other is expected.
+             */
+            const val VERSION_DEVICE_BLOB: Byte = 0x03
 
             // Expected key size
             const val IDENTITY_KEY_SIZE = 64
@@ -176,6 +185,75 @@ class IdentityKeyEncryptor
             }
             if (encryptedData.size < 1 + GCM_IV_LENGTH + IDENTITY_KEY_SIZE) {
                 throw CorruptedKeyException("Encrypted data too short")
+            }
+        }
+
+        /**
+         * Encrypt an arbitrary-length secret with device-only protection.
+         *
+         * Same Keystore master key and same AES-256-GCM treatment as the identity
+         * key, without the fixed 64-byte assumption. Added for the hybrid
+         * post-quantum key pair, whose private halves run to a few kilobytes and
+         * whose length depends on which ML-KEM private-key form the provider
+         * returns.
+         *
+         * Format: `[0x03][12-byte IV][ciphertext + 16-byte tag]`
+         *
+         * @param plainData the secret to protect; must not be empty
+         * @return the wrapped blob, safe to store in the database
+         */
+        override fun encryptBlobWithDeviceKey(plainData: ByteArray): ByteArray {
+            require(plainData.isNotEmpty()) { "Cannot encrypt an empty blob" }
+
+            val masterKey = getOrCreateMasterKey()
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(Cipher.ENCRYPT_MODE, masterKey)
+
+            val iv = cipher.iv
+            val encryptedData = cipher.doFinal(plainData)
+
+            return ByteBuffer
+                .allocate(1 + GCM_IV_LENGTH + encryptedData.size)
+                .put(VERSION_DEVICE_BLOB)
+                .put(iv)
+                .put(encryptedData)
+                .array()
+        }
+
+        /**
+         * Decrypt a blob produced by [encryptBlobWithDeviceKey].
+         *
+         * @throws CorruptedKeyException if the blob is malformed, of the wrong
+         *   kind, or cannot be decrypted — most often because the Keystore key
+         *   did not survive a device restore, the same failure mode the identity
+         *   key has.
+         */
+        override fun decryptBlobWithDeviceKey(encryptedData: ByteArray): ByteArray {
+            if (encryptedData.size < 1 + GCM_IV_LENGTH + 1) {
+                throw CorruptedKeyException("Encrypted blob too short")
+            }
+            if (encryptedData[0] != VERSION_DEVICE_BLOB) {
+                throw CorruptedKeyException(
+                    "Unsupported blob encryption version: ${encryptedData[0]} (expected device blob)",
+                )
+            }
+
+            val buffer = ByteBuffer.wrap(encryptedData)
+            buffer.get() // version, already checked
+
+            val iv = ByteArray(GCM_IV_LENGTH)
+            buffer.get(iv)
+
+            val ciphertext = ByteArray(buffer.remaining())
+            buffer.get(ciphertext)
+
+            return try {
+                val masterKey = getOrCreateMasterKey()
+                val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                cipher.init(Cipher.DECRYPT_MODE, masterKey, GCMParameterSpec(GCM_TAG_LENGTH, iv))
+                cipher.doFinal(ciphertext)
+            } catch (e: Exception) {
+                throw CorruptedKeyException("Blob decryption failed - data may be corrupted or tampered", e)
             }
         }
 

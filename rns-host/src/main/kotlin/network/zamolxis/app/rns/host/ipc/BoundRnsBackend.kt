@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ipc
+package network.zamolxis.app.rns.host.ipc
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
@@ -8,15 +8,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.host.ReticulumServiceConnection
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.host.ReticulumServiceConnection
 
 /**
  * UI-process [RnsBackend] implementation that proxies to the live

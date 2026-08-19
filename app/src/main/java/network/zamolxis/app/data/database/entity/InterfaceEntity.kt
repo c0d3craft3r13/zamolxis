@@ -1,4 +1,4 @@
-package network.columba.app.data.database.entity
+package network.zamolxis.app.data.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

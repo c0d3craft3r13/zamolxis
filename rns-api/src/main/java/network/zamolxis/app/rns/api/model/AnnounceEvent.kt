@@ -1,8 +1,8 @@
-package network.columba.app.rns.api.model
+package network.zamolxis.app.rns.api.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import network.columba.app.rns.api.util.Aspects
+import network.zamolxis.app.rns.api.util.Aspects
 
 @Parcelize
 enum class NodeType : Parcelable {
@@ -10,7 +10,7 @@ enum class NodeType : Parcelable {
     PEER, // Node we can message with
     PROPAGATION_NODE, // Relay/repeater node for signal propagation
     PHONE, // lxst.telephony — callable audio/telephony destination
-    UNKNOWN, // Aspect didn't resolve to one Columba tracks — don't guess
+    UNKNOWN, // Aspect didn't resolve to one Zamolxis tracks — don't guess
     ;
 
     companion object {
@@ -20,7 +20,7 @@ enum class NodeType : Parcelable {
          * previously each had its own `when` block and they diverged on the
          * fallback branch (kotlin -> PEER, python -> NODE).
          *
-         * Returns [UNKNOWN] for any aspect Columba doesn't explicitly handle,
+         * Returns [UNKNOWN] for any aspect Zamolxis doesn't explicitly handle,
          * including `null`. Upstream callers normally drop unknown-aspect
          * announces before reaching this — the [UNKNOWN] case is a defensive
          * default, not an assumption.

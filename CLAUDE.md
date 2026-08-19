@@ -1,4 +1,4 @@
-# Columba Project Instructions for Claude Code
+# Zamolxis Project Instructions for Claude Code
 
 ## Common Pitfalls
 

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.process
+package network.zamolxis.app.rns.host.process
 
 import android.app.ActivityManager
 import android.app.Application
@@ -7,10 +7,10 @@ import android.os.Build
 import android.os.Process
 
 /**
- * Which Columba process this Hilt graph is being instantiated in.
+ * Which Zamolxis process this Hilt graph is being instantiated in.
  *
- * The dual-build runs the UI in `network.columba.app[.debug]` and the RNS stack in
- * `network.columba.app[.debug]:reticulum`. Both processes resolve the same
+ * The dual-build runs the UI in `network.zamolxis.app[.debug]` and the RNS stack in
+ * `network.zamolxis.app[.debug]:reticulum`. Both processes resolve the same
  * `@InstallIn(SingletonComponent::class)` modules — Hilt's SingletonComponent is
  * per-process, not per-app, so each process gets its own graph and each provider
  * runs once per process. That means a naive `RnsBackend` provider would
@@ -23,7 +23,7 @@ import android.os.Process
  * AIDL-proxy [BoundRnsBackend].
  */
 enum class ProcessType {
-    /** Foreground UI process (`network.columba.app[.debug]`). */
+    /** Foreground UI process (`network.zamolxis.app[.debug]`). */
     UI,
 
     /** `:reticulum` foreground service process where the live RNS stack lives. */
@@ -37,7 +37,7 @@ enum class ProcessType {
  * Resolves the [ProcessType] of the current process.
  *
  * Lifts the process-name detection logic that previously lived inline in
- * `ColumbaApplication.getCurrentProcessName()`. Pure utility: no Android
+ * `ZamolxisApplication.getCurrentProcessName()`. Pure utility: no Android
  * dependency beyond [Context], and the result is stable for the lifetime of
  * the process so callers can cache the value.
  */

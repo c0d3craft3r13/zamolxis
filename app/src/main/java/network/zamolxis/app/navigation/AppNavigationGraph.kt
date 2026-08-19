@@ -1,4 +1,4 @@
-package network.columba.app.navigation
+package network.zamolxis.app.navigation
 
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.Composable

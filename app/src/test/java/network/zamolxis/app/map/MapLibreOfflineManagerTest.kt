@@ -1,4 +1,4 @@
-package network.columba.app.map
+package network.zamolxis.app.map
 
 import android.app.Application
 import io.mockk.mockk

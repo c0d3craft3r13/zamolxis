@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween

@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
@@ -20,8 +20,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import network.zamolxis.app.R
 
 /**
  * A reusable TopAppBar with integrated search functionality.
@@ -97,7 +99,7 @@ fun SearchableTopAppBar(
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { onSearchQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.common_clear_search))
                         }
                     }
                 },

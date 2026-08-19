@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc.client
+package network.zamolxis.app.rns.ipc.client
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
@@ -10,16 +10,16 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.api.model.VoiceCallState
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsTelephony
-import network.columba.app.rns.ipc.callback.IRnsBoolEventCallback
-import network.columba.app.rns.ipc.callback.IRnsCallStateCallback
-import network.columba.app.rns.ipc.callback.IRnsNullableStringEventCallback
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsTelephony
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsCallStateCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsNullableStringEventCallback
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 

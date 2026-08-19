@@ -12,7 +12,7 @@
     -->
     <application>
         <service
-            android:name="network.columba.app.rns.host.ReticulumService"
+            android:name="network.zamolxis.app.rns.host.ReticulumService"
             android:enabled="true"
             android:exported="false"
             android:process=":reticulum"

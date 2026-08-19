@@ -1,4 +1,4 @@
-package network.columba.app.data.db.entity
+package network.zamolxis.app.data.db.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -49,7 +49,7 @@ data class MessageEntity(
     // contentBytes} per-event (legacy fields[0x10] still parsed inbound); the
     // receiver routes those events into this column on the *target* message.
     // Migrated v1→v2 from the prior fields[16].reactions overload — see
-    // MIGRATION_1_2 in ColumbaDatabase.
+    // MIGRATION_1_2 in ZamolxisDatabase.
     val reactionsJson: String? = null,
     // Delivery method used when sending: "opportunistic", "direct", or "propagated"
     val deliveryMethod: String? = null,

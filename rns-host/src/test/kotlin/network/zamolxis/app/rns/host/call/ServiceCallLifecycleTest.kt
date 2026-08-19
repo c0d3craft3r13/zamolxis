@@ -1,15 +1,15 @@
-package network.columba.app.rns.host.call
+package network.zamolxis.app.rns.host.call
 
 import app.cash.turbine.test
 import java.util.UUID
 import kotlinx.coroutines.test.runTest
-import network.columba.app.data.db.dao.CallHistoryDao
-import network.columba.app.data.db.entity.CallHistoryEntity
-import network.columba.app.rns.api.call.CallAttemptDirection
-import network.columba.app.rns.api.call.CallAttemptRequest
-import network.columba.app.rns.api.call.CallFailureReason
-import network.columba.app.rns.api.call.CallLifecycleEvent
-import network.columba.app.rns.api.call.UnconnectedOutcome
+import network.zamolxis.app.data.db.dao.CallHistoryDao
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.rns.api.call.CallAttemptDirection
+import network.zamolxis.app.rns.api.call.CallAttemptRequest
+import network.zamolxis.app.rns.api.call.CallFailureReason
+import network.zamolxis.app.rns.api.call.CallLifecycleEvent
+import network.zamolxis.app.rns.api.call.UnconnectedOutcome
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -249,7 +249,7 @@ class ServiceCallLifecycleTest {
         }
 
     @Test
-    fun `failCallAttempt persists Columba observed failure reason`() =
+    fun `failCallAttempt persists Zamolxis observed failure reason`() =
         runTest {
             val dao = RecordingCallHistoryDao()
             val times = ArrayDeque(listOf(100L, 200L))

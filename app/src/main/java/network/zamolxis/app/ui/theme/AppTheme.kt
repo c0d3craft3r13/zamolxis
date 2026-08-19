@@ -1,4 +1,4 @@
-package network.columba.app.ui.theme
+package network.zamolxis.app.ui.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme

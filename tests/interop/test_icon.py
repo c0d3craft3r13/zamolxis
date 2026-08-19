@@ -1,7 +1,7 @@
 """`FIELD_ICON_APPEARANCE` (0x04) round-trip.
 
 The triple `[icon_name, fg_rgb_bytes, bg_rgb_bytes]` is what Sideband
-and Columba both attach for sender chrome. Tests assert byte-equality
+and Zamolxis both attach for sender chrome. Tests assert byte-equality
 on the wire.
 
 Sideband normally attaches FIELD_ICON_APPEARANCE via `get_message_fields()`
@@ -21,13 +21,13 @@ from verify import icon_appearance, FIELD_ICON_APPEARANCE
 
 ICON_NAME = "person-circle"
 FG = b"\xFF\xFF\xFF"  # white
-BG = b"\x1E\x88\xE5"  # mid blue (matches Columba's default avatar palette)
+BG = b"\x1E\x88\xE5"  # mid blue (matches Zamolxis's default avatar palette)
 
 
 @pytest.mark.timeout(90)
-def test_icon_columba_to_sideband(interop):
-    text = f"icon_from_columba_{int(time.time() * 1000)}"
-    interop.columba.broadcast(
+def test_icon_zamolxis_to_sideband(interop):
+    text = f"icon_from_zamolxis_{int(time.time() * 1000)}"
+    interop.zamolxis.broadcast(
         "SEND_ICON",
         to=interop.sideband_hex,
         text=text,
@@ -37,7 +37,7 @@ def test_icon_columba_to_sideband(interop):
     )
 
     msg = interop.sideband.wait_for_message(
-        from_hex=interop.columba_hex,
+        from_hex=interop.zamolxis_hex,
         content_predicate=lambda m: (
             m.content_text == text and FIELD_ICON_APPEARANCE in m.fields
         ),
@@ -50,10 +50,10 @@ def test_icon_columba_to_sideband(interop):
 
 
 @pytest.mark.timeout(90)
-def test_icon_sideband_to_columba(interop):
-    """Send a B→A message with the icon field explicit. Columba's
+def test_icon_sideband_to_zamolxis(interop):
+    """Send a B→A message with the icon field explicit. Zamolxis's
     rx_msg line surfaces content only — the icon appearance lives in
-    Columba's local DB and is rendered into the chat UI, but isn't in
+    Zamolxis's local DB and is rendered into the chat UI, but isn't in
     the structured `rx_msg` log line. Wire arrival is confirmed by the
     rx_msg firing (LXMF drops messages with malformed fields before
     rx_msg fires)."""
@@ -66,10 +66,10 @@ def test_icon_sideband_to_columba(interop):
         ],
     }
     assert interop.sideband.send_with_fields(
-        interop.columba_hex, text, fields=fields,
+        interop.zamolxis_hex, text, fields=fields,
     )
 
-    msg = interop.columba.wait_for_message(
+    msg = interop.zamolxis.wait_for_message(
         from_hex=interop.sideband_hex,
         content_predicate=lambda m: m.content == text,
         timeout=60,

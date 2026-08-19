@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.offlinemaps
+package network.zamolxis.app.ui.screens.offlinemaps
 
 import android.app.Application
 import androidx.activity.OnBackPressedDispatcher
@@ -8,11 +8,11 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.DownloadProgress
-import network.columba.app.viewmodel.DownloadWizardStep
-import network.columba.app.viewmodel.OfflineMapDownloadState
-import network.columba.app.viewmodel.OfflineMapDownloadViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.DownloadProgress
+import network.zamolxis.app.viewmodel.DownloadWizardStep
+import network.zamolxis.app.viewmodel.OfflineMapDownloadState
+import network.zamolxis.app.viewmodel.OfflineMapDownloadViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

@@ -1,4 +1,4 @@
-package network.columba.app.map
+package network.zamolxis.app.map
 
 import kotlinx.coroutines.test.runTest
 import org.json.JSONObject

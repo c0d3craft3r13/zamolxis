@@ -1,22 +1,22 @@
-package network.columba.app.rns.ipc.server
+package network.zamolxis.app.rns.ipc.server
 
 import android.os.Bundle
 import android.os.RemoteException
 import kotlinx.coroutines.CoroutineScope
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsTelephony
-import network.columba.app.rns.ipc.callback.IRnsBoolEventCallback
-import network.columba.app.rns.ipc.callback.IRnsCallStateCallback
-import network.columba.app.rns.ipc.callback.IRnsNullableStringEventCallback
-import network.columba.app.rns.ipc.callback.IRnsResultCallback
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsTelephony
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsCallStateCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsNullableStringEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback
 
 /**
  * Host-side adapter that bridges `oneway` [IRnsTelephony] AIDL calls onto
  * the suspend [RnsTelephony] implementation. Each AIDL entry point launches
  * a coroutine on [scope] that runs the suspend call and forwards the result
- * (or [network.columba.app.rns.api.RnsError]) back via the supplied
+ * (or [network.zamolxis.app.rns.api.RnsError]) back via the supplied
  * [IRnsResultCallback].
  *
  * Observable StateFlow surfaces (callState/remoteIdentity/isMuted/isSpeakerOn/

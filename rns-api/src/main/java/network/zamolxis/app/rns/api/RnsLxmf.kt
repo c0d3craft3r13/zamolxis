@@ -1,17 +1,17 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.emptyFlow
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.DeliveryStatusUpdate
-import network.columba.app.rns.api.model.Destination
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.MessageReceipt
-import network.columba.app.rns.api.model.PropagationState
-import network.columba.app.rns.api.model.ReceivedMessage
-import network.columba.app.rns.api.model.TransferProgressUpdate
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
+import network.zamolxis.app.rns.api.model.Destination
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.rns.api.model.PropagationState
+import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.TransferProgressUpdate
 
 /**
  * LXMF messaging surface: send/receive messages, observe delivery state,

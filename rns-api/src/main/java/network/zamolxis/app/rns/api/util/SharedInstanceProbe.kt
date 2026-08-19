@@ -1,6 +1,6 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 import java.net.DatagramSocket
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -17,7 +17,7 @@ import java.net.Socket
  *  - **UDP test bind** on the AutoInterface `data_port` (29717
  *    default). Detects an app holding the IPv6 link-local multicast
  *    bind even when it's NOT exposing a shared instance — i.e. another
- *    Columba install running as standalone. AutoInterface can't be
+ *    Zamolxis install running as standalone. AutoInterface can't be
  *    started in our process; we skip declaring it but leave the rest
  *    of our config (TCP/BLE/RNode) intact.
  *

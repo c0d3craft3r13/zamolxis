@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -70,8 +71,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import network.columba.app.ui.model.ReactionUi
 import kotlinx.coroutines.launch
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.model.ReactionUi
 
 /**
  * Standard emoji reactions available for selection.
@@ -382,7 +384,7 @@ fun MessageActionBar(
                 if (onRetry != null) {
                     ActionButton(
                         icon = Icons.Default.Refresh,
-                        label = "Retry",
+                        label = stringResource(R.string.common_retry),
                         onClick = {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             onRetry()
@@ -393,7 +395,7 @@ fun MessageActionBar(
                 // Reply button
                 ActionButton(
                     icon = Icons.AutoMirrored.Filled.Reply,
-                    label = "Reply",
+                    label = stringResource(R.string.messaging_reply),
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         onReply()
@@ -403,7 +405,7 @@ fun MessageActionBar(
                 // Copy button
                 ActionButton(
                     icon = Icons.Default.ContentCopy,
-                    label = "Copy",
+                    label = stringResource(R.string.common_copy),
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         onCopy()
@@ -414,7 +416,7 @@ fun MessageActionBar(
                 if (onViewDetails != null) {
                     ActionButton(
                         icon = Icons.Default.Info,
-                        label = "Details",
+                        label = stringResource(R.string.messaging_view_details),
                         onClick = {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             onViewDetails()
@@ -557,7 +559,7 @@ fun FullEmojiPickerDialog(
                 modifier = Modifier.padding(16.dp),
             ) {
                 Text(
-                    text = "Choose a reaction",
+                    text = stringResource(R.string.reaction_choose),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 12.dp),
@@ -624,7 +626,7 @@ private fun AddMoreEmojiButton(
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "More emojis",
+                contentDescription = stringResource(R.string.reaction_more_cd),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp),
             )
@@ -1017,7 +1019,7 @@ fun ReactionModeOverlay(
                 // Message snapshot - keep at full opacity during animation
                 Image(
                     bitmap = bitmap,
-                    contentDescription = "Selected message",
+                    contentDescription = stringResource(R.string.reaction_selected_cd),
                     modifier =
                         Modifier
                             .size(width = displayWidthDp, height = displayHeightDp)
@@ -1130,7 +1132,7 @@ fun SelectableTextDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select text") },
+        title = { Text(stringResource(R.string.reaction_select_text)) },
         text = {
             SelectableMessageText(
                 text = text,
@@ -1142,7 +1144,7 @@ fun SelectableTextDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Done")
+                Text(stringResource(R.string.flasher_done))
             }
         },
     )
@@ -1186,7 +1188,7 @@ private fun MessageActionButtons(
             if (onRetry != null) {
                 ReactionModeActionButton(
                     icon = Icons.Default.Refresh,
-                    label = "Retry",
+                    label = stringResource(R.string.common_retry),
                     onClick = onRetry,
                 )
             }
@@ -1194,14 +1196,14 @@ private fun MessageActionButtons(
             // Reply button (all messages)
             ReactionModeActionButton(
                 icon = Icons.AutoMirrored.Filled.Reply,
-                label = "Reply",
+                label = stringResource(R.string.messaging_reply),
                 onClick = onReply,
             )
 
             // Copy button (all messages)
             ReactionModeActionButton(
                 icon = Icons.Default.ContentCopy,
-                label = "Copy",
+                label = stringResource(R.string.common_copy),
                 onClick = onCopy,
             )
 
@@ -1209,7 +1211,7 @@ private fun MessageActionButtons(
             if (onSelectText != null) {
                 ReactionModeActionButton(
                     icon = Icons.Default.SelectAll,
-                    label = "Select text",
+                    label = stringResource(R.string.reaction_select_text),
                     onClick = onSelectText,
                 )
             }
@@ -1218,7 +1220,7 @@ private fun MessageActionButtons(
             if (onViewDetails != null) {
                 ReactionModeActionButton(
                     icon = Icons.Default.Info,
-                    label = "Details",
+                    label = stringResource(R.string.messaging_view_details),
                     onClick = onViewDetails,
                 )
             }
@@ -1227,7 +1229,7 @@ private fun MessageActionButtons(
             if (onDelete != null) {
                 ReactionModeActionButton(
                     icon = Icons.Default.Delete,
-                    label = "Delete",
+                    label = stringResource(R.string.delete),
                     onClick = onDelete,
                 )
             }

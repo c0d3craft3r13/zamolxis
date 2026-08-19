@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "tech.torlando.columba.data"
+    namespace = "tech.torlando.zamolxis.data"
     compileSdk = 36
 
     defaultConfig {
@@ -39,7 +39,6 @@ dependencies {
     // Java 8+ core library desugaring runtime (java.time backport for API < 26).
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    implementation(project(":domain"))
 
     // Hilt
     implementation(libs.hilt)
@@ -53,6 +52,9 @@ dependencies {
     implementation("androidx.room:room-paging:${libs.versions.room.get()}")
 
     // Coroutines
+    // Hybrid post-quantum sealing for message content.
+    implementation(project(":crypto-pq"))
+
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
 

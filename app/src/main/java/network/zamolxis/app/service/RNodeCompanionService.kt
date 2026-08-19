@@ -1,4 +1,4 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.annotation.SuppressLint
 import android.companion.AssociationInfo
@@ -10,9 +10,9 @@ import androidx.annotation.RequiresApi
 /**
  * Companion Device Service for RNode Bluetooth devices.
  *
- * This service enables Android to recognize Columba as the companion app for associated
+ * This service enables Android to recognize Zamolxis as the companion app for associated
  * RNode devices. When a user taps "Connect" on an RNode in system Bluetooth settings,
- * Android will launch Columba.
+ * Android will launch Zamolxis.
  *
  * The service binding is automatically managed by the system based on device presence:
  * - Bound when the associated RNode is within BLE range or connected via Bluetooth

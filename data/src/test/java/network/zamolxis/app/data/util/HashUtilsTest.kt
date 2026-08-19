@@ -1,6 +1,6 @@
-package network.columba.app.data.util
+package network.zamolxis.app.data.util
 
-import network.columba.app.data.util.HashUtils.toHexString
+import network.zamolxis.app.data.util.HashUtils.toHexString
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

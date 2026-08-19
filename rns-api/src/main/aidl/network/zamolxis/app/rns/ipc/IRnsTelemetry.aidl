@@ -14,13 +14,13 @@
 // timebase is a nullable long — represented as (value, hasValue) since AIDL
 // has no boxed-primitive support. allowedHashes is `in String[]` because Set
 // isn't a direct AIDL type; :rns-ipc converts Set↔Array on each side.
-package network.columba.app.rns.ipc;
+package network.zamolxis.app.rns.ipc;
 
-import network.columba.app.rns.api.model.IconAppearance;
-import network.columba.app.rns.api.model.Identity;
-import network.columba.app.rns.api.model.LocationTelemetry;
-import network.columba.app.rns.ipc.callback.IRnsResultCallback;
-import network.columba.app.rns.ipc.callback.IRnsLocationTelemetryCallback;
+import network.zamolxis.app.rns.api.model.IconAppearance;
+import network.zamolxis.app.rns.api.model.Identity;
+import network.zamolxis.app.rns.api.model.LocationTelemetry;
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsLocationTelemetryCallback;
 
 oneway interface IRnsTelemetry {
     void sendLocationTelemetry(

@@ -1,4 +1,4 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals

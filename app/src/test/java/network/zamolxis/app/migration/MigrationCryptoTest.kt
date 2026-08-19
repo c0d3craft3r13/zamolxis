@@ -1,4 +1,4 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -102,7 +102,7 @@ class MigrationCryptoTest {
 
     @Test
     fun `encryptFile encrypts file in-place`() {
-        val tempFile = File.createTempFile("migration_test", ".columba")
+        val tempFile = File.createTempFile("migration_test", ".zamolxis")
         try {
             val originalContent = "ZIP file content simulation".toByteArray()
             tempFile.writeBytes(originalContent)

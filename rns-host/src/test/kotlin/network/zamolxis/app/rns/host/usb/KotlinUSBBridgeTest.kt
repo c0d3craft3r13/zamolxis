@@ -1,7 +1,7 @@
 // Context, UsbManager are Android framework classes with many methods
 @file:Suppress("NoRelaxedMocks")
 
-package network.columba.app.rns.host.usb
+package network.zamolxis.app.rns.host.usb
 
 import android.content.Context
 import android.hardware.usb.UsbManager

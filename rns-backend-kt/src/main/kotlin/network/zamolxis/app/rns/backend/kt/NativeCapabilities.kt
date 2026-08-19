@@ -1,13 +1,13 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.BackendCapabilities.BackendId
-import network.columba.app.rns.api.BackendCapabilities.InterfaceCaps
-import network.columba.app.rns.api.BackendCapabilities.MessagingCaps
-import network.columba.app.rns.api.BackendCapabilities.PerformanceCaps
-import network.columba.app.rns.api.BackendCapabilities.Support
-import network.columba.app.rns.api.BackendCapabilities.TelemetryCaps
-import network.columba.app.rns.api.BackendCapabilities.Versions
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.BackendCapabilities.BackendId
+import network.zamolxis.app.rns.api.BackendCapabilities.InterfaceCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.MessagingCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.PerformanceCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.Support
+import network.zamolxis.app.rns.api.BackendCapabilities.TelemetryCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.Versions
 
 /**
  * Static capability snapshot published by [NativeRnsBackend]'s

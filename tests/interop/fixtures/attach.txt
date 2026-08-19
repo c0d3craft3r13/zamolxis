@@ -1,2 +1,2 @@
-columba ↔ sideband interop
+zamolxis ↔ sideband interop
 text file fixture line 2

@@ -1,13 +1,13 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.BackendCapabilities.BackendId
-import network.columba.app.rns.api.BackendCapabilities.InterfaceCaps
-import network.columba.app.rns.api.BackendCapabilities.MessagingCaps
-import network.columba.app.rns.api.BackendCapabilities.PerformanceCaps
-import network.columba.app.rns.api.BackendCapabilities.Support
-import network.columba.app.rns.api.BackendCapabilities.TelemetryCaps
-import network.columba.app.rns.api.BackendCapabilities.Versions
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.BackendCapabilities.BackendId
+import network.zamolxis.app.rns.api.BackendCapabilities.InterfaceCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.MessagingCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.PerformanceCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.Support
+import network.zamolxis.app.rns.api.BackendCapabilities.TelemetryCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.Versions
 
 /**
  * Static capability snapshot published by [ChaquopyRnsBackend]'s
@@ -41,7 +41,7 @@ import network.columba.app.rns.api.BackendCapabilities.Versions
  *   knob that filters auto-connect by IFAC presence; reticulum-kt does. UI
  *   hides the IFAC-only Switch on this backend so the toggle doesn't
  *   silently lie about its runtime effect. Implementing the filter on the
- *   Python flavor needs a Columba-authored wrapper around
+ *   Python flavor needs a Zamolxis-authored wrapper around
  *   `RNS.Discovery.autoconnect()` in `event_bridge.py` (slim-Python rule —
  *   no `rns_*.py` facade); tracked as a post-release follow-up.
  */

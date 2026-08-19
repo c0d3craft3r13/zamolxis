@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.manager
+package network.zamolxis.app.rns.host.manager
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -320,20 +320,20 @@ class NetworkChangeManagerTest {
         assertEquals(listOf(CurrentTransport.UNKNOWN), transports)
         assertEquals(
             listOf("any"),
-            filterByTransport(listOf(tcp("any", network.columba.app.rns.api.model.NetworkRestriction.ANY)), CurrentTransport.UNKNOWN)
+            filterByTransport(listOf(tcp("any", network.zamolxis.app.rns.api.model.NetworkRestriction.ANY)), CurrentTransport.UNKNOWN)
                 .map { it.name },
         )
         assertEquals(
             emptyList<String>(),
             filterByTransport(
-                listOf(tcp("wifi", network.columba.app.rns.api.model.NetworkRestriction.WIFI_ONLY)),
+                listOf(tcp("wifi", network.zamolxis.app.rns.api.model.NetworkRestriction.WIFI_ONLY)),
                 CurrentTransport.UNKNOWN,
             ).map { it.name },
         )
         assertEquals(
             emptyList<String>(),
             filterByTransport(
-                listOf(tcp("cell", network.columba.app.rns.api.model.NetworkRestriction.CELLULAR_ONLY)),
+                listOf(tcp("cell", network.zamolxis.app.rns.api.model.NetworkRestriction.CELLULAR_ONLY)),
                 CurrentTransport.UNKNOWN,
             ).map { it.name },
         )
@@ -440,9 +440,9 @@ class NetworkChangeManagerTest {
 
     private fun tcp(
         name: String,
-        restriction: network.columba.app.rns.api.model.NetworkRestriction,
-    ): network.columba.app.rns.api.model.InterfaceConfig.TCPClient =
-        network.columba.app.rns.api.model.InterfaceConfig.TCPClient(
+        restriction: network.zamolxis.app.rns.api.model.NetworkRestriction,
+    ): network.zamolxis.app.rns.api.model.InterfaceConfig.TCPClient =
+        network.zamolxis.app.rns.api.model.InterfaceConfig.TCPClient(
             name = name,
             targetHost = "10.0.0.1",
             targetPort = 4242,

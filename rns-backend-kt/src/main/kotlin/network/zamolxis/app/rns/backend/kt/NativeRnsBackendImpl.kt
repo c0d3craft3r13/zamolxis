@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.util.Log
 import androidx.room.Room
@@ -17,39 +17,39 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.rns.api.model.ConversationLinkResult
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.DeliveryStatusUpdate
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.rns.api.model.FailedInterface
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.LinkSpeedProbeResult
-import network.columba.app.rns.api.model.LinkStatus
-import network.columba.app.rns.api.model.LocationTelemetry
-import network.columba.app.rns.api.model.MessageReceipt
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.NodeType
-import network.columba.app.rns.api.model.PacketReceipt
-import network.columba.app.rns.api.model.PacketType
-import network.columba.app.rns.api.model.PropagationState
-import network.columba.app.rns.api.model.ReceivedMessage
-import network.columba.app.rns.api.model.ReceivedPacket
-import network.columba.app.rns.api.model.ReticulumConfig
-import network.columba.app.rns.api.model.VoiceCallState
-import network.columba.app.rns.api.util.AppDataParser
-import network.columba.app.rns.api.util.Aspects
-import network.columba.app.rns.api.util.LxmfFields
-import network.columba.app.rns.api.util.ReactionWireCodec
-import network.columba.app.rns.api.util.hexToBytes
-import network.columba.app.rns.api.util.isUserVisibleChatMessage
-import network.columba.app.rns.api.util.toHex
-import network.columba.app.rns.backend.kt.BuildConfig
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.ConversationLinkResult
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.LinkSpeedProbeResult
+import network.zamolxis.app.rns.api.model.LinkStatus
+import network.zamolxis.app.rns.api.model.LocationTelemetry
+import network.zamolxis.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.NodeType
+import network.zamolxis.app.rns.api.model.PacketReceipt
+import network.zamolxis.app.rns.api.model.PacketType
+import network.zamolxis.app.rns.api.model.PropagationState
+import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.rns.api.util.AppDataParser
+import network.zamolxis.app.rns.api.util.Aspects
+import network.zamolxis.app.rns.api.util.LxmfFields
+import network.zamolxis.app.rns.api.util.ReactionWireCodec
+import network.zamolxis.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.util.isUserVisibleChatMessage
+import network.zamolxis.app.rns.api.util.toHex
+import network.zamolxis.app.rns.backend.kt.BuildConfig
 import network.reticulum.Reticulum
 import network.reticulum.common.DestinationDirection
 import network.reticulum.lxmf.LXMRouter
@@ -57,9 +57,9 @@ import network.reticulum.lxmf.LXMessage
 import network.reticulum.transport.Transport
 import org.json.JSONObject
 import org.msgpack.core.MessagePack
-import network.columba.app.rns.api.model.Destination as ColumbaDestination
-import network.columba.app.rns.api.model.Identity as ColumbaIdentity
-import network.columba.app.rns.api.model.Link as ColumbaLink
+import network.zamolxis.app.rns.api.model.Destination as ZamolxisDestination
+import network.zamolxis.app.rns.api.model.Identity as ZamolxisIdentity
+import network.zamolxis.app.rns.api.model.Link as ZamolxisLink
 
 /**
  * Internal worker class for [NativeRnsBackend].
@@ -104,13 +104,13 @@ class NativeRnsBackendImpl(
      * Supplied by the kotlinBackend Hilt module. Null in unit-test mode →
      * native incoming admission is unavailable (call managers not constructed).
      */
-    private val callLifecycleRecorder: network.columba.app.rns.api.call.CallLifecycleRecorder? = null,
-) : network.columba.app.rns.api.RnsCore,
-    network.columba.app.rns.api.RnsLxmf,
-    network.columba.app.rns.api.RnsTelephony,
-    network.columba.app.rns.api.RnsTelemetry,
-    network.columba.app.rns.api.RnsNomadnet,
-    network.columba.app.rns.api.RnsTransportAdmin {
+    private val callLifecycleRecorder: network.zamolxis.app.rns.api.call.CallLifecycleRecorder? = null,
+) : network.zamolxis.app.rns.api.RnsCore,
+    network.zamolxis.app.rns.api.RnsLxmf,
+    network.zamolxis.app.rns.api.RnsTelephony,
+    network.zamolxis.app.rns.api.RnsTelemetry,
+    network.zamolxis.app.rns.api.RnsNomadnet,
+    network.zamolxis.app.rns.api.RnsTransportAdmin {
     companion object {
         private const val TAG = "NativeReticulumProtocol"
 
@@ -122,22 +122,22 @@ class NativeRnsBackendImpl(
         /** Live-poll cadence for `propagationTransferState`. ~2 polls / second. */
         private const val PROPAGATION_POLL_INTERVAL_MS = 500L
 
-        fun NativeIdentity.toColumba(): ColumbaIdentity =
-            ColumbaIdentity(
+        fun NativeIdentity.toZamolxis(): ZamolxisIdentity =
+            ZamolxisIdentity(
                 hash = this.hash,
                 publicKey = this.getPublicKey(),
                 privateKey = if (this.hasPrivateKey) this.sigPrv else null,
             )
 
-        fun ColumbaIdentity.toNative(): NativeIdentity =
+        fun ZamolxisIdentity.toNative(): NativeIdentity =
             if (privateKey != null) {
                 NativeIdentity.fromPrivateKey(privateKey!!)
             } else {
                 NativeIdentity.fromPublicKey(publicKey)
             }
 
-        fun NativeDestination.toColumba(identity: ColumbaIdentity): ColumbaDestination =
-            ColumbaDestination(
+        fun NativeDestination.toZamolxis(identity: ZamolxisIdentity): ZamolxisDestination =
+            ZamolxisDestination(
                 hash = this.hash,
                 hexHash = this.hexHash,
                 identity = identity,
@@ -167,24 +167,44 @@ class NativeRnsBackendImpl(
                 else -> NativeDestination.create(identity, direction, type, appName, aspects[0], aspects[1], aspects[2])
             }
 
-        fun buildPeerAnnounceAppData(displayName: String): ByteArray {
+        /**
+         * Build the `app_data` for a peer announce.
+         *
+         * Elements 0 and 1 are the LXMF standard: display name and stamp cost.
+         * A third element carries the 16-byte hybrid post-quantum key fingerprint
+         * when the identity has one.
+         *
+         * Appending is safe for everyone else on the mesh: LXMF and NomadNet read
+         * `app_data[0]` and `app_data[1]` by index, so a longer array is simply
+         * not looked at. Only the fingerprint goes here, never the key itself —
+         * at 1216 bytes a key would inflate a message that every transport node
+         * rebroadcasts, spending airtime that belongs to the whole network.
+         */
+        fun buildPeerAnnounceAppData(
+            displayName: String,
+            pqFingerprint: ByteArray? = null,
+        ): ByteArray {
             val packer = MessagePack.newDefaultBufferPacker()
             val nameBytes = displayName.toByteArray(Charsets.UTF_8)
-            packer.packArrayHeader(2)
+            packer.packArrayHeader(if (pqFingerprint != null) 3 else 2)
             packer.packBinaryHeader(nameBytes.size)
             packer.writePayload(nameBytes)
             packer.packNil()
+            if (pqFingerprint != null) {
+                packer.packBinaryHeader(pqFingerprint.size)
+                packer.writePayload(pqFingerprint)
+            }
             return packer.toByteArray()
         }
 
-        fun network.reticulum.link.Link.toColumbaLink(destHash: ByteArray): ColumbaLink {
+        fun network.reticulum.link.Link.toZamolxisLink(destHash: ByteArray): ZamolxisLink {
             val identity =
-                this.destination?.identity?.toColumba()
-                    ?: ColumbaIdentity(hash = destHash, publicKey = ByteArray(0), privateKey = null)
-            return ColumbaLink(
+                this.destination?.identity?.toZamolxis()
+                    ?: ZamolxisIdentity(hash = destHash, publicKey = ByteArray(0), privateKey = null)
+            return ZamolxisLink(
                 id = this.linkId.toHex(),
                 destination =
-                    ColumbaDestination(
+                    ZamolxisDestination(
                         hash = destHash,
                         hexHash = destHash.toHex(),
                         identity = identity,
@@ -746,13 +766,13 @@ class NativeRnsBackendImpl(
      * makes a future multicast collision diagnosable instead of mysterious.
      */
     private fun warnIfOtherRnsInstance(config: ReticulumConfig) {
-        if (network.columba.app.rns.api.util.SharedInstanceProbe
+        if (network.zamolxis.app.rns.api.util.SharedInstanceProbe
                 .shouldShareInstance(config)
         ) {
             Log.w(
                 TAG,
                 "Another RNS instance detected on 127.0.0.1:" +
-                    "${network.columba.app.rns.api.util.SharedInstanceProbe.DEFAULT_PORT}; " +
+                    "${network.zamolxis.app.rns.api.util.SharedInstanceProbe.DEFAULT_PORT}; " +
                     "reticulum-kt doesn't currently speak shared-instance RPC, so native " +
                     "interfaces may collide. Consider preferOwnInstance=true or stopping the other RNS app.",
             )
@@ -889,7 +909,7 @@ class NativeRnsBackendImpl(
         val event =
             AnnounceEvent(
                 destinationHash = destinationHash,
-                identity = announcedIdentity.toColumba(),
+                identity = announcedIdentity.toZamolxis(),
                 appData = appData,
                 hops = hops,
                 timestamp = System.currentTimeMillis(),
@@ -1094,30 +1114,30 @@ class NativeRnsBackendImpl(
 
     // ==================== Phase 1: Identity (Read-Only) ====================
 
-    override suspend fun recallIdentity(hash: ByteArray): ColumbaIdentity? {
+    override suspend fun recallIdentity(hash: ByteArray): ZamolxisIdentity? {
         val recalled = NativeIdentity.recall(hash) ?: NativeIdentity.recallByIdentityHash(hash)
-        return recalled?.toColumba()
+        return recalled?.toZamolxis()
     }
 
     // ==================== Phase 2: Identity Management ====================
 
-    override suspend fun createIdentity(): Result<ColumbaIdentity> =
+    override suspend fun createIdentity(): Result<ZamolxisIdentity> =
         withContext(Dispatchers.IO) {
             runCatching {
-                NativeIdentity.create().toColumba()
+                NativeIdentity.create().toZamolxis()
             }
         }
 
-    override suspend fun loadIdentity(path: String): Result<ColumbaIdentity> =
+    override suspend fun loadIdentity(path: String): Result<ZamolxisIdentity> =
         withContext(Dispatchers.IO) {
             runCatching {
-                NativeIdentity.fromFile(path)?.toColumba()
+                NativeIdentity.fromFile(path)?.toZamolxis()
                     ?: error("Failed to load identity from $path")
             }
         }
 
     override suspend fun saveIdentity(
-        identity: ColumbaIdentity,
+        identity: ZamolxisIdentity,
         path: String,
     ): Result<Unit> =
         withContext(Dispatchers.IO) {
@@ -1139,19 +1159,19 @@ class NativeRnsBackendImpl(
             null
         }
 
-    override suspend fun getLxmfIdentity(): Result<ColumbaIdentity> =
+    override suspend fun getLxmfIdentity(): Result<ZamolxisIdentity> =
         runCatching {
             val identity = deliveryIdentity ?: error("Delivery identity not initialized")
-            identity.toColumba()
+            identity.toZamolxis()
         }
 
-    override suspend fun getLxmfDestination(): Result<ColumbaDestination> =
+    override suspend fun getLxmfDestination(): Result<ZamolxisDestination> =
         runCatching {
             val dest = deliveryDestination ?: error("Delivery destination not initialized")
             val identity =
-                deliveryIdentity?.toColumba()
-                    ?: ColumbaIdentity(hash = ByteArray(0), publicKey = ByteArray(0), privateKey = null)
-            dest.toColumba(identity)
+                deliveryIdentity?.toZamolxis()
+                    ?: ZamolxisIdentity(hash = ByteArray(0), publicKey = ByteArray(0), privateKey = null)
+            dest.toZamolxis(identity)
         }
 
     override suspend fun createIdentityWithName(displayName: String): Map<String, Any> =
@@ -1230,7 +1250,7 @@ class NativeRnsBackendImpl(
     override suspend fun sendLxmfMessage(
         destinationHash: ByteArray,
         content: String,
-        sourceIdentity: ColumbaIdentity,
+        sourceIdentity: ZamolxisIdentity,
         imageData: ByteArray?,
         imageFormat: String?,
         fileAttachments: List<Pair<String, ByteArray>>?,
@@ -1250,7 +1270,7 @@ class NativeRnsBackendImpl(
     override suspend fun sendLxmfMessageWithMethod(
         destinationHash: ByteArray,
         content: String,
-        sourceIdentity: ColumbaIdentity,
+        sourceIdentity: ZamolxisIdentity,
         deliveryMethod: DeliveryMethod,
         tryPropagationOnFail: Boolean,
         imageData: ByteArray?,
@@ -1398,7 +1418,7 @@ class NativeRnsBackendImpl(
         destinationHash: ByteArray,
         targetMessageId: String,
         emoji: String,
-        sourceIdentity: ColumbaIdentity,
+        sourceIdentity: ZamolxisIdentity,
     ): Result<MessageReceipt> {
         // Canonical LXMF `fields[0x40] = {0x00: hashBytes, 0x01: emojiBytes}`
         // (the reactor is derived from the message source on receive — no
@@ -1424,21 +1444,21 @@ class NativeRnsBackendImpl(
     override suspend fun sendLocationTelemetry(
         destinationHash: ByteArray,
         telemetry: LocationTelemetry,
-        sourceIdentity: ColumbaIdentity,
+        sourceIdentity: ZamolxisIdentity,
         iconAppearance: IconAppearance?,
     ): Result<MessageReceipt> {
         // Wire format (Sideband-interop, paramount):
         //   FIELD_TELEMETRY (0x02)   = Telemeter msgpack (shared codec)
-        //   FIELD_CUSTOM_META (0xFD) = Columba extras msgpack, omitted
+        //   FIELD_CUSTOM_META (0xFD) = Zamolxis extras msgpack, omitted
         //                              when telemetry carries no extras
         // Both fields go through `TelemeterCodec` — one implementation
         // shared with `PythonRnsTelemetry` so the bit-format Sideband
-        // peers consume is byte-identical across both Columba backends.
+        // peers consume is byte-identical across both Zamolxis backends.
         val fields = mutableMapOf<Int, Any>()
         fields[LxmfFields.FIELD_TELEMETRY] =
-            network.columba.app.rns.api.util.TelemeterCodec
+            network.zamolxis.app.rns.api.util.TelemeterCodec
                 .packLocationTelemetry(telemetry)
-        network.columba.app.rns.api.util.TelemeterCodec.packColumbaMeta(telemetry)?.let {
+        network.zamolxis.app.rns.api.util.TelemeterCodec.packZamolxisMeta(telemetry)?.let {
             fields[FIELD_COLUMBA_META] = it
         }
 
@@ -1454,7 +1474,7 @@ class NativeRnsBackendImpl(
 
     override suspend fun sendTelemetryRequest(
         destinationHash: ByteArray,
-        sourceIdentity: ColumbaIdentity,
+        sourceIdentity: ZamolxisIdentity,
         timebase: Long?,
         isCollectorRequest: Boolean,
     ): Result<MessageReceipt> {
@@ -1463,7 +1483,7 @@ class NativeRnsBackendImpl(
         // first-request null to 0 so we never ship int(None) into the list.
         // See TelemeterCodec.telemetryRequestTimebaseSeconds. (#927)
         val timebaseSeconds =
-            network.columba.app.rns.api.util.TelemeterCodec
+            network.zamolxis.app.rns.api.util.TelemeterCodec
                 .telemetryRequestTimebaseSeconds(timebase)
         val commands =
             listOf(
@@ -1522,12 +1542,12 @@ class NativeRnsBackendImpl(
     // ==================== Phase 3: Destination & Packet Operations ====================
 
     override suspend fun createDestination(
-        identity: ColumbaIdentity,
+        identity: ZamolxisIdentity,
         direction: Direction,
         type: DestinationType,
         appName: String,
         aspects: List<String>,
-    ): Result<ColumbaDestination> =
+    ): Result<ZamolxisDestination> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val nativeIdentity = identity.toNative()
@@ -1545,7 +1565,7 @@ class NativeRnsBackendImpl(
                         else -> NativeDestinationType.SINGLE
                     }
                 val dest = createNativeDestination(nativeIdentity, nativeDir, nativeType, appName, aspects)
-                dest.toColumba(identity)
+                dest.toZamolxis(identity)
             }
         }
 
@@ -1567,17 +1587,20 @@ class NativeRnsBackendImpl(
         )
     }
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        pqFingerprint: ByteArray?,
+    ): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val appData = Companion.buildPeerAnnounceAppData(displayName)
+                val appData = Companion.buildPeerAnnounceAppData(displayName, pqFingerprint)
                 announceLocalPeerDestinations(appData, "auto-announce '$displayName'")
                 Unit
             }
         }
 
     override suspend fun announceDestination(
-        destination: ColumbaDestination,
+        destination: ZamolxisDestination,
         appData: ByteArray?,
     ): Result<Unit> =
         withContext(Dispatchers.IO) {
@@ -1588,7 +1611,7 @@ class NativeRnsBackendImpl(
         }
 
     override suspend fun sendPacket(
-        destination: ColumbaDestination,
+        destination: ZamolxisDestination,
         data: ByteArray,
         packetType: PacketType,
     ): Result<PacketReceipt> =
@@ -1607,10 +1630,10 @@ class NativeRnsBackendImpl(
 
     // ==================== Phase 3: Link Operations ====================
 
-    override suspend fun establishLink(destination: ColumbaDestination): Result<ColumbaLink> =
+    override suspend fun establishLink(destination: ZamolxisDestination): Result<ZamolxisLink> =
         withContext(Dispatchers.IO) {
             establishConversationLink(destination.hash).map { linkResult ->
-                ColumbaLink(
+                ZamolxisLink(
                     id = destination.hexHash,
                     destination = destination,
                     status = if (linkResult.isActive) LinkStatus.ACTIVE else LinkStatus.CLOSED,
@@ -1620,14 +1643,14 @@ class NativeRnsBackendImpl(
             }
         }
 
-    override suspend fun closeLink(link: ColumbaLink): Result<Unit> =
+    override suspend fun closeLink(link: ZamolxisLink): Result<Unit> =
         runCatching {
             closeConversationLink(link.destination.hash)
             Unit
         }
 
     override suspend fun sendOverLink(
-        link: ColumbaLink,
+        link: ZamolxisLink,
         data: ByteArray,
     ): Result<Unit> =
         runCatching {
@@ -1681,13 +1704,13 @@ class NativeRnsBackendImpl(
                         establishedCallback = { l ->
                             activeLinks[hexHash] = l
                             _links.tryEmit(
-                                LinkEvent.Established(l.toColumbaLink(destinationHash)),
+                                LinkEvent.Established(l.toZamolxisLink(destinationHash)),
                             )
                         },
                         closedCallback = { l ->
                             activeLinks.remove(hexHash)
                             _links.tryEmit(
-                                LinkEvent.Closed(l.toColumbaLink(destinationHash), l.teardownReason.toString()),
+                                LinkEvent.Closed(l.toZamolxisLink(destinationHash), l.teardownReason.toString()),
                             )
                         },
                     )
@@ -1906,7 +1929,7 @@ class NativeRnsBackendImpl(
         )
     }
 
-    override suspend fun reloadInterfaces(configs: List<network.columba.app.rns.api.model.InterfaceConfig>) {
+    override suspend fun reloadInterfaces(configs: List<network.zamolxis.app.rns.api.model.InterfaceConfig>) {
         withContext(Dispatchers.IO) {
             NativeInterfaceFactory.syncInterfaces(configs)
         }
@@ -2011,7 +2034,7 @@ class NativeRnsBackendImpl(
             // Find and restart any RNode interfaces
             val config = lastConfig
             if (config != null) {
-                val rnodeConfigs = config.enabledInterfaces.filterIsInstance<network.columba.app.rns.api.model.InterfaceConfig.RNode>()
+                val rnodeConfigs = config.enabledInterfaces.filterIsInstance<network.zamolxis.app.rns.api.model.InterfaceConfig.RNode>()
                 for (rnode in rnodeConfigs) {
                     Log.i(TAG, "Reconnecting RNode interface: ${rnode.name}")
                     NativeInterfaceFactory.restartInterface(rnode)
@@ -2230,7 +2253,7 @@ class NativeRnsBackendImpl(
         path: String,
         formDataJson: String?,
         timeoutSeconds: Float,
-    ): Result<network.columba.app.rns.api.model.NomadnetPageResult> = nomadNetHandler.requestNomadnetPage(destinationHash, path, formDataJson, timeoutSeconds)
+    ): Result<network.zamolxis.app.rns.api.model.NomadnetPageResult> = nomadNetHandler.requestNomadnetPage(destinationHash, path, formDataJson, timeoutSeconds)
 
     override suspend fun cancelNomadnetPageRequest() {
         nomadNetHandler.nomadnetCancelled = true

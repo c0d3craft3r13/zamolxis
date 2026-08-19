@@ -1,4 +1,4 @@
-package network.columba.app.reticulum.util
+package network.zamolxis.app.reticulum.util
 
 import android.util.Log
 import org.msgpack.core.MessagePack
@@ -28,7 +28,7 @@ data class PropagationNodeMetadata(
  * See: https://github.com/torlando-tech/columba/issues/41
  */
 object AppDataParser {
-    private const val TAG = "Columba:Kotlin:AppDataParser"
+    private const val TAG = "Zamolxis:Kotlin:AppDataParser"
 
     /**
      * Extract a peer name from announce data.

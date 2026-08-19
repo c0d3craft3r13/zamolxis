@@ -1,8 +1,9 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.runtime.Composable
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.service.ConversationLinkManager
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.service.ConversationLinkManager
 
 /**
  * Dialog for selecting image quality/compression level before sending.
@@ -43,8 +44,8 @@ fun ImageQualitySelectionDialog(
         presets.map { preset ->
             QualityOption(
                 value = preset,
-                displayName = preset.displayName,
-                description = preset.description,
+                displayName = stringResource(preset.displayNameRes),
+                description = stringResource(preset.descriptionRes),
             )
         }
 

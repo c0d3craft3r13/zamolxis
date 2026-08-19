@@ -1,8 +1,8 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
 import androidx.annotation.StringRes
-import network.columba.app.R
-import network.columba.app.rns.api.util.LxmfFields
+import network.zamolxis.app.R
+import network.zamolxis.app.rns.api.util.LxmfFields
 import tech.torlando.lxst.codec.Codec2
 import tech.torlando.lxst.recording.RecordingConfig
 

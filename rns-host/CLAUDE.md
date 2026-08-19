@@ -9,22 +9,22 @@ The dual-build runs **two** processes per APK:
 
 | Process | Hilt-provided `RnsBackend` | What it owns |
 |---|---|---|
-| `network.columba.app[.debug]` (UI) | `BoundRnsBackend` (AIDL proxy) | UI, ViewModels, Room writes, DataStore |
-| `network.columba.app[.debug]:reticulum` (FGS) | flavor-local backend (`ChaquopyRnsBackend` or `NativeRnsBackend`) | Python interpreter, `RNS.Reticulum()` + `LXMRouter`, `KotlinBLEBridge`, all interface sockets, all LXST audio I/O |
+| `network.zamolxis.app[.debug]` (UI) | `BoundRnsBackend` (AIDL proxy) | UI, ViewModels, Room writes, DataStore |
+| `network.zamolxis.app[.debug]:reticulum` (FGS) | flavor-local backend (`ChaquopyRnsBackend` or `NativeRnsBackend`) | Python interpreter, `RNS.Reticulum()` + `LXMRouter`, `KotlinBLEBridge`, all interface sockets, all LXST audio I/O |
 
 Both processes resolve the same `@InstallIn(SingletonComponent::class)`
 Hilt graph, but Hilt's `SingletonComponent` is **per-process** — each process
 runs every `@Provides` once. The single canonical `RnsBackend` binding is
-provided by [`ProcessAwareBackendModule`](src/main/kotlin/network/columba/app/rns/host/di/ProcessAwareBackendModule.kt),
-which branches at provider time on [`ProcessDetector.detect(context)`](src/main/kotlin/network/columba/app/rns/host/process/ProcessType.kt):
+provided by [`ProcessAwareBackendModule`](src/main/kotlin/network/zamolxis/app/rns/host/di/ProcessAwareBackendModule.kt),
+which branches at provider time on [`ProcessDetector.detect(context)`](src/main/kotlin/network/zamolxis/app/rns/host/process/ProcessType.kt):
 
 - In `:reticulum` → returns the `@LocalBackend`-qualified flavor-local
   backend. Constructing it loads CPython (python flavor) or starts
   reticulum-kt (kotlin flavor) — intentional pre-warm.
-- In UI / TEST → returns [`BoundRnsBackend`](src/main/kotlin/network/columba/app/rns/host/ipc/BoundRnsBackend.kt),
+- In UI / TEST → returns [`BoundRnsBackend`](src/main/kotlin/network/zamolxis/app/rns/host/ipc/BoundRnsBackend.kt),
   which delegates every call to the `:reticulum`-process backend via
-  [`ReticulumServiceConnection`](src/main/kotlin/network/columba/app/rns/host/ReticulumServiceConnection.kt)
-  + [`RnsBackendClient`](../rns-ipc/src/main/kotlin/network/columba/app/rns/ipc/RnsBackendClient.kt).
+  [`ReticulumServiceConnection`](src/main/kotlin/network/zamolxis/app/rns/host/ReticulumServiceConnection.kt)
+  + [`RnsBackendClient`](../rns-ipc/src/main/kotlin/network/zamolxis/app/rns/ipc/RnsBackendClient.kt).
   The `@LocalBackend`-qualified provider is never resolved on this side, so
   no Python loads + no sockets bind in the UI pid.
 
@@ -62,8 +62,8 @@ binding in-flight as soon as Hilt resolves the singleton at app start.
 
 ## Defense-in-depth: backend ctor process assertion
 
-Both [`ChaquopyRnsBackend`](../rns-backend-py/src/main/kotlin/network/columba/app/rns/backend/py/ChaquopyRnsBackend.kt)
-and [`NativeRnsBackend`](../rns-backend-kt/src/main/kotlin/network/columba/app/rns/backend/kt/NativeRnsBackend.kt)
+Both [`ChaquopyRnsBackend`](../rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/ChaquopyRnsBackend.kt)
+and [`NativeRnsBackend`](../rns-backend-kt/src/main/kotlin/network/zamolxis/app/rns/backend/kt/NativeRnsBackend.kt)
 assert in their `init {}` blocks (DEBUG builds only) that
 `Application.getProcessName()` contains `:reticulum`. A bug in Hilt wiring
 that lands the local backend in the UI process trips this check immediately
@@ -74,7 +74,7 @@ Release builds skip the check so a defensive bug never crashes the FGS.
 
 ## `ReticulumService` pre-warm
 
-[`ReticulumService.onCreate`](src/main/kotlin/network/columba/app/rns/host/ReticulumService.kt)
+[`ReticulumService.onCreate`](src/main/kotlin/network/zamolxis/app/rns/host/ReticulumService.kt)
 injects `RnsBackend` (Hilt-resolved to the local backend in `:reticulum`)
 and logs `"Pre-warmed RnsBackend in :reticulum pid=<pid> -> <class>"` on
 each service start. Touching the field triggers eager Hilt construction; the
@@ -89,8 +89,8 @@ detects binder death and rebinds via `onServiceConnected`. Flow observers
 resubscribe cleanly via `flatMapLatest`.
 
 To bring the live stack back up without requiring the UI process to be alive,
-[`ReticulumConfigSnapshot`](src/main/kotlin/network/columba/app/rns/host/persistence/ReticulumConfigSnapshot.kt)
-+ [`BackendInitializer`](src/main/kotlin/network/columba/app/rns/host/persistence/BackendInitializer.kt)
+[`ReticulumConfigSnapshot`](src/main/kotlin/network/zamolxis/app/rns/host/persistence/ReticulumConfigSnapshot.kt)
++ [`BackendInitializer`](src/main/kotlin/network/zamolxis/app/rns/host/persistence/BackendInitializer.kt)
 implement a snapshot-driven self-init path:
 
 1. After every successful UI-driven `rnsCore.initialize(config)`, the UI

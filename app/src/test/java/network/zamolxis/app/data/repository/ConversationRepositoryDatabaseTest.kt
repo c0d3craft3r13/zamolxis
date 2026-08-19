@@ -1,9 +1,9 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import app.cash.turbine.test
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.storage.AttachmentStorageManager
-import network.columba.app.test.DatabaseTest
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.storage.AttachmentStorageManager
+import network.zamolxis.app.test.DatabaseTest
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

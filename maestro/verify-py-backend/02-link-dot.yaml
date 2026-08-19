@@ -1,7 +1,7 @@
 # Reproduces punch-list item 2: PythonRnsCore.establishConversationLink stub.
 #
 # The Python build's PythonRnsCore.establishConversationLink
-# (rns-backend-py/src/main/kotlin/network/columba/app/rns/backend/py/PythonRnsCore.kt:431-451)
+# (rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/PythonRnsCore.kt:431-451)
 # always returns ConversationLinkResult(isActive=false, ...) — it never
 # constructs an RNS.Link, so the conversation TopAppBar's online dot never goes
 # solid green. ConversationLinkManager.openConversationLink() is invoked
@@ -17,17 +17,17 @@
 #   - App is already onboarded (start destination resolves to Screen.Chats).
 #   - At least one conversation exists in the chat list (the flow fails fast
 #     via assertNotVisible on "No conversations yet" if not).
-#   - Python build of network.columba.app.debug is installed on emulator-5554.
+#   - Python build of network.zamolxis.app.debug is installed on emulator-5554.
 #
 # Evidence: takeScreenshot artifacts (Maestro cannot read pixel colors). On the
 # broken Python build the dot stays grey/absent and the status text remains
 # "Connecting..." or disappears entirely; on a working build it transitions to
 # solid green with "Online" by the 6s mark.
 
-appId: network.columba.app.debug
+appId: network.zamolxis.app.debug
 ---
 - launchApp:
-    appId: network.columba.app.debug
+    appId: network.zamolxis.app.debug
     clearState: false
 
 # Wait for the Chats screen to render. The TopAppBar title is "Chats" (from

@@ -1,9 +1,9 @@
 """
-ColumbaRNodeInterface — Columba-authored RNS.Interface for RNode LoRa hardware.
+ZamolxisRNodeInterface — Zamolxis-authored RNS.Interface for RNode LoRa hardware.
 
 Bridges BLE (Classic SPP or BLE GATT) and USB-serial RNode connections to RNS's
 custom-interface loader path. TCP-mode RNode rides on upstream
-`RNS.Interfaces.Android.RNodeInterface` (no Columba interface needed) — this
+`RNS.Interfaces.Android.RNodeInterface` (no Zamolxis interface needed) — this
 file handles ONLY BLE/Classic + USB because the upstream Android paths rely on
 pyjnius for Bluetooth/USB, which is non-functional under Chaquopy.
 
@@ -16,9 +16,9 @@ event-bridge accessors. The bridge instances are populated by Kotlin
 interface's `__init__` can resolve them synchronously.
 
 External-interface loader contract (Reticulum.py:919-937):
-    • file path:   <configdir>/interfaces/ColumbaRNodeInterface.py
-    • config type: type = ColumbaRNodeInterface
-    • module footer: interface_class = ColumbaRNodeInterface
+    • file path:   <configdir>/interfaces/ZamolxisRNodeInterface.py
+    • config type: type = ZamolxisRNodeInterface
+    • module footer: interface_class = ZamolxisRNodeInterface
     • class signature: __init__(self, owner, configuration)
     • subclass of RNS.Interfaces.Interface.Interface
 """
@@ -158,9 +158,9 @@ class KISS:
         return bytes(result)
 
 
-class ColumbaRNodeInterface(Interface):
+class ZamolxisRNodeInterface(Interface):
     """
-    Columba-authored RNS.Interface speaking KISS to RNode LoRa hardware
+    Zamolxis-authored RNS.Interface speaking KISS to RNode LoRa hardware
     over Bluetooth Classic (SPP/RFCOMM), Bluetooth Low Energy (GATT), or
     USB serial. Bridges to Kotlin-side hardware drivers
     (`KotlinRNodeBridge`, `KotlinUSBBridge`) via `event_bridge` accessors —
@@ -253,7 +253,7 @@ class ColumbaRNodeInterface(Interface):
         # Force HW_MTU back onto the instance because the base
         # Interface.__init__ above set it to None. Matches the BLEInterface
         # workaround for the same RNS bug — see BLEInterface.py:284-302.
-        self.HW_MTU = ColumbaRNodeInterface.HW_MTU
+        self.HW_MTU = ZamolxisRNodeInterface.HW_MTU
         self.mtu = RNS.Reticulum.MTU
 
         # Interface mode (RNS Transport behaviour selector).
@@ -271,7 +271,7 @@ class ColumbaRNodeInterface(Interface):
         elif mode_str == "boundary":
             self.mode = Interface.MODE_BOUNDARY
         else:
-            RNS.log(f"ColumbaRNodeInterface '{self.name}': unknown mode '{mode_str}', defaulting to full", RNS.LOG_WARNING)
+            RNS.log(f"ZamolxisRNodeInterface '{self.name}': unknown mode '{mode_str}', defaulting to full", RNS.LOG_WARNING)
             self.mode = Interface.MODE_FULL
 
         # Connection target + mode.
@@ -294,7 +294,7 @@ class ColumbaRNodeInterface(Interface):
         self.st_alock = float(c["st_alock"]) if "st_alock" in c else None
         self.lt_alock = float(c["lt_alock"]) if "lt_alock" in c else None
 
-        # External framebuffer (Columba logo on RNode display).
+        # External framebuffer (Zamolxis logo on RNode display).
         self.enable_framebuffer = c.as_bool("enable_framebuffer") if "enable_framebuffer" in c else False
         self.framebuffer_enabled = False
 
@@ -303,7 +303,7 @@ class ColumbaRNodeInterface(Interface):
         # is a misconfiguration.
         if self.connection_mode == "tcp":
             RNS.log(
-                f"ColumbaRNodeInterface '{self.name}': connection_mode='tcp' "
+                f"ZamolxisRNodeInterface '{self.name}': connection_mode='tcp' "
                 "is not supported by this interface — TCP RNodes use the "
                 "upstream RNS.RNodeInterface. Marking offline.",
                 RNS.LOG_ERROR,
@@ -362,12 +362,12 @@ class ColumbaRNodeInterface(Interface):
             self._validate_config()
         except ValueError as e:
             RNS.log(
-                f"ColumbaRNodeInterface '{self.name}': invalid config — {e}",
+                f"ZamolxisRNodeInterface '{self.name}': invalid config — {e}",
                 RNS.LOG_ERROR,
             )
             return
 
-        RNS.log(f"ColumbaRNodeInterface '{self.name}' initialized", RNS.LOG_DEBUG)
+        RNS.log(f"ZamolxisRNodeInterface '{self.name}' initialized", RNS.LOG_DEBUG)
 
         # Trigger the actual hardware connection in a daemon thread. In
         # v0.10.x, this was driven by `reticulum_wrapper.initialize()`
@@ -386,7 +386,7 @@ class ColumbaRNodeInterface(Interface):
         # is ready (or False on failure); the daemon wrapper just keeps
         # that error surface from killing the process.
         threading.Thread(
-            target=self._safe_start, name=f"ColumbaRNode-start-{self.name}", daemon=True,
+            target=self._safe_start, name=f"ZamolxisRNode-start-{self.name}", daemon=True,
         ).start()
 
     def _safe_start(self):
@@ -398,7 +398,7 @@ class ColumbaRNodeInterface(Interface):
             self.start()
         except Exception as e:  # noqa: BLE001
             RNS.log(
-                f"ColumbaRNodeInterface[{self.name}] start() raised: {e} — interface staying offline",
+                f"ZamolxisRNodeInterface[{self.name}] start() raised: {e} — interface staying offline",
                 RNS.LOG_ERROR,
             )
             import traceback
@@ -416,16 +416,16 @@ class ColumbaRNodeInterface(Interface):
             from event_bridge import get_rnode_bridge
             self.kotlin_bridge = get_rnode_bridge()
             if self.kotlin_bridge is not None:
-                RNS.log("ColumbaRNodeInterface: KotlinRNodeBridge resolved via event_bridge", RNS.LOG_DEBUG)
+                RNS.log("ZamolxisRNodeInterface: KotlinRNodeBridge resolved via event_bridge", RNS.LOG_DEBUG)
             else:
                 RNS.log(
-                    "ColumbaRNodeInterface: KotlinRNodeBridge not available "
+                    "ZamolxisRNodeInterface: KotlinRNodeBridge not available "
                     "(event_bridge.get_rnode_bridge() returned None) — "
                     "BLE/Classic mode will not function",
                     RNS.LOG_ERROR,
                 )
         except Exception as e:  # noqa: BLE001
-            RNS.log(f"ColumbaRNodeInterface: failed to get KotlinRNodeBridge: {e}", RNS.LOG_ERROR)
+            RNS.log(f"ZamolxisRNodeInterface: failed to get KotlinRNodeBridge: {e}", RNS.LOG_ERROR)
 
     def _get_usb_bridge(self):
         """Resolve the Kotlin USB-serial bridge via the usb_bridge slim-Python module."""
@@ -433,15 +433,15 @@ class ColumbaRNodeInterface(Interface):
             import usb_bridge
             self.usb_bridge = usb_bridge.get_usb_bridge()
             if self.usb_bridge is not None:
-                RNS.log("ColumbaRNodeInterface: KotlinUSBBridge resolved via usb_bridge module", RNS.LOG_DEBUG)
+                RNS.log("ZamolxisRNodeInterface: KotlinUSBBridge resolved via usb_bridge module", RNS.LOG_DEBUG)
             else:
                 RNS.log(
-                    "ColumbaRNodeInterface: KotlinUSBBridge not available "
+                    "ZamolxisRNodeInterface: KotlinUSBBridge not available "
                     "(usb_bridge.get_usb_bridge() returned None) — USB mode will not function",
                     RNS.LOG_ERROR,
                 )
         except Exception as e:  # noqa: BLE001
-            RNS.log(f"ColumbaRNodeInterface: failed to get KotlinUSBBridge: {e}", RNS.LOG_ERROR)
+            RNS.log(f"ZamolxisRNodeInterface: failed to get KotlinUSBBridge: {e}", RNS.LOG_ERROR)
 
     def _validate_config(self):
         """Validate configuration parameters."""
@@ -492,7 +492,7 @@ class ColumbaRNodeInterface(Interface):
 
         # The KotlinRNodeBridge is a process-wide singleton with one
         # connectedDeviceName / one GATT client / one shared read buffer at a
-        # time. If a sibling ColumbaRNodeInterface has already won the
+        # time. If a sibling ZamolxisRNodeInterface has already won the
         # connect-race (two interfaces' start() threads can fire in the same
         # millisecond because RNS spawns them in the interface-init for-loop),
         # calling bridge.connect() again clobbers the first connection's state
@@ -529,7 +529,7 @@ class ColumbaRNodeInterface(Interface):
             if hasattr(self.kotlin_bridge, "setOnConnectionStateChanged"):
                 self.kotlin_bridge.setOnConnectionStateChanged(self._on_connection_state_changed)
         except Exception as e:  # noqa: BLE001
-            RNS.log(f"ColumbaRNodeInterface: optional callback registration failed (non-fatal): {e}", RNS.LOG_DEBUG)
+            RNS.log(f"ZamolxisRNodeInterface: optional callback registration failed (non-fatal): {e}", RNS.LOG_DEBUG)
 
         # Connect via Kotlin bridge with specified mode
         if not self.kotlin_bridge.connect(self.target_device_name, self.connection_mode):
@@ -550,7 +550,7 @@ class ColumbaRNodeInterface(Interface):
         # this pattern (lines ~594-600) — mirror it here.
         if self._read_thread is not None and self._read_thread.is_alive():
             RNS.log(
-                f"ColumbaRNodeInterface[{self.name}]: stopping stale BLE/Classic "
+                f"ZamolxisRNodeInterface[{self.name}]: stopping stale BLE/Classic "
                 "read thread before reconnect start",
                 RNS.LOG_INFO,
             )
@@ -558,7 +558,7 @@ class ColumbaRNodeInterface(Interface):
             self._read_thread.join(timeout=2.0)
             if self._read_thread.is_alive():
                 RNS.log(
-                    f"ColumbaRNodeInterface[{self.name}]: stale read thread did not stop "
+                    f"ZamolxisRNodeInterface[{self.name}]: stale read thread did not stop "
                     "within timeout — aborting start to prevent race",
                     RNS.LOG_ERROR,
                 )
@@ -644,7 +644,7 @@ class ColumbaRNodeInterface(Interface):
             if hasattr(self.usb_bridge, "setOnConnectionStateChanged"):
                 self.usb_bridge.setOnConnectionStateChanged(self._on_usb_connection_state_changed)
         except Exception as e:  # noqa: BLE001
-            RNS.log(f"ColumbaRNodeInterface: optional USB callback registration failed (non-fatal): {e}", RNS.LOG_DEBUG)
+            RNS.log(f"ZamolxisRNodeInterface: optional USB callback registration failed (non-fatal): {e}", RNS.LOG_DEBUG)
 
         # Stop any existing read thread before starting a new one
         # This prevents thread leaks if the disconnect callback didn't fire properly
@@ -783,7 +783,7 @@ class ColumbaRNodeInterface(Interface):
             self._set_online(True)
             RNS.log(f"RNode '{self.name}' is online", RNS.LOG_INFO)
 
-            # Display Columba logo on RNode if enabled
+            # Display Zamolxis logo on RNode if enabled
             self._display_logo()
         else:
             raise IOError("Radio configuration validation failed")
@@ -1028,17 +1028,17 @@ class ColumbaRNodeInterface(Interface):
         RNS.log(f"{self} Sent 64x64 image to RNode framebuffer", RNS.LOG_DEBUG)
 
     def _display_logo(self):
-        """Display or disable the Columba logo on RNode based on settings."""
+        """Display or disable the Zamolxis logo on RNode based on settings."""
         if self.enable_framebuffer:
             try:
-                from columba_logo import columba_fb_data
-                self.display_image(columba_fb_data)
+                from zamolxis_logo import zamolxis_fb_data
+                self.display_image(zamolxis_fb_data)
                 # Delay before enable command to ensure framebuffer data is processed
                 time.sleep(0.05)
                 self.enable_external_framebuffer()
-                RNS.log(f"{self} Displayed Columba logo on RNode", RNS.LOG_DEBUG)
+                RNS.log(f"{self} Displayed Zamolxis logo on RNode", RNS.LOG_DEBUG)
             except ImportError:
-                RNS.log(f"{self} columba_logo module not found, skipping logo display", RNS.LOG_WARNING)
+                RNS.log(f"{self} zamolxis_logo module not found, skipping logo display", RNS.LOG_WARNING)
             except Exception as e:  # noqa: BLE001
                 RNS.log(f"{self} Failed to display logo: {e}", RNS.LOG_WARNING)
         else:
@@ -1609,10 +1609,10 @@ class ColumbaRNodeInterface(Interface):
             return False
 
     def __str__(self):
-        return f"ColumbaRNodeInterface[{self.name}]"
+        return f"ZamolxisRNodeInterface[{self.name}]"
 
 
 # RNS external-interface loader contract: the module must expose
 # `interface_class` pointing to the class to instantiate. See
 # Reticulum.py:933 — `interface_class = interface_globals["interface_class"]`.
-interface_class = ColumbaRNodeInterface
+interface_class = ZamolxisRNodeInterface

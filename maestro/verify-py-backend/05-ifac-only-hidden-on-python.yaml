@@ -25,7 +25,7 @@
 # pass). The 03-04-05-discovery-toggles flow leaves the device in
 # this state, so run that first if starting from a fresh device.
 
-appId: network.columba.app.debug
+appId: network.zamolxis.app.debug
 name: 05-ifac-only-hidden-on-python
 tags:
   - py-backend
@@ -33,7 +33,7 @@ tags:
   - regression
 ---
 - launchApp:
-    appId: network.columba.app.debug
+    appId: network.zamolxis.app.debug
     stopApp: true
 - extendedWaitUntil:
     visible: "Chats"

@@ -1,4 +1,4 @@
-package network.columba.app.repository
+package network.zamolxis.app.repository
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -27,15 +27,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.data.model.MapStylePreference
-import network.columba.app.data.repository.CustomThemeRepository
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.host.persistence.ServiceSettingsAccessor
-import network.columba.app.ui.theme.AppTheme
-import network.columba.app.ui.theme.CustomTheme
-import network.columba.app.ui.theme.PresetTheme
-import network.columba.app.ui.theme.ThemeMode
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.data.model.MapStylePreference
+import network.zamolxis.crypto.pq.PqMode
+import network.zamolxis.app.data.repository.CustomThemeRepository
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
+import network.zamolxis.app.ui.theme.AppTheme
+import network.zamolxis.app.ui.theme.CustomTheme
+import network.zamolxis.app.ui.theme.PresetTheme
+import network.zamolxis.app.ui.theme.ThemeMode
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -134,6 +135,7 @@ class SettingsRepository
 
             // Image compression preferences
             val IMAGE_COMPRESSION_PRESET = stringPreferencesKey("image_compression_preset")
+            val POST_QUANTUM_MODE = stringPreferencesKey("post_quantum_mode")
 
             // Map source preferences
             val MAP_SOURCE_HTTP_ENABLED = booleanPreferencesKey("map_source_http_enabled")
@@ -793,7 +795,7 @@ class SettingsRepository
 
         /**
          * Flow of the prefer own instance setting.
-         * When true, Columba will create its own RNS instance even if a shared one is available.
+         * When true, Zamolxis will create its own RNS instance even if a shared one is available.
          * Defaults to false (prefer shared instance if available).
          */
         val preferOwnInstanceFlow: Flow<Boolean> =
@@ -805,7 +807,7 @@ class SettingsRepository
         /**
          * Save the prefer own instance setting.
          *
-         * @param preferOwn Whether to prefer Columba's own instance over a shared one
+         * @param preferOwn Whether to prefer Zamolxis's own instance over a shared one
          */
         suspend fun savePreferOwnInstance(preferOwn: Boolean) {
             context.dataStore.edit { preferences ->
@@ -814,7 +816,7 @@ class SettingsRepository
         }
 
         /**
-         * Flow of whether Columba is currently connected to a shared RNS instance.
+         * Flow of whether Zamolxis is currently connected to a shared RNS instance.
          * Set by the service when it initializes/connects.
          * Defaults to false.
          */
@@ -1535,6 +1537,43 @@ class SettingsRepository
             }
         }
 
+        // Post-quantum message sealing
+
+        /**
+         * The user's stance on hybrid post-quantum sealing.
+         *
+         * Defaults to [PqMode.OPPORTUNISTIC]: seal whenever the recipient can read
+         * it and the link can afford the overhead. That keeps ordinary Reticulum
+         * peers reachable and does not spend LoRa airtime on a payload the link
+         * cannot carry cheaply, while still protecting every conversation that can
+         * be protected.
+         *
+         * An unrecognised stored value falls back to the default rather than
+         * throwing — a preferences file written by a newer build must not stop the
+         * app from sending anything at all.
+         */
+        val postQuantumModeFlow: Flow<PqMode> =
+            context.dataStore.data
+                .map { preferences -> preferences.readPostQuantumMode() }
+                .distinctUntilChanged()
+
+        /** Non-flow read, for the send path. */
+        suspend fun getPostQuantumMode(): PqMode =
+            context.dataStore.data
+                .map { preferences -> preferences.readPostQuantumMode() }
+                .first()
+
+        suspend fun savePostQuantumMode(mode: PqMode) {
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.POST_QUANTUM_MODE] = mode.name
+            }
+        }
+
+        private fun Preferences.readPostQuantumMode(): PqMode {
+            val stored = this[PreferencesKeys.POST_QUANTUM_MODE] ?: return PqMode.OPPORTUNISTIC
+            return PqMode.entries.firstOrNull { it.name == stored } ?: PqMode.OPPORTUNISTIC
+        }
+
         /**
          * Get the HTTP map source enabled setting (non-flow).
          */
@@ -1873,9 +1912,9 @@ class SettingsRepository
          * Export all preferences from DataStore for backup/migration.
          * Returns a list of preference entries that can be serialized.
          */
-        suspend fun exportAllPreferences(): List<network.columba.app.migration.PreferenceEntry> {
+        suspend fun exportAllPreferences(): List<network.zamolxis.app.migration.PreferenceEntry> {
             val preferences = context.dataStore.data.first()
-            val entries = mutableListOf<network.columba.app.migration.PreferenceEntry>()
+            val entries = mutableListOf<network.zamolxis.app.migration.PreferenceEntry>()
 
             preferences.asMap().forEach { (key, value) ->
                 val (type, stringValue) =
@@ -1890,7 +1929,7 @@ class SettingsRepository
                     }
 
                 entries.add(
-                    network.columba.app.migration.PreferenceEntry(
+                    network.zamolxis.app.migration.PreferenceEntry(
                         key = key.name,
                         type = type,
                         value = stringValue,
@@ -1905,7 +1944,7 @@ class SettingsRepository
          * Import preferences from a list of preference entries.
          * Unknown keys are safely ignored for forward/backward compatibility.
          */
-        suspend fun importAllPreferences(entries: List<network.columba.app.migration.PreferenceEntry>) {
+        suspend fun importAllPreferences(entries: List<network.zamolxis.app.migration.PreferenceEntry>) {
             context.dataStore.edit { prefs ->
                 entries.forEach { entry ->
                     try {
@@ -2160,7 +2199,7 @@ class SettingsRepository
         /**
          * Convert a CustomThemeData to a CustomTheme (for use in UI)
          */
-        fun customThemeDataToAppTheme(themeData: network.columba.app.data.repository.CustomThemeData): CustomTheme {
+        fun customThemeDataToAppTheme(themeData: network.zamolxis.app.data.repository.CustomThemeData): CustomTheme {
             // Convert ThemeColorSet to ColorScheme
             val lightScheme =
                 with(themeData.lightColors) {

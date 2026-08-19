@@ -1,7 +1,7 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 import android.util.Log
-import network.columba.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -29,7 +29,7 @@ class NordicDFUFlasher(
     private val usbBridge: KotlinUSBBridge,
 ) {
     companion object {
-        private const val TAG = "Columba:NordicDFU"
+        private const val TAG = "Zamolxis:NordicDFU"
 
         // DFU Protocol Constants
         private const val DFU_TOUCH_BAUD = 1200
@@ -182,7 +182,7 @@ class NordicDFUFlasher(
                 //
                 // After a 1200-baud touch, the device re-enumerates with a new USB
                 // device ID. Android revokes permission for the old ID and shows a
-                // "Open with Columba?" system dialog. Until the user taps it (or
+                // "Open with Zamolxis?" system dialog. Until the user taps it (or
                 // the system auto-grants via device_filter.xml), connect() will fail
                 // with "No permission". Retry to give time for permission grant.
                 if (!connectWithRetry(bootloaderDeviceId, DFU_FLASH_BAUD)) {
@@ -318,7 +318,7 @@ class NordicDFUFlasher(
      *
      * After USB re-enumeration (1200-baud touch or DFU reset), Android assigns
      * a new device ID and requires fresh permission. The system shows "Open with
-     * Columba?" — until the user taps it, connect() fails with "No permission".
+     * Zamolxis?" — until the user taps it, connect() fails with "No permission".
      *
      * @return true if connected within the retry window
      */

@@ -1,8 +1,8 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import app.cash.turbine.test
-import network.columba.app.data.db.dao.ReceivedLocationDao
-import network.columba.app.data.db.entity.ReceivedLocationEntity
+import network.zamolxis.app.data.db.dao.ReceivedLocationDao
+import network.zamolxis.app.data.db.entity.ReceivedLocationEntity
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every

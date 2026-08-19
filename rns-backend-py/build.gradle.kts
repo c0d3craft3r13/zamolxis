@@ -36,7 +36,7 @@ plugins {
 }
 
 android {
-    namespace = "network.columba.app.rns.backend.py"
+    namespace = "network.zamolxis.app.rns.backend.py"
     compileSdk = 36
 
     defaultConfig {

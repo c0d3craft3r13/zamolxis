@@ -1,14 +1,14 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.service.InterfaceConfigManager
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.service.InterfaceConfigManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -140,7 +140,7 @@ class DiscoveredInterfacesViewModel
             // triggers a fresh upstream subscription cost.
             viewModelScope.launch {
                 rnsBackend.core.networkStatus
-                    .filter { it is network.columba.app.rns.api.model.NetworkStatus.READY }
+                    .filter { it is network.zamolxis.app.rns.api.model.NetworkStatus.READY }
                     .collect {
                         Log.d(TAG, "networkStatus → READY, re-loading discovery state")
                         loadDiscoveredInterfaces()

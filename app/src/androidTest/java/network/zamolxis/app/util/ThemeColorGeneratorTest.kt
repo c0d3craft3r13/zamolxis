@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb

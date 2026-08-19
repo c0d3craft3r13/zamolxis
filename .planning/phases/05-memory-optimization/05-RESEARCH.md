@@ -6,7 +6,7 @@
 
 ## Summary
 
-This phase addresses the ~1.4 MB/min memory growth causing OOM crashes in Columba's Python/Reticulum layer. The research identifies standard profiling tools, integration approaches, and verification strategies for fixing memory leaks in the Chaquopy Python-Kotlin bridge environment.
+This phase addresses the ~1.4 MB/min memory growth causing OOM crashes in Zamolxis's Python/Reticulum layer. The research identifies standard profiling tools, integration approaches, and verification strategies for fixing memory leaks in the Chaquopy Python-Kotlin bridge environment.
 
 **Key findings:**
 - Python's tracemalloc (stdlib) is the recommended profiling tool for initial leak detection, with snapshot comparison for leak identification
@@ -94,7 +94,7 @@ for stat in top_stats[:10]:
 ```bash
 # Source: https://perfetto.dev/docs/case-studies/memory
 # Native/Dalvik heap breakdown
-adb shell dumpsys meminfo network.columba.app | grep -A 20 "App Summary"
+adb shell dumpsys meminfo network.zamolxis.app | grep -A 20 "App Summary"
 
 # Output interpretation:
 # - "Native Heap" = C/C++ allocations (Python interpreter, Chaquopy JNI)
@@ -177,9 +177,9 @@ Problems that look simple but have existing solutions:
 **Warning signs:** App jank during snapshot capture, logcat shows tracemalloc dominating CPU time
 
 ### Pitfall 6: Forgetting Reticulum Fork Boundary
-**What goes wrong:** Conclude "Reticulum has a leak" without checking if issue is in Columba's patches or upstream
+**What goes wrong:** Conclude "Reticulum has a leak" without checking if issue is in Zamolxis's patches or upstream
 **Why it happens:** Reticulum code paths are complex, easy to blame external dependency
-**How to avoid:** Test with upstream Reticulum (not Columba fork) to isolate leak source; check Columba patches in python/patches/RNS/
+**How to avoid:** Test with upstream Reticulum (not Zamolxis fork) to isolate leak source; check Zamolxis patches in python/patches/RNS/
 **Warning signs:** Leak in Reticulum code path, but no reports in Reticulum's issue tracker
 
 ## Code Examples
@@ -239,10 +239,10 @@ for stat in top_stats[:10]:
 ```bash
 # Source: https://developer.android.com/tools/dumpsys
 # Basic memory breakdown
-adb shell dumpsys meminfo network.columba.app
+adb shell dumpsys meminfo network.zamolxis.app
 
 # Focus on heap sizes
-adb shell dumpsys meminfo network.columba.app | grep -A 5 "TOTAL"
+adb shell dumpsys meminfo network.zamolxis.app | grep -A 5 "TOTAL"
 
 # Native Heap = Python interpreter + Chaquopy JNI
 # Dalvik Heap = Java/Kotlin objects
@@ -286,7 +286,7 @@ Things that couldn't be fully resolved:
 
 2. **Optimal snapshot interval for 5-day runtime**
    - What we know: 5-minute intervals suggested in user decisions; Perfetto docs show variable intervals based on overhead
-   - What's unclear: Actual overhead on Columba's hardware (may vary by device), storage requirements for multi-day snapshots
+   - What's unclear: Actual overhead on Zamolxis's hardware (may vary by device), storage requirements for multi-day snapshots
    - Recommendation: Start with 5 minutes, tune based on observed overhead (check CPU usage during snapshot capture via dumpsys cpuinfo)
 
 3. **Chaquopy PyObject lifecycle best practices**

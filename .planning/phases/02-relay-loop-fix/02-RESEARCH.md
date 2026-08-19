@@ -442,7 +442,7 @@ Things that couldn't be fully resolved:
 - [Kotlin Flow distinctUntilChanged documentation](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/distinct-until-changed.html) - Official Kotlin docs on filtering duplicate emissions
 - [Android Room with Flow guide](https://developer.android.com/codelabs/basic-android-kotlin-training-intro-room-flow) - Official Android guide on reactive database queries
 - [Room InvalidationTracker behavior](https://medium.com/androiddevelopers/7-pro-tips-for-room-fbadea4bfbd1) - Android Developers blog on Room false positive notifications and distinctUntilChanged solution
-- Columba codebase: PropagationNodeManager.kt, ContactRepository.kt, AnnounceDao.kt - Current implementation showing the feedback loop pattern
+- Zamolxis codebase: PropagationNodeManager.kt, ContactRepository.kt, AnnounceDao.kt - Current implementation showing the feedback loop pattern
 
 ### Secondary (MEDIUM confidence)
 - [Kotlin Flow debounce operator](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/debounce.html) - Official docs on timing-based filtering
@@ -459,8 +459,8 @@ Things that couldn't be fully resolved:
 **Confidence breakdown:**
 - Standard stack: HIGH - All components are official Android/Kotlin libraries, well-documented
 - Architecture: HIGH - Feedback loop pattern is well-understood in reactive programming, multiple sources confirm Room's broad invalidation behavior
-- Pitfalls: HIGH - All pitfalls derived from official documentation or confirmed by existing Columba code showing the problem
-- Code examples: HIGH - Based on actual Columba code and official Kotlin Flow documentation
+- Pitfalls: HIGH - All pitfalls derived from official documentation or confirmed by existing Zamolxis code showing the problem
+- Code examples: HIGH - Based on actual Zamolxis code and official Kotlin Flow documentation
 
 **Research date:** 2026-01-25
 **Valid until:** 60 days (stable domain - reactive patterns and Room behavior unlikely to change)

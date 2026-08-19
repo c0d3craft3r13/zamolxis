@@ -1,4 +1,4 @@
-package network.columba.app.data.db
+package network.zamolxis.app.data.db
 
 import android.app.Application
 import androidx.room.testing.MigrationTestHelper
@@ -21,11 +21,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class MigrationChainTo6SchemaTest {
+    private val DATABASE_NAME = migrationDbPath("call-history-full-chain-schema-migration")
+
     @get:Rule
     val helper =
         MigrationTestHelper(
             InstrumentationRegistry.getInstrumentation(),
-            ColumbaDatabase::class.java,
+            ZamolxisDatabase::class.java,
         )
 
     @Test
@@ -36,15 +38,12 @@ class MigrationChainTo6SchemaTest {
                 DATABASE_NAME,
                 6,
                 true,
-                ColumbaDatabase.MIGRATION_2_3,
-                ColumbaDatabase.MIGRATION_3_4,
-                ColumbaDatabase.MIGRATION_4_5,
-                ColumbaDatabase.MIGRATION_5_6,
+                ZamolxisDatabase.MIGRATION_2_3,
+                ZamolxisDatabase.MIGRATION_3_4,
+                ZamolxisDatabase.MIGRATION_4_5,
+                ZamolxisDatabase.MIGRATION_5_6,
             )
             .close()
     }
 
-    private companion object {
-        const val DATABASE_NAME = "call-history-full-chain-schema-migration"
-    }
 }

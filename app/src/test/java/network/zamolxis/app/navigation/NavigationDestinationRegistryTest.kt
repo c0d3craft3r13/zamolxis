@@ -1,4 +1,4 @@
-package network.columba.app.navigation
+package network.zamolxis.app.navigation
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

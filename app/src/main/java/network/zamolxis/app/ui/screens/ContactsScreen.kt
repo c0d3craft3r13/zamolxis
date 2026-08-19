@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.util.Log
 import android.widget.Toast
@@ -107,24 +107,24 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import network.columba.app.R
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.model.EnrichedContact
-import network.columba.app.ui.components.AddContactConfirmationDialog
-import network.columba.app.ui.components.LocalWindowSize
-import network.columba.app.ui.components.ProfileIcon
-import network.columba.app.ui.components.simpleVerticalScrollbar
-import network.columba.app.ui.theme.MeshConnected
-import network.columba.app.ui.util.rememberLifecycleTickerMillis
-import network.columba.app.util.formatTimeSince
-import network.columba.app.util.validation.InputValidator
-import network.columba.app.util.validation.ValidationConstants
-import network.columba.app.util.validation.ValidationResult
-import network.columba.app.viewmodel.AddContactResult
-import network.columba.app.viewmodel.AnnounceStreamViewModel
-import network.columba.app.viewmodel.ContactsViewModel
-import network.columba.app.viewmodel.SharedImageViewModel
-import network.columba.app.viewmodel.SharedTextViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.ui.components.AddContactConfirmationDialog
+import network.zamolxis.app.ui.components.LocalWindowSize
+import network.zamolxis.app.ui.components.ProfileIcon
+import network.zamolxis.app.ui.components.simpleVerticalScrollbar
+import network.zamolxis.app.ui.theme.MeshConnected
+import network.zamolxis.app.ui.util.rememberLifecycleTickerMillis
+import network.zamolxis.app.util.formatTimeSince
+import network.zamolxis.app.util.validation.InputValidator
+import network.zamolxis.app.util.validation.ValidationConstants
+import network.zamolxis.app.util.validation.ValidationResult
+import network.zamolxis.app.viewmodel.AddContactResult
+import network.zamolxis.app.viewmodel.AnnounceStreamViewModel
+import network.zamolxis.app.viewmodel.ContactsViewModel
+import network.zamolxis.app.viewmodel.SharedImageViewModel
+import network.zamolxis.app.viewmodel.SharedTextViewModel
 
 private const val TAG = "ContactsScreen"
 
@@ -257,7 +257,7 @@ fun ContactsScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Contacts",
+                            text = stringResource(R.string.contacts_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                         )
@@ -275,7 +275,7 @@ fun ContactsScreen(
                             IconButton(onClick = { showAddContactSheet = true }) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "Add contact",
+                                    contentDescription = stringResource(R.string.contacts_add_cd),
                                 )
                             }
                         }
@@ -309,7 +309,7 @@ fun ContactsScreen(
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.Campaign,
-                                        contentDescription = "Announce now",
+                                        contentDescription = stringResource(R.string.contacts_announce_now),
                                     )
                                 }
                             }
@@ -318,7 +318,7 @@ fun ContactsScreen(
                                 IconButton(onClick = { showNetworkOverflowMenu = true }) {
                                     Icon(
                                         imageVector = Icons.Default.MoreVert,
-                                        contentDescription = "More options",
+                                        contentDescription = stringResource(R.string.common_more_options),
                                     )
                                 }
                                 DropdownMenu(
@@ -335,7 +335,7 @@ fun ContactsScreen(
                                         },
                                         text = {
                                             Text(
-                                                text = "Clear All Announces",
+                                                text = stringResource(R.string.contacts_clear_announces),
                                                 color = MaterialTheme.colorScheme.error,
                                             )
                                         },
@@ -399,7 +399,10 @@ fun ContactsScreen(
                                         }
                                     },
                                 ) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                                    Icon(
+                                        Icons.Default.Clear,
+                                        contentDescription = stringResource(R.string.common_clear_search),
+                                    )
                                 }
                             }
                         },
@@ -443,7 +446,7 @@ fun ContactsScreen(
                     onClick = { showAddContactSheet = true },
                     containerColor = MaterialTheme.colorScheme.primary,
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add contact")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.contacts_add_cd))
                 }
             }
         },
@@ -501,7 +504,7 @@ fun ContactsScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = "MY RELAY",
+                                            text = stringResource(R.string.contacts_my_relay),
                                             style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.tertiary,
                                         )
@@ -509,7 +512,7 @@ fun ContactsScreen(
                                         if (currentRelayInfo?.isAutoSelected == true) {
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                text = "(auto)",
+                                                text = stringResource(R.string.contacts_auto),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
@@ -551,7 +554,7 @@ fun ContactsScreen(
                             if (contactsState.groupedContacts.pinned.isNotEmpty()) {
                                 item {
                                     Text(
-                                        text = "PINNED",
+                                        text = stringResource(R.string.contacts_pinned),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
@@ -603,7 +606,7 @@ fun ContactsScreen(
                                 if (contactsState.groupedContacts.relay != null || contactsState.groupedContacts.pinned.isNotEmpty()) {
                                     item {
                                         Text(
-                                            text = "ALL CONTACTS",
+                                            text = stringResource(R.string.contacts_all),
                                             style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
@@ -763,13 +766,13 @@ fun ContactsScreen(
             icon = {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Contact Exists",
+                    contentDescription = stringResource(R.string.contact_exists_cd),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             },
             title = {
                 Text(
-                    text = "Contact Already Added",
+                    text = stringResource(R.string.contact_already_added),
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
@@ -793,7 +796,7 @@ fun ContactsScreen(
                         existingContactName = null
                     },
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.common_ok))
                 }
             },
         )
@@ -816,14 +819,14 @@ fun ContactsScreen(
             },
             title = {
                 Text(
-                    text = "Unset as Your Relay?",
+                    text = stringResource(R.string.contacts_unset_relay_title),
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             },
             text = {
                 Text(
-                    text = "\"${currentRelayToUnset.displayName}\" will be removed from contacts.",
+                    text = stringResource(R.string.contacts_unset_relay_body, currentRelayToUnset.displayName),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             },
@@ -842,7 +845,7 @@ fun ContactsScreen(
                             relayToUnset = null
                         },
                     ) {
-                        Text("Remove & Auto-Select New")
+                        Text(stringResource(R.string.contacts_relay_remove_auto))
                     }
                     TextButton(
                         onClick = {
@@ -854,7 +857,7 @@ fun ContactsScreen(
                             relayToUnset = null
                         },
                     ) {
-                        Text("Remove Only")
+                        Text(stringResource(R.string.contacts_relay_remove_only))
                     }
                     TextButton(
                         onClick = {
@@ -862,7 +865,7 @@ fun ContactsScreen(
                             relayToUnset = null
                         },
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             },
@@ -1075,7 +1078,7 @@ fun ContactListItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Error,
-                                contentDescription = "Identity not found",
+                                contentDescription = stringResource(R.string.contacts_identity_not_found_cd),
                                 modifier = Modifier.size(14.dp),
                                 tint = MaterialTheme.colorScheme.error,
                             )
@@ -1096,7 +1099,7 @@ fun ContactListItem(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Hub,
-                            contentDescription = "My Relay",
+                            contentDescription = stringResource(R.string.contacts_my_relay_cd),
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.onTertiary,
                         )
@@ -1135,14 +1138,14 @@ fun ContactListItem(
                     when {
                         isPending -> {
                             Text(
-                                text = "Searching for identity...",
+                                text = stringResource(R.string.contacts_searching_identity),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )
                         }
                         isUnresolved -> {
                             Text(
-                                text = "Identity not found - tap to retry",
+                                text = stringResource(R.string.contacts_identity_not_found_retry),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error,
                             )
@@ -1152,13 +1155,13 @@ fun ContactListItem(
                             val lastSeen = contact.lastSeenTimestamp
                             if (lastSeen != null) {
                                 Text(
-                                    text = formatTimeSince(lastSeen, nowMillis),
+                                    text = formatTimeSince(LocalContext.current, lastSeen, nowMillis),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             } else {
                                 Text(
-                                    text = "Never seen",
+                                    text = stringResource(R.string.contacts_never_seen),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -1188,7 +1191,7 @@ fun ContactListItem(
                 if (contact.isReceivingLocationFrom) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Sharing location with you",
+                        contentDescription = stringResource(R.string.contacts_sharing_location),
                         modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -1205,7 +1208,7 @@ fun ContactListItem(
                                 ).padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
                         Text(
-                            text = "RELAY",
+                            text = stringResource(R.string.contacts_relay_badge),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary,
@@ -1231,7 +1234,7 @@ fun ContactListItem(
                     }
                 Icon(
                     imageVector = badgeIcon,
-                    contentDescription = "Added via ${contact.addedVia}",
+                    contentDescription = stringResource(R.string.contacts_added_via, contact.addedVia),
                     modifier = Modifier.size(16.dp),
                     tint = badgeColor.copy(alpha = textAlpha),
                 )
@@ -1242,7 +1245,7 @@ fun ContactListItem(
                 IconButton(onClick = onClick) {
                     Icon(
                         imageVector = Icons.Filled.Refresh,
-                        contentDescription = "Retry search",
+                        contentDescription = stringResource(R.string.contacts_retry_search),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -1311,7 +1314,7 @@ fun ContactContextMenu(
                 )
             },
             text = {
-                Text("View Peer Details")
+                Text(stringResource(R.string.chats_view_peer_details))
             },
             onClick = onViewDetails,
         )
@@ -1344,7 +1347,7 @@ fun ContactContextMenu(
                 )
             },
             text = {
-                Text("Edit Nickname")
+                Text(stringResource(R.string.contacts_edit_nickname))
             },
             onClick = onEditNickname,
         )
@@ -1383,7 +1386,7 @@ fun LoadingContactsState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Loading contacts...",
+            text = stringResource(R.string.contacts_loading),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1405,14 +1408,14 @@ fun EmptyContactsState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No contacts yet",
+            text = stringResource(R.string.contacts_empty_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Star peers in the Announce Stream\nor add contacts via QR code",
+            text = stringResource(R.string.contacts_empty_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             modifier = Modifier.padding(horizontal = 32.dp),
@@ -1441,7 +1444,7 @@ fun AddContactBottomSheet(
                     .fillMaxWidth(),
         ) {
             Text(
-                text = "Add Contact",
+                text = stringResource(R.string.contacts_add_contact),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
@@ -1451,8 +1454,8 @@ fun AddContactBottomSheet(
 
             // Scan QR Code option
             ListItem(
-                headlineContent = { Text("Scan QR Code") },
-                supportingContent = { Text("Scan a contact's QR code to add them") },
+                headlineContent = { Text(stringResource(R.string.qr_scan_title)) },
+                supportingContent = { Text(stringResource(R.string.contacts_scan_qr_subtitle)) },
                 leadingContent = {
                     Icon(
                         Icons.Default.QrCodeScanner,
@@ -1468,8 +1471,8 @@ fun AddContactBottomSheet(
 
             // Manual Entry option
             ListItem(
-                headlineContent = { Text("Manual Entry") },
-                supportingContent = { Text("Paste RNS identity string") },
+                headlineContent = { Text(stringResource(R.string.contacts_manual_entry)) },
+                supportingContent = { Text(stringResource(R.string.contacts_manual_entry_subtitle)) },
                 leadingContent = {
                     Icon(
                         Icons.Default.Edit,
@@ -1494,13 +1497,13 @@ fun ManualEntryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Contact") },
+        title = { Text(stringResource(R.string.contacts_add_contact)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
-                    text = "Paste an LXMF identity string (lxma://...) or destination hash from Sideband",
+                    text = stringResource(R.string.contacts_paste_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1512,8 +1515,8 @@ fun ManualEntryDialog(
                         identityString = it.trim()
                         errorMessage = null
                     },
-                    label = { Text("Identity or Address") },
-                    placeholder = { Text("lxma://... or 32-char hash") },
+                    label = { Text(stringResource(R.string.contacts_identity_or_address)) },
+                    placeholder = { Text(stringResource(R.string.contacts_address_placeholder)) },
                     singleLine = false,
                     maxLines = 4,
                     modifier = Modifier.fillMaxWidth(),
@@ -1523,7 +1526,7 @@ fun ManualEntryDialog(
                         if (error != null) {
                             Text(error, color = MaterialTheme.colorScheme.error)
                         } else {
-                            Text("Full lxma:// URL or 32-character hex address")
+                            Text(stringResource(R.string.contacts_address_supporting))
                         }
                     },
                 )
@@ -1536,8 +1539,8 @@ fun ManualEntryDialog(
                             nickname = newValue
                         }
                     },
-                    label = { Text("Nickname (optional)") },
-                    placeholder = { Text("Enter a name") },
+                    label = { Text(stringResource(R.string.contacts_nickname_optional)) },
+                    placeholder = { Text(stringResource(R.string.contacts_nickname_placeholder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     supportingText = {
@@ -1563,12 +1566,12 @@ fun ManualEntryDialog(
                     }
                 },
             ) {
-                Text("Add")
+                Text(stringResource(R.string.common_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -1653,11 +1656,11 @@ fun PendingContactBottomSheet(
                     Text(
                         text =
                             if (isPending) {
-                                "This contact was added with only their address. Columba is " +
+                                "This contact was added with only their address. Zamolxis is " +
                                     "searching the network for their full identity. Once found, " +
                                     "you'll be able to send messages."
                             } else {
-                                "Columba couldn't find this contact's identity on the network " +
+                                "Zamolxis couldn't find this contact's identity on the network " +
                                     "after 24 hours. They may be offline or using a different " +
                                     "address. You can retry the search or remove this contact."
                             },
@@ -1706,7 +1709,7 @@ fun PendingContactBottomSheet(
                         modifier = Modifier.size(20.dp),
                     )
                     Spacer(modifier = Modifier.size(8.dp))
-                    Text("Remove Contact")
+                    Text(stringResource(R.string.contacts_remove))
                 }
             }
 
@@ -1726,20 +1729,20 @@ fun EditNicknameDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Nickname") },
+        title = { Text(stringResource(R.string.contacts_edit_nickname)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
-                    text = "Set a custom nickname for this contact",
+                    text = stringResource(R.string.contacts_nickname_dialog_note),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 // Show destination hash for context
                 Text(
-                    text = "Contact: $destinationHash",
+                    text = stringResource(R.string.contacts_dialog_contact_hash, destinationHash),
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
@@ -1753,8 +1756,8 @@ fun EditNicknameDialog(
                             nickname = newValue
                         }
                     },
-                    label = { Text("Nickname") },
-                    placeholder = { Text("Enter a custom name") },
+                    label = { Text(stringResource(R.string.contacts_nickname)) },
+                    placeholder = { Text(stringResource(R.string.contacts_nickname_custom_placeholder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     supportingText = {
@@ -1766,7 +1769,7 @@ fun EditNicknameDialog(
                             IconButton(onClick = { nickname = "" }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
-                                    contentDescription = "Clear nickname",
+                                    contentDescription = stringResource(R.string.contacts_clear_nickname_cd),
                                 )
                             }
                         }
@@ -1775,7 +1778,7 @@ fun EditNicknameDialog(
 
                 if (nickname.isEmpty() && currentNickname != null) {
                     Text(
-                        text = "Clearing the nickname will use the announce name if available",
+                        text = stringResource(R.string.contacts_clear_nickname_note),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
@@ -1788,12 +1791,12 @@ fun EditNicknameDialog(
                     onConfirm(nickname.ifBlank { null })
                 },
             ) {
-                Text("Save")
+                Text(stringResource(R.string.common_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )

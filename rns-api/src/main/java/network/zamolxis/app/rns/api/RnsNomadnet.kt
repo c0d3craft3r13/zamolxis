@@ -1,7 +1,7 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 import kotlinx.coroutines.flow.StateFlow
-import network.columba.app.rns.api.model.NomadnetPageResult
+import network.zamolxis.app.rns.api.model.NomadnetPageResult
 
 /**
  * NomadNet page browsing.

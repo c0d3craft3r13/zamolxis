@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.call.rnode
+package network.zamolxis.app.rns.host.call.rnode
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * feed a [PipedInputStream], and writes go through a latch-synchronized BLE write path
  * that chunks data to the negotiated MTU.
  *
- * Adapted from Columba's KotlinRNodeBridge — stripped of Chaquopy/Python, Bluetooth Classic,
+ * Adapted from Zamolxis's KotlinRNodeBridge — stripped of Chaquopy/Python, Bluetooth Classic,
  * and converted to a focused BLE-only connection helper.
  */
 @SuppressLint("MissingPermission")

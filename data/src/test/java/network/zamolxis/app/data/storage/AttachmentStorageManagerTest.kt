@@ -1,4 +1,4 @@
-package network.columba.app.data.storage
+package network.zamolxis.app.data.storage
 
 import android.app.Application
 import android.content.Context
@@ -105,7 +105,9 @@ class AttachmentStorageManagerTest {
         val path = storageManager.saveAttachment(messageHash, fieldKey, data)
 
         assertNotNull("Should return non-null path", path)
-        assertTrue("Path should be absolute", path!!.startsWith("/"))
+        // File.isAbsolute, not a "/" prefix: an absolute Windows path starts with a
+        // drive letter, so the prefix check failed everywhere except Unix.
+        assertTrue("Path should be absolute", java.io.File(path!!).isAbsolute)
         assertTrue("Path should contain attachments dir", path.contains("attachments"))
     }
 

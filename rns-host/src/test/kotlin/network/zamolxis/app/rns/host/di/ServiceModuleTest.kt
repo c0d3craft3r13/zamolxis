@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.di
+package network.zamolxis.app.rns.host.di
 
 import android.content.Context
 import io.mockk.clearAllMocks

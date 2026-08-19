@@ -1,4 +1,4 @@
-package network.columba.app.rns.host
+package network.zamolxis.app.rns.host
 
 import android.content.ComponentName
 import android.content.Context
@@ -15,9 +15,9 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.ipc.IRnsBackend
-import network.columba.app.rns.ipc.RnsBackendClient
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.ipc.IRnsBackend
+import network.zamolxis.app.rns.ipc.RnsBackendClient
 
 /**
  * UI-side connection driver for the `:reticulum`-process [ReticulumService].
@@ -29,7 +29,7 @@ import network.columba.app.rns.ipc.RnsBackendClient
  * restarts, ANR recoveries) surface as fresh emissions to downstream
  * collectors. `onServiceDisconnected` does NOT complete the flow — Android
  * delivers a follow-up `onServiceConnected` automatically — but it DOES emit
- * `null` so that [network.columba.app.rns.host.ipc.BoundRnsBackend]'s
+ * `null` so that [network.zamolxis.app.rns.host.ipc.BoundRnsBackend]'s
  * `awaitBound()` callers suspend through the gap instead of forwarding a
  * call to a dead binder (DeadObjectException → BackendNotReady at the call
  * site). This is the punch-list-item-10 fix: without the null sentinel,
@@ -37,10 +37,10 @@ import network.columba.app.rns.ipc.RnsBackendClient
  * `:reticulum` is started fires against the previous (dead) binder reference
  * still cached in the `StateFlow<RnsBackend?>`.
  *
- * Consumed by [network.columba.app.rns.host.ipc.BoundRnsBackend] (A.10),
+ * Consumed by [network.zamolxis.app.rns.host.ipc.BoundRnsBackend] (A.10),
  * which `stateIn`s this nullable flow into a `StateFlow<RnsBackend?>` and
  * hands the same reference to each `BoundRns*` sub-wrapper for republishing.
- * [network.columba.app.rns.host.di.ProcessAwareBackendModule] decides per
+ * [network.zamolxis.app.rns.host.di.ProcessAwareBackendModule] decides per
  * process whether to instantiate `BoundRnsBackend` (UI / TEST) or hand back
  * the flavor-local backend (`:reticulum`).
  */
@@ -51,7 +51,7 @@ object ReticulumServiceConnection {
      *  in shape: a constant `:reticulum`-process action. The bind path uses
      *  an explicit component name, so the action is informational metadata.
      */
-    const val ACTION_BIND = "network.columba.app.rns.host.BIND"
+    const val ACTION_BIND = "network.zamolxis.app.rns.host.BIND"
 
     /**
      * Build the explicit [Intent] used by [Context.bindService]. Targets the

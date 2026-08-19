@@ -1,7 +1,7 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
 import android.app.Application
-import network.columba.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.ReceivedMessage
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

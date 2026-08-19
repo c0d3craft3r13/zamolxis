@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

@@ -1,14 +1,14 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 import android.content.Context
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import network.columba.app.data.crypto.IdentityKeyProvider
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.data.crypto.IdentityKeyProvider
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 
 /**
  * Self-initialization driver for the `:reticulum` foreground service.

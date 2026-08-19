@@ -1,4 +1,4 @@
-package network.columba.app.ui.compose
+package network.zamolxis.app.ui.compose
 
 import android.app.Application
 import androidx.compose.animation.AnimatedVisibility
@@ -23,9 +23,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.unit.dp
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.waitForCondition
-import network.columba.app.test.waitForNodeWithTag
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.waitForCondition
+import network.zamolxis.app.test.waitForNodeWithTag
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain

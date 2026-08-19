@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +26,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 /**
  * Material 3 confirmation dialog for adding a contact from a scanned QR code or deep link.
@@ -49,13 +51,13 @@ fun AddContactConfirmationDialog(
         icon = {
             Icon(
                 imageVector = Icons.Default.PersonAdd,
-                contentDescription = "Add Contact",
+                contentDescription = stringResource(R.string.contacts_add_contact),
                 tint = MaterialTheme.colorScheme.primary,
             )
         },
         title = {
             Text(
-                text = "Add Contact?",
+                text = stringResource(R.string.addcontact_title),
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
             )
@@ -71,7 +73,7 @@ fun AddContactConfirmationDialog(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        text = "Destination Hash",
+                        text = stringResource(R.string.addcontact_dest_hash),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -119,8 +121,8 @@ fun AddContactConfirmationDialog(
                 OutlinedTextField(
                     value = nickname,
                     onValueChange = { nickname = it },
-                    label = { Text("Nickname (optional)") },
-                    placeholder = { Text("Enter a friendly name") },
+                    label = { Text(stringResource(R.string.contacts_nickname_optional)) },
+                    placeholder = { Text(stringResource(R.string.contacts_nickname_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors =
@@ -132,7 +134,7 @@ fun AddContactConfirmationDialog(
 
                 // Helper text
                 Text(
-                    text = "You can add a nickname to easily identify this contact.",
+                    text = stringResource(R.string.contacts_nickname_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -145,12 +147,12 @@ fun AddContactConfirmationDialog(
                     onConfirm(nickname.trim().ifBlank { null })
                 },
             ) {
-                Text("Add Contact")
+                Text(stringResource(R.string.contacts_add_contact))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )

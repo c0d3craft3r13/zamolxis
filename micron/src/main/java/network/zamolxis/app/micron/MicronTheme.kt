@@ -1,4 +1,4 @@
-package network.columba.app.micron
+package network.zamolxis.app.micron
 
 /**
  * Heading styles matching NomadNet's STYLES_DARK and STYLES_LIGHT tables.

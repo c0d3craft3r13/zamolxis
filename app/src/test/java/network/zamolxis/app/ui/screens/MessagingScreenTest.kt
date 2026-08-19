@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import android.Manifest
@@ -27,17 +27,17 @@ import androidx.paging.PagingData
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.testing.TestLifecycleOwner
-import network.columba.app.audio.VoiceMessageRecordingState
-import network.columba.app.audio.VoiceMessageFormat
-import network.columba.app.service.SyncProgress
-import network.columba.app.test.MessagingTestFixtures
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.ui.model.CodecProfile
-import network.columba.app.ui.model.LocationSharingState
-import network.columba.app.ui.model.ReplyPreviewUi
-import network.columba.app.viewmodel.ContactToggleResult
-import network.columba.app.viewmodel.MessagingViewModel
-import network.columba.app.viewmodel.ComposerSendResult
+import network.zamolxis.app.audio.VoiceMessageRecordingState
+import network.zamolxis.app.audio.VoiceMessageFormat
+import network.zamolxis.app.service.SyncProgress
+import network.zamolxis.app.test.MessagingTestFixtures
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.model.CodecProfile
+import network.zamolxis.app.ui.model.LocationSharingState
+import network.zamolxis.app.ui.model.ReplyPreviewUi
+import network.zamolxis.app.viewmodel.ContactToggleResult
+import network.zamolxis.app.viewmodel.MessagingViewModel
+import network.zamolxis.app.viewmodel.ComposerSendResult
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -119,6 +119,11 @@ class MessagingScreenTest {
         every { mockViewModel.messages } returns flowOf(PagingData.empty())
         every { mockViewModel.announceInfo } returns MutableStateFlow(null)
         every { mockViewModel.peerActivity } returns MutableStateFlow(null)
+        // No pending key change: these tests exercise the ordinary chat surface,
+        // not the key-substitution warning.
+        every { mockViewModel.pqKeyChange } returns MutableStateFlow(null)
+        every { mockViewModel.pqSealed } returns MutableStateFlow(false)
+        every { mockViewModel.refreshPqKeyChange(any()) } just Runs
         every { mockViewModel.currentConversationHash } returns
             MutableStateFlow(MessagingTestFixtures.Constants.TEST_DESTINATION_HASH)
         every { mockViewModel.selectedImageData } returns MutableStateFlow(null)
@@ -457,10 +462,10 @@ class MessagingScreenTest {
         // "Online" is reserved for an active link only.
         every { mockViewModel.peerActivity } returns
             MutableStateFlow(
-                network.columba.app.data.db.entity.PeerActivityEntity(
+                network.zamolxis.app.data.db.entity.PeerActivityEntity(
                     destinationHash = MessagingTestFixtures.Constants.TEST_DESTINATION_HASH,
                     lastReceivedAt = System.currentTimeMillis() - 60_000L,
-                    activityType = network.columba.app.data.db.entity.PeerActivityType.MESSAGE,
+                    activityType = network.zamolxis.app.data.db.entity.PeerActivityType.MESSAGE,
                 ),
             )
 
@@ -484,10 +489,10 @@ class MessagingScreenTest {
         // Given - old verified inbound activity.
         every { mockViewModel.peerActivity } returns
             MutableStateFlow(
-                network.columba.app.data.db.entity.PeerActivityEntity(
+                network.zamolxis.app.data.db.entity.PeerActivityEntity(
                     destinationHash = MessagingTestFixtures.Constants.TEST_DESTINATION_HASH,
                     lastReceivedAt = System.currentTimeMillis() - 60 * 60 * 1_000L,
-                    activityType = network.columba.app.data.db.entity.PeerActivityType.ANNOUNCE,
+                    activityType = network.zamolxis.app.data.db.entity.PeerActivityType.ANNOUNCE,
                 ),
             )
 
@@ -509,10 +514,10 @@ class MessagingScreenTest {
     fun onlineStatus_ignoresActivityFromPreviousConversation() {
         every { mockViewModel.peerActivity } returns
             MutableStateFlow(
-                network.columba.app.data.db.entity.PeerActivityEntity(
+                network.zamolxis.app.data.db.entity.PeerActivityEntity(
                     destinationHash = "different-peer",
                     lastReceivedAt = System.currentTimeMillis(),
-                    activityType = network.columba.app.data.db.entity.PeerActivityType.MESSAGE,
+                    activityType = network.zamolxis.app.data.db.entity.PeerActivityType.MESSAGE,
                 ),
             )
 
@@ -534,7 +539,7 @@ class MessagingScreenTest {
         every { mockViewModel.currentConversationHash } returns MutableStateFlow("different-peer")
         every { mockViewModel.conversationLinkState } returns
             MutableStateFlow(
-                network.columba.app.service.ConversationLinkManager.LinkState(isActive = true),
+                network.zamolxis.app.service.ConversationLinkManager.LinkState(isActive = true),
             )
 
         composeTestRule.setContent {

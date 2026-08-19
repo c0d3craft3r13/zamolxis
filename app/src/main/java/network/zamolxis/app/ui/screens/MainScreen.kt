@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,14 +26,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import network.columba.app.viewmodel.MainViewModel
-import network.columba.app.viewmodel.UiState
+import network.zamolxis.app.R
+import network.zamolxis.app.viewmodel.MainViewModel
+import network.zamolxis.app.viewmodel.UiState
 
 /**
- * Main screen of the Columba application.
+ * Main screen of the Zamolxis application.
  * Demonstrates integration with Reticulum protocol through the abstraction layer.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,11 +47,11 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Columba LXMF Messenger") },
+                title = { Text(stringResource(R.string.main_title)) },
                 actions = {
                     Icon(
                         imageVector = Icons.Default.Info,
-                        contentDescription = "Network status",
+                        contentDescription = stringResource(R.string.main_network_status_cd),
                         tint = Color(viewModel.getNetworkStatusColor()),
                         modifier = Modifier.padding(end = 16.dp),
                     )
@@ -68,13 +70,13 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
         ) {
             // Header
             Text(
-                text = "Hello, Reticulum!",
+                text = stringResource(R.string.main_hello),
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(top = 32.dp),
             )
 
             Text(
-                text = "This is a demonstration of the Kotlin UI layer communicating with the Reticulum abstraction layer.",
+                text = stringResource(R.string.main_demo_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -93,7 +95,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                             .padding(16.dp),
                 ) {
                     Text(
-                        text = "Network Status",
+                        text = stringResource(R.string.main_network_status),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -109,21 +111,21 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                 onClick = { viewModel.initializeReticulum() },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Initialize Reticulum")
+                Text(stringResource(R.string.main_init))
             }
 
             Button(
                 onClick = { viewModel.createIdentity() },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Create Identity")
+                Text(stringResource(R.string.main_create_identity))
             }
 
             Button(
                 onClick = { viewModel.testSendPacket() },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Test Send Packet")
+                Text(stringResource(R.string.main_test_send))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -153,10 +155,10 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                     Text(
                         text =
                             when (uiState) {
-                                is UiState.Initial -> "Ready"
-                                is UiState.Loading -> "Status"
-                                is UiState.Success -> "Success"
-                                is UiState.Error -> "Error"
+                                is UiState.Initial -> stringResource(R.string.main_ready)
+                                is UiState.Loading -> stringResource(R.string.iface_stats_status)
+                                is UiState.Success -> stringResource(R.string.rnode_disc_success_cd)
+                                is UiState.Error -> stringResource(R.string.rnode_wiz_error)
                             },
                         style = MaterialTheme.typography.titleMedium,
                     )
@@ -164,7 +166,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
                     when (val state = uiState) {
                         is UiState.Initial -> {
-                            Text("Click the buttons above to test the Reticulum abstraction layer.")
+                            Text(stringResource(R.string.main_demo_hint))
                         }
                         is UiState.Loading -> {
                             CircularProgressIndicator(
@@ -189,7 +191,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
             // Footer
             Text(
-                text = "Powered by Reticulum Network Stack",
+                text = stringResource(R.string.main_powered),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -1,16 +1,16 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.content.Context
 import android.location.Location
 import app.cash.turbine.test
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.MessageReceipt
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.util.LocationCompat
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.util.LocationCompat
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -52,7 +52,7 @@ class TelemetryCollectorManagerTest {
     private lateinit var mockRnsCore: RnsCore
     private lateinit var mockRnsLxmf: RnsLxmf
     private lateinit var mockRnsTelemetry: RnsTelemetry
-    private lateinit var mockIdentityRepository: network.columba.app.data.repository.IdentityRepository
+    private lateinit var mockIdentityRepository: network.zamolxis.app.data.repository.IdentityRepository
     private lateinit var manager: TelemetryCollectorManager
 
     // Settings flows
@@ -551,7 +551,7 @@ class TelemetryCollectorManagerTest {
                 coEvery { serviceRnsTelemetry.storeOwnTelemetry(any(), any()) } returns Result.success(Unit)
                 coEvery { serviceRnsLxmf.getLxmfIdentity() } returns
                     Result.success(
-                        network.columba.app.rns.api.model.Identity(
+                        network.zamolxis.app.rns.api.model.Identity(
                             hash = ByteArray(16) { 0x01 },
                             publicKey = ByteArray(32) { 0x02 },
                             privateKey = null,

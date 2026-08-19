@@ -1,11 +1,11 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.db.entity.BlockedPeerEntity
-import network.columba.app.data.repository.BlockedPeerRepository
-import network.columba.app.rns.api.RnsCore
+import network.zamolxis.app.data.db.entity.BlockedPeerEntity
+import network.zamolxis.app.data.repository.BlockedPeerRepository
+import network.zamolxis.app.rns.api.RnsCore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

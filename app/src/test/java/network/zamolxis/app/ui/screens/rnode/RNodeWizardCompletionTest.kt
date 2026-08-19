@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.rnode
+package network.zamolxis.app.ui.screens.rnode
 
 import android.app.Application
 import androidx.activity.OnBackPressedDispatcher
@@ -6,10 +6,10 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.RNodeWizardState
-import network.columba.app.viewmodel.RNodeWizardViewModel
-import network.columba.app.viewmodel.WizardStep
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.RNodeWizardState
+import network.zamolxis.app.viewmodel.RNodeWizardViewModel
+import network.zamolxis.app.viewmodel.WizardStep
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

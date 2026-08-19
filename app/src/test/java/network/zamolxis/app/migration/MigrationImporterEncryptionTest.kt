@@ -1,4 +1,4 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import android.content.Context
 import android.net.Uri
@@ -91,7 +91,7 @@ class MigrationImporterEncryptionTest {
      */
     private fun writeTempFile(
         bytes: ByteArray,
-        suffix: String = ".columba",
+        suffix: String = ".zamolxis",
     ): Uri {
         val file = File.createTempFile("migration_test_", suffix, context.cacheDir)
         file.writeBytes(bytes)

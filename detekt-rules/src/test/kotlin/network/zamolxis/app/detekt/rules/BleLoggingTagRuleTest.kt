@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.test.lint
@@ -12,11 +12,11 @@ class BleLoggingTagRuleTest {
     @Test
     fun `valid TAG pattern passes`() {
         val code = """
-            package network.columba.app.reticulum.ble.client
+            package network.zamolxis.app.reticulum.ble.client
 
             class BleScanner {
                 companion object {
-                    private const val TAG = "Columba:BLE:K:Scan"
+                    private const val TAG = "Zamolxis:BLE:K:Scan"
                 }
             }
         """.trimIndent()
@@ -28,11 +28,11 @@ class BleLoggingTagRuleTest {
     @Test
     fun `invalid TAG pattern reports issue`() {
         val code = """
-            package network.columba.app.reticulum.ble.client
+            package network.zamolxis.app.reticulum.ble.client
 
             class BleScanner {
                 companion object {
-                    private const val TAG = "Columba:Kotlin:BleScanner"
+                    private const val TAG = "Zamolxis:Kotlin:BleScanner"
                 }
             }
         """.trimIndent()
@@ -45,7 +45,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `missing TAG reports issue`() {
         val code = """
-            package network.columba.app.reticulum.ble.client
+            package network.zamolxis.app.reticulum.ble.client
 
             class BleScanner {
                 companion object {
@@ -62,7 +62,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `missing companion object reports issue`() {
         val code = """
-            package network.columba.app.reticulum.ble.client
+            package network.zamolxis.app.reticulum.ble.client
 
             class BleScanner {
                 private val someField = "value"
@@ -76,7 +76,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `non-BLE package is ignored`() {
         val code = """
-            package network.columba.app.reticulum.bridge
+            package network.zamolxis.app.reticulum.bridge
 
             class SomeBridge {
                 // No TAG needed - not in BLE package
@@ -90,7 +90,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `data class is ignored`() {
         val code = """
-            package network.columba.app.reticulum.ble.model
+            package network.zamolxis.app.reticulum.ble.model
 
             data class BleDevice(val address: String, val name: String)
         """.trimIndent()
@@ -102,7 +102,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `enum class is ignored`() {
         val code = """
-            package network.columba.app.reticulum.ble.model
+            package network.zamolxis.app.reticulum.ble.model
 
             enum class BleConnectionState { CONNECTED, DISCONNECTED }
         """.trimIndent()
@@ -114,7 +114,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `exception class is ignored`() {
         val code = """
-            package network.columba.app.reticulum.ble.util
+            package network.zamolxis.app.reticulum.ble.util
 
             class TimeoutException(message: String) : Exception(message)
         """.trimIndent()
@@ -126,7 +126,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `interface is ignored`() {
         val code = """
-            package network.columba.app.reticulum.ble.client
+            package network.zamolxis.app.reticulum.ble.client
 
             interface BleCallback {
                 fun onConnected()
@@ -140,7 +140,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `sealed class is ignored`() {
         val code = """
-            package network.columba.app.reticulum.ble.util
+            package network.zamolxis.app.reticulum.ble.util
 
             sealed class BleOperation {
                 data class Connect(val address: String) : BleOperation()
@@ -154,7 +154,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `model package is ignored`() {
         val code = """
-            package network.columba.app.reticulum.ble.model
+            package network.zamolxis.app.reticulum.ble.model
 
             class BleConfig {
                 val timeout = 5000
@@ -168,19 +168,19 @@ class BleLoggingTagRuleTest {
     @Test
     fun `various valid component names pass`() {
         val validTags = listOf(
-            "Columba:BLE:K:Bridge",
-            "Columba:BLE:K:Scan",
-            "Columba:BLE:K:Client",
-            "Columba:BLE:K:Server",
-            "Columba:BLE:K:Adv",
-            "Columba:BLE:K:Queue",
-            "Columba:BLE:K:ConnMgr",
-            "Columba:BLE:K:Pair",
+            "Zamolxis:BLE:K:Bridge",
+            "Zamolxis:BLE:K:Scan",
+            "Zamolxis:BLE:K:Client",
+            "Zamolxis:BLE:K:Server",
+            "Zamolxis:BLE:K:Adv",
+            "Zamolxis:BLE:K:Queue",
+            "Zamolxis:BLE:K:ConnMgr",
+            "Zamolxis:BLE:K:Pair",
         )
 
         for (tag in validTags) {
             val code = """
-                package network.columba.app.reticulum.ble.service
+                package network.zamolxis.app.reticulum.ble.service
 
                 class TestComponent {
                     companion object {
@@ -198,16 +198,16 @@ class BleLoggingTagRuleTest {
     fun `invalid patterns are rejected`() {
         val invalidTags = listOf(
             "BleScanner",                      // No prefix
-            "Columba:Kotlin:BleScanner",       // Old pattern
-            "Columba:BLE:Py:Driver",           // Python pattern (K expected)
-            "Columba:BLE:K:",                  // Missing component
-            "Columba:BLE:K:Scan:Extra",        // Too many segments
-            "columba:ble:k:scan",              // Wrong case
+            "Zamolxis:Kotlin:BleScanner",       // Old pattern
+            "Zamolxis:BLE:Py:Driver",           // Python pattern (K expected)
+            "Zamolxis:BLE:K:",                  // Missing component
+            "Zamolxis:BLE:K:Scan:Extra",        // Too many segments
+            "zamolxis:ble:k:scan",              // Wrong case
         )
 
         for (tag in invalidTags) {
             val code = """
-                package network.columba.app.reticulum.ble.service
+                package network.zamolxis.app.reticulum.ble.service
 
                 class TestComponent {
                     companion object {

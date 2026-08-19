@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.rnode
+package network.zamolxis.app.ui.screens.rnode
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -23,10 +23,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import network.columba.app.ui.components.WizardBottomBar
-import network.columba.app.viewmodel.RNodeWizardViewModel
-import network.columba.app.viewmodel.WizardStep
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.WizardBottomBar
+import network.zamolxis.app.viewmodel.RNodeWizardViewModel
+import network.zamolxis.app.viewmodel.WizardStep
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,15 +126,19 @@ fun RNodeWizardScreen(
                         when (state.currentStep) {
                             WizardStep.DEVICE_DISCOVERY ->
                                 when {
-                                    state.transportMode -> "Configure Transport"
-                                    state.isEditMode -> "Change RNode Device"
-                                    else -> "Select RNode Device"
+                                    state.transportMode -> stringResource(R.string.rnode_wiz_title_configure_transport)
+                                    state.isEditMode -> stringResource(R.string.rnode_wiz_title_change_device)
+                                    else -> stringResource(R.string.rnode_wiz_title_select_device)
                                 }
-                            WizardStep.REGION_SELECTION -> "Choose Region"
-                            WizardStep.MODEM_PRESET -> "Select Modem Preset"
-                            WizardStep.FREQUENCY_SLOT -> "Select Frequency Slot"
+                            WizardStep.REGION_SELECTION -> stringResource(R.string.rnode_wiz_title_choose_region)
+                            WizardStep.MODEM_PRESET -> stringResource(R.string.rnode_wiz_title_modem_preset)
+                            WizardStep.FREQUENCY_SLOT -> stringResource(R.string.rnode_wiz_title_frequency_slot)
                             WizardStep.REVIEW_CONFIGURE ->
-                                if (state.transportMode) "Review Transport Config" else "Review Settings"
+                                if (state.transportMode) {
+                                    stringResource(R.string.rnode_wiz_title_review_transport)
+                                } else {
+                                    stringResource(R.string.rnode_wiz_title_review)
+                                }
                         },
                     )
                 },
@@ -148,7 +154,7 @@ fun RNodeWizardScreen(
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                         )
                     }
                 },
@@ -162,11 +168,11 @@ fun RNodeWizardScreen(
                     when (state.currentStep) {
                         WizardStep.REVIEW_CONFIGURE ->
                             when {
-                                state.transportMode -> "Enable Transport"
-                                state.isEditMode -> "Update"
-                                else -> "Save"
+                                state.transportMode -> stringResource(R.string.rnode_wiz_enable_transport)
+                                state.isEditMode -> stringResource(R.string.rnode_wiz_update)
+                                else -> stringResource(R.string.common_save)
                             }
-                        else -> "Next"
+                        else -> stringResource(R.string.rnode_wiz_next)
                     },
                 canProceed = viewModel.canProceed(),
                 isSaving = state.isSaving || state.transportConfiguring,
@@ -214,11 +220,11 @@ fun RNodeWizardScreen(
     state.saveError?.let { error ->
         AlertDialog(
             onDismissRequest = { viewModel.clearSaveError() },
-            title = { Text("Error") },
+            title = { Text(stringResource(R.string.rnode_wiz_error)) },
             text = { Text(error) },
             confirmButton = {
                 TextButton(onClick = { viewModel.clearSaveError() }) {
-                    Text("OK")
+                    Text(stringResource(R.string.common_ok))
                 }
             },
         )
@@ -228,11 +234,11 @@ fun RNodeWizardScreen(
     state.transportConfigError?.let { error ->
         AlertDialog(
             onDismissRequest = { viewModel.clearTransportConfigError() },
-            title = { Text("Transport Configuration Failed") },
+            title = { Text(stringResource(R.string.rnode_wiz_transport_failed)) },
             text = { Text(error) },
             confirmButton = {
                 TextButton(onClick = { viewModel.clearTransportConfigError() }) {
-                    Text("OK")
+                    Text(stringResource(R.string.common_ok))
                 }
             },
         )

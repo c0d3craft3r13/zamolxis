@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc.client
+package network.zamolxis.app.rns.ipc.client
 
 import android.os.DeadObjectException
 import io.mockk.Runs
@@ -10,8 +10,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.ipc.IRnsCore
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.ipc.IRnsCore
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

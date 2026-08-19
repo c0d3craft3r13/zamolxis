@@ -1,4 +1,4 @@
-package network.columba.app.ui.theme
+package network.zamolxis.app.ui.theme
 
 /**
  * Material Design Icons (MDI) codepoint mapping for Sideband/MeshChat interoperability.

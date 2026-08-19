@@ -1,4 +1,4 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

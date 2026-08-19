@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +43,7 @@ fun QrCodeBottomSheet(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                text = "QR Code",
+                text = stringResource(R.string.common_qr_code),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
@@ -51,8 +53,8 @@ fun QrCodeBottomSheet(
 
             // Scan QR Code option
             ListItem(
-                headlineContent = { Text("Scan QR Code") },
-                supportingContent = { Text("Scan a contact's QR code") },
+                headlineContent = { Text(stringResource(R.string.qr_scan_title)) },
+                supportingContent = { Text(stringResource(R.string.qr_scan_subtitle)) },
                 leadingContent = {
                     Icon(
                         Icons.Default.QrCodeScanner,
@@ -68,8 +70,8 @@ fun QrCodeBottomSheet(
 
             // Show QR Code option
             ListItem(
-                headlineContent = { Text("Show QR Code") },
-                supportingContent = { Text("Show your QR code for others to scan") },
+                headlineContent = { Text(stringResource(R.string.onboarding_complete_show_qr)) },
+                supportingContent = { Text(stringResource(R.string.qr_show_subtitle)) },
                 leadingContent = {
                     Icon(
                         Icons.Default.QrCode,

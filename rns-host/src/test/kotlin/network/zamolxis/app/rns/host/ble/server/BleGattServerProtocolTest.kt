@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.server
+package network.zamolxis.app.rns.host.ble.server
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

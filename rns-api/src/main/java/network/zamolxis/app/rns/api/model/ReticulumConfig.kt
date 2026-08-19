@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.model
+package network.zamolxis.app.rns.api.model
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -29,9 +29,9 @@ data class ReticulumConfig(
      */
     val batteryProfile: BatteryProfile = BatteryProfile.BALANCED,
     /**
-     * When false (default), Columba will attempt to connect to a shared RNS instance
+     * When false (default), Zamolxis will attempt to connect to a shared RNS instance
      * (e.g., from Sideband) if one is available on the device.
-     * When true, Columba will always create its own RNS instance.
+     * When true, Zamolxis will always create its own RNS instance.
      */
     val preferOwnInstance: Boolean = false,
     /**
@@ -52,7 +52,7 @@ data class ReticulumConfig(
      * When true, publish this RNS instance as a shared instance on TCP 37428
      * (`share_instance = yes`, `shared_instance_type = tcp` in the rendered
      * config). Other RNS apps on the device — stock Sideband, `rnscp` shells,
-     * other Columba installs — can then RPC through this instance instead of
+     * other Zamolxis installs — can then RPC through this instance instead of
      * spinning up their own transport.
      *
      * Distinct from [preferOwnInstance], which controls whether *we* join an
@@ -333,7 +333,7 @@ sealed class InterfaceConfig : Parcelable {
      * @param mode Interface mode: "full", "gateway", "access_point", "roaming", "boundary"
      * @param networkName Optional IFAC network name for cryptographic authentication
      * @param passphrase Optional IFAC passphrase for cryptographic authentication
-     * @param enableFramebuffer Display Columba logo on RNode's screen
+     * @param enableFramebuffer Display Zamolxis logo on RNode's screen
      */
     data class RNode(
         override val name: String = "RNode LoRa",

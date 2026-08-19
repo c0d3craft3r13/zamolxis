@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -44,11 +44,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import network.columba.app.R
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.ui.components.ProfileIcon
-import network.columba.app.viewmodel.ChatsSegment
-import network.columba.app.viewmodel.VoiceHistoryState
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.ui.components.ProfileIcon
+import network.zamolxis.app.viewmodel.ChatsSegment
+import network.zamolxis.app.viewmodel.VoiceHistoryState
 import kotlinx.coroutines.awaitCancellation
 import java.text.DateFormat
 import java.text.SimpleDateFormat

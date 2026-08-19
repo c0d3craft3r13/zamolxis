@@ -1,4 +1,4 @@
-package network.columba.app.service.manager
+package network.zamolxis.app.service.manager
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -22,11 +22,11 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.host.manager.CurrentTransport
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.host.manager.CurrentTransport
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

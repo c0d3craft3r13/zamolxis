@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -10,7 +10,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import network.columba.app.ui.components.CollapsibleSettingsCard
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 
 @Composable
 fun NotificationSettingsCard(
@@ -21,7 +24,7 @@ fun NotificationSettingsCard(
     onManageClick: () -> Unit,
 ) {
     CollapsibleSettingsCard(
-        title = "Notifications",
+        title = stringResource(R.string.notifsettings_cd),
         icon = Icons.Default.Notifications,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
@@ -53,7 +56,7 @@ fun NotificationSettingsCard(
                     containerColor = MaterialTheme.colorScheme.primary,
                 ),
         ) {
-            Text("Manage Notifications")
+            Text(stringResource(R.string.notifcard_manage))
         }
     }
 }

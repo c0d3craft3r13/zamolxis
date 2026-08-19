@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.Manifest
 import android.content.Context
@@ -24,8 +24,8 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import network.columba.app.R
-import network.columba.app.util.LocationPermissionManager
+import network.zamolxis.app.R
+import network.zamolxis.app.util.LocationPermissionManager
 
 /**
  * Prompts the user to grant *precise* (fine) location when they've chosen

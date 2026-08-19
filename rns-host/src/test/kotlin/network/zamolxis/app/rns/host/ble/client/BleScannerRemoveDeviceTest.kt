@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.client
+package network.zamolxis.app.rns.host.ble.client
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
@@ -170,7 +170,7 @@ class BleScannerRemoveDeviceTest {
         name: String?,
     ) {
         val device =
-            network.columba.app.rns.host.ble.model.BleDevice(
+            network.zamolxis.app.rns.host.ble.model.BleDevice(
                 address = address,
                 name = name,
                 rssi = -70,
@@ -192,11 +192,11 @@ class BleScannerRemoveDeviceTest {
         @Suppress("UNCHECKED_CAST")
         val discoveredDevicesFlow =
             discoveredDevicesField.get(scanner)
-                as kotlinx.coroutines.flow.MutableStateFlow<Map<String, network.columba.app.rns.host.ble.model.BleDevice>>
+                as kotlinx.coroutines.flow.MutableStateFlow<Map<String, network.zamolxis.app.rns.host.ble.model.BleDevice>>
 
         mutex.withLock {
             devices[address] = device
-            discoveredDevicesFlow.value = devices.toMap() as Map<String, network.columba.app.rns.host.ble.model.BleDevice>
+            discoveredDevicesFlow.value = devices.toMap() as Map<String, network.zamolxis.app.rns.host.ble.model.BleDevice>
         }
     }
 

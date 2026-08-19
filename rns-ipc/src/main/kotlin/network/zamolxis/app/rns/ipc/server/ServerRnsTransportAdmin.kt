@@ -1,20 +1,20 @@
-package network.columba.app.rns.ipc.server
+package network.zamolxis.app.rns.ipc.server
 
 import android.os.Bundle
 import kotlinx.coroutines.CoroutineScope
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsTransportAdmin
-import network.columba.app.rns.ipc.callback.IRnsBoolCallback
-import network.columba.app.rns.ipc.callback.IRnsIntCallback
-import network.columba.app.rns.ipc.callback.IRnsResultCallback
-import network.columba.app.rns.ipc.callback.IRnsStringCallback
-import network.columba.app.rns.ipc.callback.IRnsStringEventCallback
-import network.columba.app.rns.ipc.callback.IRnsStringListCallback
-import network.columba.app.rns.ipc.callback.IRnsUnitEventCallback
-import network.columba.app.rns.ipc.toBundle
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsTransportAdmin
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsIntCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringListCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsUnitEventCallback
+import network.zamolxis.app.rns.ipc.toBundle
 
 internal class ServerRnsTransportAdmin(
     private val impl: RnsTransportAdmin,

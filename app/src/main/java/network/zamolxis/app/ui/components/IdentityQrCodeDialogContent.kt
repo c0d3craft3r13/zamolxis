@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.view.WindowManager
 import androidx.compose.foundation.background
@@ -31,6 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 /**
  * Reusable full-screen dialog for displaying identity QR code and details.
@@ -86,7 +88,7 @@ fun IdentityQrCodeDialogContent(
                             IconButton(onClick = onDismiss) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Close",
+                                    contentDescription = stringResource(R.string.common_close),
                                 )
                             }
                         },
@@ -125,7 +127,7 @@ fun IdentityQrCodeDialogContent(
                         )
 
                         Text(
-                            text = "Scan this QR code to add me as a contact",
+                            text = stringResource(R.string.qr_add_me),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

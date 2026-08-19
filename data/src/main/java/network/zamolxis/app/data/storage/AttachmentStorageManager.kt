@@ -1,4 +1,4 @@
-package network.columba.app.data.storage
+package network.zamolxis.app.data.storage
 
 import android.content.Context
 import android.util.Log

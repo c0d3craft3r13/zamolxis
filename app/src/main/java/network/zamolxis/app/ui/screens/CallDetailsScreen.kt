@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,15 +46,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
-import network.columba.app.R
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.ui.components.CodecSelectionDialog
-import network.columba.app.ui.components.ProfileIcon
-import network.columba.app.ui.model.CodecProfile
-import network.columba.app.viewmodel.BlockLookupState
-import network.columba.app.viewmodel.CallDetailsState
-import network.columba.app.viewmodel.CallDetailsViewModel
-import network.columba.app.viewmodel.CallInitiationFailure
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.ui.components.CodecSelectionDialog
+import network.zamolxis.app.ui.components.ProfileIcon
+import network.zamolxis.app.ui.model.CodecProfile
+import network.zamolxis.app.viewmodel.BlockLookupState
+import network.zamolxis.app.viewmodel.CallDetailsState
+import network.zamolxis.app.viewmodel.CallDetailsViewModel
+import network.zamolxis.app.viewmodel.CallInitiationFailure
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

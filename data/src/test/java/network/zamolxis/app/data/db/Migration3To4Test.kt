@@ -1,4 +1,4 @@
-package network.columba.app.data.db
+package network.zamolxis.app.data.db
 
 import android.app.Application
 import android.content.Context
@@ -97,7 +97,7 @@ class Migration3To4Test {
                     oldVersion: Int,
                     newVersion: Int,
                 ) {
-                    ColumbaDatabase.MIGRATION_3_4.migrate(db)
+                    ZamolxisDatabase.MIGRATION_3_4.migrate(db)
                 }
             }
         return createHelper(callback).writableDatabase

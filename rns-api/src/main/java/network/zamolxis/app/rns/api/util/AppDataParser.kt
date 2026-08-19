@@ -1,7 +1,7 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
 import android.util.Log
-import network.columba.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.IconAppearance
 
 /**
  * Backend-agnostic announce `app_data` parsing.
@@ -15,7 +15,7 @@ import network.columba.app.rns.api.model.IconAppearance
  * required fixing the same NomadNet ":"-split bug in two files.
  *
  * The `app_data` formats parsed here are protocol-leaf — they're set by
- * upstream LXMF / NomadNet, not by Columba — so reuse across backends is
+ * upstream LXMF / NomadNet, not by Zamolxis — so reuse across backends is
  * unambiguously correct and the upstream wire format is the spec.
  */
 object AppDataParser {
@@ -164,6 +164,50 @@ object AppDataParser {
             Log.w(TAG, "Failed to parse peer stamp cost: ${e.message}")
             null
         }
+
+    /**
+     * Hybrid post-quantum key fingerprint from a peer announce, if it carries one.
+     *
+     * Element 2 of the `app_data` array — a Zamolxis extension past the LXMF
+     * standard elements 0 (display name) and 1 (stamp cost). Unlike the rest of
+     * this object, that element is *not* protocol-leaf: it is set by Zamolxis, so
+     * it must be read defensively. Anything can occupy index 2 of an announce
+     * from another client, and a peer that never advertised one is simply not
+     * post-quantum capable.
+     *
+     * @return the fingerprint bytes, or null when absent or not the expected shape
+     */
+    fun parsePqFingerprint(appData: ByteArray?): ByteArray? {
+        if (appData == null || appData.isEmpty()) return null
+        return try {
+            val firstByte = appData[0].toInt() and 0xFF
+            if ((firstByte !in 0x90..0x9f) && firstByte != 0xdc) return null
+
+            val unpacker =
+                org.msgpack.core.MessagePack
+                    .newDefaultUnpacker(appData)
+            if (unpacker.unpackArrayHeader() < 3) return null
+
+            unpacker.skipValue() // display name
+            unpacker.skipValue() // stamp cost
+
+            if (unpacker.nextFormat.valueType != org.msgpack.value.ValueType.BINARY) return null
+            val length = unpacker.unpackBinaryHeader()
+            // Bound before allocating: the length prefix comes off the network.
+            if (length !in 1..MAX_PQ_FINGERPRINT_BYTES) return null
+            unpacker.readPayload(length)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to parse post-quantum fingerprint: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Ceiling on an announced fingerprint. The current one is 16 bytes; the slack
+     * leaves room for a longer digest later without letting a hostile announce
+     * dictate an allocation.
+     */
+    private const val MAX_PQ_FINGERPRINT_BYTES = 64
 
     /**
      * Parse an LXMF Field 4 (icon appearance) tuple into a typed

@@ -1,8 +1,8 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 import android.os.Bundle
 
-private const val LIST_MARKER = "network.columba.extra_fields.list"
+private const val LIST_MARKER = "network.zamolxis.extra_fields.list"
 private const val VALUE_KIND = "__kind"
 private const val VALUE_SIZE = "__size"
 

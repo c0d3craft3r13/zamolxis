@@ -1,18 +1,18 @@
-package network.columba.app.rns.ipc.server
+package network.zamolxis.app.rns.ipc.server
 
 import android.os.Bundle
 import android.os.RemoteException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.ipc.callback.IRnsBoolCallback
-import network.columba.app.rns.ipc.callback.IRnsByteArrayCallback
-import network.columba.app.rns.ipc.callback.IRnsFloatCallback
-import network.columba.app.rns.ipc.callback.IRnsIntCallback
-import network.columba.app.rns.ipc.callback.IRnsResultCallback
-import network.columba.app.rns.ipc.callback.IRnsStringCallback
-import network.columba.app.rns.ipc.callback.IRnsStringListCallback
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsByteArrayCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsFloatCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsIntCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringListCallback
 
 /**
  * Server-side dispatch helpers — launch a coroutine on the host scope, run

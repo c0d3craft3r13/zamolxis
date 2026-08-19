@@ -1,6 +1,6 @@
-package network.columba.app.rns.host.ble.service
+package network.zamolxis.app.rns.host.ble.service
 
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.util.toHex
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
@@ -13,15 +13,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import network.columba.app.rns.host.ble.client.BleGattClient
-import network.columba.app.rns.host.ble.client.BleScanner
-import network.columba.app.rns.host.ble.model.BleConnectionState
-import network.columba.app.rns.host.ble.model.BleConstants
-import network.columba.app.rns.host.ble.model.BleDevice
-import network.columba.app.rns.host.ble.server.BleAdvertiser
-import network.columba.app.rns.host.ble.server.BleGattServer
-import network.columba.app.rns.host.ble.util.BleOperationQueue
-import network.columba.app.rns.host.ble.util.BlePairingHandler
+import network.zamolxis.app.rns.host.ble.client.BleGattClient
+import network.zamolxis.app.rns.host.ble.client.BleScanner
+import network.zamolxis.app.rns.host.ble.model.BleConnectionState
+import network.zamolxis.app.rns.host.ble.model.BleConstants
+import network.zamolxis.app.rns.host.ble.model.BleDevice
+import network.zamolxis.app.rns.host.ble.server.BleAdvertiser
+import network.zamolxis.app.rns.host.ble.server.BleGattServer
+import network.zamolxis.app.rns.host.ble.util.BleOperationQueue
+import network.zamolxis.app.rns.host.ble.util.BlePairingHandler
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -60,7 +60,7 @@ class BleConnectionManager(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
 ) {
     companion object {
-        private const val TAG = "Columba:BLE:K:ConnMgr"
+        private const val TAG = "Zamolxis:BLE:K:ConnMgr"
     }
 
     private val bluetoothAdapter: BluetoothAdapter = bluetoothManager.adapter

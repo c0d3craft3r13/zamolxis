@@ -1,4 +1,4 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream

@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.call
+package network.zamolxis.app.rns.host.call
 
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -15,18 +15,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import network.columba.app.data.db.dao.CallHistoryDao
-import network.columba.app.data.db.entity.CallHistoryEntity
-import network.columba.app.rns.api.call.CallAttemptDirection
-import network.columba.app.rns.api.call.CallAttemptRequest
-import network.columba.app.rns.api.call.CallAttemptSnapshot
-import network.columba.app.rns.api.call.CallFailureReason
-import network.columba.app.rns.api.call.CallFinalOutcome
-import network.columba.app.rns.api.call.CallLifecycleEvent
-import network.columba.app.rns.api.call.CallLifecycleRecorder
-import network.columba.app.rns.api.call.ServiceLiveCallAttemptRegistry
-import network.columba.app.rns.api.call.UnconnectedOutcome
-import network.columba.app.rns.api.call.toCallFinalOutcome
+import network.zamolxis.app.data.db.dao.CallHistoryDao
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.rns.api.call.CallAttemptDirection
+import network.zamolxis.app.rns.api.call.CallAttemptRequest
+import network.zamolxis.app.rns.api.call.CallAttemptSnapshot
+import network.zamolxis.app.rns.api.call.CallFailureReason
+import network.zamolxis.app.rns.api.call.CallFinalOutcome
+import network.zamolxis.app.rns.api.call.CallLifecycleEvent
+import network.zamolxis.app.rns.api.call.CallLifecycleRecorder
+import network.zamolxis.app.rns.api.call.ServiceLiveCallAttemptRegistry
+import network.zamolxis.app.rns.api.call.UnconnectedOutcome
+import network.zamolxis.app.rns.api.call.toCallFinalOutcome
 
 /**
  * Service-process owner of the backend-neutral reduced call-lifecycle seam.

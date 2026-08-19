@@ -1,9 +1,9 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.repository.CustomThemeData
-import network.columba.app.data.repository.CustomThemeRepository
+import network.zamolxis.app.data.repository.CustomThemeData
+import network.zamolxis.app.data.repository.CustomThemeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch

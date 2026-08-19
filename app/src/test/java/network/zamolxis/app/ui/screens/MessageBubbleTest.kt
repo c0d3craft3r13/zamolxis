@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.runtime.mutableLongStateOf
@@ -12,14 +12,14 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.MessagingTestFixtures
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.audio.VoiceMessagePlayerState
-import network.columba.app.ui.model.AudioAttachmentMode
-import network.columba.app.ui.model.AudioAttachmentUi
-import network.columba.app.ui.model.MessageRenderer
-import network.columba.app.ui.model.MessageUi
-import network.columba.app.ui.theme.ColumbaTheme
+import network.zamolxis.app.test.MessagingTestFixtures
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.audio.VoiceMessagePlayerState
+import network.zamolxis.app.ui.model.AudioAttachmentMode
+import network.zamolxis.app.ui.model.AudioAttachmentUi
+import network.zamolxis.app.ui.model.MessageRenderer
+import network.zamolxis.app.ui.model.MessageUi
+import network.zamolxis.app.ui.theme.ZamolxisTheme
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -288,7 +288,7 @@ class MessageBubbleTest {
             )
 
         composeTestRule.setContent {
-            ColumbaTheme(darkTheme = true) {
+            ZamolxisTheme(darkTheme = true) {
                 val clipboardManager = LocalClipboardManager.current
                 MessageBubble(
                     message = message,

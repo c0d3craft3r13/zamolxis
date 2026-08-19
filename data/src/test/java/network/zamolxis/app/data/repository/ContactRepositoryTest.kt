@@ -2,16 +2,16 @@
 // NoRelaxedMocks: DAO interfaces have many methods; tests explicitly stub what they need
 @file:Suppress("NoVerifyOnlyTests", "NoRelaxedMocks")
 
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import android.util.Log
-import network.columba.app.data.db.dao.AnnounceDao
-import network.columba.app.data.db.dao.ContactDao
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.dao.AnnounceDao
+import network.zamolxis.app.data.db.dao.ContactDao
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery

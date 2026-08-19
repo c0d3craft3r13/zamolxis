@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ipc
+package network.zamolxis.app.rns.host.ipc
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -10,12 +10,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.rns.api.model.FailedInterface
-import network.columba.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.rns.api.model.FailedInterface
+import network.zamolxis.app.rns.api.model.InterfaceConfig
 
 /**
  * UI-side proxy that delegates every [RnsTransportAdmin] member to the
@@ -23,7 +23,7 @@ import network.columba.app.rns.api.model.InterfaceConfig
  *
  * Two non-suspend getters need special handling:
  * - [getRNodeRssi] / [getBleConnectionDetails] are synchronous Kotlin calls;
- *   the underlying [network.columba.app.rns.ipc.client.ClientRnsTransportAdmin]
+ *   the underlying [network.zamolxis.app.rns.ipc.client.ClientRnsTransportAdmin]
  *   already caches their values from the observer flows, so we just pass
  *   through to whichever backend is currently bound and return the documented
  *   sentinel (-100 / `"[]"`) when no backend is bound yet.

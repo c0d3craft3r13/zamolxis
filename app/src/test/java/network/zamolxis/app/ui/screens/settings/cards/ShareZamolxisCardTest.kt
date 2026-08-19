@@ -1,12 +1,12 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.ui.theme.ColumbaTheme
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.theme.ZamolxisTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -18,7 +18,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
-class ShareColumbaCardTest {
+class ShareZamolxisCardTest {
     private val registerActivityRule = RegisterComponentActivityRule()
     private val composeRule = createComposeRule()
 
@@ -30,8 +30,8 @@ class ShareColumbaCardTest {
     @Test
     fun `displays card title`() {
         composeTestRule.setContent {
-            ColumbaTheme {
-                ShareColumbaCard(
+            ZamolxisTheme {
+                ShareZamolxisCard(
                     isExpanded = true,
                     onExpandedChange = {},
                     onNavigateToApkSharing = {},
@@ -39,14 +39,14 @@ class ShareColumbaCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Share Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Share Zamolxis").assertIsDisplayed()
     }
 
     @Test
     fun `displays description when expanded`() {
         composeTestRule.setContent {
-            ColumbaTheme {
-                ShareColumbaCard(
+            ZamolxisTheme {
+                ShareZamolxisCard(
                     isExpanded = true,
                     onExpandedChange = {},
                     onNavigateToApkSharing = {},
@@ -55,15 +55,15 @@ class ShareColumbaCardTest {
         }
 
         composeTestRule
-            .onNodeWithText("Share the Columba app with someone nearby.", substring = true)
+            .onNodeWithText("Share the Zamolxis app with someone nearby.", substring = true)
             .assertIsDisplayed()
     }
 
     @Test
     fun `displays share button when expanded`() {
         composeTestRule.setContent {
-            ColumbaTheme {
-                ShareColumbaCard(
+            ZamolxisTheme {
+                ShareZamolxisCard(
                     isExpanded = true,
                     onExpandedChange = {},
                     onNavigateToApkSharing = {},
@@ -71,14 +71,14 @@ class ShareColumbaCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Share Columba APK").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Share Zamolxis APK").assertIsDisplayed()
     }
 
     @Test
     fun `hides content when collapsed`() {
         composeTestRule.setContent {
-            ColumbaTheme {
-                ShareColumbaCard(
+            ZamolxisTheme {
+                ShareZamolxisCard(
                     isExpanded = false,
                     onExpandedChange = {},
                     onNavigateToApkSharing = {},
@@ -86,15 +86,15 @@ class ShareColumbaCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Share Columba APK").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Share Zamolxis APK").assertDoesNotExist()
     }
 
     @Test
     fun `share button triggers navigation callback`() {
         var navigated = false
         composeTestRule.setContent {
-            ColumbaTheme {
-                ShareColumbaCard(
+            ZamolxisTheme {
+                ShareZamolxisCard(
                     isExpanded = true,
                     onExpandedChange = {},
                     onNavigateToApkSharing = { navigated = true },
@@ -102,7 +102,7 @@ class ShareColumbaCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Share Columba APK").performClick()
+        composeTestRule.onNodeWithText("Share Zamolxis APK").performClick()
         assertTrue(navigated)
     }
 
@@ -110,8 +110,8 @@ class ShareColumbaCardTest {
     fun `expand change callback is invoked`() {
         var expandedValue: Boolean? = null
         composeTestRule.setContent {
-            ColumbaTheme {
-                ShareColumbaCard(
+            ZamolxisTheme {
+                ShareZamolxisCard(
                     isExpanded = false,
                     onExpandedChange = { expandedValue = it },
                     onNavigateToApkSharing = {},
@@ -119,7 +119,7 @@ class ShareColumbaCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Share Columba").performClick()
+        composeTestRule.onNodeWithText("Share Zamolxis").performClick()
         assertEquals(true, expandedValue)
     }
 }

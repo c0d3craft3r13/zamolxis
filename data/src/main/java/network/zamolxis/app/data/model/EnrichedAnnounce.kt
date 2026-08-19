@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 /**
  * Enriched announce data combining announces table with peer_icons.

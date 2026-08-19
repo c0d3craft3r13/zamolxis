@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.util
+package network.zamolxis.app.rns.host.util
 
 import android.util.Log
 

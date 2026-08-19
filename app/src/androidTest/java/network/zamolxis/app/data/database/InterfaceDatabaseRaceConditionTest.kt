@@ -1,10 +1,10 @@
-package network.columba.app.data.database
+package network.zamolxis.app.data.database
 
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import network.columba.app.data.database.dao.InterfaceDao
+import network.zamolxis.app.data.database.dao.InterfaceDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
@@ -24,7 +24,7 @@ import javax.inject.Provider
  * Test to reproduce and fix the database initialization race condition.
  *
  * Bug: InterfaceDatabase.onCreate() uses async coroutine to populate defaults,
- * but ColumbaApplication immediately reads from database before population completes.
+ * but ZamolxisApplication immediately reads from database before population completes.
  * Result: Empty enabledInterfaces list → empty [interfaces] section in RNS config.
  *
  * This test validates that default interfaces are available immediately after
@@ -71,7 +71,7 @@ class InterfaceDatabaseRaceConditionTest {
     /**
      * Test Case 1: Verify default interfaces exist immediately after database creation.
      *
-     * This simulates the exact scenario in ColumbaApplication where we try to
+     * This simulates the exact scenario in ZamolxisApplication where we try to
      * read interfaces immediately after database creation.
      *
      * EXPECTED: This test FAILS before the fix (race condition causes empty list)
@@ -81,7 +81,7 @@ class InterfaceDatabaseRaceConditionTest {
     fun testDefaultInterfacesAvailableImmediatelyAfterCreation() =
         runBlocking {
             // ACT: Read all interfaces immediately after database creation
-            // This mimics ColumbaApplication.kt:90
+            // This mimics ZamolxisApplication.kt:90
             val allInterfaces = interfaceDao.getAllInterfaces().first()
 
             // ASSERT: Database should have default interfaces
@@ -110,7 +110,7 @@ class InterfaceDatabaseRaceConditionTest {
     /**
      * Test Case 2: Verify enabled interfaces are available for config generation.
      *
-     * This simulates the exact flow in ColumbaApplication where enabled interfaces
+     * This simulates the exact flow in ZamolxisApplication where enabled interfaces
      * are read and passed to ReticulumService for config generation.
      *
      * EXPECTED: This test FAILS before the fix (AndroidBLE missing)
@@ -119,7 +119,7 @@ class InterfaceDatabaseRaceConditionTest {
     @Test
     fun testEnabledInterfacesAvailableForConfigGeneration() =
         runBlocking {
-            // ACT: Read enabled interfaces (mimics ColumbaApplication.kt:90)
+            // ACT: Read enabled interfaces (mimics ZamolxisApplication.kt:90)
             val enabledInterfaces = interfaceDao.getEnabledInterfaces().first()
 
             // ASSERT: Should have at least one enabled interface (AndroidBLE by default)

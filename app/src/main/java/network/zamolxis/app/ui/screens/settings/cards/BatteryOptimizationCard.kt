@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -43,16 +43,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.ui.components.LocalCapabilities
-import network.columba.app.util.BatteryOptimizationManager
+import network.zamolxis.app.R
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.ui.components.LocalCapabilities
+import network.zamolxis.app.util.BatteryOptimizationManager
 
 @Composable
 fun BatteryOptimizationCard(
@@ -143,13 +146,13 @@ fun BatteryOptimizationCard(
                     )
                     Column {
                         Text(
-                            text = "Battery & Background",
+                            text = stringResource(R.string.battery_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = contentColor,
                         )
                         Text(
-                            text = batteryProfile.displayName,
+                            text = batteryProfileDisplayName(batteryProfile),
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor,
                         )
@@ -158,7 +161,12 @@ fun BatteryOptimizationCard(
 
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription =
+                        if (isExpanded) {
+                            stringResource(R.string.common_collapse)
+                        } else {
+                            stringResource(R.string.common_expand)
+                        },
                     tint = contentColor,
                 )
             }
@@ -171,7 +179,7 @@ fun BatteryOptimizationCard(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (batteryProfileTuningSupported) {
                         Text(
-                            text = "Choose how aggressively Columba should run native Reticulum in the background. Changes apply immediately.",
+                            text = stringResource(R.string.battery_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = contentColor,
                         )
@@ -204,12 +212,12 @@ fun BatteryOptimizationCard(
                                                     .weight(1f),
                                         ) {
                                             Text(
-                                                text = profile.displayName,
+                                                text = batteryProfileDisplayName(profile),
                                                 style = MaterialTheme.typography.titleSmall,
                                                 color = contentColor,
                                             )
                                             Text(
-                                                text = profile.description,
+                                                text = batteryProfileDescription(profile),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = contentColor.copy(alpha = 0.9f),
                                             )
@@ -229,7 +237,7 @@ fun BatteryOptimizationCard(
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                     } else if (isExempted) {
                         Text(
-                            text = "Battery optimization exemption granted. Columba can run more reliably in the background during deep idle.",
+                            text = stringResource(R.string.battery_exemption_granted),
                             style = MaterialTheme.typography.bodyMedium,
                             color = contentColor,
                         )
@@ -243,14 +251,11 @@ fun BatteryOptimizationCard(
                         ) {
                             Icon(Icons.Default.Settings, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("View Battery Settings")
+                            Text(stringResource(R.string.battery_view_settings))
                         }
                     } else {
                         Text(
-                            text =
-                                "Android battery optimization is still enabled. The battery profile above reduces " +
-                                    "background work, but Android may still delay or kill background networking " +
-                                    "unless Columba is exempted.",
+                            text = stringResource(R.string.battery_still_enabled),
                             style = MaterialTheme.typography.bodyMedium,
                             color = contentColor,
                         )
@@ -265,7 +270,7 @@ fun BatteryOptimizationCard(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                         ) {
-                            Text("Request Exemption")
+                            Text(stringResource(R.string.battery_request_exemption))
                         }
 
                         TextButton(
@@ -275,7 +280,7 @@ fun BatteryOptimizationCard(
                             },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text("Open Battery Settings Manually")
+                            Text(stringResource(R.string.battery_open_manually))
                         }
                     }
                 }
@@ -283,3 +288,23 @@ fun BatteryOptimizationCard(
         }
     }
 }
+
+@Composable
+private fun batteryProfileDisplayName(profile: BatteryProfile): String =
+    stringResource(
+        when (profile) {
+            BatteryProfile.MAXIMUM_BATTERY -> R.string.battery_profile_max
+            BatteryProfile.BALANCED -> R.string.battery_profile_balanced
+            BatteryProfile.PERFORMANCE -> R.string.battery_profile_performance
+        },
+    )
+
+@Composable
+private fun batteryProfileDescription(profile: BatteryProfile): String =
+    stringResource(
+        when (profile) {
+            BatteryProfile.MAXIMUM_BATTERY -> R.string.battery_profile_max_desc
+            BatteryProfile.BALANCED -> R.string.battery_profile_balanced_desc
+            BatteryProfile.PERFORMANCE -> R.string.battery_profile_performance_desc
+        },
+    )

@@ -1,4 +1,4 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import android.app.Application
 import android.content.Context
@@ -10,15 +10,15 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import network.columba.app.data.crypto.IdentityKeyEncryptor
-import network.columba.app.data.crypto.IdentityKeyProvider
-import network.columba.app.data.database.InterfaceDatabase
-import network.columba.app.data.database.dao.InterfaceDao
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.CallHistoryEntity
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.service.PropagationNodeManager
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
+import network.zamolxis.app.data.crypto.IdentityKeyProvider
+import network.zamolxis.app.data.database.InterfaceDatabase
+import network.zamolxis.app.data.database.dao.InterfaceDao
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.service.PropagationNodeManager
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -35,13 +35,13 @@ import java.io.File
 @Suppress("NoRelaxedMocks") // External migration collaborators are irrelevant to the Room round-trip assertions.
 class MigrationCallHistoryRoundTripTest {
     private lateinit var context: Context
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var importer: MigrationImporter
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        database = Room.inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java).allowMainThreadQueries().build()
+        database = Room.inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java).allowMainThreadQueries().build()
         val interfaceDao = mockk<InterfaceDao>(relaxed = true)
         every { interfaceDao.getAllInterfaces() } returns flowOf(emptyList())
         val interfaceDatabase = mockk<InterfaceDatabase>(relaxed = true)
@@ -76,7 +76,7 @@ class MigrationCallHistoryRoundTripTest {
         }
 
     private suspend fun assertProductionExportRoundTrip(exportPassword: CharArray?) {
-        val source = Room.inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java).allowMainThreadQueries().build()
+        val source = Room.inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java).allowMainThreadQueries().build()
         try {
             source.localIdentityDao().insert(identity().copy(keyData = ByteArray(64) { it.toByte() }))
             // Every reduced outcome: outgoing
@@ -154,7 +154,7 @@ class MigrationCallHistoryRoundTripTest {
     @Test
     fun `deletion authority round trips and suppresses later re-import`() =
         runTest {
-            val source = Room.inMemoryDatabaseBuilder(context, ColumbaDatabase::class.java).allowMainThreadQueries().build()
+            val source = Room.inMemoryDatabaseBuilder(context, ZamolxisDatabase::class.java).allowMainThreadQueries().build()
             try {
                 source.localIdentityDao().insert(identity().copy(keyData = ByteArray(64) { it.toByte() }))
                 insertCall(source, "deleted-call", connectedAt = 120L, outcome = "CONNECTED_ENDED")
@@ -209,7 +209,7 @@ class MigrationCallHistoryRoundTripTest {
         }
 
     private suspend fun insertCall(
-        db: ColumbaDatabase,
+        db: ZamolxisDatabase,
         callAttemptId: String,
         direction: String = "OUTGOING",
         connectedAt: Long?,
@@ -254,7 +254,7 @@ class MigrationCallHistoryRoundTripTest {
         )
 
     private fun writeTempFile(bytes: ByteArray): Uri {
-        val file = File.createTempFile("call_history_transfer_", ".columba", context.cacheDir)
+        val file = File.createTempFile("call_history_transfer_", ".zamolxis", context.cacheDir)
         file.writeBytes(bytes)
         file.deleteOnExit()
         return Uri.fromFile(file)

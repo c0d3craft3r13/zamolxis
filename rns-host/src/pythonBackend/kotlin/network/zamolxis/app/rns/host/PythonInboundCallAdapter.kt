@@ -2,18 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-package network.columba.app.rns.host
+package network.zamolxis.app.rns.host
 
 import android.util.Log
 import com.chaquo.python.PyObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.call.AcceptedCallLifecycle
-import network.columba.app.rns.api.call.CallAttemptDirection
-import network.columba.app.rns.api.call.CallAttemptRequest
-import network.columba.app.rns.backend.py.PyEventCallback
-import network.columba.app.rns.backend.py.PyTwoArgCallback
-import network.columba.app.rns.backend.py.PythonRnsRuntime
+import network.zamolxis.app.rns.api.call.AcceptedCallLifecycle
+import network.zamolxis.app.rns.api.call.CallAttemptDirection
+import network.zamolxis.app.rns.api.call.CallAttemptRequest
+import network.zamolxis.app.rns.backend.py.PyEventCallback
+import network.zamolxis.app.rns.backend.py.PyTwoArgCallback
+import network.zamolxis.app.rns.backend.py.PythonRnsRuntime
 import org.msgpack.core.MessagePack
 import tech.torlando.lxst.audio.Signalling
 import tech.torlando.lxst.telephone.Telephone
@@ -24,7 +24,7 @@ import tech.torlando.lxst.telephone.Telephone
  * Reduced version of the donor adapter: no transport session IDs, no rejected-link
  * history owners, no Telephone session machinery. Accepted incoming calls are made
  * durable through the shared [AcceptedCallLifecycle] owner BEFORE the ringing callback
- * / UI is exposed. Admission failures (another Columba attempt still owns terminal
+ * / UI is exposed. Admission failures (another Zamolxis attempt still owns terminal
  * processing, or a durable insert failure) tear the link down without creating any
  * history or ringing.
  */

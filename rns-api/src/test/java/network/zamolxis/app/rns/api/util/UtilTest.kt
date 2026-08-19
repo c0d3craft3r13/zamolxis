@@ -1,7 +1,7 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.NodeType
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.NodeType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull

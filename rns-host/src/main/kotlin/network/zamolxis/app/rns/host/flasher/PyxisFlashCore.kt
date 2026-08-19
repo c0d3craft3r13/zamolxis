@@ -1,6 +1,6 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
-import network.columba.app.rns.host.usb.UsbDeviceInfo
+import network.zamolxis.app.rns.host.usb.UsbDeviceInfo
 import java.io.InputStream
 
 /** Narrow seam around ESPTool used by the persistence-safe Pyxis updater. */

@@ -1,10 +1,10 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.DebugInfo
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.DebugInfo
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain

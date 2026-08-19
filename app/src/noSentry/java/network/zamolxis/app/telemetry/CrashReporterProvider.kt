@@ -1,4 +1,4 @@
-package network.columba.app.telemetry
+package network.zamolxis.app.telemetry
 
 /**
  * Flavor-bound factory. The `noSentry` flavor returns a no-op reporter, ensuring no

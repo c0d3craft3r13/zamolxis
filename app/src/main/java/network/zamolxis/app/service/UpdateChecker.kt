@@ -1,7 +1,7 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
 import android.util.Log
-import network.columba.app.BuildConfig
+import network.zamolxis.app.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -37,8 +37,8 @@ class UpdateChecker
     constructor() {
         companion object {
             private const val TAG = "UpdateChecker"
-            private const val OWNER = "torlando-tech"
-            private const val REPO = "columba"
+            private const val OWNER = "c0d3craft3r13"
+            private const val REPO = "zamolxis"
             private const val TIMEOUT_MS = 10_000
         }
 
@@ -97,7 +97,7 @@ class UpdateChecker
             connection.readTimeout = TIMEOUT_MS
             connection.setRequestProperty("Accept", "application/vnd.github+json")
             connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28")
-            connection.setRequestProperty("User-Agent", "Columba/${BuildConfig.VERSION_NAME}")
+            connection.setRequestProperty("User-Agent", "Zamolxis/${BuildConfig.VERSION_NAME}")
             try {
                 val responseCode = connection.responseCode
                 if (responseCode != HttpURLConnection.HTTP_OK) {

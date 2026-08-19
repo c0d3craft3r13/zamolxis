@@ -1,4 +1,4 @@
-package network.columba.app.audio
+package network.zamolxis.app.audio
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
@@ -10,8 +10,8 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import network.columba.app.ui.model.AudioAttachmentMode
-import network.columba.app.ui.model.AudioAttachmentUi
+import network.zamolxis.app.ui.model.AudioAttachmentMode
+import network.zamolxis.app.ui.model.AudioAttachmentUi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.call
+package network.zamolxis.app.rns.api.call
 
 /**
  * Reduced call-history domain model for the rebuilt feature.
@@ -8,7 +8,7 @@ package network.columba.app.rns.api.call
  * generic ending cannot be distinguished as clean or dropped. Before connection, explicit
  * local decline or cancellation, explicit remote rejection or busy, and explicit incoming
  * missed are valid; every other generic pre-connection ending becomes `NOT_CONNECTED`.
- * `FAILED` is reserved for failures Columba independently observes before or outside LXST
+ * `FAILED` is reserved for failures Zamolxis independently observes before or outside LXST
  * ownership; it is never inferred from a generic LXST ending. `UNANSWERED`,
  * `DROPPED`, and media/transport terminal causes are not authoritative persisted
  * outcomes because Python LXST does not expose enough information to classify them.
@@ -34,7 +34,7 @@ enum class CallFinalOutcome {
 }
 
 /**
- * Sanitized reason for a `FAILED` attempt, restricted to prerequisites Columba can
+ * Sanitized reason for a `FAILED` attempt, restricted to prerequisites Zamolxis can
  * independently observe before LXST accepts the call or from its own checks. Transport,
  * media, protocol, and internal-termination causes are excluded because Python LXST cannot
  * classify them for call history.
@@ -168,7 +168,7 @@ interface CallLifecycleRecorder {
         outcome: UnconnectedOutcome,
     ): Result<Unit>
 
-    /** Persist `FAILED` for a prerequisite Columba independently observed before acceptance. */
+    /** Persist `FAILED` for a prerequisite Zamolxis independently observed before acceptance. */
     suspend fun failCallAttempt(
         callAttemptId: String,
         failureReason: CallFailureReason,

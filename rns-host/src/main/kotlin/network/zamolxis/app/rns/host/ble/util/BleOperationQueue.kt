@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.ble.util
+package network.zamolxis.app.rns.host.ble.util
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
@@ -6,7 +6,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.os.Build
 import android.util.Log
-import network.columba.app.rns.host.ble.model.BleConstants
+import network.zamolxis.app.rns.host.ble.model.BleConstants
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -45,7 +45,7 @@ class BleOperationQueue(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
 ) {
     companion object {
-        private const val TAG = "Columba:BLE:K:Queue"
+        private const val TAG = "Zamolxis:BLE:K:Queue"
         private const val DEFAULT_TIMEOUT_MS = BleConstants.OPERATION_TIMEOUT_MS
     }
 

@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 /**
  * Represents a file attachment for LXMF messages.

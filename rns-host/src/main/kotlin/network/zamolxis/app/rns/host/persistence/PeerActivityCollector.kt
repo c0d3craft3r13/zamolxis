@@ -1,17 +1,17 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import network.columba.app.data.db.entity.PeerActivityType
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.util.AppDataParser
-import network.columba.app.rns.host.util.PeerNameResolver
+import network.zamolxis.app.data.db.entity.PeerActivityType
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.util.AppDataParser
+import network.zamolxis.app.rns.host.util.PeerNameResolver
 import org.json.JSONObject
 
 /**

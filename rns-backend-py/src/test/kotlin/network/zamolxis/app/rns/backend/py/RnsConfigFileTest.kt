@@ -1,7 +1,7 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -99,9 +99,9 @@ class RnsConfigFileTest {
 
     @Test
     fun `AndroidBLE includes device_name when set`() {
-        val ble = InterfaceConfig.AndroidBLE(deviceName = "Columba1")
+        val ble = InterfaceConfig.AndroidBLE(deviceName = "Zamolxis1")
         val out = RnsConfigFile.build(cfg(interfaces = listOf(ble)))
-        assertTrue(out.contains("device_name = Columba1"))
+        assertTrue(out.contains("device_name = Zamolxis1"))
     }
 
     @Test

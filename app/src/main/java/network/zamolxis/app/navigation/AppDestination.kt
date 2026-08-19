@@ -1,7 +1,7 @@
-package network.columba.app.navigation
+package network.zamolxis.app.navigation
 
 /**
- * Canonical registry for every destination in Columba's application NavHost.
+ * Canonical registry for every destination in Zamolxis's application NavHost.
  *
  * [sampleRoute] is a concrete, navigable route used by the global Back contract
  * tests. New destinations must be registered here and through `appComposable`

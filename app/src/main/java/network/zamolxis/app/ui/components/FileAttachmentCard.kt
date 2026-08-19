@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,13 +14,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.model.FileAttachmentUi
-import network.columba.app.ui.theme.ColumbaTheme
-import network.columba.app.util.FileUtils
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.model.FileAttachmentUi
+import network.zamolxis.app.ui.theme.ZamolxisTheme
+import network.zamolxis.app.util.FileUtils
 
 /**
  * Card component for displaying file attachments in messages.
@@ -66,7 +68,7 @@ fun FileAttachmentCard(
             // File type icon
             Icon(
                 imageVector = FileUtils.getFileIconForMimeType(attachment.mimeType),
-                contentDescription = "File type: ${attachment.mimeType}",
+                contentDescription = stringResource(R.string.fileattach_cd_type, attachment.mimeType),
                 modifier = Modifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -100,7 +102,7 @@ fun FileAttachmentCard(
 @Preview(showBackground = true, backgroundColor = 0xFFF5F5F5)
 @Composable
 private fun FileAttachmentCardPreview() {
-    ColumbaTheme {
+    ZamolxisTheme {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),

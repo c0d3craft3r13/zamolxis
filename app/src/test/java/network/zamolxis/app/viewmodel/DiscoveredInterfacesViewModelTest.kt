@@ -1,17 +1,17 @@
 @file:Suppress("InjectDispatcher")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.api.model.DiscoveredInterface
-import network.columba.app.service.InterfaceConfigManager
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
+import network.zamolxis.app.service.InterfaceConfigManager
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -1202,19 +1202,19 @@ class DiscoveredInterfacesViewModelTest {
         runTest {
             val interfaces =
                 listOf(
-                    createTestDiscoveredInterface(name = "Columba Node Alpha", reachableOn = "10.0.0.1"),
+                    createTestDiscoveredInterface(name = "Zamolxis Node Alpha", reachableOn = "10.0.0.1"),
                     createTestDiscoveredInterface(name = "Some Other Interface", reachableOn = "10.0.0.2"),
                 )
             coEvery { reticulumProtocol.getDiscoveredInterfaces() } returns interfaces
             viewModel = createViewModel()
             advanceUntilIdle()
 
-            viewModel.setSearchQuery("columba")
+            viewModel.setSearchQuery("zamolxis")
 
             val state = viewModel.state.value
-            assertEquals("columba", state.searchQuery)
+            assertEquals("zamolxis", state.searchQuery)
             assertEquals(1, state.interfaces.size)
-            assertEquals("Columba Node Alpha", state.interfaces[0].name)
+            assertEquals("Zamolxis Node Alpha", state.interfaces[0].name)
         }
 
     @Test

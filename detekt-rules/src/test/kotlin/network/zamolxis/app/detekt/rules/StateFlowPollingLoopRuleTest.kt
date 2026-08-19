@@ -1,4 +1,4 @@
-package network.columba.app.detekt.rules
+package network.zamolxis.app.detekt.rules
 
 import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.test.lint
@@ -197,7 +197,7 @@ class StateFlowPollingLoopRuleTest {
     fun `detects pattern from CallViewModel - exact match`() {
         val code =
             """
-            package network.columba.app.viewmodel
+            package network.zamolxis.app.viewmodel
 
             import kotlinx.coroutines.delay
             import kotlinx.coroutines.launch

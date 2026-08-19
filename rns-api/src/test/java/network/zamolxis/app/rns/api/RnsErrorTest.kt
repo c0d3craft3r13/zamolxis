@@ -1,4 +1,4 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals

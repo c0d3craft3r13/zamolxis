@@ -1,7 +1,7 @@
-package network.columba.app
+package network.zamolxis.app
 
 import android.content.Intent
-import network.columba.app.notifications.NotificationHelper
+import network.zamolxis.app.notifications.NotificationHelper
 import java.util.concurrent.atomic.AtomicLong
 
 /**

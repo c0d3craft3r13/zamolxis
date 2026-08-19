@@ -1,4 +1,4 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 /**
  * Generates a default display name from an identity hash.

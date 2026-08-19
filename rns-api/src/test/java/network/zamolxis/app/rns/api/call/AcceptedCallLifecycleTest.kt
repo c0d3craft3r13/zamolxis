@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.call
+package network.zamolxis.app.rns.api.call
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -210,7 +210,7 @@ class AcceptedCallLifecycleTest {
         }
 
     @Test
-    fun `failCallAttempt persists Columba observed reason`() =
+    fun `failCallAttempt persists Zamolxis observed reason`() =
         runTest {
             val recorder = RecordingLifecycleRecorder()
             val (lifecycle, _) = newLifecycle(recorder)

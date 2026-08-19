@@ -32,7 +32,7 @@ class Receiver:
             Any,
             self.router.register_delivery_identity(
                 self.identity,
-                display_name="Columba CI Receiver",
+                display_name="Zamolxis CI Receiver",
                 stamp_cost=None,
             ),
         )
@@ -52,7 +52,7 @@ class Receiver:
   loglevel = 6
 
 [interfaces]
-  [[Columba E2E TCP Server]]
+  [[Zamolxis E2E TCP Server]]
     type = TCPServerInterface
     enabled = Yes
     listen_ip = 127.0.0.1

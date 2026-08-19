@@ -1,6 +1,6 @@
-package network.columba.app.rns.api.util
+package network.zamolxis.app.rns.api.util
 
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

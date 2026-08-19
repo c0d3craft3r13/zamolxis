@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -6,8 +6,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import network.columba.app.service.SyncProgress
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.service.SyncProgress
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

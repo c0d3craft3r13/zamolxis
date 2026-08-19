@@ -1,15 +1,15 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.LogLevel
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.ReticulumConfig
-import network.columba.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.LogLevel
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.RnsCore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Main ViewModel for the Columba application.
+ * Main ViewModel for the Zamolxis application.
  * Demonstrates integration with the Reticulum abstraction layer.
  */
 @HiltViewModel
@@ -41,7 +41,7 @@ class MainViewModel
 
                 val config =
                     ReticulumConfig(
-                        storagePath = "/tmp/columba",
+                        storagePath = "/tmp/zamolxis",
                         enabledInterfaces = listOf(InterfaceConfig.AutoInterface()),
                         logLevel = LogLevel.INFO,
                     )
@@ -88,7 +88,7 @@ class MainViewModel
                     identity = identity,
                     direction = Direction.OUT,
                     type = DestinationType.SINGLE,
-                    appName = "columba.test",
+                    appName = "zamolxis.test",
                     aspects = listOf("test"),
                 ).onSuccess { destination ->
                     // Send a test packet

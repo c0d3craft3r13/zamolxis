@@ -1,4 +1,4 @@
-package network.columba.app.test
+package network.zamolxis.app.test
 
 import android.content.Context
 import android.util.Log
@@ -14,25 +14,25 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.model.InterfaceConfig
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.DeliveryStatusUpdate
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.ReceivedMessage
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.rns.api.util.LxmfFields
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.service.InterfaceConfigManager
+import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.rns.api.util.LxmfFields
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.service.InterfaceConfigManager
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.security.MessageDigest
 
 /**
- * Debug-only test surface for the columba phone harness.
+ * Debug-only test surface for the zamolxis phone harness.
  *
  * Lazy-initialized on the first broadcast received by [TestReceiver]. Binds
  * to [RnsCore] + [RnsLxmf] via Hilt's entry-point pattern (sub-interfaces are
@@ -331,9 +331,9 @@ object TestController {
      */
     private fun parseTestLocationJson(
         json: String,
-    ): network.columba.app.rns.api.model.LocationTelemetry? = runCatching {
+    ): network.zamolxis.app.rns.api.model.LocationTelemetry? = runCatching {
         val o = org.json.JSONObject(json)
-        network.columba.app.rns.api.model.LocationTelemetry(
+        network.zamolxis.app.rns.api.model.LocationTelemetry(
             lat = o.optDouble("lat", 0.0),
             lng = o.optDouble("lng", o.optDouble("lon", 0.0)),
             acc = o.optDouble("acc", o.optDouble("accuracy", 0.0)).toFloat(),
@@ -349,7 +349,7 @@ object TestController {
 
     /**
      * Send a text + `FIELD_IMAGE` payload via DIRECT. Used by the
-     * Columba↔Sideband interop suite — the suite stages the image bytes
+     * Zamolxis↔Sideband interop suite — the suite stages the image bytes
      * into `path` via `adb push` then broadcasts SEND_IMAGE.
      */
     fun handleSendImage(
@@ -376,7 +376,7 @@ object TestController {
 
     /**
      * Send a text + `FIELD_FILE_ATTACHMENTS` payload via DIRECT. `name` is
-     * the on-wire filename Sideband / Columba surfaces in the receive UI.
+     * the on-wire filename Sideband / Zamolxis surfaces in the receive UI.
      */
     fun handleSendFile(
         context: Context,
@@ -429,7 +429,7 @@ object TestController {
 
     /**
      * Send a text payload with `FIELD_ICON_APPEARANCE` set. The icon
-     * appearance is the same triple Sideband / Columba surface in the UI
+     * appearance is the same triple Sideband / Zamolxis surface in the UI
      * for sender chrome.
      */
     fun handleSendIcon(
@@ -466,7 +466,7 @@ object TestController {
         eventTag: String,
         toHex: String,
         text: String,
-        sender: suspend (network.columba.app.rns.api.model.Identity, ByteArray) -> Result<network.columba.app.rns.api.model.MessageReceipt>,
+        sender: suspend (network.zamolxis.app.rns.api.model.Identity, ByteArray) -> Result<network.zamolxis.app.rns.api.model.MessageReceipt>,
     ) {
         ensureInit(context)
         scope.launch {
@@ -542,8 +542,8 @@ object TestController {
 
     /** Force an announce of the active LXMF destination. Critical for the
      * harness — peers can't echo back to the phone until they've seen its
-     * announce, and Columba may not announce on a fresh interface for a
-     * while. Rate-limited internally by Columba ("minimum interval between
+     * announce, and Zamolxis may not announce on a fresh interface for a
+     * while. Rate-limited internally by Zamolxis ("minimum interval between
      * announces"); on success the reply is `announced dest=<hex>`, on
      * failure it's `announce_err dest=<hex> reason=<msg>` (or
      * `announce_err reason=no_active_destination` before LXMF is up). */
@@ -558,7 +558,7 @@ object TestController {
             // through announceDestination() can fail after a debug-package reinstall
             // if UI identity records were reset while the backend retained its active
             // LXMF destination.
-            val result = rnsCore!!.triggerAutoAnnounce("Columba Android BLE Physical Test")
+            val result = rnsCore!!.triggerAutoAnnounce("Zamolxis Android BLE Physical Test")
             if (result.isSuccess) {
                 Log.i(LOGCAT_TAG, "announced dest=${dest.hexHash}")
             } else {

@@ -2,14 +2,14 @@
 // NoRelaxedMocks: Context, BluetoothManager, BluetoothAdapter are Android framework classes
 @file:Suppress("NoVerifyOnlyTests", "NoRelaxedMocks")
 
-package network.columba.app.rns.host.ble.bridge
+package network.zamolxis.app.rns.host.ble.bridge
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
-import network.columba.app.rns.host.ble.client.BleGattClient
-import network.columba.app.rns.host.ble.client.BleScanner
-import network.columba.app.rns.host.ble.server.BleGattServer
+import network.zamolxis.app.rns.host.ble.client.BleGattClient
+import network.zamolxis.app.rns.host.ble.client.BleScanner
+import network.zamolxis.app.rns.host.ble.server.BleGattServer
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -306,11 +306,11 @@ class KotlinBLEBridgeSendRaceConditionTest {
     ) {
         val peerConnectionClass =
             Class.forName(
-                "network.columba.app.rns.host.ble.bridge.KotlinBLEBridge\$PeerConnection",
+                "network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge\$PeerConnection",
             )
         val deduplicationStateClass =
             Class.forName(
-                "network.columba.app.rns.host.ble.bridge.KotlinBLEBridge\$DeduplicationState",
+                "network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge\$DeduplicationState",
             )
         val constructor =
             peerConnectionClass.getDeclaredConstructor(
@@ -364,7 +364,7 @@ class KotlinBLEBridgeSendRaceConditionTest {
     ) {
         val deduplicationStateClass =
             Class.forName(
-                "network.columba.app.rns.host.ble.bridge.KotlinBLEBridge\$DeduplicationState",
+                "network.zamolxis.app.rns.host.ble.bridge.KotlinBLEBridge\$DeduplicationState",
             )
         val stateEnum = deduplicationStateClass.enumConstants!!.first { it.toString() == stateName }
 

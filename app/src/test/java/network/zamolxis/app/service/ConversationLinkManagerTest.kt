@@ -1,6 +1,6 @@
-package network.columba.app.service
+package network.zamolxis.app.service
 
-import network.columba.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.data.model.ImageCompressionPreset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -364,9 +364,9 @@ class ConversationLinkManagerTest {
     fun `refreshAllLinkStatuses does not cleanup entry that becomes active during refresh`() =
         kotlinx.coroutines.test.runTest {
             // Given: A mock protocol that returns "active" when queried
-            val mockProtocol = io.mockk.mockk<network.columba.app.rns.api.RnsCore>()
+            val mockProtocol = io.mockk.mockk<network.zamolxis.app.rns.api.RnsCore>()
             io.mockk.coEvery { mockProtocol.getConversationLinkStatus(any()) } returns
-                network.columba.app.rns.api.model.ConversationLinkResult(
+                network.zamolxis.app.rns.api.model.ConversationLinkResult(
                     isActive = true, // Peer established link to us!
                     establishmentRateBps = 100_000L,
                     expectedRateBps = null,
@@ -379,7 +379,7 @@ class ConversationLinkManagerTest {
             val manager =
                 ConversationLinkManager(
                     mockProtocol,
-                    io.mockk.mockk<network.columba.app.data.repository.PeerActivityRepository>(relaxed = true),
+                    io.mockk.mockk<network.zamolxis.app.data.repository.PeerActivityRepository>(relaxed = true),
                 )
 
             // Set up an inactive, stale entry (would normally be cleaned up)
@@ -403,10 +403,10 @@ class ConversationLinkManagerTest {
 
     @Test
     fun `successful link records durable peer activity`() {
-        val rnsCore = io.mockk.mockk<network.columba.app.rns.api.RnsCore>()
-        val repository = io.mockk.mockk<network.columba.app.data.repository.PeerActivityRepository>(relaxed = true)
+        val rnsCore = io.mockk.mockk<network.zamolxis.app.rns.api.RnsCore>()
+        val repository = io.mockk.mockk<network.zamolxis.app.data.repository.PeerActivityRepository>(relaxed = true)
         io.mockk.coEvery { rnsCore.establishConversationLink(any(), any()) } returns
-            Result.success(network.columba.app.rns.api.model.ConversationLinkResult(isActive = true))
+            Result.success(network.zamolxis.app.rns.api.model.ConversationLinkResult(isActive = true))
         val manager = ConversationLinkManager(rnsCore, repository)
 
         manager.openConversationLink("00112233445566778899aabbccddeeff")
@@ -415,7 +415,7 @@ class ConversationLinkManagerTest {
             repository.recordActivity(
                 "00112233445566778899aabbccddeeff",
                 any(),
-                network.columba.app.data.db.entity.PeerActivityType.LINK,
+                network.zamolxis.app.data.db.entity.PeerActivityType.LINK,
             )
         }
         assertTrue(manager.getLinkState("00112233445566778899aabbccddeeff")?.isActive == true)
@@ -423,8 +423,8 @@ class ConversationLinkManagerTest {
 
     @Test
     fun `failed link probe does not record peer activity`() {
-        val rnsCore = io.mockk.mockk<network.columba.app.rns.api.RnsCore>()
-        val repository = io.mockk.mockk<network.columba.app.data.repository.PeerActivityRepository>(relaxed = true)
+        val rnsCore = io.mockk.mockk<network.zamolxis.app.rns.api.RnsCore>()
+        val repository = io.mockk.mockk<network.zamolxis.app.data.repository.PeerActivityRepository>(relaxed = true)
         io.mockk.coEvery { rnsCore.establishConversationLink(any(), any()) } returns
             Result.failure(IllegalStateException("offline"))
         val manager = ConversationLinkManager(rnsCore, repository)

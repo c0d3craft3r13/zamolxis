@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Device Verification Script for Columba
+# Device Verification Script for Zamolxis
 #
 # This script builds the debug APK, installs it on a connected Android device,
 # runs smoke tests, and captures logs/screenshots on failure.
@@ -43,7 +43,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Output directory for artifacts
-OUTPUT_DIR="/tmp/columba-verify"
+OUTPUT_DIR="/tmp/zamolxis-verify"
 mkdir -p "$OUTPUT_DIR"
 
 # JAVA_HOME resolution: honour any explicit env, else try the bundled
@@ -201,7 +201,7 @@ run_smoke_tests() {
     fi
 
     # Run specific smoke test if it exists, otherwise run all androidTests
-    TEST_CLASS="network.columba.app.smoke.SmokeTest"
+    TEST_CLASS="network.zamolxis.app.smoke.SmokeTest"
 
     log_info "Running instrumented tests..."
     if ./gradlew :app:connectedNoSentryDebugAndroidTest \
@@ -228,7 +228,7 @@ capture_debug_info() {
     # Logcat (last 1000 lines, filtered for our app)
     log_info "Capturing logcat..."
     adb -s "$DEVICE_SERIAL" logcat -d -t 1000 \
-        --pid=$(adb -s "$DEVICE_SERIAL" shell pidof network.columba.app 2>/dev/null || echo "0") \
+        --pid=$(adb -s "$DEVICE_SERIAL" shell pidof network.zamolxis.app 2>/dev/null || echo "0") \
         > "$OUTPUT_DIR/logcat_${timestamp}.log" 2>/dev/null || true
 
     # Full logcat for comprehensive debugging
@@ -245,7 +245,7 @@ capture_debug_info() {
 
 # Main execution
 main() {
-    log_info "=== Columba Device Verification ==="
+    log_info "=== Zamolxis Device Verification ==="
     log_info "Output directory: $OUTPUT_DIR"
 
     # Step 1: Find device

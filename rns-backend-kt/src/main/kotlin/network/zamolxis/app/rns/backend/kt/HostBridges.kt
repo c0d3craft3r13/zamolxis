@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.content.Context
 import java.io.InputStream
@@ -56,7 +56,7 @@ interface RNodeHostBridge {
     ): Pair<InputStream, OutputStream>
 
     /**
-     * Optional RNode framebuffer image data (typically the Columba logo).
+     * Optional RNode framebuffer image data (typically the Zamolxis logo).
      * Returned as a flat byte array sized for the RNode's small OLED panel.
      * Null disables the framebuffer feature for this connection.
      */

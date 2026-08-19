@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 import android.content.Context
 import io.mockk.clearAllMocks
@@ -7,11 +7,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.dao.ContactDao
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.rns.host.di.ServiceDatabaseProvider
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.dao.ContactDao
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.rns.host.di.ServiceDatabaseProvider
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -28,7 +28,7 @@ import org.junit.Test
  */
 class CallsFromContactsGateTest {
     private lateinit var context: Context
-    private lateinit var database: ColumbaDatabase
+    private lateinit var database: ZamolxisDatabase
     private lateinit var contactDao: ContactDao
     private lateinit var localIdentityDao: LocalIdentityDao
     private lateinit var settingsAccessor: ServiceSettingsAccessor

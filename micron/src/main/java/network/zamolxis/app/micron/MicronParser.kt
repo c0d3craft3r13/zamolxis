@@ -1,4 +1,4 @@
-package network.columba.app.micron
+package network.zamolxis.app.micron
 
 /**
  * Parser for Micron markup language used by NomadNet.

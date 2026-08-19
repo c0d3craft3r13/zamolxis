@@ -1,6 +1,6 @@
 @file:Suppress("MatchingDeclarationName")
 
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -38,13 +38,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.service.ConversationLinkManager
+import network.zamolxis.app.R
+import network.zamolxis.app.service.ConversationLinkManager
 import java.util.Locale
 
 /**
@@ -98,7 +101,7 @@ fun <T> QualitySelectionDialog(
     linkState: ConversationLinkManager.LinkState? = null,
     isProbing: Boolean = false,
     transferTimeEstimates: Map<T, String?>? = null,
-    confirmButtonText: String = "Confirm",
+    confirmButtonText: String = stringResource(R.string.common_confirm),
     onConfirm: (T) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -171,7 +174,7 @@ fun <T> QualitySelectionDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -198,26 +201,28 @@ fun PathInfoSection(
         when {
             // isProbing takes precedence over linkState being null so the
             // dialog can render the probing card immediately on open.
-            isProbing -> "Probing link..."
+            isProbing -> stringResource(R.string.quality_probing)
             linkState == null -> null
-            linkState.isEstablishing -> "Connecting..."
+            linkState.isEstablishing -> stringResource(R.string.messaging_connecting)
             linkState.isActive -> {
+                val hopsText = linkState.hops?.let { pluralStringResource(R.plurals.msgdetail_hops, it, it) }
+                val mtuText = linkState.linkMtu?.let { stringResource(R.string.quality_mtu, it) }
                 buildString {
-                    linkState.hops?.let { append("$it hops") }
+                    hopsText?.let { append(it) }
 
                     linkState.bestRateBps?.let { rate ->
                         if (isNotEmpty()) append(" • ")
                         append(formatBitrate(rate))
                     }
 
-                    linkState.linkMtu?.let { mtu ->
+                    mtuText?.let {
                         if (isNotEmpty()) append(" • ")
-                        append("${mtu}B MTU")
+                        append(it)
                     }
                 }.ifEmpty { null }
             }
-            linkState.error != null -> "Connection failed"
-            else -> "No active link"
+            linkState.error != null -> stringResource(R.string.quality_conn_failed)
+            else -> stringResource(R.string.quality_no_link)
         }
 
     if (pathInfo != null) {
@@ -355,7 +360,7 @@ fun QualityOptionRow(
 fun RecommendedChip() {
     Icon(
         imageVector = Icons.Filled.Star,
-        contentDescription = "Recommended",
+        contentDescription = stringResource(R.string.rnode_preset_recommended),
         modifier = Modifier.height(18.dp),
         tint = MaterialTheme.colorScheme.primary,
     )
@@ -368,7 +373,7 @@ fun RecommendedChip() {
 fun ExperimentalChip() {
     Icon(
         imageVector = Icons.Filled.Warning,
-        contentDescription = "Experimental",
+        contentDescription = stringResource(R.string.quality_experimental),
         modifier = Modifier.height(18.dp),
         tint = MaterialTheme.colorScheme.tertiary,
     )

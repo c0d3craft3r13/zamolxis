@@ -1,9 +1,9 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import android.util.Log
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.data.db.entity.CallHistoryDeletionEntity
-import network.columba.app.data.db.entity.CallHistoryEntity
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.entity.CallHistoryDeletionEntity
+import network.zamolxis.app.data.db.entity.CallHistoryEntity
 
 /**
  * Reduced call-history migration importer.
@@ -12,12 +12,12 @@ import network.columba.app.data.db.entity.CallHistoryEntity
  * `MISSED_INCOMING`, `DECLINED_LOCAL`, `REJECTED_REMOTE`, `BUSY_REMOTE`,
  * `CANCELLED_LOCAL`, `NOT_CONNECTED`, `FAILED`, and `INTERRUPTED`.
  * Authoritative `UNANSWERED`, `DROPPED`, and media/transport causes are
- * rejected. `FAILED` carries only a reduced Columba-observed prerequisite reason.
+ * rejected. `FAILED` carries only a reduced Zamolxis-observed prerequisite reason.
  * Import is additive and idempotent by attempt ID; conflicting rows are skipped and
  * diagnosed; malformed input fails transactionally without partial history.
  */
 internal class CallHistoryMigrationImporter(
-    private val database: ColumbaDatabase,
+    private val database: ZamolxisDatabase,
 ) {
     data class Result(
         val imported: Int,

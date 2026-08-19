@@ -1,15 +1,15 @@
-package network.columba.app
+package network.zamolxis.app
 
 import android.app.Application
 import android.content.Intent
 import android.view.WindowManager
 import dagger.hilt.android.EntryPointAccessors
-import network.columba.app.di.RnsTelephonyEntryPoint
-import network.columba.app.notifications.CallNotificationHelper
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.model.CallState
-import network.columba.app.ui.theme.ThemeMode
+import network.zamolxis.app.di.RnsTelephonyEntryPoint
+import network.zamolxis.app.notifications.CallNotificationHelper
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.ui.theme.ThemeMode
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk

@@ -26,9 +26,9 @@
 #
 # Preconditions:
 #   - App is already onboarded (start destination resolves to Screen.Chats).
-#   - Python build of network.columba.app.debug is installed on emulator-5554.
+#   - Python build of network.zamolxis.app.debug is installed on emulator-5554.
 #   - The orchestration layer (NOT this flow) is responsible for:
-#       BEFORE: adb -s emulator-5554 shell run-as network.columba.app.debug \
+#       BEFORE: adb -s emulator-5554 shell run-as network.zamolxis.app.debug \
 #                 cat files/reticulum/config > /tmp/config-before.txt
 #       AFTER:  force-stop, relaunch (separately so the wrapper re-reads
 #               config), then dump again to /tmp/config-after.txt
@@ -57,13 +57,13 @@
 #     card shifts them) but are the only reliable handles until testTags are
 #     added.
 
-appId: network.columba.app.debug
+appId: network.zamolxis.app.debug
 ---
 # Reset the activity stack so we always start from Screen.Chats regardless of
 # where a previous flow left the app. clearState would wipe onboarding and
 # break the precondition, so use stopApp instead.
 - launchApp:
-    appId: network.columba.app.debug
+    appId: network.zamolxis.app.debug
     stopApp: true
     clearState: false
 

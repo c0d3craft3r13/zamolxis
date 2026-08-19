@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.onboarding
+package network.zamolxis.app.ui.screens.onboarding
 
 import android.Manifest
 import android.os.Build
@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -42,17 +43,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import network.columba.app.BuildConfig
-import network.columba.app.ui.screens.onboarding.pages.CompletePage
-import network.columba.app.ui.screens.onboarding.pages.ConnectivityPage
-import network.columba.app.ui.screens.onboarding.pages.CrashReportingPage
-import network.columba.app.ui.screens.onboarding.pages.IdentityPage
-import network.columba.app.ui.screens.onboarding.pages.PermissionsPage
-import network.columba.app.ui.screens.onboarding.pages.WelcomePage
-import network.columba.app.util.BatteryOptimizationManager
-import network.columba.app.util.getBlePermissions
-import network.columba.app.viewmodel.DebugViewModel
-import network.columba.app.viewmodel.OnboardingViewModel
+import network.zamolxis.app.R
+import network.zamolxis.app.BuildConfig
+import network.zamolxis.app.ui.screens.onboarding.pages.CompletePage
+import network.zamolxis.app.ui.screens.onboarding.pages.ConnectivityPage
+import network.zamolxis.app.ui.screens.onboarding.pages.CrashReportingPage
+import network.zamolxis.app.ui.screens.onboarding.pages.IdentityPage
+import network.zamolxis.app.ui.screens.onboarding.pages.PermissionsPage
+import network.zamolxis.app.ui.screens.onboarding.pages.WelcomePage
+import network.zamolxis.app.util.BatteryOptimizationManager
+import network.zamolxis.app.util.getBlePermissions
+import network.zamolxis.app.viewmodel.DebugViewModel
+import network.zamolxis.app.viewmodel.OnboardingViewModel
 import kotlinx.coroutines.launch
 
 /**
@@ -310,7 +312,7 @@ private fun TopBar(
                 modifier = Modifier.align(Alignment.CenterEnd),
             ) {
                 Text(
-                    text = "Skip",
+                    text = stringResource(R.string.onboarding_skip),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

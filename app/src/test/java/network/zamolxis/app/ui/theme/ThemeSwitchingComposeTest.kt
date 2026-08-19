@@ -1,4 +1,4 @@
-package network.columba.app.ui.theme
+package network.zamolxis.app.ui.theme
 
 import android.app.Application
 import androidx.compose.foundation.background
@@ -18,7 +18,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
-import network.columba.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.RegisterComponentActivityRule
 import org.junit.Assert.assertNotEquals
 import org.junit.Rule
 import org.junit.Test
@@ -30,7 +30,7 @@ import org.robolectric.annotation.Config
 /**
  * Compose UI tests for theme switching behavior.
  *
- * These tests verify that the ColumbaTheme and Material 3 theming system
+ * These tests verify that the ZamolxisTheme and Material 3 theming system
  * works correctly when switching between preset themes. This is important
  * for validating Compose BOM upgrades don't break theme rendering.
  */
@@ -50,7 +50,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun vibrantTheme_rendersContent() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = PresetTheme.VIBRANT,
             ) {
@@ -68,7 +68,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun oceanTheme_rendersContent() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = PresetTheme.OCEAN,
             ) {
@@ -86,7 +86,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun forestTheme_rendersContent() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = PresetTheme.FOREST,
             ) {
@@ -104,7 +104,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun sunsetTheme_rendersContent() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = PresetTheme.SUNSET,
             ) {
@@ -122,7 +122,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun monochromeTheme_rendersContent() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = PresetTheme.MONOCHROME,
             ) {
@@ -140,7 +140,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun expressiveTheme_rendersContent() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = PresetTheme.EXPRESSIVE,
             ) {
@@ -160,7 +160,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun vibrantTheme_darkMode_rendersContent() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = true,
                 selectedTheme = PresetTheme.VIBRANT,
             ) {
@@ -190,7 +190,7 @@ class ThemeSwitchingComposeTest {
             )
 
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = true,
                 selectedTheme = currentTheme,
             ) {
@@ -216,7 +216,7 @@ class ThemeSwitchingComposeTest {
         var currentTheme by mutableStateOf<AppTheme>(PresetTheme.VIBRANT)
 
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = currentTheme,
             ) {
@@ -260,7 +260,7 @@ class ThemeSwitchingComposeTest {
         var isDarkMode by mutableStateOf(false)
 
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = isDarkMode,
                 selectedTheme = PresetTheme.VIBRANT,
             ) {
@@ -291,7 +291,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun materialTheme_colorScheme_isAccessible() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = PresetTheme.VIBRANT,
             ) {
@@ -311,7 +311,7 @@ class ThemeSwitchingComposeTest {
     @Test
     fun materialTheme_typography_isAccessible() {
         composeTestRule.setContent {
-            ColumbaTheme(
+            ZamolxisTheme(
                 darkTheme = false,
                 selectedTheme = PresetTheme.VIBRANT,
             ) {

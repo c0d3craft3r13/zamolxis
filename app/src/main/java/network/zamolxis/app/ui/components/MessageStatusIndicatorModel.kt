@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDone
@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
-import network.columba.app.R
+import network.zamolxis.app.R
 
 internal sealed interface MessageStatusIndicatorModel {
     data class Glyph(val value: String) : MessageStatusIndicatorModel

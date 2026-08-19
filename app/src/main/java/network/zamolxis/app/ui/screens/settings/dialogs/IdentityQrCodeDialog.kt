@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.dialogs
+package network.zamolxis.app.ui.screens.settings.dialogs
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.components.HashSection
-import network.columba.app.ui.components.IdentityQrCodeDialogContent
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.HashSection
+import network.zamolxis.app.ui.components.IdentityQrCodeDialogContent
 
 @Composable
 fun IdentityQrCodeDialog(
@@ -45,7 +48,7 @@ fun IdentityQrCodeDialog(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Share Identity")
+            Text(stringResource(R.string.identityqr_share))
         }
 
         HorizontalDivider()
@@ -53,7 +56,7 @@ fun IdentityQrCodeDialog(
         // Identity Hash
         if (identityHash != null) {
             HashSection(
-                title = "Identity Hash",
+                title = stringResource(R.string.identityqr_identity_hash),
                 hash = identityHash,
                 onCopy = { clipboardManager.setText(AnnotatedString(identityHash)) },
             )
@@ -62,7 +65,7 @@ fun IdentityQrCodeDialog(
         // Destination Hash
         if (destinationHash != null) {
             HashSection(
-                title = "Destination Hash (LXMF)",
+                title = stringResource(R.string.identityqr_dest_hash),
                 hash = destinationHash,
                 onCopy = { clipboardManager.setText(AnnotatedString(destinationHash)) },
             )

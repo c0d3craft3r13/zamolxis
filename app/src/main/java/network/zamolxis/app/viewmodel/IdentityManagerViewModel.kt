@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.net.Uri
@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.util.Base32
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.util.Base32
 import java.util.zip.GZIPInputStream
 import javax.inject.Inject
 
@@ -35,7 +35,7 @@ class IdentityManagerViewModel
     constructor(
         @ApplicationContext private val context: Context,
         private val identityRepository: IdentityRepository,
-        private val identityKeyProvider: network.columba.app.data.crypto.IdentityKeyProvider,
+        private val identityKeyProvider: network.zamolxis.app.data.crypto.IdentityKeyProvider,
         private val rnsCore: RnsCore,
         private val interfaceConfigManager: InterfaceConfigManager,
     ) : ViewModel() {
@@ -236,7 +236,7 @@ class IdentityManagerViewModel
                     // Delete from database (cascade delete will remove associated data).
                     // No disk-side cleanup: delivery keys live in Room now, not in
                     // reticulum/identities/ — stale legacy files (if any) are scrubbed
-                    // at cold-start in ColumbaApplication.
+                    // at cold-start in ZamolxisApplication.
                     identityRepository
                         .deleteIdentity(identityHash)
                         .onSuccess {

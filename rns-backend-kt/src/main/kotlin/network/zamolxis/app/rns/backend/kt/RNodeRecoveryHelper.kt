@@ -1,11 +1,11 @@
-package network.columba.app.rns.backend.kt
+package network.zamolxis.app.rns.backend.kt
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.InterfaceConfig
 
 internal object RNodeRecoveryHelper {
     private const val TAG = "NativeInterfaceFactory"

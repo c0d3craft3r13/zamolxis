@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import android.net.Uri
@@ -8,9 +8,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.MigrationUiState
-import network.columba.app.viewmodel.MigrationViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.MigrationUiState
+import network.zamolxis.app.viewmodel.MigrationViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 import android.os.ParcelFileDescriptor
 import java.io.BufferedInputStream
@@ -11,7 +11,7 @@ import java.io.IOException
 
 /**
  * Out-of-band transfer of a received message's `fieldsJson` across the
- * [network.columba.app.rns.ipc.callback.IRnsMessageCallback] AIDL boundary —
+ * [network.zamolxis.app.rns.ipc.callback.IRnsMessageCallback] AIDL boundary —
  * the receive-direction mirror of [AttachmentBlob].
  *
  * Inbound LXMF messages carry image/file payloads hex-encoded inside

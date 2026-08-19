@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -221,7 +221,7 @@ class DebugViewModelPersistenceTest {
                 interfaceCount = 2,
                 interfaces =
                     listOf(
-                        InterfaceInfo("RNode", "ColumbaRNodeInterface", true, null),
+                        InterfaceInfo("RNode", "ZamolxisRNodeInterface", true, null),
                     ),
                 transportEnabled = true,
                 multicastLockHeld = true,

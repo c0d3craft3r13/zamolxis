@@ -1,15 +1,15 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import network.columba.app.data.db.dao.AnnounceDao
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.AnnounceInterfaceSightingEntity
-import network.columba.app.data.model.EnrichedAnnounce
-import network.columba.app.data.model.InterfaceType
-import network.columba.app.data.util.HashUtils
+import network.zamolxis.app.data.db.dao.AnnounceDao
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.AnnounceInterfaceSightingEntity
+import network.zamolxis.app.data.model.EnrichedAnnounce
+import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.util.HashUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

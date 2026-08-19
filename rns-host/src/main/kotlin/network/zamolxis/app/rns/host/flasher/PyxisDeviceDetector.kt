@@ -1,4 +1,4 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 /** Identity returned by a running Pyxis firmware over its production USB VERSION command. */
 data class PyxisDeviceIdentity(

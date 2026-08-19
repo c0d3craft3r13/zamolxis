@@ -1,4 +1,4 @@
-package network.columba.app.navigation
+package network.zamolxis.app.navigation
 
 import android.app.Application
 import android.net.Uri
@@ -15,13 +15,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import network.columba.app.R
-import network.columba.app.data.model.CallHistoryRecord
-import network.columba.app.ui.screens.CallDetailsContent
-import network.columba.app.ui.screens.VoiceHistoryContent
-import network.columba.app.viewmodel.BlockLookupState
-import network.columba.app.viewmodel.CallDetailsState
-import network.columba.app.viewmodel.VoiceHistoryState
+import network.zamolxis.app.R
+import network.zamolxis.app.data.model.CallHistoryRecord
+import network.zamolxis.app.ui.screens.CallDetailsContent
+import network.zamolxis.app.ui.screens.VoiceHistoryContent
+import network.zamolxis.app.viewmodel.BlockLookupState
+import network.zamolxis.app.viewmodel.CallDetailsState
+import network.zamolxis.app.viewmodel.VoiceHistoryState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

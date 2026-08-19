@@ -6,7 +6,7 @@
 
 ## Summary
 
-This phase targets UI stuttering and progressive performance degradation in Columba, especially on the Interface Discovery screen. The app uses Jetpack Compose with LazyColumn for the discovered interfaces list, integrates Python via Chaquopy for Reticulum networking, and follows Android MVVM architecture with Hilt DI.
+This phase targets UI stuttering and progressive performance degradation in Zamolxis, especially on the Interface Discovery screen. The app uses Jetpack Compose with LazyColumn for the discovered interfaces list, integrates Python via Chaquopy for Reticulum networking, and follows Android MVVM architecture with Hilt DI.
 
 Research reveals three major areas for investigation:
 1. **Compose Performance Issues**: LazyColumn stuttering from unstable keys, excessive recomposition, or unstable state objects
@@ -282,7 +282,7 @@ class DiscoveredInterfacesScrollBenchmark {
     @Test
     fun scrollDiscoveredInterfaces() {
         benchmarkRule.measureRepeated(
-            packageName = "network.columba.app",
+            packageName = "network.zamolxis.app",
             metrics = listOf(FrameTimingMetric()),
             compilationMode = CompilationMode.None(), // Test without AOT
             startupMode = StartupMode.WARM,
@@ -361,7 +361,7 @@ LazyColumn {
     }
 }
 
-// Columba's implementation:
+// Zamolxis's implementation:
 items(state.interfaces, key = { "${it.transportId ?: ""}:${it.name}:${it.type}" }) { iface ->
     DiscoveredInterfaceCard(/* ... */)
 }
@@ -450,7 +450,7 @@ Things that couldn't be fully resolved:
 3. **Is the issue in Python Reticulum or Kotlin UI layer?**
    - What we know: Interface Discovery is Kotlin UI around Python RNS 1.1.0 discovery feature
    - What's unclear: Is Reticulum accumulating data? Is Kotlin not releasing references?
-   - Recommendation: Profiler will reveal. If heap dump shows Python objects growing, fork Reticulum and fix. If Kotlin objects growing, fix in Columba.
+   - Recommendation: Profiler will reveal. If heap dump shows Python objects growing, fork Reticulum and fix. If Kotlin objects growing, fix in Zamolxis.
 
 4. **What is the typical Interface Discovery list size in production?**
    - What we know: User stated "10-50 items (moderate size)" in context

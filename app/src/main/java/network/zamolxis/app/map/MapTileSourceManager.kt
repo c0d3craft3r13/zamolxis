@@ -1,4 +1,4 @@
-package network.columba.app.map
+package network.zamolxis.app.map
 
 import android.content.Context
 import android.content.res.Configuration
@@ -8,12 +8,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import network.columba.app.data.model.MapStylePreference
-import network.columba.app.data.repository.OfflineMapRegion
-import network.columba.app.data.repository.OfflineMapRegionRepository
-import network.columba.app.data.repository.RmspServer
-import network.columba.app.data.repository.RmspServerRepository
-import network.columba.app.repository.SettingsRepository
+import network.zamolxis.app.data.model.MapStylePreference
+import network.zamolxis.app.data.repository.OfflineMapRegion
+import network.zamolxis.app.data.repository.OfflineMapRegionRepository
+import network.zamolxis.app.data.repository.RmspServer
+import network.zamolxis.app.data.repository.RmspServerRepository
+import network.zamolxis.app.repository.SettingsRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 

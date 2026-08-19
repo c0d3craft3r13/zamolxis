@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,8 +12,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import network.columba.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 
 @Composable
 fun DataMigrationCard(
@@ -22,16 +25,14 @@ fun DataMigrationCard(
     onNavigateToMigration: () -> Unit,
 ) {
     CollapsibleSettingsCard(
-        title = "Data Migration",
+        title = stringResource(R.string.datamigration_title),
         icon = Icons.Default.ImportExport,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
     ) {
         // Description
         Text(
-            text =
-                "Export your data (identities, messages, contacts) to transfer to " +
-                    "another device or import from a previous backup.",
+            text = stringResource(R.string.datamigration_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -47,7 +48,7 @@ fun DataMigrationCard(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Export / Import Data")
+            Text(stringResource(R.string.datamigration_export_import))
         }
     }
 }

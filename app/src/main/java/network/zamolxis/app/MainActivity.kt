@@ -1,4 +1,4 @@
-package network.columba.app
+package network.zamolxis.app
 
 import android.Manifest
 import android.content.BroadcastReceiver
@@ -77,75 +77,75 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.di.RnsTelephonyEntryPoint
-import network.columba.app.navigation.activeCallRoute
-import network.columba.app.navigation.callDetailsDestination
-import network.columba.app.navigation.callDetailsRoute
-import network.columba.app.navigation.AppDestination
-import network.columba.app.navigation.ConversationNavigation
-import network.columba.app.navigation.appComposable
-import network.columba.app.navigation.completeCurrentFlow
-import network.columba.app.navigation.navigateToAnsweredCall
-import network.columba.app.navigation.navigateToEntity
-import network.columba.app.navigation.navigateToIncomingCall
-import network.columba.app.notifications.CallNotificationHelper
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.host.ble.util.BlePermissionManager
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.host.ReticulumService
-import network.columba.app.ui.components.BlePermissionBottomSheet
-import network.columba.app.ui.components.LocalCapabilities
-import network.columba.app.ui.components.LocalWindowSize
-import network.columba.app.ui.components.OfflineModeBanner
-import network.columba.app.ui.screens.AnnounceDetailScreen
-import network.columba.app.ui.screens.AnnounceStreamScreen
-import network.columba.app.ui.screens.ApkSharingScreen
-import network.columba.app.ui.screens.BleConnectionStatusScreen
-import network.columba.app.ui.screens.BlockedUsersScreen
-import network.columba.app.ui.screens.ChatsScreen
-import network.columba.app.ui.screens.ContactsScreen
-import network.columba.app.ui.screens.DiscoveredInterfacesScreen
-import network.columba.app.ui.screens.IdentityManagerScreen
-import network.columba.app.ui.screens.IdentityScreen
-import network.columba.app.ui.screens.IncomingCallScreen
-import network.columba.app.ui.screens.InterfaceManagementScreen
-import network.columba.app.ui.screens.MapScreen
-import network.columba.app.ui.screens.MessageDetailScreen
-import network.columba.app.ui.screens.MessagingScreen
-import network.columba.app.ui.screens.MigrationScreen
-import network.columba.app.ui.screens.MyIdentityScreen
-import network.columba.app.ui.screens.NomadNetBrowserScreen
-import network.columba.app.ui.screens.NotificationSettingsScreen
-import network.columba.app.ui.screens.QrScannerScreen
-import network.columba.app.ui.screens.SettingsScreen
-import network.columba.app.ui.screens.ThemeEditorScreen
-import network.columba.app.ui.screens.ThemeManagementScreen
-import network.columba.app.ui.screens.VoiceCallScreen
-import network.columba.app.ui.screens.buildFocusInterfaceDetails
-import network.columba.app.ui.screens.flasher.PyxisUpdaterScreen
-import network.columba.app.ui.screens.flasher.RNodeFlasherScreen
-import network.columba.app.ui.screens.offlinemaps.OfflineMapDownloadScreen
-import network.columba.app.ui.screens.offlinemaps.OfflineMapsScreen
-import network.columba.app.ui.screens.onboarding.OnboardingPagerScreen
-import network.columba.app.ui.screens.tcpclient.TcpClientWizardScreen
-import network.columba.app.ui.theme.ColumbaTheme
-import network.columba.app.ui.theme.ThemeMode
-import network.columba.app.ui.util.LifecycleGuard
-import network.columba.app.util.CrashReportManager
-import network.columba.app.util.InterfaceReconnectSignal
-import network.columba.app.viewmodel.ContactsViewModel
-import network.columba.app.viewmodel.MapViewModel
-import network.columba.app.viewmodel.OnboardingViewModel
-import network.columba.app.viewmodel.SettingsViewModel
-import network.columba.app.viewmodel.SharedImageViewModel
-import network.columba.app.viewmodel.SharedTextViewModel
-import network.columba.app.rns.api.model.CallState
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.di.RnsTelephonyEntryPoint
+import network.zamolxis.app.navigation.activeCallRoute
+import network.zamolxis.app.navigation.callDetailsDestination
+import network.zamolxis.app.navigation.callDetailsRoute
+import network.zamolxis.app.navigation.AppDestination
+import network.zamolxis.app.navigation.ConversationNavigation
+import network.zamolxis.app.navigation.appComposable
+import network.zamolxis.app.navigation.completeCurrentFlow
+import network.zamolxis.app.navigation.navigateToAnsweredCall
+import network.zamolxis.app.navigation.navigateToEntity
+import network.zamolxis.app.navigation.navigateToIncomingCall
+import network.zamolxis.app.notifications.CallNotificationHelper
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.host.ble.util.BlePermissionManager
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.host.ReticulumService
+import network.zamolxis.app.ui.components.BlePermissionBottomSheet
+import network.zamolxis.app.ui.components.LocalCapabilities
+import network.zamolxis.app.ui.components.LocalWindowSize
+import network.zamolxis.app.ui.components.OfflineModeBanner
+import network.zamolxis.app.ui.screens.AnnounceDetailScreen
+import network.zamolxis.app.ui.screens.AnnounceStreamScreen
+import network.zamolxis.app.ui.screens.ApkSharingScreen
+import network.zamolxis.app.ui.screens.BleConnectionStatusScreen
+import network.zamolxis.app.ui.screens.BlockedUsersScreen
+import network.zamolxis.app.ui.screens.ChatsScreen
+import network.zamolxis.app.ui.screens.ContactsScreen
+import network.zamolxis.app.ui.screens.DiscoveredInterfacesScreen
+import network.zamolxis.app.ui.screens.IdentityManagerScreen
+import network.zamolxis.app.ui.screens.IdentityScreen
+import network.zamolxis.app.ui.screens.IncomingCallScreen
+import network.zamolxis.app.ui.screens.InterfaceManagementScreen
+import network.zamolxis.app.ui.screens.MapScreen
+import network.zamolxis.app.ui.screens.MessageDetailScreen
+import network.zamolxis.app.ui.screens.MessagingScreen
+import network.zamolxis.app.ui.screens.MigrationScreen
+import network.zamolxis.app.ui.screens.MyIdentityScreen
+import network.zamolxis.app.ui.screens.NomadNetBrowserScreen
+import network.zamolxis.app.ui.screens.NotificationSettingsScreen
+import network.zamolxis.app.ui.screens.QrScannerScreen
+import network.zamolxis.app.ui.screens.SettingsScreen
+import network.zamolxis.app.ui.screens.ThemeEditorScreen
+import network.zamolxis.app.ui.screens.ThemeManagementScreen
+import network.zamolxis.app.ui.screens.VoiceCallScreen
+import network.zamolxis.app.ui.screens.buildFocusInterfaceDetails
+import network.zamolxis.app.ui.screens.flasher.PyxisUpdaterScreen
+import network.zamolxis.app.ui.screens.flasher.RNodeFlasherScreen
+import network.zamolxis.app.ui.screens.offlinemaps.OfflineMapDownloadScreen
+import network.zamolxis.app.ui.screens.offlinemaps.OfflineMapsScreen
+import network.zamolxis.app.ui.screens.onboarding.OnboardingPagerScreen
+import network.zamolxis.app.ui.screens.tcpclient.TcpClientWizardScreen
+import network.zamolxis.app.ui.theme.ZamolxisTheme
+import network.zamolxis.app.ui.theme.ThemeMode
+import network.zamolxis.app.ui.util.LifecycleGuard
+import network.zamolxis.app.util.CrashReportManager
+import network.zamolxis.app.util.InterfaceReconnectSignal
+import network.zamolxis.app.viewmodel.ContactsViewModel
+import network.zamolxis.app.viewmodel.MapViewModel
+import network.zamolxis.app.viewmodel.OnboardingViewModel
+import network.zamolxis.app.viewmodel.SettingsViewModel
+import network.zamolxis.app.viewmodel.SharedImageViewModel
+import network.zamolxis.app.viewmodel.SharedTextViewModel
+import network.zamolxis.app.rns.api.model.CallState
 import javax.inject.Inject
 
 /**
- * Main activity for the Columba LXMF Messenger application.
+ * Main activity for the Zamolxis LXMF Messenger application.
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -177,9 +177,9 @@ class MainActivity : ComponentActivity() {
     private val pendingNavigation = mutableStateOf<PendingNavigation?>(null)
 
     // Build-time-swappable crash reporter (no-op in the noSentry flavor). Breadcrumbs are
-    // recorded against the global reporting hub initialized by ColumbaApplication.
-    private val crashReporter: network.columba.app.telemetry.CrashReporter =
-        network.columba.app.telemetry.CrashReporterProvider.create()
+    // recorded against the global reporting hub initialized by ZamolxisApplication.
+    private val crashReporter: network.zamolxis.app.telemetry.CrashReporter =
+        network.zamolxis.app.telemetry.CrashReporterProvider.create()
 
     // JankStats for performance monitoring (Phase 1 Plan 01-03)
     private lateinit var jankStats: androidx.metrics.performance.JankStats
@@ -190,14 +190,14 @@ class MainActivity : ComponentActivity() {
             if (frameData.isJank) {
                 val durationMs = frameData.frameDurationUiNanos / 1_000_000
                 crashReporter.addBreadcrumb(
-                    network.columba.app.telemetry.CrashBreadcrumb(
+                    network.zamolxis.app.telemetry.CrashBreadcrumb(
                         category = "performance",
                         message = "Janky frame: ${durationMs}ms",
                         level =
                             if (durationMs > 100) {
-                                network.columba.app.telemetry.CrashReportLevel.WARNING
+                                network.zamolxis.app.telemetry.CrashReportLevel.WARNING
                             } else {
-                                network.columba.app.telemetry.CrashReportLevel.INFO
+                                network.zamolxis.app.telemetry.CrashReportLevel.INFO
                             },
                         data =
                             mapOf(
@@ -316,7 +316,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             // Signal splash screen dismissal once theme loads
-            val settingsViewModel: network.columba.app.viewmodel.SettingsViewModel = hiltViewModel()
+            val settingsViewModel: network.zamolxis.app.viewmodel.SettingsViewModel = hiltViewModel()
             val settingsState by settingsViewModel.state.collectAsState()
 
             // Dismiss splash screen once theme is loaded (non-default theme or after timeout)
@@ -329,7 +329,7 @@ class MainActivity : ComponentActivity() {
 
             // Wait for onboarding status to resolve before dismissing splash.
             // startDestination is memoised via remember{}, so it captures the first
-            // composed value. The LaunchedEffect in ColumbaNavigation redirects
+            // composed value. The LaunchedEffect in ZamolxisNavigation redirects
             // upgraders to Chats once onboardingState resolves; the extended splash
             // screen hides that redirect, preventing the wizard from flashing.
             val onboardingViewModel: OnboardingViewModel = hiltViewModel()
@@ -356,7 +356,7 @@ class MainActivity : ComponentActivity() {
                 LocalCapabilities provides capabilities,
                 LocalWindowSize provides windowSizeClass,
             ) {
-                ColumbaNavigation(
+                ZamolxisNavigation(
                     pendingNavigation = pendingNavigation,
                     interfaceRepository = interfaceRepository,
                     crashReportManager = crashReportManager,
@@ -437,27 +437,27 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun isEsp32S3Candidate(usbDevice: UsbDevice): Boolean =
-        network.columba.app.rns.host.flasher.ESPToolFlasher.isNativeUsbDevice(
+        network.zamolxis.app.rns.host.flasher.ESPToolFlasher.isNativeUsbDevice(
             usbDevice.vendorId,
             usbDevice.productId,
         )
 
     private suspend fun detectConnectedPyxis(
         usbDevice: UsbDevice,
-    ): network.columba.app.rns.host.flasher.PyxisDeviceIdentity? {
+    ): network.zamolxis.app.rns.host.flasher.PyxisDeviceIdentity? {
         if (!isEsp32S3Candidate(usbDevice)) return null
-        return network.columba.app.rns.host.flasher.RNodeFlasher(this)
+        return network.zamolxis.app.rns.host.flasher.RNodeFlasher(this)
             .detectPyxisDevice(usbDevice.deviceId)
     }
 
     private suspend fun detectConnectedRNode(usbDevice: UsbDevice): Boolean {
-        val flasher = network.columba.app.rns.host.flasher.RNodeFlasher(this)
+        val flasher = network.zamolxis.app.rns.host.flasher.RNodeFlasher(this)
         if (!flasher.hasPermission(usbDevice.deviceId)) return false
         return flasher.isRNodeDevice(usbDevice.deviceId)
     }
 
     private data class UsbAttachmentClassification(
-        val pyxisIdentity: network.columba.app.rns.host.flasher.PyxisDeviceIdentity?,
+        val pyxisIdentity: network.zamolxis.app.rns.host.flasher.PyxisDeviceIdentity?,
         val configuredRNode: InterfaceEntity?,
     )
 
@@ -705,7 +705,7 @@ sealed class Screen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ColumbaNavigation(
+fun ZamolxisNavigation(
     pendingNavigation: MutableState<PendingNavigation?>,
     interfaceRepository: InterfaceRepository,
     crashReportManager: CrashReportManager,
@@ -760,7 +760,7 @@ fun ColumbaNavigation(
     var mapPermissionCardDismissed by remember { mutableStateOf(false) }
 
     // Access SettingsViewModel to get theme preference
-    val settingsViewModel: network.columba.app.viewmodel.SettingsViewModel =
+    val settingsViewModel: network.zamolxis.app.viewmodel.SettingsViewModel =
         androidx.hilt.navigation.compose
             .hiltViewModel()
 
@@ -807,7 +807,7 @@ fun ColumbaNavigation(
         val currentDestination = navController.currentDestination ?: return@LaunchedEffect
         if (!onboardingState.hasCompletedOnboarding) return@LaunchedEffect
         if (needsIdentityUnlock && currentDestination.route != Screen.IdentityUnlock.route) {
-            Log.d("ColumbaNavigation", "Redirecting to IdentityUnlock (key decryption failed)")
+            Log.d("ZamolxisNavigation", "Redirecting to IdentityUnlock (key decryption failed)")
             navController.navigate(Screen.IdentityUnlock.route) {
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
             }
@@ -825,7 +825,7 @@ fun ColumbaNavigation(
         val popped = navController.popBackStack()
 
         if ((!popped || previousRoute == Screen.Welcome.route) && onboardingState.hasCompletedOnboarding) {
-            Log.d("ColumbaNavigation", "Call flow finished without valid return destination, navigating to Chats")
+            Log.d("ZamolxisNavigation", "Call flow finished without valid return destination, navigating to Chats")
             navController.navigate(Screen.Chats.route) {
                 if (!popped && currentRoute != null) {
                     popUpTo(currentRoute) { inclusive = true }
@@ -849,7 +849,7 @@ fun ColumbaNavigation(
                             route = "announce_detail/$encodedHash",
                             identityArguments = mapOf("destinationHash" to navigation.destinationHash),
                         )
-                        Log.d("ColumbaNavigation", "Navigated to announce detail: ${navigation.destinationHash}")
+                        Log.d("ZamolxisNavigation", "Navigated to announce detail: ${navigation.destinationHash}")
                     }
                     is PendingNavigation.Conversation -> {
                         // Idempotency: skip navigation if the user is already viewing this
@@ -881,18 +881,18 @@ fun ColumbaNavigation(
                                 launchSingleTop = true
                             }
                             Log.d(
-                                "ColumbaNavigation",
+                                "ZamolxisNavigation",
                                 "Reused current conversation for notification entry: ${navigation.peerName}",
                             )
                         } else if (navigationAction == ConversationNavigation.Action.SKIP) {
                             Log.d(
-                                "ColumbaNavigation",
+                                "ZamolxisNavigation",
                                 "Already viewing conversation ${navigation.peerName} — skipping duplicate navigation",
                             )
                         } else {
                             navController.navigate(conversationRoute)
                             Log.d(
-                                "ColumbaNavigation",
+                                "ZamolxisNavigation",
                                 "Navigated to conversation: ${navigation.peerName} (fromNotification=${navigation.fromNotification})",
                             )
                         }
@@ -908,7 +908,7 @@ fun ColumbaNavigation(
                             restoreState = true
                         }
                         pendingContactAdd = navigation.lxmaUrl
-                        Log.d("ColumbaNavigation", "Navigated to contacts for deep link: ${navigation.lxmaUrl}")
+                        Log.d("ZamolxisNavigation", "Navigated to contacts for deep link: ${navigation.lxmaUrl}")
                     }
                     is PendingNavigation.ImportIdentityFromText -> {
                         // Navigate to Identity Manager with pre-filled Base32 key
@@ -918,7 +918,7 @@ fun ColumbaNavigation(
                             route = "identity_manager?base32Key=$encodedKey",
                             identityArguments = mapOf("base32Key" to navigation.base32Text),
                         )
-                        Log.d("ColumbaNavigation", "Navigated to identity import from shared text")
+                        Log.d("ZamolxisNavigation", "Navigated to identity import from shared text")
                     }
                     is PendingNavigation.SharedText -> {
                         sharedTextViewModel.setText(navigation.text)
@@ -934,7 +934,7 @@ fun ColumbaNavigation(
                                 restoreState = true
                             }
                         }
-                        Log.d("ColumbaNavigation", "Handled shared text intent")
+                        Log.d("ZamolxisNavigation", "Handled shared text intent")
                     }
                     is PendingNavigation.SharedImage -> {
                         sharedImageViewModel.setImages(navigation.uris)
@@ -950,13 +950,13 @@ fun ColumbaNavigation(
                                 restoreState = true
                             }
                         }
-                        Log.d("ColumbaNavigation", "Handled shared image intent (${navigation.uris.size} images)")
+                        Log.d("ZamolxisNavigation", "Handled shared image intent (${navigation.uris.size} images)")
                     }
                     is PendingNavigation.IncomingCall -> {
                         // Navigate to incoming call screen
                         val encodedHash = Uri.encode(navigation.identityHash)
                         navController.navigateToIncomingCall("incoming_call/$encodedHash")
-                        Log.d("ColumbaNavigation", "Navigated to incoming call: ${navigation.identityHash.take(16)}...")
+                        Log.d("ZamolxisNavigation", "Navigated to incoming call: ${navigation.identityHash.take(16)}...")
                     }
                     is PendingNavigation.AnswerCall -> {
                         // Set flag to prevent callState observer from overriding navigation
@@ -964,10 +964,10 @@ fun ColumbaNavigation(
                         // Navigate to voice call screen with auto-answer flag
                         val encodedHash = Uri.encode(navigation.identityHash)
                         val route = "voice_call/$encodedHash?autoAnswer=true"
-                        Log.w("ColumbaNavigation", "📞 AnswerCall handler - navigating to $route")
-                        Log.w("ColumbaNavigation", "📞 Current backstack: ${navController.currentBackStackEntry?.destination?.route}")
+                        Log.w("ZamolxisNavigation", "📞 AnswerCall handler - navigating to $route")
+                        Log.w("ZamolxisNavigation", "📞 Current backstack: ${navController.currentBackStackEntry?.destination?.route}")
                         navController.navigateToAnsweredCall(route)
-                        Log.w("ColumbaNavigation", "📞 After navigation, current: ${navController.currentBackStackEntry?.destination?.route}")
+                        Log.w("ZamolxisNavigation", "📞 After navigation, current: ${navController.currentBackStackEntry?.destination?.route}")
                     }
                     is PendingNavigation.InterfaceStats -> {
                         // Navigate to interface stats screen
@@ -978,7 +978,7 @@ fun ColumbaNavigation(
 
                         if (currentRoute == "interface_stats/{interfaceId}" && currentInterfaceId == navigation.interfaceId) {
                             // Already on the SAME interface's stats screen - just signal reconnect
-                            Log.d("ColumbaNavigation", "Already on stats screen for interface ${navigation.interfaceId}, skipping navigation")
+                            Log.d("ZamolxisNavigation", "Already on stats screen for interface ${navigation.interfaceId}, skipping navigation")
                         } else {
                             // Navigate to the (different) interface's stats screen
                             navController.navigate(targetRoute) {
@@ -988,7 +988,7 @@ fun ColumbaNavigation(
                                 }
                                 launchSingleTop = true
                             }
-                            Log.d("ColumbaNavigation", "Navigated to interface stats: ${navigation.interfaceId}")
+                            Log.d("ZamolxisNavigation", "Navigated to interface stats: ${navigation.interfaceId}")
                         }
                     }
                     is PendingNavigation.UsbDeviceAction -> {
@@ -1007,9 +1007,9 @@ fun ColumbaNavigation(
                                 route = route,
                                 identityArguments = mapOf("usbDeviceId" to navigation.usbDeviceId),
                             )
-                            Log.d("ColumbaNavigation", "Navigated to USB device action: ${navigation.usbDeviceId}")
+                            Log.d("ZamolxisNavigation", "Navigated to USB device action: ${navigation.usbDeviceId}")
                         } else {
-                            Log.d("ColumbaNavigation", "Skipped detached USB device: ${navigation.usbDeviceId}")
+                            Log.d("ZamolxisNavigation", "Skipped detached USB device: ${navigation.usbDeviceId}")
                         }
                     }
                     is PendingNavigation.RNodeWizardWithUsb -> {
@@ -1025,7 +1025,7 @@ fun ColumbaNavigation(
                             route = route,
                             identityArguments = mapOf("usbDeviceId" to navigation.usbDeviceId),
                         )
-                        Log.d("ColumbaNavigation", "Navigated to RNode wizard with USB: ${navigation.usbDeviceId}")
+                        Log.d("ZamolxisNavigation", "Navigated to RNode wizard with USB: ${navigation.usbDeviceId}")
                     }
                     is PendingNavigation.DirectFlash -> {
                         // Navigate directly to flasher with skip-detection mode
@@ -1040,7 +1040,7 @@ fun ColumbaNavigation(
                             route = route,
                             identityArguments = mapOf("usbDeviceId" to navigation.usbDeviceId),
                         )
-                        Log.d("ColumbaNavigation", "Navigated to flasher (direct): ${navigation.usbDeviceId}")
+                        Log.d("ZamolxisNavigation", "Navigated to flasher (direct): ${navigation.usbDeviceId}")
                     }
                     is PendingNavigation.NomadNetBrowser -> {
                         val encoded = Uri.encode(navigation.path)
@@ -1053,13 +1053,13 @@ fun ColumbaNavigation(
                                     "path" to navigation.path,
                                 ),
                         )
-                        Log.d("ColumbaNavigation", "Navigated to NomadNet browser: ${navigation.nodeHash}")
+                        Log.d("ZamolxisNavigation", "Navigated to NomadNet browser: ${navigation.nodeHash}")
                     }
                 }
                 // Only clear on success so a failed navigation can be retried
                 pendingNavigation.value = null
             } catch (e: Exception) {
-                Log.e("ColumbaNavigation", "Failed to navigate from pending intent: $navigation", e)
+                Log.e("ZamolxisNavigation", "Failed to navigate from pending intent: $navigation", e)
             }
         }
     }
@@ -1104,10 +1104,10 @@ fun ColumbaNavigation(
 
             // If any BLE permissions were just granted, restart BLE interface
             if (blePermissionsGranted.isNotEmpty()) {
-                Log.d("ColumbaNavigation", "BLE permissions granted, restarting BLE interface")
+                Log.d("ZamolxisNavigation", "BLE permissions granted, restarting BLE interface")
                 val restartIntent =
                     Intent(context, ReticulumService::class.java).apply {
-                        action = "network.columba.app.RESTART_BLE"
+                        action = "network.zamolxis.app.RESTART_BLE"
                     }
                 context.startService(restartIntent)
             }
@@ -1116,7 +1116,7 @@ fun ColumbaNavigation(
             if (!allGranted) {
                 // User denied some permissions - they can still use the app,
                 // but BLE features won't work
-                Log.d("ColumbaNavigation", "Some permissions denied")
+                Log.d("ZamolxisNavigation", "Some permissions denied")
                 hasRequestedBluetoothOnce = true
                 bluetoothPrefs.edit().putBoolean("hasRequestedBluetoothPermissions", true).apply()
             }
@@ -1145,7 +1145,7 @@ fun ColumbaNavigation(
 
     // Synchronize selectedTab with current route when navigating back
     LaunchedEffect(currentRoute) {
-        Log.d("ColumbaNavigation", "📍 currentRoute changed to: $currentRoute")
+        Log.d("ZamolxisNavigation", "📍 currentRoute changed to: $currentRoute")
         selectedTab =
             when (currentRoute) {
                 Screen.Chats.route -> 0
@@ -1261,7 +1261,7 @@ fun ColumbaNavigation(
         }
     }
 
-    ColumbaTheme(
+    ZamolxisTheme(
         darkTheme = settingsState.themeMode.resolveDark(isSystemInDarkTheme()),
         selectedTheme = settingsState.selectedTheme,
     ) {
@@ -1270,9 +1270,9 @@ fun ColumbaNavigation(
         // Fires on app start, after a settings import, and when sharing/precision
         // changes — all surface as the persisted settings (issues #855, #991).
         // Gated on locationSharingEnabled so users who never opted into sharing
-        // aren't nagged (issue #991). Hosted inside ColumbaTheme so the sheet
+        // aren't nagged (issue #991). Hosted inside ZamolxisTheme so the sheet
         // matches the app's light/dark theme.
-        network.columba.app.ui.components.PreciseLocationPermissionPrompt(
+        network.zamolxis.app.ui.components.PreciseLocationPermissionPrompt(
             locationSharingEnabled = settingsState.locationSharingEnabled,
             locationPrecisionRadius = settingsState.locationPrecisionRadius,
             enabled = !settingsState.isLoading && onboardingState.hasCompletedOnboarding,
@@ -1350,9 +1350,9 @@ fun ColumbaNavigation(
                             }
 
                             appComposable(AppDestination.IDENTITY_UNLOCK) {
-                                network.columba.app.ui.screens.IdentityUnlockScreen(
+                                network.zamolxis.app.ui.screens.IdentityUnlockScreen(
                                     onResolved = {
-                                        // ColumbaApplication bailed out of Reticulum init when
+                                        // ZamolxisApplication bailed out of Reticulum init when
                                         // the key decrypt failed at cold-start. Now that the
                                         // re-wrap put a usable encryptedKeyData back on the row,
                                         // kick the service so the native stack comes up with
@@ -1755,11 +1755,11 @@ fun ColumbaNavigation(
                                     androidx.compose.runtime.mutableStateOf(null)
                                 }
 
-                                network.columba.app.ui.screens.UsbDeviceActionScreen(
+                                network.zamolxis.app.ui.screens.UsbDeviceActionScreen(
                                     deviceName = usbDeviceName,
                                     pyxisVersion = pyxisVersion,
                                     isEsp32S3Candidate =
-                                        network.columba.app.rns.host.flasher.ESPToolFlasher.isNativeUsbDevice(
+                                        network.zamolxis.app.rns.host.flasher.ESPToolFlasher.isNativeUsbDevice(
                                             usbVendorId,
                                             usbProductId,
                                         ),
@@ -1807,7 +1807,7 @@ fun ColumbaNavigation(
                                         isDisablingTransport = true
                                         coroutineScope.launch {
                                             val flasher =
-                                                network.columba.app.rns.host.flasher
+                                                network.zamolxis.app.rns.host.flasher
                                                     .RNodeFlasher(context)
                                             val success = flasher.tncModeController.disableTncMode(usbDeviceId)
                                             isDisablingTransport = false
@@ -2071,7 +2071,7 @@ fun ColumbaNavigation(
                                 val loraBandwidth = backStackEntry.arguments?.getInt("loraBandwidth") ?: -1
                                 val loraSf = backStackEntry.arguments?.getInt("loraSf") ?: -1
                                 val loraCr = backStackEntry.arguments?.getInt("loraCr") ?: -1
-                                network.columba.app.ui.screens.rnode.RNodeWizardScreen(
+                                network.zamolxis.app.ui.screens.rnode.RNodeWizardScreen(
                                     editingInterfaceId = if (interfaceId >= 0) interfaceId else null,
                                     preselectedConnectionType = connectionType,
                                     preselectedUsbDeviceId = if (usbDeviceId >= 0) usbDeviceId else null,
@@ -2103,7 +2103,7 @@ fun ColumbaNavigation(
                                         },
                                     ),
                             ) { backStackEntry ->
-                                network.columba.app.ui.screens.InterfaceStatsScreen(
+                                network.zamolxis.app.ui.screens.InterfaceStatsScreen(
                                     onNavigateBack = { navController.popBackStack() },
                                     onNavigateToEdit = { interfaceId, interfaceType ->
                                         // Route to appropriate wizard based on interface type
@@ -2535,7 +2535,7 @@ fun ColumbaNavigation(
                 // ViewModel gates visibility (sentry flavor, onboarding complete, prompt
                 // not yet seen, not already opted in) and marks it seen on either choice.
                 if (showCrashReportingOptIn) {
-                    network.columba.app.ui.screens.settings.dialogs.CrashReportingOptInDialog(
+                    network.zamolxis.app.ui.screens.settings.dialogs.CrashReportingOptInDialog(
                         onEnable = { settingsViewModel.enableCrashReportingFromPrompt() },
                         onDismiss = { settingsViewModel.dismissCrashReportingPrompt() },
                     )

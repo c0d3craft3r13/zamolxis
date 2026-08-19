@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -8,9 +8,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.TestFactories
-import network.columba.app.data.model.InterfaceType
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.TestFactories
+import network.zamolxis.app.data.model.InterfaceType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -326,13 +326,13 @@ class PeerCardTest {
     }
 
     @Test
-    fun peerCard_displaysAntennaIcon_forColumbaRNodeBle() {
+    fun peerCard_displaysAntennaIcon_forZamolxisRNodeBle() {
         // BLE-attached RNode: classifier must prefer "rnode" over "ble"
         // because the transport really IS RNode even though the wire
         // adapter is BLE. Regression-pin from the original cascade fix.
         val announce =
             TestFactories.createAnnounce(
-                receivingInterface = "ColumbaRNodeInterface[Heltec V3]",
+                receivingInterface = "ZamolxisRNodeInterface[Heltec V3]",
             )
 
         composeTestRule.setContent {

@@ -1,8 +1,8 @@
-# Micron Rendering Implementation Plan for Columba
+# Micron Rendering Implementation Plan for Zamolxis
 
 ## Overview
 
-Add Micron markup rendering to Columba Android LXMF messenger. This would make Columba the first Android app with native micron page rendering (Sideband lacks this feature; MeshChat is web-only).
+Add Micron markup rendering to Zamolxis Android LXMF messenger. This would make Zamolxis the first Android app with native micron page rendering (Sideband lacks this feature; MeshChat is web-only).
 
 ---
 
@@ -25,10 +25,10 @@ MessageEntity → Message → MessageUi (with decoded image + parsed Micron) →
 Create new `:micron` module (pure Kotlin, no Android deps):
 
 ```
-columba/
+zamolxis/
 ├── micron/
 │   ├── build.gradle.kts
-│   └── src/main/java/network.columba.app/micron/
+│   └── src/main/java/network.zamolxis.app/micron/
 │       ├── MicronParser.kt      # Main parser (~900 lines ported from JS)
 │       ├── MicronState.kt       # Parser state machine
 │       ├── MicronElement.kt     # Sealed class hierarchy for parsed elements
@@ -209,6 +209,6 @@ if (message.parsedContent != null) {
 ## Reference
 
 - **JS Parser:** `micron-parser-js/js/micron-parser.js` (907 lines)
-- **Columba MessageMapper:** `app/src/main/java/network.columba.app/ui/model/MessageMapper.kt`
-- **Columba MessageUi:** `app/src/main/java/network.columba.app/ui/model/MessageUi.kt`
-- **Columba MessagingScreen:** `app/src/main/java/network.columba.app/ui/screens/MessagingScreen.kt:434`
+- **Zamolxis MessageMapper:** `app/src/main/java/network.zamolxis.app/ui/model/MessageMapper.kt`
+- **Zamolxis MessageUi:** `app/src/main/java/network.zamolxis.app/ui/model/MessageUi.kt`
+- **Zamolxis MessagingScreen:** `app/src/main/java/network.zamolxis.app/ui/screens/MessagingScreen.kt:434`

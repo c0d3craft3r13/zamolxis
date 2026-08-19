@@ -1,15 +1,15 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import androidx.core.content.FileProvider
-import network.columba.app.data.crypto.IdentityKeyEncryptor
-import network.columba.app.data.crypto.IdentityKeyProvider
-import network.columba.app.data.database.InterfaceDatabase
-import network.columba.app.data.db.ColumbaDatabase
-import network.columba.app.repository.SettingsRepository
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
+import network.zamolxis.app.data.crypto.IdentityKeyProvider
+import network.zamolxis.app.data.database.InterfaceDatabase
+import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -29,7 +29,7 @@ import javax.inject.Singleton
 /**
  * Handles exporting all app data to a migration bundle file.
  *
- * The export creates a .columba file (ZIP archive) containing:
+ * The export creates a .zamolxis file (ZIP archive) containing:
  * - manifest.json: Serialized MigrationBundle with all data
  * - attachments/: Directory with message attachments
  *
@@ -43,7 +43,7 @@ class MigrationExporter
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
-        private val database: ColumbaDatabase,
+        private val database: ZamolxisDatabase,
         private val interfaceDatabase: InterfaceDatabase,
         private val settingsRepository: SettingsRepository,
         private val keyEncryptor: IdentityKeyEncryptor,
@@ -167,7 +167,7 @@ class MigrationExporter
         )
 
         private suspend fun collectUserData(
-            identities: List<network.columba.app.data.db.entity.LocalIdentityEntity>,
+            identities: List<network.zamolxis.app.data.db.entity.LocalIdentityEntity>,
             onProgress: (Float) -> Unit,
         ): UserData {
             val allConversations = mutableListOf<ConversationExport>()
@@ -240,7 +240,7 @@ class MigrationExporter
             }
 
         private suspend fun exportIdentities(
-            identities: List<network.columba.app.data.db.entity.LocalIdentityEntity>,
+            identities: List<network.zamolxis.app.data.db.entity.LocalIdentityEntity>,
             exportPassword: CharArray? = null,
         ): List<IdentityExport> {
             return identities.map { identity ->
@@ -290,7 +290,7 @@ class MigrationExporter
          */
         @Suppress("DEPRECATION")
         private suspend fun getDecryptedKeyData(
-            identity: network.columba.app.data.db.entity.LocalIdentityEntity,
+            identity: network.zamolxis.app.data.db.entity.LocalIdentityEntity,
         ): ByteArray? {
             // Try to get from encrypted storage first
             if (identity.keyEncryptionVersion > 0 && identity.encryptedKeyData != null) {
@@ -360,7 +360,7 @@ class MigrationExporter
         }
 
         private suspend fun exportCallHistory(
-            identities: List<network.columba.app.data.db.entity.LocalIdentityEntity>,
+            identities: List<network.zamolxis.app.data.db.entity.LocalIdentityEntity>,
         ): List<CallHistoryExport> {
             val records =
                 identities.flatMap { identity ->
@@ -485,7 +485,7 @@ class MigrationExporter
             val exportDir = File(context.cacheDir, EXPORT_DIR).also { it.mkdirs() }
             val dateFormat = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.US)
             val timestamp = dateFormat.format(Date())
-            val exportFile = File(exportDir, "columba_export_$timestamp.columba")
+            val exportFile = File(exportDir, "zamolxis_export_$timestamp.zamolxis")
 
             ZipOutputStream(FileOutputStream(exportFile)).use { zipOut ->
                 zipOut.putNextEntry(ZipEntry(MANIFEST_FILENAME))

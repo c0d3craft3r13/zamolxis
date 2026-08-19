@@ -7,9 +7,9 @@
     <application>
         <!-- Test host for Compose instrumented tests (no launcher icon) -->
         <activity
-            android:name="network.columba.app.test.TestHostActivity"
+            android:name="network.zamolxis.app.test.TestHostActivity"
             android:exported="true"
-            android:theme="@style/Theme.Columba" />
+            android:theme="@style/Theme.Zamolxis" />
 
         <!-- Disable LeakCanary's "Leaks" launcher icon -->
         <activity
@@ -17,30 +17,30 @@
             android:enabled="false"
             tools:replace="android:enabled" />
 
-        <!-- Debug-only: exposes a BroadcastReceiver that the columba phone
+        <!-- Debug-only: exposes a BroadcastReceiver that the zamolxis phone
              harness drives via `adb shell am broadcast`. See TestReceiver.kt
              for the full action contract. Compiled out of release builds. -->
         <receiver
-            android:name="network.columba.app.test.TestReceiver"
+            android:name="network.zamolxis.app.test.TestReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="network.columba.test.GET_DEST" />
-                <action android:name="network.columba.test.HAS_PATH" />
-                <action android:name="network.columba.test.SEND_DIRECT" />
-                <action android:name="network.columba.test.SEND_OPP" />
-                <action android:name="network.columba.test.SEND_PROP" />
-                <action android:name="network.columba.test.GET_MSG_STATE" />
-                <action android:name="network.columba.test.GET_RX" />
-                <action android:name="network.columba.test.RX_CLEAR" />
-                <action android:name="network.columba.test.ANNOUNCE" />
-                <action android:name="network.columba.test.LIST_INTERFACES" />
-                <action android:name="network.columba.test.DISABLE_ALL_INTERFACES" />
-                <action android:name="network.columba.test.DISABLE_INTERFACE" />
-                <action android:name="network.columba.test.ENABLE_INTERFACE" />
-                <action android:name="network.columba.test.ADD_TCP_CLIENT" />
-                <action android:name="network.columba.test.REMOVE_INTERFACE" />
-                <action android:name="network.columba.test.SET_PROP_NODE" />
-                <action android:name="network.columba.test.SYNC_PROP" />
+                <action android:name="network.zamolxis.test.GET_DEST" />
+                <action android:name="network.zamolxis.test.HAS_PATH" />
+                <action android:name="network.zamolxis.test.SEND_DIRECT" />
+                <action android:name="network.zamolxis.test.SEND_OPP" />
+                <action android:name="network.zamolxis.test.SEND_PROP" />
+                <action android:name="network.zamolxis.test.GET_MSG_STATE" />
+                <action android:name="network.zamolxis.test.GET_RX" />
+                <action android:name="network.zamolxis.test.RX_CLEAR" />
+                <action android:name="network.zamolxis.test.ANNOUNCE" />
+                <action android:name="network.zamolxis.test.LIST_INTERFACES" />
+                <action android:name="network.zamolxis.test.DISABLE_ALL_INTERFACES" />
+                <action android:name="network.zamolxis.test.DISABLE_INTERFACE" />
+                <action android:name="network.zamolxis.test.ENABLE_INTERFACE" />
+                <action android:name="network.zamolxis.test.ADD_TCP_CLIENT" />
+                <action android:name="network.zamolxis.test.REMOVE_INTERFACE" />
+                <action android:name="network.zamolxis.test.SET_PROP_NODE" />
+                <action android:name="network.zamolxis.test.SYNC_PROP" />
             </intent-filter>
         </receiver>
     </application>

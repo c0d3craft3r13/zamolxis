@@ -1,4 +1,4 @@
-package network.columba.app.util.validation
+package network.zamolxis.app.util.validation
 
 /**
  * Represents the result of a validation operation.

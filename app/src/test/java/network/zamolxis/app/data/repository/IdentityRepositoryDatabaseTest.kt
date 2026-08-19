@@ -1,12 +1,12 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import app.cash.turbine.test
-import network.columba.app.data.crypto.IdentityKeyEncryptor
-import network.columba.app.data.crypto.IdentityKeyProvider
-import network.columba.app.test.DatabaseTest
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
+import network.zamolxis.app.data.crypto.IdentityKeyProvider
+import network.zamolxis.app.test.DatabaseTest
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -62,7 +62,7 @@ class IdentityRepositoryDatabaseTest : DatabaseTest() {
         mockContext = mockk(relaxed = true)
         every { mockContext.filesDir } returns tempDir
         every { mockContext.cacheDir } returns tempDir
-        every { mockContext.packageName } returns "network.columba.app"
+        every { mockContext.packageName } returns "network.zamolxis.app"
 
         mockKeyEncryptor = mockk()
         every { mockKeyEncryptor.encryptWithDeviceKey(any()) } answers {
@@ -362,7 +362,7 @@ class IdentityRepositoryDatabaseTest : DatabaseTest() {
 
                 // Should eventually emit the active identity
                 // Skip intermediate nulls until we get the active identity
-                var active: network.columba.app.data.db.entity.LocalIdentityEntity? = null
+                var active: network.zamolxis.app.data.db.entity.LocalIdentityEntity? = null
                 while (active == null) {
                     active = awaitItem()
                 }

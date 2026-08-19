@@ -1,9 +1,9 @@
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
 import android.app.Application
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import network.columba.app.data.repository.Message
+import network.zamolxis.app.data.repository.Message
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
@@ -386,7 +386,7 @@ class MessageMapperTest {
         // Write some hex data (arbitrary - Robolectric may or may not decode it)
         tempFile.writeText("0102030405060708")
 
-        val fieldsJson = """{"6": {"_file_ref": "${tempFile.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}}"""
         val result = decodeAndCacheImage("file-test-id", fieldsJson)
 
         // The function should have read the file - whether decode succeeds depends on Robolectric
@@ -400,7 +400,7 @@ class MessageMapperTest {
         // Valid hex string (though not a valid image)
         tempFile.writeText("ffd8ffe000104a46494600")
 
-        val fieldsJson = """{"6": {"_file_ref": "${tempFile.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}}"""
         val result = decodeAndCacheImage("hex-file-test", fieldsJson)
 
         // File was read successfully - decode may or may not succeed
@@ -412,7 +412,7 @@ class MessageMapperTest {
         // Create a directory instead of a file
         val tempDir = tempFolder.newFolder("not_a_file")
 
-        val fieldsJson = """{"6": {"_file_ref": "${tempDir.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(tempDir.absolutePath)}}}"""
         val result = decodeAndCacheImage("dir-test-id", fieldsJson)
 
         // Should return null because we can't read a directory as text
@@ -424,7 +424,7 @@ class MessageMapperTest {
         val emptyFile = tempFolder.newFile("empty.dat")
         // File exists but is empty
 
-        val fieldsJson = """{"6": {"_file_ref": "${emptyFile.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(emptyFile.absolutePath)}}}"""
         val result = decodeAndCacheImage("empty-file-test", fieldsJson)
 
         // Function should handle empty file without crashing
@@ -436,7 +436,7 @@ class MessageMapperTest {
         val whitespaceFile = tempFolder.newFile("whitespace.dat")
         whitespaceFile.writeText("   \n\t  ")
 
-        val fieldsJson = """{"6": {"_file_ref": "${whitespaceFile.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(whitespaceFile.absolutePath)}}}"""
         val result = decodeAndCacheImage("whitespace-file-test", fieldsJson)
 
         // Whitespace is not valid hex, should fail during hex parsing
@@ -449,7 +449,7 @@ class MessageMapperTest {
         val tempFile = tempFolder.newFile("test file with spaces.dat")
         tempFile.writeText("0102030405")
 
-        val fieldsJson = """{"6": {"_file_ref": "${tempFile.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}}"""
         val result = decodeAndCacheImage("special-path-test", fieldsJson)
 
         // Should handle the path correctly - no exception means success
@@ -1049,7 +1049,7 @@ class MessageMapperTest {
     fun `toMessageUi parses positional wire format from Sideband`() {
         // Sideband (and the LXMF reference implementation) serializes
         // FIELD_FILE_ATTACHMENTS as a list of [filename, data_bytes]
-        // tuples. After Columba's hex-serialization step the JSON looks
+        // tuples. After Zamolxis's hex-serialization step the JSON looks
         // like [[filename_str, data_hex_str], ...]. Before the wire-
         // format-aware fix this path threw typeMismatch on getJSONObject
         // and the attachment was dropped silently -> empty bubble.
@@ -1072,14 +1072,14 @@ class MessageMapperTest {
     }
 
     @Test
-    fun `toMessageUi decodes hex-encoded filename from Columba sender`() {
-        // Both Columba backends send the filename element as bytes
+    fun `toMessageUi decodes hex-encoded filename from Zamolxis sender`() {
+        // Both Zamolxis backends send the filename element as bytes
         // (`PythonRnsLxmf.buildFields`: `name.toByteArray()`), so the
         // upstream-LXMF serializer hex-encodes the filename when it
         // crosses into fieldsJson. Receiver must hex-decode UTF-8 when
         // the element looks like lowercase-hex; without this, the file
-        // bubble rendered the raw hex string in the UI on every Columba
-        // -> Columba file attachment.
+        // bubble rendered the raw hex string in the UI on every Zamolxis
+        // -> Zamolxis file attachment.
         // 0x74 65 73 74 2d 61 74 74 61 63 68 2e 74 78 74 == "test-attach.txt"
         val fieldsJson = """{"5": [["746573742d6174746163682e747874", "0102", 16]]}"""
         val message = createMessage(TestMessageConfig(fieldsJson = fieldsJson))
@@ -1388,7 +1388,7 @@ class MessageMapperTest {
         tempFile.writeText("48656c6c6f") // "Hello" in hex
 
         // New format: metadata inline with per-file _data_ref
-        val fieldsJson = """{"5": [{"filename": "test.txt", "size": 5, "_data_ref": "${tempFile.absolutePath}"}]}"""
+        val fieldsJson = """{"5": [{"filename": "test.txt", "size": 5, "_data_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}]}"""
         val result = loadFileAttachmentData(fieldsJson, 0)
 
         assertNotNull(result)
@@ -1548,7 +1548,7 @@ class MessageMapperTest {
         tempFile.writeText("446973") // "Dis" in hex
 
         // New format: metadata inline with per-file _data_ref
-        val fieldsJson = """{"5": [{"filename": "disk_file.txt", "size": 3, "_data_ref": "${tempFile.absolutePath}"}]}"""
+        val fieldsJson = """{"5": [{"filename": "disk_file.txt", "size": 3, "_data_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}]}"""
         val message = createMessage(TestMessageConfig(fieldsJson = fieldsJson))
 
         val result = message.toMessageUi()
@@ -1568,8 +1568,8 @@ class MessageMapperTest {
 
         // New format: each attachment has its own _data_ref
         val fieldsJson = """{"5": [
-            {"filename": "a.txt", "size": 2, "_data_ref": "${tempFileA.absolutePath}"},
-            {"filename": "b.txt", "size": 2, "_data_ref": "${tempFileB.absolutePath}"}
+            {"filename": "a.txt", "size": 2, "_data_ref": ${org.json.JSONObject.quote(tempFileA.absolutePath)}},
+            {"filename": "b.txt", "size": 2, "_data_ref": ${org.json.JSONObject.quote(tempFileB.absolutePath)}}
         ]}"""
 
         val resultA = loadFileAttachmentData(fieldsJson, 0)
@@ -1587,7 +1587,7 @@ class MessageMapperTest {
         // Invalid hex data - odd length and invalid characters
         tempFile.writeText("not valid hex [{{{")
 
-        val fieldsJson = """{"5": [{"filename": "test.txt", "size": 5, "_data_ref": "${tempFile.absolutePath}"}]}"""
+        val fieldsJson = """{"5": [{"filename": "test.txt", "size": 5, "_data_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}]}"""
         val result = loadFileAttachmentData(fieldsJson, 0)
 
         // Invalid hex throws exception which is caught, returning null
@@ -1956,7 +1956,7 @@ class MessageMapperTest {
         val tempFile = tempFolder.newFile("animated.dat")
         tempFile.writeText(animatedGifHex)
 
-        val fieldsJson = """{"6": {"_file_ref": "${tempFile.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}}"""
         val result = decodeImageWithAnimation("file-ref-test", fieldsJson)
 
         assertNotNull(result)
@@ -2713,7 +2713,7 @@ class MessageMapperTest {
         val tempFile = tempFolder.newFile("image_data.dat")
         tempFile.writeText("48656c6c6f") // "Hello" in hex
 
-        val fieldsJson = """{"6": {"_file_ref": "${tempFile.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}}"""
         val result = loadImageData(fieldsJson)
 
         assertNotNull(result)
@@ -2857,7 +2857,7 @@ class MessageMapperTest {
         val tempFile = tempFolder.newFile("animated.dat")
         tempFile.writeText(animatedGifHex)
 
-        val fieldsJson = """{"6": {"_file_ref": "${tempFile.absolutePath}"}}"""
+        val fieldsJson = """{"6": {"_file_ref": ${org.json.JSONObject.quote(tempFile.absolutePath)}}}"""
         val result = getImageMetadata(fieldsJson)
 
         assertNotNull(result)

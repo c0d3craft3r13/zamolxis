@@ -1,8 +1,8 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.content.Context
 import android.os.Build
-import network.columba.app.BuildConfig
+import network.zamolxis.app.BuildConfig
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -64,7 +64,7 @@ object DeviceInfoUtil {
 
     fun formatForClipboard(info: SystemInfo): String =
         buildString {
-            appendLine("Columba ${info.appVersion} (${info.appBuildCode})")
+            appendLine("Zamolxis ${info.appVersion} (${info.appBuildCode})")
             appendLine("Build: ${info.gitCommitHash} (${info.buildDate})")
             appendLine("Android ${info.androidVersion} (API ${info.apiLevel})")
             appendLine("Device: ${info.deviceModel} by ${info.manufacturer}")
@@ -90,7 +90,7 @@ object DeviceInfoUtil {
     fun formatForBugReport(info: SystemInfo): String =
         buildString {
             appendLine("### System Information")
-            appendLine("- **Columba**: ${info.appVersion} (${info.appBuildCode})")
+            appendLine("- **Zamolxis**: ${info.appVersion} (${info.appBuildCode})")
             appendLine("- **Build**: ${info.gitCommitHash} (${info.buildDate})")
             appendLine("- **Build Type**: ${info.buildType}")
             appendLine("- **Android**: ${info.androidVersion} (API ${info.apiLevel})")

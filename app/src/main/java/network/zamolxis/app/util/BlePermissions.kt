@@ -1,10 +1,10 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
 import android.Manifest
 import android.os.Build
 
 /**
- * The runtime permissions Columba needs to operate the AndroidBLE interface.
+ * The runtime permissions Zamolxis needs to operate the AndroidBLE interface.
  * Android 12+ uses the new BLUETOOTH_* runtime permissions; older versions
  * fall back to the legacy BLUETOOTH + ACCESS_FINE_LOCATION pair.
  */

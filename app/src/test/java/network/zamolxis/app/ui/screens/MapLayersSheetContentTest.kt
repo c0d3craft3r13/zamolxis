@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -8,9 +8,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.data.model.MapStylePreference
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.ui.util.InterfaceCategory
+import network.zamolxis.app.data.model.MapStylePreference
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.util.InterfaceCategory
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

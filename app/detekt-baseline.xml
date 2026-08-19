@@ -2,7 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:ColumbaApplication.kt$ColumbaApplication$override fun onCreate()</ID>
+    <ID>CyclomaticComplexMethod:ZamolxisApplication.kt$ZamolxisApplication$override fun onCreate()</ID>
     <ID>CyclomaticComplexMethod:ConfigFileParser.kt$ConfigFileParser$private fun parseConfigLines(lines: List&lt;String&gt;): List&lt;InterfaceConfig&gt;</ID>
     <ID>CyclomaticComplexMethod:DebugViewModel.kt$DebugViewModel$private fun fetchDebugInfo()</ID>
     <ID>CyclomaticComplexMethod:InterfaceRepository.kt$InterfaceRepository$fun entityToConfig(entity: InterfaceEntity): InterfaceConfig</ID>
@@ -13,7 +13,7 @@
     <ID>ImplicitDefaultLocale:BleTestFixtures.kt$BleTestFixtures$String.format("%02X", i)</ID>
     <ID>ImplicitDefaultLocale:ThemeColorGenerator.kt$ThemeColorGenerator$String.format("#%06X", argb and 0xFFFFFF)</ID>
     <ID>ImplicitDefaultLocale:ThemeColorGenerator.kt$ThemeColorGenerator$String.format("#%08X", argb)</ID>
-    <ID>LongMethod:ColumbaApplication.kt$ColumbaApplication$override fun onCreate()</ID>
+    <ID>LongMethod:ZamolxisApplication.kt$ZamolxisApplication$override fun onCreate()</ID>
     <ID>LongMethod:ConfigFileParser.kt$ConfigFileParser$private fun parseConfigLines(lines: List&lt;String&gt;): List&lt;InterfaceConfig&gt;</ID>
     <ID>LongMethod:InterfaceRepository.kt$InterfaceRepository$fun entityToConfig(entity: InterfaceEntity): InterfaceConfig</ID>
     <ID>LongMethod:MessageCollector.kt$MessageCollector$fun startCollecting()</ID>
@@ -31,7 +31,7 @@
     <ID>ReturnCount:InputValidator.kt$InputValidator$fun String.safeHexToBytes(): Result&lt;ByteArray&gt;</ID>
     <ID>ReturnCount:InputValidator.kt$InputValidator$fun validateIdentityString(identityString: String): ValidationResult&lt;Pair&lt;ByteArray, ByteArray&gt;&gt;</ID>
     <ID>ReturnCount:NotificationHelper.kt$NotificationHelper$suspend fun notifyMessageReceived( destinationHash: String, peerName: String, messagePreview: String, isFavorite: Boolean, )</ID>
-    <ID>SwallowedException:ColumbaApplication.kt$ColumbaApplication$e: ClassNotFoundException</ID>
+    <ID>SwallowedException:ZamolxisApplication.kt$ZamolxisApplication$e: ClassNotFoundException</ID>
     <ID>SwallowedException:IdentityManagerViewModel.kt$IdentityManagerViewModel$e: Exception</ID>
     <ID>SwallowedException:IdentityQrCodeUtils.kt$IdentityQrCodeUtils$e: Exception</ID>
     <ID>SwallowedException:InterfaceConfigManager.kt$InterfaceConfigManager$e: Exception</ID>
@@ -59,14 +59,14 @@
     <ID>TooManyFunctions:SettingsRepository.kt$SettingsRepository</ID>
     <ID>UnusedParameter:ContactsScreen.kt$contactName: String</ID>
     <ID>UnusedParameter:ContactsScreen.kt$onNavigateToConversation: (destinationHash: String) -&gt; Unit = {}</ID>
-    <ID>UnusedParameter:DebugViewModel.kt$DebugViewModel$identity: network.columba.app.rns.api.model.Identity</ID>
+    <ID>UnusedParameter:DebugViewModel.kt$DebugViewModel$identity: network.zamolxis.app.rns.api.model.Identity</ID>
     <ID>UnusedParameter:IdentityManagerViewModel.kt$IdentityManagerViewModel$identityHash: String</ID>
     <ID>UnusedParameter:IdentityScreen.kt$identityHash: String?</ID>
     <ID>UnusedParameter:MyIdentityScreen.kt$onNavigateToIdentityManager: () -&gt; Unit = {}</ID>
     <ID>UnusedParameter:MyIdentityScreen.kt$publicKey: ByteArray?</ID>
     <ID>UnusedParameter:QrScannerScreen.kt$onNavigateToConversation: (destinationHash: String) -&gt; Unit = {}</ID>
     <ID>UnusedPrivateMember:AnnounceStreamScreen.kt$private fun formatHash(hash: ByteArray): String</ID>
-    <ID>UnusedPrivateMember:ColumbaApplication.kt$ColumbaApplication$private suspend fun initializeReticulumService(rnsCore: RnsCore)</ID>
+    <ID>UnusedPrivateMember:ZamolxisApplication.kt$ZamolxisApplication$private suspend fun initializeReticulumService(rnsCore: RnsCore)</ID>
     <ID>UnusedPrivateMember:InterfaceDatabase.kt$InterfaceDatabase.Callback$private suspend fun populateDatabase(interfaceDao: InterfaceDao)</ID>
     <ID>UnusedPrivateMember:MessageCollector.kt$MessageCollector$private fun getPeerName(peerHash: String): String</ID>
     <ID>UnusedPrivateMember:MessageMapper.kt$@Deprecated( "Use parseReplyToFromFields — it accepts both the canonical 0x30 " + "format AND the legacy 0x10 overload.", ReplaceWith("parseReplyToFromFields(fieldsJson)"), ) private fun parseReplyToFromField16(fieldsJson: String?): String?</ID>
@@ -77,8 +77,8 @@
     <ID>UnusedPrivateProperty:IdentityScreen.kt$val context = LocalContext.current</ID>
     <ID>UnusedPrivateProperty:InterfaceDatabase.kt$InterfaceDatabase.Callback$private val applicationScope: CoroutineScope</ID>
     <ID>UnusedPrivateProperty:InterfaceDatabase.kt$InterfaceDatabase.Callback$private val database: Provider&lt;InterfaceDatabase&gt;</ID>
-    <ID>UnusedPrivateProperty:NotificationHelper.kt$NotificationHelper.Companion$private const val ACTION_MARK_READ = "network.columba.app.ACTION_MARK_READ"</ID>
-    <ID>UnusedPrivateProperty:NotificationHelper.kt$NotificationHelper.Companion$private const val ACTION_REPLY = "network.columba.app.ACTION_REPLY"</ID>
+    <ID>UnusedPrivateProperty:NotificationHelper.kt$NotificationHelper.Companion$private const val ACTION_MARK_READ = "network.zamolxis.app.ACTION_MARK_READ"</ID>
+    <ID>UnusedPrivateProperty:NotificationHelper.kt$NotificationHelper.Companion$private const val ACTION_REPLY = "network.zamolxis.app.ACTION_REPLY"</ID>
     <ID>UnusedPrivateProperty:ThemeEditorViewModel.kt$ThemeEditorViewModel.Companion$private const val TAG = "ThemeEditorViewModel"</ID>
     <ID>UseCheckOrError:AppRestarter.kt$AppRestarter$throw IllegalStateException("Unable to get launch intent for app")</ID>
     <ID>UseRequire:IdentityQrCodeUtils.kt$IdentityQrCodeUtils$throw IllegalArgumentException("Hex string must have even length")</ID>

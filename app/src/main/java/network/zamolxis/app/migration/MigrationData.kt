@@ -1,6 +1,6 @@
-package network.columba.app.migration
+package network.zamolxis.app.migration
 
-import network.columba.app.data.db.entity.CustomThemeEntity
+import network.zamolxis.app.data.db.entity.CustomThemeEntity
 import kotlinx.serialization.Serializable
 
 /**

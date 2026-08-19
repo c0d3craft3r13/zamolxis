@@ -1,7 +1,7 @@
-package network.columba.app.rns.host.rnode
+package network.zamolxis.app.rns.host.rnode
 
 import android.annotation.SuppressLint
-import network.columba.app.rns.api.annotation.ReflectivelyKept
+import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -100,7 +100,7 @@ class KotlinRNodeBridge(
     private val context: Context,
 ) {
     companion object {
-        private const val TAG = "Columba:RNodeBridge"
+        private const val TAG = "Zamolxis:RNodeBridge"
 
         // Standard SPP UUID for serial port profile (Bluetooth Classic)
         private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
@@ -210,7 +210,7 @@ class KotlinRNodeBridge(
     private val onlineStatusListeners = mutableListOf<RNodeOnlineStatusListener>()
 
     // Python-side connection-state callback. Single slot (not a list) because
-    // the consumer is ColumbaRNodeInterface._on_connection_state_changed —
+    // the consumer is ZamolxisRNodeInterface._on_connection_state_changed —
     // there's one Python interface per bridge instance at a time. PyObject
     // (Chaquopy) instead of a Kotlin SAM because Chaquopy doesn't auto-
     // adapt a Python bound method to a Kotlin functional interface
@@ -298,7 +298,7 @@ class KotlinRNodeBridge(
      * Register the python callback invoked on BLE/Classic
      * connect / disconnect transitions.
      *
-     * Python registers this via `ColumbaRNodeInterface.start()` after the
+     * Python registers this via `ZamolxisRNodeInterface.start()` after the
      * initial `connect()` succeeds; the bridge then invokes it from
      * [handleDisconnect] (BLE GATT drop, Classic stream EOF) and from the
      * connect-success path. Without this wiring the python interface keeps
@@ -407,7 +407,7 @@ class KotlinRNodeBridge(
             }
             // Different device or different mode requested. Refusing rather
             // than disconnecting+reconnecting protects against two
-            // ColumbaRNodeInterface.start() threads racing — the previously-
+            // ZamolxisRNodeInterface.start() threads racing — the previously-
             // observed pattern was both python interfaces' start() firing in
             // the same millisecond, both racing through connect(), the
             // second one's disconnect() killing the first's working GATT,

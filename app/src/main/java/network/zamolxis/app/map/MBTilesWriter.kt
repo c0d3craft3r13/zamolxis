@@ -1,4 +1,4 @@
-package network.columba.app.map
+package network.zamolxis.app.map
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase

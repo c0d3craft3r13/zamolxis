@@ -1,17 +1,17 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.rns.host.flasher.FirmwarePackage
-import network.columba.app.rns.host.flasher.FirmwareSource
-import network.columba.app.rns.host.flasher.FrequencyBand
-import network.columba.app.rns.host.flasher.RNodeBoard
-import network.columba.app.rns.host.flasher.RNodeDeviceInfo
-import network.columba.app.rns.host.flasher.RNodeFlasher
-import network.columba.app.rns.host.usb.UsbDeviceInfo
+import network.zamolxis.app.rns.host.flasher.FirmwarePackage
+import network.zamolxis.app.rns.host.flasher.FirmwareSource
+import network.zamolxis.app.rns.host.flasher.FrequencyBand
+import network.zamolxis.app.rns.host.flasher.RNodeBoard
+import network.zamolxis.app.rns.host.flasher.RNodeDeviceInfo
+import network.zamolxis.app.rns.host.flasher.RNodeFlasher
+import network.zamolxis.app.rns.host.usb.UsbDeviceInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,8 +94,8 @@ data class FlasherUiState(
     val provisioningMessage: String? = null,
     // Step 4d: TNC Configuration (microReticulum)
     val tncConfigOnly: Boolean = false, // standalone config mode (no flashing)
-    val tncSelectedRegion: network.columba.app.data.model.FrequencyRegion? = null,
-    val tncSelectedPreset: network.columba.app.data.model.ModemPreset = network.columba.app.data.model.ModemPreset.DEFAULT,
+    val tncSelectedRegion: network.zamolxis.app.data.model.FrequencyRegion? = null,
+    val tncSelectedPreset: network.zamolxis.app.data.model.ModemPreset = network.zamolxis.app.data.model.ModemPreset.DEFAULT,
     val tncFrequencyMhz: String = "868.0",
     val tncBandwidthKhz: String = "125",
     val tncSpreadingFactor: String = "8",
@@ -129,7 +129,7 @@ class FlasherViewModel
         @ApplicationContext private val context: Context,
     ) : ViewModel() {
         companion object {
-            private const val TAG = "Columba:FlasherVM"
+            private const val TAG = "Zamolxis:FlasherVM"
         }
 
         private val flasher = RNodeFlasher(context)
@@ -165,7 +165,7 @@ class FlasherViewModel
             Log.d(TAG, "Skip detection mode enabled (for bootloader flashing)")
             skipDetectionMode = true
             // Disable USB auto-navigation when bootloader mode is active
-            network.columba.app.MainActivity.bootloaderFlashModeActive = true
+            network.zamolxis.app.MainActivity.bootloaderFlashModeActive = true
             _state.update { it.copy(useManualBoardSelection = true) }
         }
 
@@ -265,7 +265,7 @@ class FlasherViewModel
                     _state.update { it.copy(isDetecting = false, detectionError = flashState.message) }
                 }
                 FlasherStep.FLASH_PROGRESS -> {
-                    network.columba.app.MainActivity.bootloaderFlashModeActive = false
+                    network.zamolxis.app.MainActivity.bootloaderFlashModeActive = false
                     _state.update {
                         it.copy(
                             currentStep = FlasherStep.COMPLETE,
@@ -596,7 +596,7 @@ class FlasherViewModel
             // The device re-enumerates after DFU with a new device ID, which triggers
             // ACTION_USB_DEVICE_ATTACHED — without this flag, the app navigates away
             // from the flash progress screen.
-            network.columba.app.MainActivity.bootloaderFlashModeActive = true
+            network.zamolxis.app.MainActivity.bootloaderFlashModeActive = true
 
             _state.update {
                 it.copy(
@@ -641,7 +641,7 @@ class FlasherViewModel
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Flash failed with exception", e)
-                    network.columba.app.MainActivity.bootloaderFlashModeActive = false
+                    network.zamolxis.app.MainActivity.bootloaderFlashModeActive = false
                     _state.update {
                         it.copy(
                             currentStep = FlasherStep.COMPLETE,
@@ -734,9 +734,9 @@ class FlasherViewModel
 
         // ==================== Step 4d: TNC Configuration ====================
 
-        fun selectTncRegion(region: network.columba.app.data.model.FrequencyRegion) = tncHelper.selectTncRegion(region)
+        fun selectTncRegion(region: network.zamolxis.app.data.model.FrequencyRegion) = tncHelper.selectTncRegion(region)
 
-        fun selectTncPreset(preset: network.columba.app.data.model.ModemPreset) = tncHelper.selectTncPreset(preset)
+        fun selectTncPreset(preset: network.zamolxis.app.data.model.ModemPreset) = tncHelper.selectTncPreset(preset)
 
         fun updateTncFrequency(value: String) = tncHelper.updateTncFrequency(value)
 
@@ -764,7 +764,7 @@ class FlasherViewModel
         fun flashAnother() {
             // Reset skip detection mode
             skipDetectionMode = false
-            network.columba.app.MainActivity.bootloaderFlashModeActive = false
+            network.zamolxis.app.MainActivity.bootloaderFlashModeActive = false
             _state.update {
                 FlasherUiState(
                     currentStep = FlasherStep.DEVICE_SELECTION,
@@ -777,7 +777,7 @@ class FlasherViewModel
         override fun onCleared() {
             super.onCleared()
             // Ensure bootloader flash mode is disabled when leaving flasher
-            network.columba.app.MainActivity.bootloaderFlashModeActive = false
+            network.zamolxis.app.MainActivity.bootloaderFlashModeActive = false
         }
 
         // ==================== Navigation Helpers ====================

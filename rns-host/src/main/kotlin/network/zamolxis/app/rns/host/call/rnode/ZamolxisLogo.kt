@@ -1,10 +1,10 @@
-package network.columba.app.rns.host.call.rnode
+package network.zamolxis.app.rns.host.call.rnode
 
 /**
- * Columba logo framebuffer data for RNode external display.
+ * Zamolxis logo framebuffer data for RNode external display.
  * 64x64 monochrome bitmap, 512 bytes (8 bytes per line, 64 lines).
  */
-object ColumbaLogo {
+object ZamolxisLogo {
     val FB_DATA =
         byteArrayOf(
             0x00.toByte(),

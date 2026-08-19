@@ -1,4 +1,4 @@
-package network.columba.app
+package network.zamolxis.app
 
 import android.app.Application
 import android.os.StrictMode
@@ -10,34 +10,34 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.ConversationRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.LogLevel
-import network.columba.app.rns.api.model.ReticulumConfig
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.service.IdentityResolutionManager
-import network.columba.app.service.MessageCollector
-import network.columba.app.service.PropagationNodeManager
-import network.columba.app.service.TelemetryCollectorManager
-import network.columba.app.startup.ConfigApplyFlagManager
-import network.columba.app.startup.ServiceIdentityVerifier
-import network.columba.app.startup.StartupConfigLoader
-import network.columba.app.telemetry.CrashReporter
-import network.columba.app.telemetry.CrashReporterProvider
-import network.columba.app.util.CrashReportManager
-import network.columba.app.util.HexUtils.hexStringToByteArray
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.LogLevel
+import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.service.IdentityResolutionManager
+import network.zamolxis.app.service.MessageCollector
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.service.TelemetryCollectorManager
+import network.zamolxis.app.startup.ConfigApplyFlagManager
+import network.zamolxis.app.startup.ServiceIdentityVerifier
+import network.zamolxis.app.startup.StartupConfigLoader
+import network.zamolxis.app.telemetry.CrashReporter
+import network.zamolxis.app.telemetry.CrashReporterProvider
+import network.zamolxis.app.util.CrashReportManager
+import network.zamolxis.app.util.HexUtils.hexStringToByteArray
 import javax.inject.Inject
 
 /**
- * Main application class for Columba LXMF Messenger.
+ * Main application class for Zamolxis LXMF Messenger.
  * Annotated with @HiltAndroidApp to enable Hilt dependency injection.
  */
 @HiltAndroidApp
-class ColumbaApplication : Application() {
+class ZamolxisApplication : Application() {
     companion object {
         /** Timeout for IPC calls to prevent ANR during initialization */
         internal const val IPC_TIMEOUT_MS = 5000L
@@ -51,13 +51,13 @@ class ColumbaApplication : Application() {
     lateinit var rnsLxmf: RnsLxmf
 
     @Inject
-    lateinit var rnsTelephony: network.columba.app.rns.api.RnsTelephony
+    lateinit var rnsTelephony: network.zamolxis.app.rns.api.RnsTelephony
 
     // Cross-process SharedPreferences wrapper shared with the :reticulum process.
     // Constructed lazily rather than via Hilt because it only needs a Context and has
     // no other dependencies — this avoids adding a module binding for a single call site.
     private val serviceSettingsAccessor by lazy {
-        network.columba.app.rns.host.persistence
+        network.zamolxis.app.rns.host.persistence
             .ServiceSettingsAccessor(this)
     }
 
@@ -83,13 +83,13 @@ class ColumbaApplication : Application() {
     lateinit var interfaceRepository: InterfaceRepository
 
     @Inject
-    lateinit var autoAnnounceManager: network.columba.app.service.AutoAnnounceManager
+    lateinit var autoAnnounceManager: network.zamolxis.app.service.AutoAnnounceManager
 
     @Inject
     lateinit var identityRepository: IdentityRepository
 
     @Inject
-    lateinit var identityKeyProvider: network.columba.app.data.crypto.IdentityKeyProvider
+    lateinit var identityKeyProvider: network.zamolxis.app.data.crypto.IdentityKeyProvider
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -107,7 +107,7 @@ class ColumbaApplication : Application() {
     lateinit var telemetryCollectorManager: TelemetryCollectorManager
 
     @Inject
-    lateinit var interfaceTransportObserver: network.columba.app.service.manager.InterfaceTransportObserver
+    lateinit var interfaceTransportObserver: network.zamolxis.app.service.manager.InterfaceTransportObserver
 
     // Application-level coroutine scope for app-wide operations
     // Uses Dispatchers.Default for background initialization (no main-thread work needed)
@@ -153,7 +153,7 @@ class ColumbaApplication : Application() {
                     .penaltyLog()
                     .build(),
             )
-            android.util.Log.d("ColumbaApplication", "StrictMode enabled for debug build")
+            android.util.Log.d("ZamolxisApplication", "StrictMode enabled for debug build")
         }
 
         // Skip RNS auto-init in service process or test environment
@@ -161,11 +161,11 @@ class ColumbaApplication : Application() {
         val processName = getCurrentProcessName()
         if (processName?.contains(":reticulum") == true || isRunningInTest()) {
             val context = if (isRunningInTest()) "test" else "service"
-            android.util.Log.d("ColumbaApplication", "$context process detected ($processName) - skipping auto-initialization")
+            android.util.Log.d("ZamolxisApplication", "$context process detected ($processName) - skipping auto-initialization")
             return
         }
 
-        android.util.Log.d("ColumbaApplication", "Main app process detected ($processName) - proceeding with auto-initialization")
+        android.util.Log.d("ZamolxisApplication", "Main app process detected ($processName) - proceeding with auto-initialization")
 
         // Preload theme preference into DataStore's in-memory cache
         // This eliminates theme flash on app startup by ensuring the theme is cached
@@ -173,10 +173,10 @@ class ColumbaApplication : Application() {
         applicationScope.launch {
             try {
                 settingsRepository.themePreferenceFlow.first()
-                android.util.Log.d("ColumbaApplication", "Theme preference preloaded and cached")
+                android.util.Log.d("ZamolxisApplication", "Theme preference preloaded and cached")
             } catch (e: Exception) {
                 android.util.Log.w(
-                    "ColumbaApplication",
+                    "ZamolxisApplication",
                     "Failed to preload theme preference (will use default): ${e.message}",
                 )
             }
@@ -185,8 +185,8 @@ class ColumbaApplication : Application() {
         // Clean up old temp files from previous sessions (attachments, share_images)
         // Run on IO dispatcher to avoid blocking main thread with file operations
         applicationScope.launch(Dispatchers.IO) {
-            network.columba.app.util.FileUtils
-                .cleanupAllTempFiles(this@ColumbaApplication)
+            network.zamolxis.app.util.FileUtils
+                .cleanupAllTempFiles(this@ZamolxisApplication)
         }
 
         // Migrate unencrypted identity keys to encrypted storage (one-time, idempotent),
@@ -210,24 +210,24 @@ class ColumbaApplication : Application() {
                     val result = identityRepository.runEncryptionMigration()
                     result.isSuccess && (result.getOrNull()?.failureCount ?: 1) == 0
                 } catch (e: Exception) {
-                    android.util.Log.e("ColumbaApplication", "Identity key encryption migration failed", e)
+                    android.util.Log.e("ZamolxisApplication", "Identity key encryption migration failed", e)
                     false
                 }
             if (!migrationSucceeded) {
                 android.util.Log.w(
-                    "ColumbaApplication",
+                    "ZamolxisApplication",
                     "Skipping stale identity file scrub - encryption migration did not fully succeed",
                 )
                 return@launch
             }
             // Skip scrub if the active identity requires a password — in that case
-            // ColumbaApplication can't decrypt the key at startup (no UI prompt yet),
+            // ZamolxisApplication can't decrypt the key at startup (no UI prompt yet),
             // so the on-disk identity file is still the only usable fallback for
             // handing the identity to the native stack. Deleting it silently rotates
             // the user onto a fresh ephemeral identity.
             if (anyActiveIdentityRequiresPassword()) {
                 android.util.Log.w(
-                    "ColumbaApplication",
+                    "ZamolxisApplication",
                     "Skipping stale identity file scrub - active identity is password-protected",
                 )
                 return@launch
@@ -250,13 +250,13 @@ class ColumbaApplication : Application() {
                     runCatching { f.writeBytes(ByteArray(f.length().toInt())) }
                     if (f.delete()) {
                         android.util.Log.i(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "Removed stale identity file: ${f.parentFile?.name}/${f.name}",
                         )
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.w("ColumbaApplication", "Stale identity file cleanup failed: ${e.message}")
+                android.util.Log.w("ZamolxisApplication", "Stale identity file cleanup failed: ${e.message}")
             }
         }
 
@@ -306,7 +306,7 @@ class ColumbaApplication : Application() {
                 val isApplyingConfig = configApplyFlagManager.isApplyingConfig()
 
                 if (isApplyingConfig) {
-                    android.util.Log.d("ColumbaApp", "Config apply flag set - checking service...")
+                    android.util.Log.d("ZamolxisApp", "Config apply flag set - checking service...")
                     // Bind to service to check status
                     // bindService() was a legacy no-op on the kotlin backend
 
@@ -322,20 +322,20 @@ class ColumbaApplication : Application() {
                             null
 
                         }
-                    android.util.Log.d("ColumbaApplication", "Service status with config flag set: $status")
+                    android.util.Log.d("ZamolxisApplication", "Service status with config flag set: $status")
 
                     if (configApplyFlagManager.isStaleFlag(status)) {
                         // Service is not running/ready - the flag is stale from a failed config apply
                         // Clear it and proceed with normal initialization
                         android.util.Log.w(
-                            "ColumbaApp",
+                            "ZamolxisApp",
                             "Stale config flag (status: $status) - clearing",
                         )
                         configApplyFlagManager.clearFlag()
                         // Fall through to normal initialization below
                     } else {
                         // Service is INITIALIZING or READY - InterfaceConfigManager is handling it
-                        android.util.Log.d("ColumbaApplication", "Config apply in progress - skipping auto-init")
+                        android.util.Log.d("ZamolxisApplication", "Config apply in progress - skipping auto-init")
                         return@launch
                     }
                 }
@@ -344,19 +344,19 @@ class ColumbaApplication : Application() {
                 if (!isApplyingConfig) {
                     // bindService() was a legacy no-op on the kotlin backend
                 }
-                android.util.Log.d("ColumbaApplication", "Successfully bound to ReticulumService")
+                android.util.Log.d("ZamolxisApplication", "Successfully bound to ReticulumService")
 
                 // Start PropagationNodeManager early so relay is synced to the native
                 // stack ASAP. This allows PROPAGATED sends to work before full
                 // initialization completes.
                 propagationNodeManager.start()
-                android.util.Log.d("ColumbaApplication", "PropagationNodeManager started early (relay sync)")
+                android.util.Log.d("ZamolxisApplication", "PropagationNodeManager started early (relay sync)")
 
                 // Start telemetry settings observation early so map UI state
                 // (collector address + send/request toggles) is available even if
                 // startup exits early while service is INITIALIZING/RESTARTING.
                 telemetryCollectorManager.start()
-                android.util.Log.d("ColumbaApplication", "TelemetryCollectorManager started early after bind")
+                android.util.Log.d("ZamolxisApplication", "TelemetryCollectorManager started early after bind")
 
                 // Check if service is already initialized (handle service process surviving app restart)
                 // Use timeout to prevent ANR if service is slow
@@ -366,10 +366,10 @@ class ColumbaApplication : Application() {
                 // backend. Always fall through to fresh initialization. Phase B's python
                 // flavor must wire a real service-status probe when it lands.
                 val currentStatus: String? = null
-                android.util.Log.d("ColumbaApplication", "Service status after binding: $currentStatus")
+                android.util.Log.d("ZamolxisApplication", "Service status after binding: $currentStatus")
 
                 if (currentStatus == "READY") {
-                    android.util.Log.d("ColumbaApplication", "Service already initialized and ready")
+                    android.util.Log.d("ZamolxisApplication", "Service already initialized and ready")
 
                     // Verify service identity matches database active identity
                     // This catches mismatches from interrupted identity switches or data imports
@@ -383,14 +383,14 @@ class ColumbaApplication : Application() {
 
                     if (!verificationResult.isMatch) {
                         android.util.Log.w(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "Identity mismatch detected! Service: ${verificationResult.serviceIdentityHash?.take(8)}..., " +
                                 "DB: ${verificationResult.dbIdentityHash?.take(8)}... - forcing reinitialization",
                         )
                         // Fall through to initialization code below to fix the mismatch
                     } else {
                         android.util.Log.d(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "Identity verified (${verificationResult.dbIdentityHash?.take(8) ?: "none"}...) - reconnecting",
                         )
                         // Identity matches - reconnect collectors and managers
@@ -400,7 +400,7 @@ class ColumbaApplication : Application() {
                         propagationNodeManager.start()
                         telemetryCollectorManager.start()
                         android.util.Log.d(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "MessageCollector, AutoAnnounceManager, IdentityResolutionManager, PropagationNodeManager, TelemetryCollectorManager started",
                         )
                         return@launch
@@ -410,15 +410,15 @@ class ColumbaApplication : Application() {
                     !currentStatus.startsWith("ERROR:")
                 ) {
                     // Service is in INITIALIZING or RESTARTING state - wait for it
-                    android.util.Log.d("ColumbaApplication", "Service is $currentStatus - waiting for completion")
+                    android.util.Log.d("ZamolxisApplication", "Service is $currentStatus - waiting for completion")
                     return@launch
                 }
 
                 // Service is SHUTDOWN or ERROR - need to initialize
-                android.util.Log.d("ColumbaApplication", "Service needs initialization (status: $currentStatus)")
+                android.util.Log.d("ZamolxisApplication", "Service needs initialization (status: $currentStatus)")
 
                 // Load all configuration from database in parallel for faster startup
-                android.util.Log.d("ColumbaApplication", "Loading configuration from database (parallel)...")
+                android.util.Log.d("ZamolxisApplication", "Loading configuration from database (parallel)...")
                 val startupConfig = startupConfigLoader.loadConfig()
                 val enabledInterfaces = startupConfig.interfaces
                 val activeIdentity = startupConfig.identity
@@ -438,7 +438,7 @@ class ColumbaApplication : Application() {
                     }.getOrDefault(true)
                 ) {
                     android.util.Log.w(
-                        "ColumbaApplication",
+                        "ZamolxisApplication",
                         "Active identity ${activeIdentity.identityHash.take(8)}... is password-protected " +
                             "(or password status unreadable) - skipping auto-init until unlock",
                     )
@@ -450,10 +450,10 @@ class ColumbaApplication : Application() {
                 val transportNodeEnabled = startupConfig.transport
                 val discoverInterfaces = startupConfig.discoverInterfaces
                 val autoconnectDiscoveredCount = startupConfig.autoconnectDiscoveredCount
-                android.util.Log.d("ColumbaApplication", "Loaded ${enabledInterfaces.size} enabled interface(s)")
-                android.util.Log.d("ColumbaApplication", "Prefer own instance: $preferOwnInstance")
-                android.util.Log.d("ColumbaApplication", "Transport node enabled: $transportNodeEnabled")
-                android.util.Log.d("ColumbaApplication", "Discover interfaces: $discoverInterfaces, autoconnect: $autoconnectDiscoveredCount")
+                android.util.Log.d("ZamolxisApplication", "Loaded ${enabledInterfaces.size} enabled interface(s)")
+                android.util.Log.d("ZamolxisApplication", "Prefer own instance: $preferOwnInstance")
+                android.util.Log.d("ZamolxisApplication", "Transport node enabled: $transportNodeEnabled")
+                android.util.Log.d("ZamolxisApplication", "Discover interfaces: $discoverInterfaces, autoconnect: $autoconnectDiscoveredCount")
 
                 val displayName = activeIdentity?.displayName
                 val deliveryKey = decryptDeliveryKey(activeIdentity)
@@ -467,7 +467,7 @@ class ColumbaApplication : Application() {
                 // runEncryptionMigration has populated the Keystore-wrapped blob.
                 if (activeIdentity != null && deliveryKey == null) {
                     android.util.Log.e(
-                        "ColumbaApplication",
+                        "ZamolxisApplication",
                         "Active identity ${activeIdentity.identityHash.take(8)}... present but key decryption " +
                             "returned null - skipping init to avoid silently substituting a fresh identity",
                     )
@@ -482,7 +482,7 @@ class ColumbaApplication : Application() {
                 settingsRepository.setNeedsIdentityUnlock(false)
 
                 // Auto-initialize Reticulum with config from database
-                android.util.Log.d("ColumbaApplication", "Auto-initializing Reticulum...")
+                android.util.Log.d("ZamolxisApplication", "Auto-initializing Reticulum...")
                 val config =
                     ReticulumConfig(
                         storagePath = filesDir.absolutePath + "/reticulum",
@@ -503,14 +503,14 @@ class ColumbaApplication : Application() {
                 rnsCore
                     .initialize(config)
                     .onSuccess {
-                        android.util.Log.i("ColumbaApplication", "Reticulum initialized successfully")
+                        android.util.Log.i("ZamolxisApplication", "Reticulum initialized successfully")
 
                         // A.10 follow-up: persist a sanitized snapshot so :reticulum can
                         // self-init after OOM/force-stop restart when UI isn't around to
                         // drive initialize(). Identity key is intentionally stripped — the
                         // reader decrypts it on demand via Keystore + IdentityKeyProvider.
-                        network.columba.app.rns.host.persistence.ReticulumConfigSnapshot.write(
-                            context = this@ColumbaApplication,
+                        network.zamolxis.app.rns.host.persistence.ReticulumConfigSnapshot.write(
+                            context = this@ZamolxisApplication,
                             config = config,
                             identityHashHex = activeIdentity?.identityHash,
                         )
@@ -524,12 +524,12 @@ class ColumbaApplication : Application() {
 
                         // Ensure identity is registered in Room database.
                         // On the native path, the identity exists only in reticulum-kt's memory —
-                        // Columba's Room DB needs it for conversations, messages, and contacts.
+                        // Zamolxis's Room DB needs it for conversations, messages, and contacts.
                         applicationScope.launch(Dispatchers.IO) {
                             try {
                                 val existingActive = identityRepository.getActiveIdentitySync()
                                 if (existingActive != null) {
-                                    android.util.Log.d("ColumbaApplication", "Active identity already in Room: ${existingActive.identityHash.take(8)}")
+                                    android.util.Log.d("ZamolxisApplication", "Active identity already in Room: ${existingActive.identityHash.take(8)}")
                                 } else {
                                     // No active identity in Room — create one from the native stack
                                     val identity = rnsLxmf.getLxmfIdentity().getOrNull()
@@ -539,7 +539,7 @@ class ColumbaApplication : Application() {
 
                                     if (idHash != null && destHash != null) {
                                         // Get the full 64-byte keypair directly from the protocol
-                                        // (bypasses the Columba model which only carries 32-byte sigPrv)
+                                        // (bypasses the Zamolxis model which only carries 32-byte sigPrv)
                                         val keyData = rnsCore.getFullIdentityKey()
 
                                         val result =
@@ -553,11 +553,11 @@ class ColumbaApplication : Application() {
                                         if (result.isSuccess) {
                                             identityRepository.switchActiveIdentity(idHash)
                                             android.util.Log.i(
-                                                "ColumbaApplication",
+                                                "ZamolxisApplication",
                                                 "Created active identity in Room: ${idHash.take(8)} (key encrypted: ${keyData != null})",
                                             )
                                         } else {
-                                            android.util.Log.e("ColumbaApplication", "Failed to create identity in Room: ${result.exceptionOrNull()}")
+                                            android.util.Log.e("ZamolxisApplication", "Failed to create identity in Room: ${result.exceptionOrNull()}")
                                         }
                                     } else {
                                         // Fallback: try legacy file-based migration
@@ -565,7 +565,7 @@ class ColumbaApplication : Application() {
                                     }
                                 }
                             } catch (e: Exception) {
-                                android.util.Log.e("ColumbaApplication", "Error ensuring identity in Room", e)
+                                android.util.Log.e("ZamolxisApplication", "Error ensuring identity in Room", e)
                             }
                         }
 
@@ -578,14 +578,14 @@ class ColumbaApplication : Application() {
                         propagationNodeManager.start()
                         telemetryCollectorManager.start()
                         android.util.Log.d(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "MessageCollector, AutoAnnounceManager, IdentityResolutionManager, PropagationNodeManager, TelemetryCollectorManager started",
                         )
                     }.onFailure { error ->
-                        android.util.Log.e("ColumbaApplication", "Failed to initialize Reticulum: ${error.message}", error)
+                        android.util.Log.e("ZamolxisApplication", "Failed to initialize Reticulum: ${error.message}", error)
                     }
             } catch (e: Exception) {
-                android.util.Log.e("ColumbaApplication", "Failed to bind to ReticulumService", e)
+                android.util.Log.e("ZamolxisApplication", "Failed to bind to ReticulumService", e)
             }
         }
 
@@ -611,7 +611,7 @@ class ColumbaApplication : Application() {
             try {
                 rnsCore.shutdown()
             } catch (e: Exception) {
-                android.util.Log.e("ColumbaApplication", "Error shutting down Reticulum", e)
+                android.util.Log.e("ZamolxisApplication", "Error shutting down Reticulum", e)
             }
             // unbindService() was a legacy no-op on the kotlin backend
         }
@@ -621,13 +621,13 @@ class ColumbaApplication : Application() {
      * Map the protocol's sealed NetworkStatus to the string vocabulary that
      * ServiceNotificationManager.getStatusTexts already branches on.
      */
-    private fun networkStatusToServiceString(status: network.columba.app.rns.api.model.NetworkStatus): String =
+    private fun networkStatusToServiceString(status: network.zamolxis.app.rns.api.model.NetworkStatus): String =
         when (status) {
-            is network.columba.app.rns.api.model.NetworkStatus.READY -> "READY"
-            is network.columba.app.rns.api.model.NetworkStatus.INITIALIZING -> "INITIALIZING"
-            is network.columba.app.rns.api.model.NetworkStatus.CONNECTING -> "CONNECTING"
-            is network.columba.app.rns.api.model.NetworkStatus.SHUTDOWN -> "SHUTDOWN"
-            is network.columba.app.rns.api.model.NetworkStatus.ERROR -> "ERROR:${status.message}"
+            is network.zamolxis.app.rns.api.model.NetworkStatus.READY -> "READY"
+            is network.zamolxis.app.rns.api.model.NetworkStatus.INITIALIZING -> "INITIALIZING"
+            is network.zamolxis.app.rns.api.model.NetworkStatus.CONNECTING -> "CONNECTING"
+            is network.zamolxis.app.rns.api.model.NetworkStatus.SHUTDOWN -> "SHUTDOWN"
+            is network.zamolxis.app.rns.api.model.NetworkStatus.ERROR -> "ERROR:${status.message}"
         }
 
     /**
@@ -637,9 +637,9 @@ class ColumbaApplication : Application() {
     private fun updateServiceNotification(status: String) {
         try {
             val intent =
-                android.content.Intent(this, network.columba.app.rns.host.ReticulumService::class.java).apply {
-                    action = network.columba.app.rns.host.ReticulumService.ACTION_UPDATE_NOTIFICATION
-                    putExtra(network.columba.app.rns.host.ReticulumService.EXTRA_NETWORK_STATUS, status)
+                android.content.Intent(this, network.zamolxis.app.rns.host.ReticulumService::class.java).apply {
+                    action = network.zamolxis.app.rns.host.ReticulumService.ACTION_UPDATE_NOTIFICATION
+                    putExtra(network.zamolxis.app.rns.host.ReticulumService.EXTRA_NETWORK_STATUS, status)
                 }
             // startForegroundService also spins up the :reticulum process if it isn't running.
             // ReticulumService.onStartCommand guards on ::managers.isInitialized and returns
@@ -653,7 +653,7 @@ class ColumbaApplication : Application() {
             androidx.core.content.ContextCompat
                 .startForegroundService(this, intent)
         } catch (e: Exception) {
-            android.util.Log.w("ColumbaApplication", "Failed to update service notification: ${e.message}")
+            android.util.Log.w("ZamolxisApplication", "Failed to update service notification: ${e.message}")
         }
     }
 
@@ -670,7 +670,7 @@ class ColumbaApplication : Application() {
                 val manager = getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
                 manager.runningAppProcesses?.find { it.pid == mypid }?.processName
             } catch (e: Exception) {
-                android.util.Log.w("ColumbaApplication", "Could not determine process name", e)
+                android.util.Log.w("ZamolxisApplication", "Could not determine process name", e)
                 null
             }
         }
@@ -706,35 +706,35 @@ class ColumbaApplication : Application() {
 
             val associations = companionDeviceManager.myAssociations
             if (associations.isEmpty()) {
-                android.util.Log.d("ColumbaApplication", "No companion device associations found")
+                android.util.Log.d("ZamolxisApplication", "No companion device associations found")
                 return
             }
 
-            android.util.Log.d("ColumbaApplication", "████ COMPANION DEVICE REGISTRATION ████ Found ${associations.size} association(s)")
+            android.util.Log.d("ZamolxisApplication", "████ COMPANION DEVICE REGISTRATION ████ Found ${associations.size} association(s)")
 
             for (association in associations) {
                 try {
                     val macAddress = association.deviceMacAddress?.toString()
                     if (macAddress != null) {
                         android.util.Log.d(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "████ REGISTERING OBSERVER ████ MAC=$macAddress name=${association.displayName}",
                         )
                         companionDeviceManager.startObservingDevicePresence(macAddress)
                         android.util.Log.d(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "████ OBSERVER REGISTERED ████ MAC=$macAddress",
                         )
                     }
                 } catch (e: Exception) {
                     android.util.Log.w(
-                        "ColumbaApplication",
+                        "ZamolxisApplication",
                         "Failed to register device presence for association ${association.id}: ${e.message}",
                     )
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.w("ColumbaApplication", "Failed to register companion devices: ${e.message}")
+            android.util.Log.w("ZamolxisApplication", "Failed to register companion devices: ${e.message}")
         }
     }
 
@@ -764,16 +764,16 @@ class ColumbaApplication : Application() {
      * when no active identity exists (native stack will create a fresh one) or
      * when decryption fails (caller falls back to the same path).
      */
-    private suspend fun decryptDeliveryKey(activeIdentity: network.columba.app.data.db.entity.LocalIdentityEntity?): ByteArray? {
+    private suspend fun decryptDeliveryKey(activeIdentity: network.zamolxis.app.data.db.entity.LocalIdentityEntity?): ByteArray? {
         if (activeIdentity == null) {
             android.util.Log.d(
-                "ColumbaApplication",
+                "ZamolxisApplication",
                 "decryptDeliveryKey: No active identity found, native stack will create default",
             )
             return null
         }
         android.util.Log.d(
-            "ColumbaApplication",
+            "ZamolxisApplication",
             "decryptDeliveryKey: Active identity: ${activeIdentity.displayName} " +
                 "(${activeIdentity.identityHash.take(8)}...)",
         )
@@ -781,14 +781,14 @@ class ColumbaApplication : Application() {
         return keyResult.fold(
             onSuccess = { key ->
                 android.util.Log.d(
-                    "ColumbaApplication",
+                    "ZamolxisApplication",
                     "decryptDeliveryKey: Decrypted delivery identity key into memory (${key.size} bytes)",
                 )
                 key
             },
             onFailure = { error ->
                 android.util.Log.e(
-                    "ColumbaApplication",
+                    "ZamolxisApplication",
                     "decryptDeliveryKey: Could not decrypt identity key: $error",
                 )
                 null
@@ -804,7 +804,7 @@ class ColumbaApplication : Application() {
                 delay(PEER_IDENTITY_BULK_RESTORE_DELAY_MS)
                 restorePeerIdentitiesInBatches(rnsCore, restoredContactIdentityHashes)
             } catch (e: Exception) {
-                android.util.Log.e("ColumbaApplication", "Error restoring peer identities", e)
+                android.util.Log.e("ZamolxisApplication", "Error restoring peer identities", e)
             }
         }
     }
@@ -812,7 +812,7 @@ class ColumbaApplication : Application() {
     private suspend fun restoreContactIdentities(rnsCore: RnsCore): Set<String> {
         val contactIdentities = contactRepository.getRestorableContactIdentitiesForActiveIdentity()
         if (contactIdentities.isEmpty()) {
-            android.util.Log.d("ColumbaApplication", "No restorable contact identities found")
+            android.util.Log.d("ZamolxisApplication", "No restorable contact identities found")
             return emptySet()
         }
 
@@ -825,20 +825,20 @@ class ColumbaApplication : Application() {
                 result
                     .onSuccess { count ->
                         android.util.Log.d(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "✓ Restored $count prioritized contact identities from chunk ${index + 1}",
                         )
                         restoredIdentityHashes.addAll(chunk.map { it.first })
                     }.onFailure { error ->
                         android.util.Log.w(
-                            "ColumbaApplication",
+                            "ZamolxisApplication",
                             "Failed to restore prioritized contact identities chunk ${index + 1}: ${error.message}",
                             error,
                         )
                     }
             } catch (e: Exception) {
                 android.util.Log.e(
-                    "ColumbaApplication",
+                    "ZamolxisApplication",
                     "Error restoring prioritized contact identities chunk ${index + 1}",
                     e,
                 )
@@ -861,14 +861,14 @@ class ColumbaApplication : Application() {
         var totalRestored = 0
         var hasMoreBatches = true
 
-        android.util.Log.d("ColumbaApplication", "Starting batched peer identity restoration (batch size: $batchSize)")
+        android.util.Log.d("ZamolxisApplication", "Starting batched peer identity restoration (batch size: $batchSize)")
 
         while (hasMoreBatches) {
             val rawBatch =
                 try {
                     conversationRepository.getPeerIdentitiesBatch(batchSize, offset)
                 } catch (e: Exception) {
-                    android.util.Log.e("ColumbaApplication", "Error fetching peer identity batch at offset $offset", e)
+                    android.util.Log.e("ZamolxisApplication", "Error fetching peer identity batch at offset $offset", e)
                     emptyList()
                 }
 
@@ -880,12 +880,12 @@ class ColumbaApplication : Application() {
             val batch = rawBatch.filterNot { alreadyRestoredIdentityHashes.contains(it.first) }
             val skippedCount = rawBatch.size - batch.size
             android.util.Log.d(
-                "ColumbaApplication",
+                "ZamolxisApplication",
                 "Processing batch ${offset / batchSize + 1}: ${batch.size}/${rawBatch.size} peer identities (offset $offset)",
             )
             if (skippedCount > 0) {
                 android.util.Log.d(
-                    "ColumbaApplication",
+                    "ZamolxisApplication",
                     "Skipped $skippedCount already-restored peer identities in batch ${offset / batchSize + 1}",
                 )
             }
@@ -897,9 +897,9 @@ class ColumbaApplication : Application() {
                         .restorePeerIdentities(batch)
                         .onSuccess { count ->
                             totalRestored += count
-                            android.util.Log.d("ColumbaApplication", "✓ Restored $count peer identities from batch (total: $totalRestored)")
+                            android.util.Log.d("ZamolxisApplication", "✓ Restored $count peer identities from batch (total: $totalRestored)")
                         }.onFailure { error ->
-                            android.util.Log.w("ColumbaApplication", "Failed to restore peer identity batch at offset $offset: ${error.message}", error)
+                            android.util.Log.w("ZamolxisApplication", "Failed to restore peer identity batch at offset $offset: ${error.message}", error)
                         }
                 }
 
@@ -909,12 +909,12 @@ class ColumbaApplication : Application() {
                     kotlinx.coroutines.yield()
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ColumbaApplication", "Error processing peer identity batch at offset $offset", e)
+                android.util.Log.e("ZamolxisApplication", "Error processing peer identity batch at offset $offset", e)
                 hasMoreBatches = false
             }
         }
 
-        android.util.Log.d("ColumbaApplication", "✓ Batch restore complete: $totalRestored peer identities restored")
+        android.util.Log.d("ZamolxisApplication", "✓ Batch restore complete: $totalRestored peer identities restored")
     }
 
 }

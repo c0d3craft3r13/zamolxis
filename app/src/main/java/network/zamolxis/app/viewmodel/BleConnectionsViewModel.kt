@@ -1,4 +1,4 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
@@ -6,10 +6,10 @@ import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.model.BleConnectionInfo
-import network.columba.app.data.model.BleConnectionsState
-import network.columba.app.data.model.ConnectionType
-import network.columba.app.data.repository.BleStatusRepository
+import network.zamolxis.app.data.model.BleConnectionInfo
+import network.zamolxis.app.data.model.BleConnectionsState
+import network.zamolxis.app.data.model.ConnectionType
+import network.zamolxis.app.data.repository.BleStatusRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

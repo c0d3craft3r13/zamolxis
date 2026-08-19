@@ -1,6 +1,6 @@
 @file:Suppress("InjectDispatcher")
 
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.location.Location
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -26,18 +26,18 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import network.columba.app.data.db.dao.AnnounceDao
-import network.columba.app.data.db.dao.ReceivedLocationDao
-import network.columba.app.data.db.entity.ReceivedLocationEntity
-import network.columba.app.data.model.MapAnnounceLookup
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.OfflineMapRegionRepository
-import network.columba.app.map.MapStyleResult
-import network.columba.app.map.MapTileSourceManager
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.service.LocationSharingManager
-import network.columba.app.service.TelemetryCollectorManager
-import network.columba.app.test.TestFactories
+import network.zamolxis.app.data.db.dao.AnnounceDao
+import network.zamolxis.app.data.db.dao.ReceivedLocationDao
+import network.zamolxis.app.data.db.entity.ReceivedLocationEntity
+import network.zamolxis.app.data.model.MapAnnounceLookup
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.OfflineMapRegionRepository
+import network.zamolxis.app.map.MapStyleResult
+import network.zamolxis.app.map.MapTileSourceManager
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.TelemetryCollectorManager
+import network.zamolxis.app.test.TestFactories
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -70,13 +70,13 @@ class MapViewModelTest {
     private lateinit var receivedLocationDao: ReceivedLocationDao
     private lateinit var locationSharingManager: LocationSharingManager
     private lateinit var announceDao: AnnounceDao
-    private lateinit var conversationDao: network.columba.app.data.db.dao.ConversationDao
+    private lateinit var conversationDao: network.zamolxis.app.data.db.dao.ConversationDao
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var mapTileSourceManager: MapTileSourceManager
     private lateinit var telemetryCollectorManager: TelemetryCollectorManager
     private lateinit var offlineMapRegionRepository: OfflineMapRegionRepository
-    private lateinit var reticulumProtocol: network.columba.app.rns.api.RnsTransportAdmin
-    private lateinit var interfaceFirstSeenDao: network.columba.app.data.db.dao.InterfaceFirstSeenDao
+    private lateinit var reticulumProtocol: network.zamolxis.app.rns.api.RnsTransportAdmin
+    private lateinit var interfaceFirstSeenDao: network.zamolxis.app.data.db.dao.InterfaceFirstSeenDao
     private lateinit var viewModel: MapViewModel
 
     @Before
@@ -115,7 +115,7 @@ class MapViewModelTest {
         every { settingsRepository.hasDismissedLocationPermissionSheetFlow } returns flowOf(false)
         every { settingsRepository.mapMarkerDeclutterEnabledFlow } returns flowOf(true)
         every { settingsRepository.mapStylePreferenceFlow } returns
-            flowOf(network.columba.app.data.model.MapStylePreference.AUTO)
+            flowOf(network.zamolxis.app.data.model.MapStylePreference.AUTO)
         every { settingsRepository.sortMessagesBySentTime } returns flowOf(false)
         coEvery { settingsRepository.markLocationPermissionSheetDismissed() } just Runs
         coEvery { settingsRepository.setHttpEnabledForDownload(any()) } just Runs
@@ -1159,7 +1159,7 @@ class MapViewModelTest {
                         displayName = "Bob",
                     ),
                 )
-            val duration = network.columba.app.ui.model.SharingDuration.ONE_HOUR
+            val duration = network.zamolxis.app.ui.model.SharingDuration.ONE_HOUR
 
             val result = runCatching { viewModel.startSharing(selectedContacts, duration) }
 
@@ -1192,7 +1192,7 @@ class MapViewModelTest {
                     interfaceFirstSeenDao,
                 )
 
-            val result = runCatching { viewModel.startSharing(emptyList(), network.columba.app.ui.model.SharingDuration.FIFTEEN_MINUTES) }
+            val result = runCatching { viewModel.startSharing(emptyList(), network.zamolxis.app.ui.model.SharingDuration.FIFTEEN_MINUTES) }
 
             assertTrue("startSharing with empty list should complete successfully", result.isSuccess)
             verify {
@@ -1227,14 +1227,14 @@ class MapViewModelTest {
                     ),
                 )
 
-            val result = runCatching { viewModel.startSharing(selectedContacts, network.columba.app.ui.model.SharingDuration.INDEFINITE) }
+            val result = runCatching { viewModel.startSharing(selectedContacts, network.zamolxis.app.ui.model.SharingDuration.INDEFINITE) }
 
             assertTrue("startSharing with single contact should complete successfully", result.isSuccess)
             verify {
                 locationSharingManager.startSharing(
                     listOf("single_hash"),
                     mapOf("single_hash" to "Single Contact"),
-                    network.columba.app.ui.model.SharingDuration.INDEFINITE,
+                    network.zamolxis.app.ui.model.SharingDuration.INDEFINITE,
                 )
             }
         }
@@ -1430,7 +1430,7 @@ class MapViewModelTest {
     @Test
     fun `activeSessions state updates from locationSharingManager`() =
         runTest {
-            val sessionsFlow = MutableStateFlow<List<network.columba.app.service.SharingSession>>(emptyList())
+            val sessionsFlow = MutableStateFlow<List<network.zamolxis.app.service.SharingSession>>(emptyList())
             every { locationSharingManager.activeSessions } returns sessionsFlow
 
             viewModel =
@@ -1455,7 +1455,7 @@ class MapViewModelTest {
 
                 val newSessions =
                     listOf(
-                        network.columba.app.service.SharingSession(
+                        network.zamolxis.app.service.SharingSession(
                             destinationHash = "hash1",
                             displayName = "Alice",
                             startTime = System.currentTimeMillis(),

@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens.settings.cards
+package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -22,11 +22,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import network.columba.app.BuildConfig
-import network.columba.app.ui.components.CollapsibleSettingsCard
-import network.columba.app.ui.components.LocalCapabilities
+import network.zamolxis.app.BuildConfig
+import network.zamolxis.app.R
+import network.zamolxis.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.ui.components.LocalCapabilities
 
 /**
  * Advanced settings card — houses power-user toggles and options that most users should
@@ -67,7 +70,7 @@ fun AdvancedCard(
 ) {
     val canHostShareInstance = LocalCapabilities.current.performance.shareInstanceHosting
     CollapsibleSettingsCard(
-        title = "Advanced",
+        title = stringResource(R.string.advanced_title),
         icon = Icons.Default.Tune,
         isExpanded = isExpanded,
         onExpandedChange = onExpandedChange,
@@ -88,7 +91,7 @@ fun AdvancedCard(
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = "Transport Node",
+                    text = stringResource(R.string.advanced_transport_node),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                 )
@@ -99,14 +102,7 @@ fun AdvancedCard(
             )
         }
         Text(
-            text =
-                "Forward traffic for the mesh network. When disabled, this device will only " +
-                    "handle its own traffic and won't relay messages for other peers. " +
-                    "It's generally not recommended for mobile devices to be transport nodes. " +
-                    "They are less likely to maintain a fixed position in the network, and thus " +
-                    "can negatively impact multihop routing. Enabling this will increase data " +
-                    "usage and battery drain. However, in a BLE-only mesh, it's required for " +
-                    "multi-hop messaging.",
+            text = stringResource(R.string.advanced_transport_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -129,7 +125,7 @@ fun AdvancedCard(
                         tint = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        text = "Share Instance",
+                        text = stringResource(R.string.advanced_share_instance),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                     )
@@ -140,12 +136,7 @@ fun AdvancedCard(
                 )
             }
             Text(
-                text =
-                    "Make Columba available as a shared RNS instance so other apps on this device " +
-                        "(Sideband, rnsd, …) can route through Columba's transport. " +
-                        "Requires a service restart to take effect. " +
-                        "If another app is already hosting a shared instance on this device, " +
-                        "Columba will join it as a client instead — see the Shared Instance banner.",
+                text = stringResource(R.string.advanced_share_instance_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -156,7 +147,7 @@ fun AdvancedCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "Change pending — restart Reticulum to apply.",
+                        text = stringResource(R.string.advanced_change_pending),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Medium,
@@ -178,7 +169,7 @@ fun AdvancedCard(
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                             )
                             Spacer(Modifier.size(8.dp))
-                            Text("Restarting…")
+                            Text(stringResource(R.string.advanced_restarting))
                         } else {
                             Icon(
                                 imageVector = Icons.Default.RestartAlt,
@@ -186,7 +177,7 @@ fun AdvancedCard(
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.size(8.dp))
-                            Text("Restart")
+                            Text(stringResource(R.string.advanced_restart))
                         }
                     }
                 }
@@ -212,7 +203,7 @@ fun AdvancedCard(
                         tint = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        text = "Anonymous Crash Reports",
+                        text = stringResource(R.string.advanced_crash_reports),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                     )
@@ -223,10 +214,7 @@ fun AdvancedCard(
                 )
             }
             Text(
-                text =
-                    "Send anonymous crash and error reports to help the developer fix bugs. " +
-                        "No message content, contacts, or identity information is ever included. " +
-                        "Off by default; you can change this at any time.",
+                text = stringResource(R.string.advanced_crash_reports_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

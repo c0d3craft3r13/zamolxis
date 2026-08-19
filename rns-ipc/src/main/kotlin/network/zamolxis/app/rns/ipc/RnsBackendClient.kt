@@ -1,4 +1,4 @@
-package network.columba.app.rns.ipc
+package network.zamolxis.app.rns.ipc
 
 import android.os.RemoteException
 import kotlinx.coroutines.CoroutineScope
@@ -7,27 +7,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsNomadnet
-import network.columba.app.rns.api.RnsTelemetry
-import network.columba.app.rns.api.RnsTelephony
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.rns.ipc.callback.IRnsCapabilitiesCallback
-import network.columba.app.rns.ipc.callback.IRnsCoreCallback
-import network.columba.app.rns.ipc.callback.IRnsLxmfCallback
-import network.columba.app.rns.ipc.callback.IRnsNomadnetCallback
-import network.columba.app.rns.ipc.callback.IRnsTelemetryCallback
-import network.columba.app.rns.ipc.callback.IRnsTelephonyCallback
-import network.columba.app.rns.ipc.callback.IRnsTransportAdminCallback
-import network.columba.app.rns.ipc.client.ClientRnsCore
-import network.columba.app.rns.ipc.client.ClientRnsLxmf
-import network.columba.app.rns.ipc.client.ClientRnsNomadnet
-import network.columba.app.rns.ipc.client.ClientRnsTelemetry
-import network.columba.app.rns.ipc.client.ClientRnsTelephony
-import network.columba.app.rns.ipc.client.ClientRnsTransportAdmin
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsNomadnet
+import network.zamolxis.app.rns.api.RnsTelemetry
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.ipc.callback.IRnsCapabilitiesCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsCoreCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsLxmfCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsNomadnetCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsTelemetryCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsTelephonyCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsTransportAdminCallback
+import network.zamolxis.app.rns.ipc.client.ClientRnsCore
+import network.zamolxis.app.rns.ipc.client.ClientRnsLxmf
+import network.zamolxis.app.rns.ipc.client.ClientRnsNomadnet
+import network.zamolxis.app.rns.ipc.client.ClientRnsTelemetry
+import network.zamolxis.app.rns.ipc.client.ClientRnsTelephony
+import network.zamolxis.app.rns.ipc.client.ClientRnsTransportAdmin
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -41,7 +41,7 @@ import kotlin.coroutines.resume
  * compile classpath, so the host-side binder is delivered in via [connect]
  * once the caller's `ServiceConnection.onServiceConnected` fires. Tests
  * construct a `RnsBackendClient` directly off an in-process
- * [network.columba.app.rns.ipc.RnsBackendServer] stub without involving
+ * [network.zamolxis.app.rns.ipc.RnsBackendServer] stub without involving
  * binder at all.
  *
  * Sub-interface accessors hold the binders fetched at [connect] time. The

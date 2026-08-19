@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-package network.columba.app.rns.api.call
+package network.zamolxis.app.rns.api.call
 
 /**
  * Single symmetric callback contract shared across native and Python backends.

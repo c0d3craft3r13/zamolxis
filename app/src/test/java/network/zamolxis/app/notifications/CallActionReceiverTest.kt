@@ -1,10 +1,10 @@
-package network.columba.app.notifications
+package network.zamolxis.app.notifications
 
 import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import network.columba.app.MainActivity
+import network.zamolxis.app.MainActivity
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -194,7 +194,7 @@ class CallActionReceiverTest {
         val result = runCatching { receiver.onReceive(context, intent) }
         assertTrue("onReceive should complete without throwing", result.isSuccess)
 
-        // In test env without ColumbaApplication, it should still finish the pending result
+        // In test env without ZamolxisApplication, it should still finish the pending result
         // Give coroutine a moment to run
         Thread.sleep(100)
         verify { mockPendingResult.finish() }
@@ -244,7 +244,7 @@ class CallActionReceiverTest {
         val result = runCatching { receiver.onReceive(context, intent) }
         assertTrue("onReceive should complete without throwing", result.isSuccess)
 
-        // In test env without ColumbaApplication, it should still finish the pending result
+        // In test env without ZamolxisApplication, it should still finish the pending result
         // Give coroutine a moment to run
         Thread.sleep(100)
         verify { mockPendingResult.finish() }

@@ -2,16 +2,19 @@
 
 ## APK Verification
 
-All official Columba releases are signed with our release certificate:
+All official Zamolxis releases are signed with our release certificate
+(RSA 4096, SHA384withRSA, valid until 2056-08-09). This certificate is
+Zamolxis's own — it is **not** the upstream Columba one, so a Columba
+fingerprint will never match a Zamolxis build.
 
 **SHA-256:**
 ```
-02:2B:12:20:48:63:A3:1F:BF:07:5B:C9:F9:34:1E:33:52:78:80:2E:80:C9:27:A4:75:46:E4:7E:2F:4A:0C:5F
+BD:6C:19:81:47:50:EB:11:81:33:B0:1B:40:6D:43:F5:C5:A3:0E:8F:BD:98:93:13:2D:AD:18:F2:FC:62:9D:E9
 ```
 
 **SHA-1:**
 ```
-0A:6B:AE:58:4E:D7:B5:D0:35:8B:3C:7B:65:11:D6:3A:81:21:0D:CE
+9E:E3:3D:F0:6C:F0:B4:F2:CA:B3:E0:FA:93:29:E8:9F:E9:AD:52:3B
 ```
 
 ### Verifying Before Installation
@@ -19,7 +22,7 @@ All official Columba releases are signed with our release certificate:
 With Android SDK tools installed:
 
 ```bash
-apksigner verify --print-certs columba-x.x.x.apk
+apksigner verify --print-certs zamolxis-x.x.x.apk
 ```
 
 Compare the SHA-256 digest in the output with the fingerprint above.
@@ -29,18 +32,53 @@ Compare the SHA-256 digest in the output with the fingerprint above.
 Release APKs include a `.sha256` file:
 
 ```bash
-sha256sum -c columba-x.x.x.apk.sha256
+sha256sum -c zamolxis-x.x.x.apk.sha256
 ```
 
 ### If Verification Fails
 
-Do not install. Delete the APK and download only from [GitHub Releases](https://github.com/torlando-tech/columba/releases). Report suspicious APKs via [GitHub Issues](https://github.com/torlando-tech/columba/issues).
+Do not install. Delete the APK and download only from
+[GitHub Releases](https://github.com/c0d3craft3r13/zamolxis/releases).
+Report suspicious APKs via
+[GitHub Issues](https://github.com/c0d3craft3r13/zamolxis/issues).
 
-**Note:** Android automatically verifies that app updates are signed with the same certificate, so subsequent updates are protected after you've verified your first installation.
+**Note:** Android automatically verifies that app updates are signed with the
+same certificate, so subsequent updates are protected after you've verified your
+first installation.
 
 ## Reporting Vulnerabilities
 
-Report security issues via [GitHub Issues](https://github.com/torlando-tech/columba/issues) with the "security" label. Include steps to reproduce and potential impact.
+**Do not open a public issue for a vulnerability.** Zamolxis carries private
+messages and identity keys, so a public report discloses the flaw to attackers
+before a fixed release exists.
+
+Report privately via
+[GitHub Security Advisories](https://github.com/c0d3craft3r13/zamolxis/security/advisories/new).
+Include steps to reproduce, affected version, and potential impact.
+
+You can expect an initial response within 7 days. Once a fix ships, we will
+credit you in the advisory unless you ask us not to.
+
+Public [GitHub Issues](https://github.com/c0d3craft3r13/zamolxis/issues) remain
+the right place for hardening suggestions and questions about this policy —
+anything that does not expose users if it is read by everyone.
+
+## Threat Model
+
+Zamolxis is built for people whose adversary controls the network: journalists,
+field operators, and anyone who cannot assume an ISP or carrier is neutral. What
+that does and does not cover:
+
+**Covered.** Message content and metadata in transit are end-to-end encrypted by
+Reticulum. There are no accounts, no phone numbers, no central server to subpoena
+or seize, and no directory that reveals who talks to whom. Delivery works over
+Bluetooth LE, LoRa, and local Wi-Fi with no internet at all.
+
+**Not covered today.** The on-device message database is not encrypted at rest,
+screenshots are not blocked, and the transport uses classical (non post-quantum)
+cryptography, so traffic captured now could be decrypted by a future quantum
+adversary. Treat a seized unlocked device as fully compromised. These are known
+gaps with planned work, not accidents.
 
 ## Supported Versions
 

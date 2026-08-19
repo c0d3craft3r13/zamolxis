@@ -1,10 +1,10 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.bluetooth.BluetoothAdapter
 import android.util.Log
-import network.columba.app.data.database.entity.InterfaceEntity
-import network.columba.app.rns.api.model.NetworkRestriction
-import network.columba.app.rns.host.manager.CurrentTransport
+import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.rns.api.model.NetworkRestriction
+import network.zamolxis.app.rns.host.manager.CurrentTransport
 import org.json.JSONException
 import org.json.JSONObject
 

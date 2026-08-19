@@ -1,7 +1,7 @@
-package network.columba.app.rns.host.usb
+package network.zamolxis.app.rns.host.usb
 
 import android.app.PendingIntent
-import network.columba.app.rns.api.annotation.ReflectivelyKept
+import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -81,8 +81,8 @@ class KotlinUSBBridge(
     private val context: Context,
 ) : SerialInputOutputManager.Listener {
     companion object {
-        private const val TAG = "Columba:USBBridge"
-        private const val ACTION_USB_PERMISSION = "network.columba.app.USB_PERMISSION"
+        private const val TAG = "Zamolxis:USBBridge"
+        private const val ACTION_USB_PERMISSION = "network.zamolxis.app.USB_PERMISSION"
 
         // Buffer sizes
         private const val WRITE_TIMEOUT_MS = 1000

@@ -1,13 +1,13 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.viewmodel.ApkSharingState
-import network.columba.app.viewmodel.ApkSharingViewModel
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.viewmodel.ApkSharingState
+import network.zamolxis.app.viewmodel.ApkSharingViewModel
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +38,7 @@ class ApkSharingScreenTest {
     // ========== Top Bar Tests ==========
 
     @Test
-    fun `displays Share Columba title in top bar`() {
+    fun `displays Share Zamolxis title in top bar`() {
         val viewModel = createMockViewModel()
 
         composeTestRule.setContent {
@@ -48,7 +48,7 @@ class ApkSharingScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Share Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Share Zamolxis").assertIsDisplayed()
     }
 
     @Test
@@ -65,7 +65,7 @@ class ApkSharingScreenTest {
 
         composeTestRule.onNodeWithText("Back").assertDoesNotExist()
         // Back button is an icon button with content description
-        composeTestRule.onNodeWithText("Share Columba").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Share Zamolxis").assertIsDisplayed()
     }
 
     // ========== Loading State Tests ==========

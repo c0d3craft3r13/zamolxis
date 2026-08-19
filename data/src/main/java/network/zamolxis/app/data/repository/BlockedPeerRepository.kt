@@ -1,15 +1,15 @@
-package network.columba.app.data.repository
+package network.zamolxis.app.data.repository
 
-import network.columba.app.data.db.dao.AnnounceDao
-import network.columba.app.data.db.dao.BlockedPeerDao
-import network.columba.app.data.db.dao.ContactDao
-import network.columba.app.data.db.dao.ConversationDao
-import network.columba.app.data.db.dao.LocalIdentityDao
-import network.columba.app.data.db.entity.AnnounceEntity
-import network.columba.app.data.db.entity.BlockedPeerEntity
-import network.columba.app.data.db.entity.ContactEntity
-import network.columba.app.data.db.entity.ConversationEntity
-import network.columba.app.data.model.BlockedIdentity
+import network.zamolxis.app.data.db.dao.AnnounceDao
+import network.zamolxis.app.data.db.dao.BlockedPeerDao
+import network.zamolxis.app.data.db.dao.ContactDao
+import network.zamolxis.app.data.db.dao.ConversationDao
+import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.db.entity.BlockedPeerEntity
+import network.zamolxis.app.data.db.entity.ContactEntity
+import network.zamolxis.app.data.db.entity.ConversationEntity
+import network.zamolxis.app.data.model.BlockedIdentity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine

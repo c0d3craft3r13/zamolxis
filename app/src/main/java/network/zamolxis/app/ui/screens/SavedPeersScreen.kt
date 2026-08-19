@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,10 +29,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import network.columba.app.data.repository.Announce
-import network.columba.app.ui.components.PeerCard
-import network.columba.app.ui.components.SearchableTopAppBar
-import network.columba.app.viewmodel.SavedPeersViewModel
+import network.zamolxis.app.data.repository.Announce
+import network.zamolxis.app.ui.components.PeerCard
+import network.zamolxis.app.ui.components.SearchableTopAppBar
+import network.zamolxis.app.viewmodel.SavedPeersViewModel
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import network.zamolxis.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,8 +59,8 @@ fun SavedPeersScreen(
     Scaffold(
         topBar = {
             SearchableTopAppBar(
-                title = "Saved Peers",
-                subtitle = "$favoriteCount ${if (favoriteCount == 1) "peer" else "peers"} saved",
+                title = stringResource(R.string.savedpeers_title),
+                subtitle = pluralStringResource(R.plurals.savedpeers_count_saved, favoriteCount, favoriteCount),
                 isSearching = isSearching,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { viewModel.searchQuery.value = it },
@@ -184,13 +187,13 @@ fun EmptySavedPeersState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No saved peers yet",
+            text = stringResource(R.string.savedpeers_empty_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Tap the star icon on any peer in the Announce Stream to save them here for quick access.",
+            text = stringResource(R.string.savedpeers_empty_body),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
         )

@@ -1,12 +1,23 @@
-package network.columba.app.util
+package network.zamolxis.app.util
 
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Unit tests for TimeUtils functions.
+ *
+ * Robolectric-backed since the formatters resolve their output from string and
+ * plural resources; the expected values below are the English (default locale)
+ * resources, which carry the same wording the functions used to hardcode.
  */
+@RunWith(RobolectricTestRunner::class)
 class TimeUtilsTest {
+    private val context = ApplicationProvider.getApplicationContext<Application>()
+
     companion object {
         private const val MINUTE_MILLIS = 60 * 1000L
         private const val HOUR_MILLIS = 60 * MINUTE_MILLIS
@@ -19,9 +30,9 @@ class TimeUtilsTest {
     fun `formatTimeSince returns just now for less than 1 minute`() {
         val now = System.currentTimeMillis()
 
-        assertEquals("just now", formatTimeSince(now, now))
-        assertEquals("just now", formatTimeSince(now - 30_000, now)) // 30 seconds ago
-        assertEquals("just now", formatTimeSince(now - 59_000, now)) // 59 seconds ago
+        assertEquals("just now", formatTimeSince(context, now, now))
+        assertEquals("just now", formatTimeSince(context, now - 30_000, now)) // 30 seconds ago
+        assertEquals("just now", formatTimeSince(context, now - 59_000, now)) // 59 seconds ago
     }
 
     @Test
@@ -29,16 +40,16 @@ class TimeUtilsTest {
         val now = System.currentTimeMillis()
         val oneMinuteAgo = now - MINUTE_MILLIS
 
-        assertEquals("1 minute ago", formatTimeSince(oneMinuteAgo, now))
+        assertEquals("1 minute ago", formatTimeSince(context, oneMinuteAgo, now))
     }
 
     @Test
     fun `formatTimeSince returns minutes ago for 2-59 minutes`() {
         val now = System.currentTimeMillis()
 
-        assertEquals("2 minutes ago", formatTimeSince(now - 2 * MINUTE_MILLIS, now))
-        assertEquals("30 minutes ago", formatTimeSince(now - 30 * MINUTE_MILLIS, now))
-        assertEquals("59 minutes ago", formatTimeSince(now - 59 * MINUTE_MILLIS, now))
+        assertEquals("2 minutes ago", formatTimeSince(context, now - 2 * MINUTE_MILLIS, now))
+        assertEquals("30 minutes ago", formatTimeSince(context, now - 30 * MINUTE_MILLIS, now))
+        assertEquals("59 minutes ago", formatTimeSince(context, now - 59 * MINUTE_MILLIS, now))
     }
 
     @Test
@@ -46,16 +57,16 @@ class TimeUtilsTest {
         val now = System.currentTimeMillis()
         val oneHourAgo = now - HOUR_MILLIS
 
-        assertEquals("1 hour ago", formatTimeSince(oneHourAgo, now))
+        assertEquals("1 hour ago", formatTimeSince(context, oneHourAgo, now))
     }
 
     @Test
     fun `formatTimeSince returns hours ago for 2-23 hours`() {
         val now = System.currentTimeMillis()
 
-        assertEquals("2 hours ago", formatTimeSince(now - 2 * HOUR_MILLIS, now))
-        assertEquals("12 hours ago", formatTimeSince(now - 12 * HOUR_MILLIS, now))
-        assertEquals("23 hours ago", formatTimeSince(now - 23 * HOUR_MILLIS, now))
+        assertEquals("2 hours ago", formatTimeSince(context, now - 2 * HOUR_MILLIS, now))
+        assertEquals("12 hours ago", formatTimeSince(context, now - 12 * HOUR_MILLIS, now))
+        assertEquals("23 hours ago", formatTimeSince(context, now - 23 * HOUR_MILLIS, now))
     }
 
     @Test
@@ -63,16 +74,16 @@ class TimeUtilsTest {
         val now = System.currentTimeMillis()
         val oneDayAgo = now - DAY_MILLIS
 
-        assertEquals("1 day ago", formatTimeSince(oneDayAgo, now))
+        assertEquals("1 day ago", formatTimeSince(context, oneDayAgo, now))
     }
 
     @Test
     fun `formatTimeSince returns days ago for multiple days`() {
         val now = System.currentTimeMillis()
 
-        assertEquals("2 days ago", formatTimeSince(now - 2 * DAY_MILLIS, now))
-        assertEquals("7 days ago", formatTimeSince(now - 7 * DAY_MILLIS, now))
-        assertEquals("30 days ago", formatTimeSince(now - 30 * DAY_MILLIS, now))
+        assertEquals("2 days ago", formatTimeSince(context, now - 2 * DAY_MILLIS, now))
+        assertEquals("7 days ago", formatTimeSince(context, now - 7 * DAY_MILLIS, now))
+        assertEquals("30 days ago", formatTimeSince(context, now - 30 * DAY_MILLIS, now))
     }
 
     @Test
@@ -81,7 +92,7 @@ class TimeUtilsTest {
         val future = now + HOUR_MILLIS
 
         // Future timestamps result in negative differences, which become "just now"
-        assertEquals("just now", formatTimeSince(future, now))
+        assertEquals("just now", formatTimeSince(context, future, now))
     }
 
     // ========== Convenience overload tests ==========
@@ -89,7 +100,7 @@ class TimeUtilsTest {
     @Test
     fun `formatTimeSince without now parameter uses current time`() {
         val recentPast = System.currentTimeMillis() - 30_000 // 30 seconds ago
-        val result = formatTimeSince(recentPast)
+        val result = formatTimeSince(context, recentPast)
 
         assertEquals("just now", result)
     }

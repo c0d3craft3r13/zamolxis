@@ -1,4 +1,4 @@
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
 /**
  * Represents the location sharing state between the current user and a contact.

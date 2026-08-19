@@ -1,4 +1,4 @@
-package network.columba.app.data.db
+package network.zamolxis.app.data.db
 
 import android.app.Application
 import androidx.room.testing.MigrationTestHelper
@@ -12,11 +12,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class Migration2To3SchemaTest {
+    private val DATABASE_NAME = migrationDbPath("peer-activity-room-schema-migration")
+
     @get:Rule
     val helper =
         MigrationTestHelper(
             InstrumentationRegistry.getInstrumentation(),
-            ColumbaDatabase::class.java,
+            ZamolxisDatabase::class.java,
         )
 
     @Test
@@ -26,11 +28,8 @@ class Migration2To3SchemaTest {
             DATABASE_NAME,
             3,
             true,
-            ColumbaDatabase.MIGRATION_2_3,
+            ZamolxisDatabase.MIGRATION_2_3,
         ).close()
     }
 
-    private companion object {
-        const val DATABASE_NAME = "peer-activity-room-schema-migration"
-    }
 }

@@ -18,17 +18,17 @@
 // the field accepts (typically byte[] or String) and are expected to stay small
 // — large binary fields must go through attachmentsBlob, not here. See the
 // per-call documentation for which fields each method writes.
-package network.columba.app.rns.ipc;
+package network.zamolxis.app.rns.ipc;
 
-import network.columba.app.rns.api.model.DeliveryMethod;
-import network.columba.app.rns.api.model.IconAppearance;
-import network.columba.app.rns.api.model.Identity;
-import network.columba.app.rns.ipc.callback.IRnsDeliveryStatusCallback;
-import network.columba.app.rns.ipc.callback.IRnsMessageCallback;
-import network.columba.app.rns.ipc.callback.IRnsPropagationStateCallback;
-import network.columba.app.rns.ipc.callback.IRnsResultCallback;
-import network.columba.app.rns.ipc.callback.IRnsStringCallback;
-import network.columba.app.rns.ipc.callback.IRnsTransferProgressCallback;
+import network.zamolxis.app.rns.api.model.DeliveryMethod;
+import network.zamolxis.app.rns.api.model.IconAppearance;
+import network.zamolxis.app.rns.api.model.Identity;
+import network.zamolxis.app.rns.ipc.callback.IRnsDeliveryStatusCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsMessageCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsPropagationStateCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsStringCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsTransferProgressCallback;
 
 oneway interface IRnsLxmf {
     // ==================== Send ====================

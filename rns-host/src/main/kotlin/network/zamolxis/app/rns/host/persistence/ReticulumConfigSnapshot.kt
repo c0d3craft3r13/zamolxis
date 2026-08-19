@@ -1,10 +1,10 @@
-package network.columba.app.rns.host.persistence
+package network.zamolxis.app.rns.host.persistence
 
 import android.content.Context
 import android.os.Parcel
 import android.util.Log
 import java.io.File
-import network.columba.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.ReticulumConfig
 
 /**
  * Persists a sanitized [ReticulumConfig] to the app's `filesDir` so the

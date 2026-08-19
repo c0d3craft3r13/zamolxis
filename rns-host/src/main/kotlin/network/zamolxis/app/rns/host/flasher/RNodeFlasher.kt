@@ -1,9 +1,9 @@
-package network.columba.app.rns.host.flasher
+package network.zamolxis.app.rns.host.flasher
 
 import android.content.Context
 import android.util.Log
-import network.columba.app.rns.host.usb.KotlinUSBBridge
-import network.columba.app.rns.host.usb.UsbDeviceInfo
+import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
+import network.zamolxis.app.rns.host.usb.UsbDeviceInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -49,7 +49,7 @@ class RNodeFlasher(
     private val context: Context,
 ) {
     companion object {
-        private const val TAG = "Columba:RNodeFlasher"
+        private const val TAG = "Zamolxis:RNodeFlasher"
 
         // nRF52 EEPROM wipe timing (rnodeconf uses 18s for LittleFS format + reboot)
         private const val NRF52_EEPROM_WIPE_WAIT_MS = 18_000L
@@ -402,7 +402,7 @@ class RNodeFlasher(
                     if (!provisionSuccess) {
                         Log.w(TAG, "Provisioning failed, but flash was successful")
                         // Don't fail the whole operation — flash succeeded, and
-                        // the device works without provisioning (Columba sends radio
+                        // the device works without provisioning (Zamolxis sends radio
                         // params at runtime). Override the Error state from provisionDevice().
                         _flashState.value = FlashState.Complete(null)
                     }
@@ -493,7 +493,7 @@ class RNodeFlasher(
                     if (!provisionSuccess) {
                         Log.w(TAG, "Provisioning failed, but flash was successful")
                         // Don't fail the whole operation — flash succeeded, and
-                        // the device works without provisioning (Columba sends radio
+                        // the device works without provisioning (Zamolxis sends radio
                         // params at runtime). Override the Error state from provisionDevice().
                         _flashState.value = FlashState.Complete(null)
                     }
@@ -883,7 +883,7 @@ class RNodeFlasher(
                         )
 
                         // Android drops USB permissions on re-enumeration but shows
-                        // UsbResolverActivity ("Open with Columba?") automatically.
+                        // UsbResolverActivity ("Open with Zamolxis?") automatically.
                         // Don't request permission ourselves — just try to connect.
                         // If the user hasn't tapped the system dialog yet, connect()
                         // will fail and we'll retry on the next attempt.

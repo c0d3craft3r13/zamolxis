@@ -1,19 +1,24 @@
-package network.columba.app.ui.model
+package network.zamolxis.app.ui.model
 
+import androidx.annotation.StringRes
 import java.util.Calendar
+import network.zamolxis.app.R
 
 /**
  * Duration options for location sharing.
  *
- * @property displayText User-facing text for the duration option
+ * @property displayTextRes User-facing text resource for the duration option
  * @property durationMillis Duration in milliseconds, or null for computed/indefinite durations
  */
-enum class SharingDuration(val displayText: String, val durationMillis: Long?) {
-    FIFTEEN_MINUTES("15 min", 15 * 60 * 1000L),
-    ONE_HOUR("1 hour", 60 * 60 * 1000L),
-    FOUR_HOURS("4 hours", 4 * 60 * 60 * 1000L),
-    UNTIL_MIDNIGHT("Until midnight", null),
-    INDEFINITE("Until I stop", null),
+enum class SharingDuration(
+    @param:StringRes val displayTextRes: Int,
+    val durationMillis: Long?,
+) {
+    FIFTEEN_MINUTES(R.string.locationshare_duration_15min, 15 * 60 * 1000L),
+    ONE_HOUR(R.string.locationshare_duration_1hour, 60 * 60 * 1000L),
+    FOUR_HOURS(R.string.locationshare_duration_4hours, 4 * 60 * 60 * 1000L),
+    UNTIL_MIDNIGHT(R.string.locationshare_duration_midnight, null),
+    INDEFINITE(R.string.locationshare_duration_indefinite, null),
     ;
 
     /**

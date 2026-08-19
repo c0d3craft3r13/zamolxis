@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from verify import audio_payload
-from peer_columba import ColumbaRxAudio
+from peer_zamolxis import ZamolxisRxAudio
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -31,9 +31,9 @@ def test_audio_fixture_is_ogg_opus(audio_bytes_fixture):
     assert b"OpusHead" in audio_bytes_fixture[:256]
 
 
-def test_columba_audio_log_parser():
+def test_zamolxis_audio_log_parser():
     digest = "ab" * 32
-    parsed = ColumbaRxAudio.parse(
+    parsed = ZamolxisRxAudio.parse(
         f"I/COLUMBA_TEST: rx_audio id=deadbeef mode=16 bytes=5171 sha256={digest}"
     )
     assert parsed is not None
@@ -44,9 +44,9 @@ def test_columba_audio_log_parser():
 
 
 @pytest.mark.timeout(90)
-def test_audio_columba_to_sideband(interop, audio_bytes_fixture):
-    text = f"audio_from_columba_{int(time.time() * 1000)}"
-    interop.columba.send_audio(
+def test_audio_zamolxis_to_sideband(interop, audio_bytes_fixture):
+    text = f"audio_from_zamolxis_{int(time.time() * 1000)}"
+    interop.zamolxis.send_audio(
         interop.sideband_hex,
         text=text,
         audio_bytes=audio_bytes_fixture,
@@ -54,7 +54,7 @@ def test_audio_columba_to_sideband(interop, audio_bytes_fixture):
     )
 
     msg = interop.sideband.wait_for_message(
-        from_hex=interop.columba_hex,
+        from_hex=interop.zamolxis_hex,
         content_predicate=lambda m: m.content_text == text,
         timeout=60,
     )
@@ -64,22 +64,22 @@ def test_audio_columba_to_sideband(interop, audio_bytes_fixture):
 
 
 @pytest.mark.timeout(90)
-def test_audio_sideband_to_columba(interop, audio_bytes_fixture):
+def test_audio_sideband_to_zamolxis(interop, audio_bytes_fixture):
     text = f"audio_from_sideband_{int(time.time() * 1000)}"
     assert interop.sideband.send_audio(
-        interop.columba_hex,
+        interop.zamolxis_hex,
         content=text,
         audio_bytes=audio_bytes_fixture,
         codec_tag=AM_OPUS_OGG,
     )
 
-    msg = interop.columba.wait_for_message(
+    msg = interop.zamolxis.wait_for_message(
         from_hex=interop.sideband_hex,
         content_predicate=lambda m: m.content == text,
         timeout=60,
     )
     assert msg.content == text
-    audio = interop.columba.wait_for_audio(msg.msg_id_hex, timeout=30)
+    audio = interop.zamolxis.wait_for_audio(msg.msg_id_hex, timeout=30)
     assert audio.mode == AM_OPUS_OGG
     assert audio.byte_count == len(audio_bytes_fixture)
     assert audio.sha256 == hashlib.sha256(audio_bytes_fixture).hexdigest()

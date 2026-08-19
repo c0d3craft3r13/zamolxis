@@ -1,29 +1,29 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
-import network.columba.app.data.db.entity.LocalIdentityEntity
-import network.columba.app.data.repository.ContactRepository
-import network.columba.app.data.repository.IdentityRepository
-import network.columba.app.map.MapTileSourceManager
-import network.columba.app.repository.InterfaceRepository
-import network.columba.app.repository.SettingsRepository
-import network.columba.app.rns.api.model.BatteryProfile
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.BackendCapabilities
-import network.columba.app.rns.api.RnsBackend
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.RnsTransportAdmin
-import network.columba.app.service.AvailableRelaysState
-import network.columba.app.service.InterfaceConfigManager
-import network.columba.app.service.LocationSharingManager
-import network.columba.app.service.PropagationNodeManager
-import network.columba.app.service.TelemetryCollectorManager
-import network.columba.app.ui.theme.PresetTheme
-import network.columba.app.ui.theme.ThemeMode
+import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.map.MapTileSourceManager
+import network.zamolxis.app.repository.InterfaceRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.model.BatteryProfile
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.BackendCapabilities
+import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.service.AvailableRelaysState
+import network.zamolxis.app.service.InterfaceConfigManager
+import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.service.TelemetryCollectorManager
+import network.zamolxis.app.ui.theme.PresetTheme
+import network.zamolxis.app.ui.theme.ThemeMode
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -72,7 +72,7 @@ class SettingsViewModelTest {
     private lateinit var rnsCore: RnsCore
     private lateinit var rnsLxmf: RnsLxmf
     private lateinit var rnsTransportAdmin: RnsTransportAdmin
-    private lateinit var rnsTelephony: network.columba.app.rns.api.RnsTelephony
+    private lateinit var rnsTelephony: network.zamolxis.app.rns.api.RnsTelephony
     private lateinit var interfaceConfigManager: InterfaceConfigManager
     private lateinit var propagationNodeManager: PropagationNodeManager
     private lateinit var locationSharingManager: LocationSharingManager
@@ -80,8 +80,8 @@ class SettingsViewModelTest {
     private lateinit var mapTileSourceManager: MapTileSourceManager
     private lateinit var telemetryCollectorManager: TelemetryCollectorManager
     private lateinit var contactRepository: ContactRepository
-    private lateinit var updateChecker: network.columba.app.service.UpdateChecker
-    private lateinit var crashReportManager: network.columba.app.util.CrashReportManager
+    private lateinit var updateChecker: network.zamolxis.app.service.UpdateChecker
+    private lateinit var crashReportManager: network.zamolxis.app.util.CrashReportManager
     private lateinit var context: android.content.Context
     private lateinit var viewModel: SettingsViewModel
 
@@ -104,7 +104,9 @@ class SettingsViewModelTest {
     private val batteryProfileFlow = MutableStateFlow(BatteryProfile.BALANCED)
     private val defaultDeliveryMethodFlow = MutableStateFlow("direct")
     private val imageCompressionPresetFlow =
-        MutableStateFlow(network.columba.app.data.model.ImageCompressionPreset.AUTO)
+        MutableStateFlow(network.zamolxis.app.data.model.ImageCompressionPreset.AUTO)
+    private val postQuantumModeFlow =
+        MutableStateFlow(network.zamolxis.crypto.pq.PqMode.OPPORTUNISTIC)
 
     @Before
     @Suppress("LongMethod") // Setup configures many mock stubs for ViewModel's 10+ dependencies
@@ -190,6 +192,7 @@ class SettingsViewModelTest {
         every { settingsRepository.batteryProfileFlow } returns batteryProfileFlow
         every { settingsRepository.defaultDeliveryMethodFlow } returns defaultDeliveryMethodFlow
         every { settingsRepository.imageCompressionPresetFlow } returns imageCompressionPresetFlow
+        every { settingsRepository.postQuantumModeFlow } returns postQuantumModeFlow
         every { settingsRepository.locationSharingEnabledFlow } returns flowOf(false)
         every { settingsRepository.defaultSharingDurationFlow } returns flowOf("ONE_HOUR")
         every { settingsRepository.locationPrecisionRadiusFlow } returns flowOf(0)
@@ -888,7 +891,7 @@ class SettingsViewModelTest {
     // region Shared Instance Transition Flow Tests
 
     /**
-     * Tests the complete flow when shared instance goes offline while Columba is using it:
+     * Tests the complete flow when shared instance goes offline while Zamolxis is using it:
      * 1. Shared instance goes offline (sharedInstanceOnline: true -> false)
      * 2. wasUsingSharedInstance is set to true
      * 3. isRestarting is set to true
@@ -904,7 +907,7 @@ class SettingsViewModelTest {
             // Note: Don't enable monitors here - they have infinite loops that cause hangs
             // We test state setup without needing the actual monitor to run
 
-            // Setup: Columba is using shared instance
+            // Setup: Zamolxis is using shared instance
             isSharedInstanceFlow.value = true
             preferOwnInstanceFlow.value = false
 
@@ -1844,8 +1847,8 @@ class SettingsViewModelTest {
     @Test
     fun `applyCustomTheme validId appliesTheme`() =
         runTest {
-            val mockThemeData = mockk<network.columba.app.data.repository.CustomThemeData>()
-            val mockCustomTheme = mockk<network.columba.app.ui.theme.CustomTheme>()
+            val mockThemeData = mockk<network.zamolxis.app.data.repository.CustomThemeData>()
+            val mockCustomTheme = mockk<network.zamolxis.app.ui.theme.CustomTheme>()
             coEvery { settingsRepository.getCustomThemeById(123L) } returns mockThemeData
             every { settingsRepository.customThemeDataToAppTheme(mockThemeData) } returns mockCustomTheme
 
@@ -2800,7 +2803,7 @@ class SettingsViewModelTest {
             viewModel.state.test {
                 val state = awaitItem()
                 assertEquals(
-                    network.columba.app.data.model.ImageCompressionPreset.AUTO,
+                    network.zamolxis.app.data.model.ImageCompressionPreset.AUTO,
                     state.imageCompressionPreset,
                 )
             }
@@ -2813,13 +2816,13 @@ class SettingsViewModelTest {
 
             val result =
                 runCatching {
-                    viewModel.setImageCompressionPreset(network.columba.app.data.model.ImageCompressionPreset.LOW)
+                    viewModel.setImageCompressionPreset(network.zamolxis.app.data.model.ImageCompressionPreset.LOW)
                 }
 
             assertTrue("setImageCompressionPreset should complete successfully", result.isSuccess)
             coVerify {
                 settingsRepository.saveImageCompressionPreset(
-                    network.columba.app.data.model.ImageCompressionPreset.LOW,
+                    network.zamolxis.app.data.model.ImageCompressionPreset.LOW,
                 )
             }
         }
@@ -2831,13 +2834,13 @@ class SettingsViewModelTest {
 
             val result =
                 runCatching {
-                    viewModel.setImageCompressionPreset(network.columba.app.data.model.ImageCompressionPreset.HIGH)
+                    viewModel.setImageCompressionPreset(network.zamolxis.app.data.model.ImageCompressionPreset.HIGH)
                 }
 
             assertTrue("setImageCompressionPreset should complete successfully", result.isSuccess)
             coVerify {
                 settingsRepository.saveImageCompressionPreset(
-                    network.columba.app.data.model.ImageCompressionPreset.HIGH,
+                    network.zamolxis.app.data.model.ImageCompressionPreset.HIGH,
                 )
             }
         }
@@ -2849,13 +2852,13 @@ class SettingsViewModelTest {
 
             val result =
                 runCatching {
-                    viewModel.setImageCompressionPreset(network.columba.app.data.model.ImageCompressionPreset.MEDIUM)
+                    viewModel.setImageCompressionPreset(network.zamolxis.app.data.model.ImageCompressionPreset.MEDIUM)
                 }
 
             assertTrue("setImageCompressionPreset should complete successfully", result.isSuccess)
             coVerify {
                 settingsRepository.saveImageCompressionPreset(
-                    network.columba.app.data.model.ImageCompressionPreset.MEDIUM,
+                    network.zamolxis.app.data.model.ImageCompressionPreset.MEDIUM,
                 )
             }
         }
@@ -2867,13 +2870,13 @@ class SettingsViewModelTest {
 
             val result =
                 runCatching {
-                    viewModel.setImageCompressionPreset(network.columba.app.data.model.ImageCompressionPreset.ORIGINAL)
+                    viewModel.setImageCompressionPreset(network.zamolxis.app.data.model.ImageCompressionPreset.ORIGINAL)
                 }
 
             assertTrue("setImageCompressionPreset should complete successfully", result.isSuccess)
             coVerify {
                 settingsRepository.saveImageCompressionPreset(
-                    network.columba.app.data.model.ImageCompressionPreset.ORIGINAL,
+                    network.zamolxis.app.data.model.ImageCompressionPreset.ORIGINAL,
                 )
             }
         }
@@ -2887,17 +2890,17 @@ class SettingsViewModelTest {
                 // Initial state
                 val initial = awaitItem()
                 assertEquals(
-                    network.columba.app.data.model.ImageCompressionPreset.AUTO,
+                    network.zamolxis.app.data.model.ImageCompressionPreset.AUTO,
                     initial.imageCompressionPreset,
                 )
 
                 // Change preset via flow
-                imageCompressionPresetFlow.value = network.columba.app.data.model.ImageCompressionPreset.MEDIUM
+                imageCompressionPresetFlow.value = network.zamolxis.app.data.model.ImageCompressionPreset.MEDIUM
 
                 // State should update
                 val updated = awaitItem()
                 assertEquals(
-                    network.columba.app.data.model.ImageCompressionPreset.MEDIUM,
+                    network.zamolxis.app.data.model.ImageCompressionPreset.MEDIUM,
                     updated.imageCompressionPreset,
                 )
             }

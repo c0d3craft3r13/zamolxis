@@ -1,4 +1,4 @@
-package network.columba.app.ui.components
+package network.zamolxis.app.ui.components
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

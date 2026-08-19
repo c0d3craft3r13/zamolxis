@@ -1,4 +1,4 @@
-package network.columba.app
+package network.zamolxis.app
 
 import android.app.Application
 
@@ -7,7 +7,7 @@ import android.app.Application
  * Used by Robolectric tests via robolectric.properties to avoid
  * native library loading issues in unit tests.
  */
-class TestColumbaApplication : Application() {
+class TestZamolxisApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         // Skip all Chaquopy/Python and Reticulum initialization

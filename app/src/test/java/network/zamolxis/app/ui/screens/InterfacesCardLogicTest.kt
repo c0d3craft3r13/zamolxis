@@ -1,10 +1,10 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
-import network.columba.app.viewmodel.InterfaceIconType
-import network.columba.app.viewmodel.InterfaceInfo
-import network.columba.app.viewmodel.getDialogTitle
-import network.columba.app.viewmodel.getIconType
-import network.columba.app.viewmodel.isClickable
+import network.zamolxis.app.viewmodel.InterfaceIconType
+import network.zamolxis.app.viewmodel.InterfaceInfo
+import network.zamolxis.app.viewmodel.getDialogTitle
+import network.zamolxis.app.viewmodel.getIconType
+import network.zamolxis.app.viewmodel.isClickable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -28,7 +28,7 @@ class InterfacesCardLogicTest {
         val iface =
             InterfaceInfo(
                 name = "RNode LoRa",
-                type = "ColumbaRNodeInterface",
+                type = "ZamolxisRNodeInterface",
                 online = true,
                 error = null,
             )
@@ -40,7 +40,7 @@ class InterfacesCardLogicTest {
         val iface =
             InterfaceInfo(
                 name = "RNode LoRa",
-                type = "ColumbaRNodeInterface",
+                type = "ZamolxisRNodeInterface",
                 online = true,
                 error = null,
             )
@@ -56,7 +56,7 @@ class InterfacesCardLogicTest {
         val iface =
             InterfaceInfo(
                 name = "RNode LoRa",
-                type = "ColumbaRNodeInterface",
+                type = "ZamolxisRNodeInterface",
                 online = false,
                 error = null,
             )
@@ -68,7 +68,7 @@ class InterfacesCardLogicTest {
         val iface =
             InterfaceInfo(
                 name = "RNode LoRa",
-                type = "ColumbaRNodeInterface",
+                type = "ZamolxisRNodeInterface",
                 online = false,
                 error = null,
             )
@@ -80,7 +80,7 @@ class InterfacesCardLogicTest {
         val iface =
             InterfaceInfo(
                 name = "RNode LoRa",
-                type = "ColumbaRNodeInterface",
+                type = "ZamolxisRNodeInterface",
                 online = false,
                 error = null,
             )
@@ -165,7 +165,7 @@ class InterfacesCardLogicTest {
     fun `interface list correctly separates healthy and failed`() {
         val interfaces =
             listOf(
-                InterfaceInfo("RNode", "ColumbaRNodeInterface", online = true, error = null),
+                InterfaceInfo("RNode", "ZamolxisRNodeInterface", online = true, error = null),
                 InterfaceInfo("BLE", "AndroidBLE", online = true, error = null),
                 InterfaceInfo("AutoInterface", "AutoInterface", online = false, error = "Port conflict"),
                 InterfaceInfo("TCPClient", "TCPClient", online = false, error = null),

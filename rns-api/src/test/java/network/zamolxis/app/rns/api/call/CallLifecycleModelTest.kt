@@ -1,4 +1,4 @@
-package network.columba.app.rns.api.call
+package network.zamolxis.app.rns.api.call
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -63,7 +63,7 @@ class CallLifecycleModelTest {
     // ===== Restricted failure reasons =====
 
     @Test
-    fun `CallFailureReason contains exactly the Columba-observed prerequisite causes`() {
+    fun `CallFailureReason contains exactly the Zamolxis-observed prerequisite causes`() {
         val expected = setOf(
             CallFailureReason.NETWORK_UNAVAILABLE,
             CallFailureReason.MICROPHONE_PERMISSION_DENIED,

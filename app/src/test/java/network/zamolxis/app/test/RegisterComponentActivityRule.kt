@@ -1,4 +1,4 @@
-package network.columba.app.test
+package network.zamolxis.app.test
 
 import android.app.Application
 import android.content.pm.ActivityInfo

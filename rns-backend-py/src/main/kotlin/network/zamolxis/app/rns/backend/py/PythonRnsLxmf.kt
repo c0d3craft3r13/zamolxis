@@ -1,4 +1,4 @@
-package network.columba.app.rns.backend.py
+package network.zamolxis.app.rns.backend.py
 
 import android.util.Log
 import com.chaquo.python.PyObject
@@ -16,25 +16,25 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import network.columba.app.rns.api.RnsError
-import network.columba.app.rns.api.RnsException
-import network.columba.app.rns.api.RnsLxmf
-import network.columba.app.rns.api.model.DeliveryMethod
-import network.columba.app.rns.api.model.DeliveryStatusUpdate
-import network.columba.app.rns.api.model.Destination
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.IconAppearance
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.MessageReceipt
-import network.columba.app.rns.api.model.PropagationState
-import network.columba.app.rns.api.model.ReceivedMessage
-import network.columba.app.rns.api.model.TransferPhase
-import network.columba.app.rns.api.model.TransferProgressUpdate
-import network.columba.app.rns.api.util.LxmfFields
-import network.columba.app.rns.api.util.ReactionWireCodec
-import network.columba.app.rns.api.util.hexToBytes
-import network.columba.app.rns.api.util.toHex
+import network.zamolxis.app.rns.api.RnsError
+import network.zamolxis.app.rns.api.RnsException
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
+import network.zamolxis.app.rns.api.model.Destination
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.IconAppearance
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.MessageReceipt
+import network.zamolxis.app.rns.api.model.PropagationState
+import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.TransferPhase
+import network.zamolxis.app.rns.api.model.TransferProgressUpdate
+import network.zamolxis.app.rns.api.util.LxmfFields
+import network.zamolxis.app.rns.api.util.ReactionWireCodec
+import network.zamolxis.app.rns.api.util.hexToBytes
+import network.zamolxis.app.rns.api.util.toHex
 
 internal enum class OutgoingTransferPollAction {
     WAIT,
@@ -522,7 +522,7 @@ class PythonRnsLxmf(
             // FIELD_FILE_ATTACHMENTS: [[name_str, data_bytes], ...]. The filename is a
             // `str`, matching upstream Sideband's `[basename, bytes]` shape (and the
             // sibling FIELD_IMAGE above, which sends its format as a str). Sideband and
-            // older Columba render the name via `str(name)`, so a `bytes` filename
+            // older Zamolxis render the name via `str(name)`, so a `bytes` filename
             // surfaces as its `b'...'` repr on the receiver — sending a `str` is the
             // interop-correct encoding. Kept in lockstep with NativeMessageSender.
             val attachments = fileAttachments.map { (name, data) ->

@@ -1,22 +1,22 @@
-package network.columba.app.util.validation
+package network.zamolxis.app.util.validation
 
-import network.columba.app.util.validation.ValidationConstants.ALLOWED_INTERFACE_PARAMS
-import network.columba.app.util.validation.ValidationConstants.DESTINATION_HASH_LENGTH
-import network.columba.app.util.validation.ValidationConstants.HEX_REGEX
-import network.columba.app.util.validation.ValidationConstants.HOSTNAME_REGEX
-import network.columba.app.util.validation.ValidationConstants.IDENTITY_PARTS_COUNT
-import network.columba.app.util.validation.ValidationConstants.IPV4_REGEX
-import network.columba.app.util.validation.ValidationConstants.IPV6_REGEX
-import network.columba.app.util.validation.ValidationConstants.LXMF_IDENTITY_PREFIX
-import network.columba.app.util.validation.ValidationConstants.MAX_BLE_PACKET_SIZE
-import network.columba.app.util.validation.ValidationConstants.MAX_DEVICE_NAME_LENGTH
-import network.columba.app.util.validation.ValidationConstants.MAX_INTERFACE_NAME_LENGTH
-import network.columba.app.util.validation.ValidationConstants.MAX_MESSAGE_LENGTH
-import network.columba.app.util.validation.ValidationConstants.MAX_NICKNAME_LENGTH
-import network.columba.app.util.validation.ValidationConstants.MAX_PORT
-import network.columba.app.util.validation.ValidationConstants.MAX_SEARCH_QUERY_LENGTH
-import network.columba.app.util.validation.ValidationConstants.MIN_PORT
-import network.columba.app.util.validation.ValidationConstants.PUBLIC_KEY_LENGTH
+import network.zamolxis.app.util.validation.ValidationConstants.ALLOWED_INTERFACE_PARAMS
+import network.zamolxis.app.util.validation.ValidationConstants.DESTINATION_HASH_LENGTH
+import network.zamolxis.app.util.validation.ValidationConstants.HEX_REGEX
+import network.zamolxis.app.util.validation.ValidationConstants.HOSTNAME_REGEX
+import network.zamolxis.app.util.validation.ValidationConstants.IDENTITY_PARTS_COUNT
+import network.zamolxis.app.util.validation.ValidationConstants.IPV4_REGEX
+import network.zamolxis.app.util.validation.ValidationConstants.IPV6_REGEX
+import network.zamolxis.app.util.validation.ValidationConstants.LXMF_IDENTITY_PREFIX
+import network.zamolxis.app.util.validation.ValidationConstants.MAX_BLE_PACKET_SIZE
+import network.zamolxis.app.util.validation.ValidationConstants.MAX_DEVICE_NAME_LENGTH
+import network.zamolxis.app.util.validation.ValidationConstants.MAX_INTERFACE_NAME_LENGTH
+import network.zamolxis.app.util.validation.ValidationConstants.MAX_MESSAGE_LENGTH
+import network.zamolxis.app.util.validation.ValidationConstants.MAX_NICKNAME_LENGTH
+import network.zamolxis.app.util.validation.ValidationConstants.MAX_PORT
+import network.zamolxis.app.util.validation.ValidationConstants.MAX_SEARCH_QUERY_LENGTH
+import network.zamolxis.app.util.validation.ValidationConstants.MIN_PORT
+import network.zamolxis.app.util.validation.ValidationConstants.PUBLIC_KEY_LENGTH
 
 /**
  * Represents parsed identity input from user.

@@ -1,14 +1,14 @@
-package network.columba.app.viewmodel
+package network.zamolxis.app.viewmodel
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import network.columba.app.data.model.ImageCompressionPreset
-import network.columba.app.service.AttachmentStorageService
-import network.columba.app.util.FileAttachment
-import network.columba.app.util.ImageUtils
+import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.service.AttachmentStorageService
+import network.zamolxis.app.util.FileAttachment
+import network.zamolxis.app.util.ImageUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow

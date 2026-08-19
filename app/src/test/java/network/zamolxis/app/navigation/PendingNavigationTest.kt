@@ -1,6 +1,6 @@
-package network.columba.app.navigation
+package network.zamolxis.app.navigation
 
-import network.columba.app.PendingNavigation
+import network.zamolxis.app.PendingNavigation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue

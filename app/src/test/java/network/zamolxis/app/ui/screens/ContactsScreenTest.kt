@@ -1,4 +1,4 @@
-package network.columba.app.ui.screens
+package network.zamolxis.app.ui.screens
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -9,14 +9,14 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
-import network.columba.app.data.db.entity.ContactStatus
-import network.columba.app.service.RelayInfo
-import network.columba.app.test.RegisterComponentActivityRule
-import network.columba.app.test.TestFactories
-import network.columba.app.viewmodel.AddContactResult
-import network.columba.app.viewmodel.AnnounceStreamViewModel
-import network.columba.app.viewmodel.ContactGroups
-import network.columba.app.viewmodel.ContactsViewModel
+import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.service.RelayInfo
+import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.test.TestFactories
+import network.zamolxis.app.viewmodel.AddContactResult
+import network.zamolxis.app.viewmodel.AnnounceStreamViewModel
+import network.zamolxis.app.viewmodel.ContactGroups
+import network.zamolxis.app.viewmodel.ContactsViewModel
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -1246,7 +1246,7 @@ class ContactsScreenTest {
 
         every { mockViewModel.contactsState } returns
             MutableStateFlow(
-                network.columba.app.viewmodel.ContactsState(
+                network.zamolxis.app.viewmodel.ContactsState(
                     groupedContacts = groupedContacts,
                     isLoading = isLoading,
                 ),

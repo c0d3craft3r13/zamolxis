@@ -1,4 +1,4 @@
-package network.columba.app.data.model
+package network.zamolxis.app.data.model
 
 /**
  * Enriched conversation data combining conversations table with announces, contacts, and peer icons.

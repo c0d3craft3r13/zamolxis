@@ -12,12 +12,12 @@
 // IRnsCore.networkStatus: a getCurrent*(cb) one-shot read + register/
 // unregister*Observer(cb) pair. The client adapter seeds a local
 // MutableStateFlow from the snapshot and updates it via observer callbacks.
-package network.columba.app.rns.ipc;
+package network.zamolxis.app.rns.ipc;
 
-import network.columba.app.rns.ipc.callback.IRnsBoolEventCallback;
-import network.columba.app.rns.ipc.callback.IRnsCallStateCallback;
-import network.columba.app.rns.ipc.callback.IRnsNullableStringEventCallback;
-import network.columba.app.rns.ipc.callback.IRnsResultCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolEventCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsCallStateCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsNullableStringEventCallback;
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback;
 
 oneway interface IRnsTelephony {
     // ==================== Call control (IPC actions) ====================

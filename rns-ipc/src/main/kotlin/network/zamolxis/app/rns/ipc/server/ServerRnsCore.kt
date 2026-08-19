@@ -1,35 +1,35 @@
-package network.columba.app.rns.ipc.server
+package network.zamolxis.app.rns.ipc.server
 
 import android.os.Bundle
 import kotlinx.coroutines.CoroutineScope
-import network.columba.app.rns.api.RnsCore
-import network.columba.app.rns.api.model.AnnounceEvent
-import network.columba.app.rns.api.model.AnnounceRestoreEntry
-import network.columba.app.rns.api.model.Destination
-import network.columba.app.rns.api.model.DestinationType
-import network.columba.app.rns.api.model.Direction
-import network.columba.app.rns.api.model.Identity
-import network.columba.app.rns.api.model.Link
-import network.columba.app.rns.api.model.LinkEvent
-import network.columba.app.rns.api.model.NetworkStatus
-import network.columba.app.rns.api.model.PacketType
-import network.columba.app.rns.api.model.PeerIdentityEntry
-import network.columba.app.rns.api.model.ReceivedPacket
-import network.columba.app.rns.api.model.ReticulumConfig
-import network.columba.app.rns.ipc.BundleKeys
-import network.columba.app.rns.ipc.IRnsCore
-import network.columba.app.rns.ipc.callback.IRnsAnnounceCallback
-import network.columba.app.rns.ipc.callback.IRnsBoolCallback
-import network.columba.app.rns.ipc.callback.IRnsByteArrayCallback
-import network.columba.app.rns.ipc.callback.IRnsIntCallback
-import network.columba.app.rns.ipc.callback.IRnsLinkEventCallback
-import network.columba.app.rns.ipc.callback.IRnsNetworkStatusCallback
-import network.columba.app.rns.ipc.callback.IRnsPacketCallback
-import network.columba.app.rns.ipc.callback.IRnsResultCallback
-import network.columba.app.rns.ipc.callback.IRnsStringCallback
-import network.columba.app.rns.ipc.callback.IRnsStringListCallback
-import network.columba.app.rns.ipc.toAnnounceRestorePairs
-import network.columba.app.rns.ipc.toPeerIdentityPairs
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.model.AnnounceEvent
+import network.zamolxis.app.rns.api.model.AnnounceRestoreEntry
+import network.zamolxis.app.rns.api.model.Destination
+import network.zamolxis.app.rns.api.model.DestinationType
+import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.rns.api.model.Link
+import network.zamolxis.app.rns.api.model.LinkEvent
+import network.zamolxis.app.rns.api.model.NetworkStatus
+import network.zamolxis.app.rns.api.model.PacketType
+import network.zamolxis.app.rns.api.model.PeerIdentityEntry
+import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.ipc.BundleKeys
+import network.zamolxis.app.rns.ipc.IRnsCore
+import network.zamolxis.app.rns.ipc.callback.IRnsAnnounceCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsBoolCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsByteArrayCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsIntCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsLinkEventCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsNetworkStatusCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsPacketCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsResultCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringCallback
+import network.zamolxis.app.rns.ipc.callback.IRnsStringListCallback
+import network.zamolxis.app.rns.ipc.toAnnounceRestorePairs
+import network.zamolxis.app.rns.ipc.toPeerIdentityPairs
 import android.os.RemoteException
 
 internal class ServerRnsCore(
@@ -128,8 +128,11 @@ internal class ServerRnsCore(
     override fun announceDestination(destination: Destination, appData: ByteArray?, cb: IRnsResultCallback) =
         dispatch(cb, scope) { impl.announceDestination(destination, appData).bundleOrThrow() }
 
-    override fun triggerAutoAnnounce(displayName: String, cb: IRnsResultCallback) =
-        dispatch(cb, scope) { impl.triggerAutoAnnounce(displayName).bundleOrThrow() }
+    override fun triggerAutoAnnounce(
+        displayName: String,
+        pqFingerprint: ByteArray?,
+        cb: IRnsResultCallback,
+    ) = dispatch(cb, scope) { impl.triggerAutoAnnounce(displayName, pqFingerprint).bundleOrThrow() }
 
     override fun sendPacket(
         destination: Destination,

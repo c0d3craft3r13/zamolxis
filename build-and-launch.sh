@@ -8,14 +8,14 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_PACKAGE="network.columba.app"
+APP_PACKAGE="network.zamolxis.app"
 MAIN_ACTIVITY="${APP_PACKAGE}.MainActivity"
 APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
 
 # Custom AVD name can be passed as first argument
 CUSTOM_AVD="$1"
 
-echo -e "${BLUE}=== Columba LXMF Messenger - Build and Launch ===${NC}\n"
+echo -e "${BLUE}=== Zamolxis LXMF Messenger - Build and Launch ===${NC}\n"
 
 # Step 1: Build the APK
 echo -e "${YELLOW}[1/5] Building APK...${NC}"

@@ -1,12 +1,12 @@
-package network.columba.app.rns.api
+package network.zamolxis.app.rns.api
 
-import network.columba.app.rns.api.BackendCapabilities.BackendId
-import network.columba.app.rns.api.BackendCapabilities.InterfaceCaps
-import network.columba.app.rns.api.BackendCapabilities.MessagingCaps
-import network.columba.app.rns.api.BackendCapabilities.PerformanceCaps
-import network.columba.app.rns.api.BackendCapabilities.Support
-import network.columba.app.rns.api.BackendCapabilities.TelemetryCaps
-import network.columba.app.rns.api.BackendCapabilities.Versions
+import network.zamolxis.app.rns.api.BackendCapabilities.BackendId
+import network.zamolxis.app.rns.api.BackendCapabilities.InterfaceCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.MessagingCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.PerformanceCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.Support
+import network.zamolxis.app.rns.api.BackendCapabilities.TelemetryCaps
+import network.zamolxis.app.rns.api.BackendCapabilities.Versions
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
