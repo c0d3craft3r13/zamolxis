@@ -74,11 +74,26 @@ Reticulum. There are no accounts, no phone numbers, no central server to subpoen
 or seize, and no directory that reveals who talks to whom. Delivery works over
 Bluetooth LE, LoRa, and local Wi-Fi with no internet at all.
 
-**Not covered today.** The on-device message database is not encrypted at rest,
-screenshots are not blocked, and the transport uses classical (non post-quantum)
-cryptography, so traffic captured now could be decrypted by a future quantum
-adversary. Treat a seized unlocked device as fully compromised. These are known
-gaps with planned work, not accidents.
+**Partly covered: post-quantum.** Reticulum's transport encryption is classical,
+so traffic captured today could be decrypted by a future quantum adversary. On top
+of it, Zamolxis seals *message text* with a hybrid X25519 + ML-KEM-768 layer
+whenever the other side is also running Zamolxis and has exchanged keys — on by
+default, switchable to "always" or off in Settings. Three limits are worth stating
+plainly:
+
+- The first message in each direction cannot be sealed: it is what carries the key.
+- Attachments — images, files, voice notes — are **not** sealed by this layer. A
+  message whose text was sealed while a photo travelled without it is labelled as
+  such in the conversation, and "always seal" mode refuses to send it at all.
+- Routing metadata (who talks to whom, when, how large) is protected only by
+  Reticulum, exactly as before.
+
+Each message records what it actually got, and the message-detail screen shows it,
+so this is auditable per message rather than a claim about the app.
+
+**Not covered today.** The on-device message database is not encrypted at rest and
+screenshots are not blocked. Treat a seized unlocked device as fully compromised.
+These are known gaps with planned work, not accidents.
 
 ## Supported Versions
 
