@@ -126,3 +126,11 @@ keystore.properties
 signing.properties
 *.p12
 *.pepk
+
+# The vendored Reticulum stack (reticulum-kt / LXMF-kt / LXST-kt) lives in libs/
+# as a plain Maven repository. It has to be tracked, or the "builds with no
+# network" promise in settings.gradle.kts is false: only the .pom/.module
+# metadata was ever committed, and a fresh clone silently fell back to JitPack —
+# exactly the dependency vendoring was meant to remove.
+!libs/**/*.jar
+!libs/**/*.aar
