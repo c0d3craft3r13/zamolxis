@@ -1,5 +1,6 @@
 package network.zamolxis.app.test
 
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.ui.model.MessageUi
 
 /**
@@ -24,6 +25,7 @@ object MessageDetailTestFixtures {
         val errorMessage: String? = null,
         val receivedHopCount: Int? = null,
         val receivedInterface: String? = null,
+        val pqProtection: PqProtection = PqProtection.NONE,
     )
 
     /**
@@ -42,6 +44,7 @@ object MessageDetailTestFixtures {
             errorMessage = config.errorMessage,
             receivedHopCount = config.receivedHopCount,
             receivedInterface = config.receivedInterface,
+            pqProtection = config.pqProtection,
         )
 
     fun deliveredMessage() =
@@ -74,6 +77,27 @@ object MessageDetailTestFixtures {
             MessageConfig(
                 status = "sent",
                 deliveryMethod = "direct",
+            ),
+        )
+
+    /** A message whose text the hybrid post-quantum layer actually sealed. */
+    fun sealedMessage() =
+        createMessageUi(
+            MessageConfig(
+                status = "delivered",
+                deliveryMethod = "direct",
+                pqProtection = PqProtection.SEALED,
+            ),
+        )
+
+    /** A received message that arrived sealed and could not be opened. */
+    fun unopenedMessage() =
+        createMessageUi(
+            MessageConfig(
+                content = "",
+                isFromMe = false,
+                status = "delivered",
+                pqProtection = PqProtection.UNOPENED,
             ),
         )
 

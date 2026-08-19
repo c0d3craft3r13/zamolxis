@@ -153,19 +153,6 @@ fun MessageDetailScreen(
                     )
                 }
 
-                // Encryption card, for sent and received alike. This is the screen a
-                // user opens to audit one message, and "was this actually protected"
-                // is a question the conversation-level badge cannot answer about a
-                // message from last week — the answer is stored per row.
-                val pqInfo = getPqProtectionInfo(msg.pqProtection)
-                MessageInfoCard(
-                    icon = pqInfo.icon,
-                    iconTint = pqInfo.tint ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                    title = stringResource(R.string.msgdetail_encryption),
-                    content = pqInfo.text,
-                    subtitle = pqInfo.subtitle,
-                )
-
                 // Status, delivery method, and error cards only apply to sent messages
                 if (msg.isFromMe) {
                     // Status card
@@ -273,6 +260,20 @@ fun MessageDetailScreen(
                         )
                     }
                 }
+
+                // Encryption, last: this is the screen where one message gets
+                // audited, and "was this actually protected" is a question the
+                // conversation badge cannot answer about a message from last week —
+                // the answer is stored per row. Placed after the delivery cards so
+                // it does not push them below the fold.
+                val pqInfo = getPqProtectionInfo(msg.pqProtection)
+                MessageInfoCard(
+                    icon = pqInfo.icon,
+                    iconTint = pqInfo.tint ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                    title = stringResource(R.string.msgdetail_encryption),
+                    content = pqInfo.text,
+                    subtitle = pqInfo.subtitle,
+                )
             }
         }
     }

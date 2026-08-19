@@ -548,6 +548,67 @@ class MessageDetailScreenTest {
 
     // ========== Card Count Verification Tests ==========
 
+    // ========== Encryption Card Tests ==========
+
+    @Test
+    fun `encryption card reports an unprotected message`() {
+        val mockViewModel = createMockViewModel()
+        every { mockViewModel.message } returns
+            MutableStateFlow(MessageDetailTestFixtures.deliveredMessage())
+
+        composeTestRule.setContent {
+            MessageDetailScreen(
+                messageId = "test-id",
+                onBackClick = {},
+                viewModel = mockViewModel,
+            )
+        }
+
+        // The card sits below the delivery cards, so the assertion has to scroll to
+        // it rather than assume it is on screen.
+        composeTestRule.onNodeWithText("Encryption").performScrollTo().assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Reticulum standard encryption")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `encryption card reports a sealed message`() {
+        val mockViewModel = createMockViewModel()
+        every { mockViewModel.message } returns
+            MutableStateFlow(MessageDetailTestFixtures.sealedMessage())
+
+        composeTestRule.setContent {
+            MessageDetailScreen(
+                messageId = "test-id",
+                onBackClick = {},
+                viewModel = mockViewModel,
+            )
+        }
+
+        composeTestRule.onNodeWithText("Post-quantum sealed").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `encryption card reports a message that could not be opened`() {
+        val mockViewModel = createMockViewModel()
+        every { mockViewModel.message } returns
+            MutableStateFlow(MessageDetailTestFixtures.unopenedMessage())
+
+        composeTestRule.setContent {
+            MessageDetailScreen(
+                messageId = "test-id",
+                onBackClick = {},
+                viewModel = mockViewModel,
+            )
+        }
+
+        // The failure has to be legible here, not just absent content: this is the
+        // screen someone opens when a message looks blank.
+        composeTestRule.onNodeWithText("Sealed, could not be opened").performScrollTo().assertIsDisplayed()
+    }
+
     @Test
     fun `screen displays correct number of cards for delivered message`() {
         val mockViewModel = createMockViewModel()

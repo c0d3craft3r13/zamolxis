@@ -286,7 +286,10 @@ class BoundRnsBackendTest {
             appName: String, aspects: List<String>,
         ): Result<Destination> = error("not used")
         override suspend fun announceDestination(destination: Destination, appData: ByteArray?) = Result.success(Unit)
-        override suspend fun triggerAutoAnnounce(displayName: String) = Result.success(Unit)
+        override suspend fun triggerAutoAnnounce(
+            displayName: String,
+            pqFingerprint: ByteArray?,
+        ) = Result.success(Unit)
         override suspend fun sendPacket(destination: Destination, data: ByteArray, packetType: PacketType): Result<PacketReceipt> = error("not used")
         override fun observePackets() = kotlinx.coroutines.flow.emptyFlow<ReceivedPacket>()
         override suspend fun establishLink(destination: Destination): Result<Link> = error("not used")
