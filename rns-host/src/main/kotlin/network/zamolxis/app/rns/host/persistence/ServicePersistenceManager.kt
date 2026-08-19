@@ -13,6 +13,8 @@ import network.zamolxis.app.data.db.entity.PeerIdentityEntity
 import network.zamolxis.app.data.util.HashUtils
 import network.zamolxis.app.data.util.TextSanitizer
 import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.model.PqProtection
+import network.zamolxis.app.rns.api.util.LxmfFields
 import network.zamolxis.app.rns.host.di.ServiceDatabaseProvider
 import network.zamolxis.app.rns.host.util.PeerNameResolver
 import kotlinx.coroutines.CoroutineScope
@@ -245,6 +247,29 @@ class ServicePersistenceManager(
      *         The caller should only broadcast to the app process if this returns true.
      */
     @Suppress("LongParameterList", "LongMethod", "ReturnCount") // Parameters mirror MessageEntity fields; early returns for clarity
+    /**
+     * What this process can honestly say the post-quantum layer did to a message.
+     *
+     * [PqProtection.UNOPENED] whenever the message carries sealed content: the
+     * ciphertext is stored intact, and the app process opens it. Anything else is
+     * [PqProtection.NONE], which is the truth for ordinary LXMF traffic.
+     */
+    private fun pqStatusFor(fieldsJson: String?): PqProtection {
+        if (fieldsJson.isNullOrBlank()) return PqProtection.NONE
+        return try {
+            if (JSONObject(fieldsJson).has(LxmfFields.FIELD_SEALED_CONTENT.toString())) {
+                PqProtection.UNOPENED
+            } else {
+                PqProtection.NONE
+            }
+        } catch (e: Exception) {
+            // An unparseable blob is not claimed either way; the app process reads
+            // the same fields and decides for itself.
+            Log.w(TAG, "Could not inspect message fields for sealed content", e)
+            PqProtection.NONE
+        }
+    }
+
     suspend fun persistMessage(
         messageHash: String,
         content: String,
@@ -365,6 +390,13 @@ class ServicePersistenceManager(
                     receivedRssi = receivedRssi,
                     receivedSnr = receivedSnr,
                     receivedAt = receivedAt,
+                    // This process holds no hybrid key material — the private halves
+                    // are Keystore-wrapped and only unwrapped in the app process — so
+                    // a sealed message can only be recorded here as unopened. That is
+                    // not a dead end: the marker is what tells the app process the row
+                    // is unfinished work rather than a duplicate, so it opens it and
+                    // replaces the row with the real content.
+                    pqStatus = pqStatusFor(fieldsJson).name,
                 )
             messageDao.insertMessage(messageEntity)
             peerActivityDao.recordActivity(sourceHash, receivedAt, PeerActivityType.MESSAGE)

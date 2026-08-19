@@ -7,6 +7,7 @@ import network.zamolxis.crypto.pq.HybridKem
 import network.zamolxis.crypto.pq.PqEnvelope
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -107,5 +108,36 @@ class PqFieldsJsonTest {
         // receive path never sees a sealed message at all.
         assertEquals(80, PqEnvelope.FIELD_SENDER_KEY)
         assertEquals(81, PqEnvelope.FIELD_SEALED_CONTENT)
+    }
+
+    // ------------------------------------------------- attachment detection
+
+    @Test
+    fun `attachment fields are detected`() {
+        // Image, file and audio all ride outside the seal, so each has to be seen
+        // or a message with an unencrypted photo would be recorded as protected.
+        assertTrue(PqFieldsJson.hasUnsealedAttachments("""{"6": ["png", "aabb"]}"""))
+        assertTrue(PqFieldsJson.hasUnsealedAttachments("""{"5": [["a.pdf", "aabb"]]}"""))
+        assertTrue(PqFieldsJson.hasUnsealedAttachments("""{"7": [16, "aabb"]}"""))
+    }
+
+    @Test
+    fun `a sealed message with no attachment reports none`() {
+        assertFalse(PqFieldsJson.hasUnsealedAttachments("""{"81": "deadbeef"}"""))
+        assertFalse(PqFieldsJson.hasUnsealedAttachments("""{"80": "aabb", "81": "deadbeef"}"""))
+    }
+
+    @Test
+    fun `absent or empty fields report no attachment`() {
+        assertFalse(PqFieldsJson.hasUnsealedAttachments(null))
+        assertFalse(PqFieldsJson.hasUnsealedAttachments(""))
+        assertFalse(PqFieldsJson.hasUnsealedAttachments("   "))
+    }
+
+    @Test
+    fun `an unparseable blob is assumed to carry an attachment`() {
+        // Understating protection is the safe direction: the worst outcome is a
+        // message labelled partial that was in fact fully sealed.
+        assertTrue(PqFieldsJson.hasUnsealedAttachments("not json {{"))
     }
 }

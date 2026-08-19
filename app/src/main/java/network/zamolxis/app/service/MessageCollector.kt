@@ -11,14 +11,19 @@ import network.zamolxis.app.data.db.dao.PeerIconDao
 import network.zamolxis.app.data.db.entity.ContactStatus
 import network.zamolxis.app.data.db.entity.PeerIconEntity
 import network.zamolxis.app.data.model.InterfaceType
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.repository.AnnounceRepository
 import network.zamolxis.app.data.repository.ContactRepository
 import network.zamolxis.app.data.repository.ConversationRepository
 import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.notifications.NotificationHelper
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.model.ReceivedMessage
 import network.zamolxis.app.rns.host.util.PeerNameResolver
+import network.zamolxis.app.service.pq.PqFieldsJson
+import network.zamolxis.app.service.pq.PqMessageSealer
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -55,8 +60,8 @@ class MessageCollector
         private val identityRepository: IdentityRepository,
         private val notificationHelper: NotificationHelper,
         private val peerIconDao: PeerIconDao,
-        private val pqMessageSealer: network.zamolxis.app.service.pq.PqMessageSealer,
-        private val pqKeyRepository: network.zamolxis.app.data.repository.PqKeyRepository,
+        private val pqMessageSealer: PqMessageSealer,
+        private val pqKeyRepository: PqKeyRepository,
     ) {
         companion object {
             private const val TAG = "MessageCollector"
@@ -117,7 +122,16 @@ class MessageCollector
                         // De-duplicate: Check if message already exists in database
                         // (may have been persisted by ServicePersistenceManager in service process)
                         val existingMessage = conversationRepository.getMessageById(receivedMessage.messageHash)
-                        if (existingMessage != null) {
+                        // An unopened row is unfinished work, not a duplicate. The
+                        // service process persists what arrives, and it holds no
+                        // hybrid key material, so a sealed message lands there as
+                        // ciphertext with empty content. This process can open it, so
+                        // it falls through to the normal path and the row is replaced
+                        // with the real content — otherwise the user is left looking
+                        // at a permanently blank message.
+                        val awaitingUnseal =
+                            PqProtection.fromStored(existingMessage?.pqStatus) == PqProtection.UNOPENED
+                        if (existingMessage != null && !awaitingUnseal) {
                             processedMessageIds.add(receivedMessage.messageHash) // Add to cache to avoid repeat DB checks
                             Log.d(TAG, "Message ${receivedMessage.messageHash.take(16)} already in database - checking if notification needed")
 
@@ -214,14 +228,14 @@ class MessageCollector
                         // ordinary messages, so this is a no-op for the vast
                         // majority of traffic.
                         val pqIncoming = unsealIfNeeded(receivedMessage, sourceHash)
-                        if (pqIncoming == null) {
-                            // A sealed message we could not open. Storing the
-                            // ciphertext as if it were text would show the user
-                            // gibberish and bury the failure; dropping it keeps the
-                            // conversation honest, and the sender's delivery proof
-                            // still tells them it arrived.
-                            Log.e(TAG, "Dropping unreadable sealed message from $sourceHash")
-                            return@collect
+                        if (pqIncoming.protection == PqProtection.UNOPENED) {
+                            // Stored, not dropped. The sender already holds a
+                            // delivery proof, so discarding it here would leave the
+                            // two sides permanently disagreeing about whether the
+                            // message exists — and the ciphertext is still in
+                            // fieldsJson, so resolving a key change or restoring a
+                            // key pair can make it readable later.
+                            Log.e(TAG, "Sealed message from $sourceHash could not be opened; storing as unreadable")
                         }
 
                         // Create data message for storage
@@ -252,6 +266,11 @@ class MessageCollector
                                 deliveryMethod = receivedMessage.deliveryMethod,
                                 // Local reception time for sort ordering
                                 receivedAt = now,
+                                // What the post-quantum layer did to this specific
+                                // message, recorded now rather than derived later:
+                                // the conversation's ability to seal changes over
+                                // time, and re-deriving would relabel history.
+                                pqProtection = pqIncoming.protection,
                             )
 
                         // Get peer name from cache, existing conversation, or use formatted hash
@@ -309,19 +328,34 @@ class MessageCollector
                                     false
                                 }
 
-                            // Show notification for received message
+                            // Show notification for received message.
+                            // Suppressed for a message we already knew about and still
+                            // cannot open: the row is being retried on every replay, and
+                            // re-announcing the same unreadable message each time the app
+                            // starts would be noise, not information.
+                            val alreadyKnownAndStillSealed =
+                                awaitingUnseal && pqIncoming.protection == PqProtection.UNOPENED
                             try {
-                                notificationHelper.notifyMessageReceived(
-                                    destinationHash = sourceHash,
-                                    peerName = peerName,
-                                    // The unsealed content, not the raw message: a
-                                    // sealed message carries an empty content slot,
-                                    // so the raw value would notify the user about a
-                                    // message that looks blank.
-                                    messagePreview = pqIncoming.content.take(100),
-                                    isFavorite = isFavorite,
-                                )
-                                Log.d(TAG, "Posted notification for message (favorite: $isFavorite)")
+                                if (alreadyKnownAndStillSealed) {
+                                    Log.d(TAG, "Not re-notifying for a still-unreadable message from $sourceHash")
+                                } else {
+                                    notificationHelper.notifyMessageReceived(
+                                        destinationHash = sourceHash,
+                                        peerName = peerName,
+                                        // The unsealed content, not the raw message: a
+                                        // sealed message carries an empty content slot,
+                                        // so the raw value would notify the user about a
+                                        // message that looks blank.
+                                        messagePreview = pqIncoming.content.take(100),
+                                        isFavorite = isFavorite,
+                                        // A sealed message we could not open has no
+                                        // preview; the helper substitutes a localised
+                                        // placeholder rather than notifying about what
+                                        // looks like a blank message.
+                                        isUnreadable = pqIncoming.protection == PqProtection.UNOPENED,
+                                    )
+                                    Log.d(TAG, "Posted notification for message (favorite: $isFavorite)")
+                                }
                             } catch (e: Exception) {
                                 Log.e(TAG, "Failed to post message notification", e)
                             }
@@ -507,47 +541,50 @@ class MessageCollector
         /**
          * Run an inbound message through the post-quantum layer.
          *
-         * @return the content to store, or null when a sealed message could not be
-         *   opened. A message with no post-quantum fields comes back unchanged.
+         * Never returns null and never drops a message. A sealed payload that
+         * cannot be opened comes back as [PqProtection.UNOPENED] with empty
+         * content, which is stored as a placeholder the user can see — silently
+         * discarding it would leave the sender holding a delivery proof for a
+         * message the recipient never learns about, and would throw away
+         * ciphertext that resolving a key change could still open.
          *
          * Any failure inside the layer degrades to "store what arrived": a fault in
          * the cryptography must not swallow ordinary messages.
          */
         private suspend fun unsealIfNeeded(
-            receivedMessage: network.zamolxis.app.rns.api.model.ReceivedMessage,
+            receivedMessage: ReceivedMessage,
             sourceHash: String,
-        ): network.zamolxis.app.service.pq.PqMessageSealer.Incoming? {
-            val fields = network.zamolxis.app.service.pq.PqFieldsJson.extract(receivedMessage.fieldsJson)
-            if (fields.isEmpty()) {
-                return network.zamolxis.app.service.pq.PqMessageSealer.Incoming(
+        ): PqMessageSealer.Incoming {
+            val fields = PqFieldsJson.extract(receivedMessage.fieldsJson)
+            val asReceived =
+                PqMessageSealer.Incoming(
                     content = receivedMessage.content,
-                    wasSealed = false,
+                    protection = PqProtection.NONE,
                 )
-            }
+            if (fields.isEmpty()) return asReceived
 
-            val identityHash =
-                runCatching { identityRepository.getActiveIdentitySync()?.identityHash }.getOrNull()
-            if (identityHash == null) {
+            val activeIdentity =
+                runCatching { identityRepository.getActiveIdentitySync() }.getOrNull()
+            if (activeIdentity == null) {
                 Log.w(TAG, "No active identity; storing message from $sourceHash as received")
-                return network.zamolxis.app.service.pq.PqMessageSealer.Incoming(
-                    content = receivedMessage.content,
-                    wasSealed = false,
-                )
+                return asReceived
             }
 
             return runCatching {
                 pqMessageSealer.processIncoming(
-                    identityHash = identityHash,
+                    identityHash = activeIdentity.identityHash,
+                    // The AAD the sender bound the payload to is (their destination
+                    // hash, ours) — not the identity hash, which the sender never
+                    // sees.
+                    ourDestinationHash = activeIdentity.destinationHash,
                     peerHash = sourceHash,
                     fallbackContent = receivedMessage.content,
                     fields = fields,
+                    hasAttachments = PqFieldsJson.hasUnsealedAttachments(receivedMessage.fieldsJson),
                 )
             }.getOrElse {
                 Log.e(TAG, "Post-quantum processing failed for message from $sourceHash", it)
-                network.zamolxis.app.service.pq.PqMessageSealer.Incoming(
-                    content = receivedMessage.content,
-                    wasSealed = false,
-                )
+                asReceived
             }
         }
 

@@ -1,6 +1,7 @@
 package network.zamolxis.app.service
 
 import network.zamolxis.app.data.db.dao.PeerIconDao
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.repository.AnnounceRepository
 import network.zamolxis.app.data.repository.ContactRepository
 import network.zamolxis.app.data.repository.ConversationRepository
@@ -9,6 +10,7 @@ import network.zamolxis.app.notifications.NotificationHelper
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.service.pq.PqMessageSealer
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -42,6 +44,7 @@ class MessageCollectorTest {
     private lateinit var identityRepository: IdentityRepository
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var peerIconDao: PeerIconDao
+    private lateinit var pqMessageSealer: PqMessageSealer
     private lateinit var messageCollector: MessageCollector
 
     // Use extraBufferCapacity to ensure emissions aren't dropped before collector is ready
@@ -61,9 +64,20 @@ class MessageCollectorTest {
         identityRepository = mockk()
         notificationHelper = mockk()
         peerIconDao = mockk()
+        pqMessageSealer = mockk()
+        // Stubbed to the behaviour these tests already assumed: messages arrive with
+        // their content unchanged and nothing is sealed, so the existing expectations
+        // still describe what is being tested. arg(3) is fallbackContent — the
+        // parameter list gained ourDestinationHash ahead of it when the AAD binding
+        // was introduced.
+        coEvery {
+            pqMessageSealer.processIncoming(any(), any(), any(), any(), any(), any())
+        } answers {
+            PqMessageSealer.Incoming(content = arg(3), protection = PqProtection.NONE)
+        }
 
         // Explicit stubs for notificationHelper (suspend function)
-        coEvery { notificationHelper.notifyMessageReceived(any(), any(), any(), any()) } returns Unit
+        coEvery { notificationHelper.notifyMessageReceived(any(), any(), any(), any(), any()) } returns Unit
 
         // Explicit stubs for peerIconDao
         coEvery { peerIconDao.getIcon(any()) } returns null
@@ -93,6 +107,10 @@ class MessageCollectorTest {
         coEvery { identityRepository.getActiveIdentitySync() } returns
             mockk {
                 every { destinationHash } returns testDestHash.joinToString("") { "%02x".format(it) }
+                // The post-quantum layer needs both: the identity hash to find our key
+                // pair, and the destination hash because that is the half of the AAD
+                // the sender could reconstruct.
+                every { identityHash } returns "test-identity"
             }
 
         messageCollector =
@@ -105,18 +123,7 @@ class MessageCollectorTest {
                 identityRepository = identityRepository,
                 notificationHelper = notificationHelper,
                 peerIconDao = peerIconDao,
-                // Stubbed to the behaviour these tests already assumed: messages
-                // arrive with their content unchanged and nothing is sealed, so the
-                // existing expectations still describe what is being tested.
-                pqMessageSealer =
-                    mockk<network.zamolxis.app.service.pq.PqMessageSealer>().also {
-                        coEvery { it.processIncoming(any(), any(), any(), any()) } answers {
-                            network.zamolxis.app.service.pq.PqMessageSealer.Incoming(
-                                content = arg(2),
-                                wasSealed = false,
-                            )
-                        }
-                    },
+                pqMessageSealer = pqMessageSealer,
                 // No announced fingerprints: these tests cover ordinary announce and
                 // message handling, not post-quantum capability discovery.
                 pqKeyRepository =
@@ -156,6 +163,9 @@ class MessageCollectorTest {
             coEvery { conversationRepository.getMessageById("persisted_message") } returns
                 mockk {
                     every { isRead } returns false
+                    // Not sealed: this row is a finished message, so the collector
+                    // treats it as a duplicate rather than unfinished work.
+                    every { pqStatus } returns null
                     // The notification preview now comes from the stored row rather
                     // than the wire message, so a sealed duplicate shows its real
                     // text instead of an empty content slot.
@@ -177,6 +187,7 @@ class MessageCollectorTest {
                     peerName = any(),
                     messagePreview = any(),
                     isFavorite = any(),
+                    isUnreadable = any(),
                 )
             }
 
@@ -186,6 +197,55 @@ class MessageCollectorTest {
                     peerHash = any(),
                     peerName = any(),
                     message = any(),
+                    peerPublicKey = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `a row the service could not open is completed rather than treated as a duplicate`() =
+        runBlocking {
+            // The service process persists what arrives. It holds no hybrid key
+            // material, so a sealed message lands there as ciphertext with an empty
+            // content slot and pqStatus = UNOPENED. If the collector treated that as
+            // a duplicate, the user would be left with a permanently blank message —
+            // which is what happened before this path existed.
+            val sealedMessage =
+                ReceivedMessage(
+                    messageHash = "sealed_message",
+                    content = "",
+                    sourceHash = testSourceHash,
+                    destinationHash = testDestHash,
+                    timestamp = System.currentTimeMillis(),
+                    fieldsJson = """{"81": "deadbeef"}""",
+                    publicKey = null,
+                )
+
+            coEvery { conversationRepository.getMessageById("sealed_message") } returns
+                mockk {
+                    every { isRead } returns false
+                    every { content } returns ""
+                    every { pqStatus } returns "UNOPENED"
+                }
+            coEvery {
+                pqMessageSealer.processIncoming(any(), any(), any(), any(), any(), any())
+            } returns
+                PqMessageSealer.Incoming(
+                    content = "opened at last",
+                    protection = PqProtection.SEALED,
+                )
+
+            messageCollector.startCollecting()
+            kotlinx.coroutines.delay(50)
+            messageFlow.emit(sealedMessage)
+            kotlinx.coroutines.delay(200)
+
+            // The row is rewritten with the opened content, not skipped.
+            coVerify(timeout = 2000) {
+                conversationRepository.saveMessage(
+                    peerHash = testSourceHashHex,
+                    peerName = any(),
+                    message = match { it.content == "opened at last" },
                     peerPublicKey = any(),
                 )
             }
@@ -226,6 +286,7 @@ class MessageCollectorTest {
                     peerName = any(),
                     messagePreview = any(),
                     isFavorite = any(),
+                    isUnreadable = any(),
                 )
             }
 
@@ -240,6 +301,7 @@ class MessageCollectorTest {
                     peerName = any(),
                     messagePreview = any(),
                     isFavorite = any(),
+                    isUnreadable = any(),
                 )
             }
         }
@@ -347,6 +409,7 @@ class MessageCollectorTest {
                     peerName = any(),
                     messagePreview = any(),
                     isFavorite = any(),
+                    isUnreadable = any(),
                 )
             }
         }
@@ -388,6 +451,7 @@ class MessageCollectorTest {
                     peerName = any(),
                     messagePreview = any(),
                     isFavorite = true,
+                    isUnreadable = any(),
                 )
             }
         }
@@ -424,6 +488,7 @@ class MessageCollectorTest {
                     peerName = any(),
                     messagePreview = any(),
                     isFavorite = false,
+                    isUnreadable = any(),
                 )
             }
         }
@@ -460,6 +525,7 @@ class MessageCollectorTest {
                     peerName = "Cached Peer Name",
                     messagePreview = any(),
                     isFavorite = any(),
+                    isUnreadable = any(),
                 )
             }
         }
@@ -494,6 +560,7 @@ class MessageCollectorTest {
                     peerName = any(),
                     messagePreview = "A".repeat(100),
                     isFavorite = any(),
+                    isUnreadable = any(),
                 )
             }
         }

@@ -2,6 +2,7 @@ package network.zamolxis.app.rns.backend.py
 
 import android.util.Log
 import com.chaquo.python.PyObject
+import network.zamolxis.app.rns.api.util.PeerAnnounceAppData
 import network.zamolxis.app.rns.api.util.hexToBytes
 import network.zamolxis.app.rns.api.util.toHex
 import kotlinx.coroutines.flow.Flow
@@ -273,18 +274,35 @@ class PythonRnsCore(
 
     override suspend fun triggerAutoAnnounce(
         displayName: String,
-        // Ignored: the python backend builds its announce app_data inside LXMF's
-        // own router, which has no hook for an extra element. Peers on this
-        // flavor still exchange keys through the first message — they just do not
-        // advertise the capability ahead of time.
         pqFingerprint: ByteArray?,
     ): Result<Unit> =
         pyResult {
-            // The LXMF delivery destination is the one that carries displayName
-            // in its app data. Re-announce it through the router.
             val router = runtime.lxmRouter
                 ?: throw RnsException(RnsError.BackendNotReady)
-            router.callAttr("announce", runtime.localDestination?.get("hash"))
+            val destination = runtime.localDestination
+
+            if (pqFingerprint != null && destination != null) {
+                // LXMF's own `LXMRouter.announce()` is a passthrough to
+                // `delivery_destination.announce(app_data=get_announce_app_data(...))`,
+                // and that app_data has no hook for an extra element. So the same
+                // call is made directly with app_data this side builds — through
+                // `PeerAnnounceAppData`, which is also what the Kotlin backend uses,
+                // so the two flavors put byte-identical announces on the wire.
+                //
+                // This used to be skipped entirely, which meant the flavor shipping
+                // under the plain application id never advertised post-quantum
+                // capability: peers could not verify a key against an announcement,
+                // and the fingerprint check degraded to bare trust-on-first-use.
+                destination.callAttr(
+                    "announce",
+                    PeerAnnounceAppData.build(displayName, pqFingerprint).toPyBytes(),
+                )
+            } else {
+                // Nothing to add — take LXMF's own path so the payload stays exactly
+                // what upstream would have produced.
+                router.callAttr("announce", destination?.get("hash"))
+            }
+
             // Keep lxst.telephony announced on the same cadence as
             // lxmf.delivery so inbound callers can resolve a fresh path
             // (PythonCallManager installs this hook in setup()).

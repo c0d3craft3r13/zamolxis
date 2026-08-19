@@ -122,6 +122,7 @@ object DatabaseModule {
                 ZamolxisDatabase.MIGRATION_5_6,
                 ZamolxisDatabase.MIGRATION_6_7,
                 ZamolxisDatabase.MIGRATION_7_8,
+                ZamolxisDatabase.MIGRATION_8_9,
             )
             .enableMultiInstanceInvalidation()
             .addCallback(DURABILITY_CALLBACK)

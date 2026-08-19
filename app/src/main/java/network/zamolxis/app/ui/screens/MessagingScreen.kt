@@ -169,7 +169,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.ui.components.PqKeyChangeDialog
+import network.zamolxis.app.ui.components.PqKeyMismatchDialog
+import network.zamolxis.app.ui.components.PqProtectionMarker
+import network.zamolxis.app.ui.components.PqUnreadableMessageBody
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -955,6 +959,7 @@ fun MessagingScreen(
     }
 
     val pqKeyChange by viewModel.pqKeyChange.collectAsStateWithLifecycle()
+    val pqKeyMismatch by viewModel.pqKeyMismatch.collectAsStateWithLifecycle()
     val pqSealed by viewModel.pqSealed.collectAsStateWithLifecycle()
     pqKeyChange?.let { prompt ->
         PqKeyChangeDialog(
@@ -964,6 +969,15 @@ fun MessagingScreen(
             onAccept = { viewModel.resolvePqKeyChange(prompt.peerHash, accept = true) },
             onReject = { viewModel.resolvePqKeyChange(prompt.peerHash, accept = false) },
             onDismiss = { viewModel.dismissPqKeyChange() },
+        )
+    }
+    // A rejected key is not a question, it is a report: someone altered either the
+    // announce or the message. Shown once, and only cleared when the user
+    // acknowledges it, so it cannot be missed by being off-screen when it happened.
+    pqKeyMismatch?.let { peerHash ->
+        PqKeyMismatchDialog(
+            peerName = peerName,
+            onDismiss = { viewModel.acknowledgePqKeyMismatch(peerHash) },
         )
     }
 
@@ -2552,7 +2566,14 @@ fun MessageBubble(
                             }
                         }
 
-                        if (message.content.isNotBlank()) {
+                        if (message.pqProtection == PqProtection.UNOPENED) {
+                            // Sealed on arrival and not openable, so there is no text
+                            // to render. Saying that plainly beats an empty bubble,
+                            // which reads as a bug and hides a security-relevant
+                            // event.
+                            PqUnreadableMessageBody()
+                            Spacer(modifier = Modifier.height(4.dp))
+                        } else if (message.content.isNotBlank()) {
                             if (message.renderer == MessageRenderer.MARKDOWN) {
                                 MarkdownMessageText(
                                     markdown = message.content,
@@ -2581,6 +2602,19 @@ fun MessageBubble(
                                 text = formatTimestamp(message.receivedAt ?: message.timestamp, timestampTick),
                                 style = MaterialTheme.typography.labelSmall,
                                 color =
+                                    if (isFromMe) {
+                                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                            )
+                            // Per-message, read from the stored row. The header badge
+                            // answers "is this conversation protected now"; this one
+                            // answers "was this message protected", which is the
+                            // question that matters when reading back history.
+                            PqProtectionMarker(
+                                protection = message.pqProtection,
+                                tint =
                                     if (isFromMe) {
                                         MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                                     } else {

@@ -20,6 +20,7 @@ import network.zamolxis.app.data.db.entity.DraftEntity
 import network.zamolxis.app.data.db.entity.MessageEntity
 import network.zamolxis.app.data.db.entity.PeerIdentityEntity
 import network.zamolxis.app.data.model.EnrichedConversation
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.storage.AttachmentStorageManager
 import network.zamolxis.app.data.util.TextSanitizer
 import org.json.JSONArray
@@ -68,6 +69,11 @@ data class Message(
     // a per-event `fields[0x10] = {reaction_to, emoji, sender}` that
     // the receiver routes into this field on the *target* message.
     val reactionsJson: String? = null,
+    // What the hybrid post-quantum layer did to this message. Recorded at send
+    // and receive time, never recomputed: whether a peer can be sealed to
+    // changes as keys arrive and links change, so a value derived later would
+    // relabel history.
+    val pqProtection: PqProtection = PqProtection.NONE,
 )
 
 /**
@@ -336,6 +342,7 @@ class ConversationRepository
                         receivedSnr = message.receivedSnr,
                         receivedAt = message.receivedAt,
                         sentInterface = message.sentInterface,
+                        pqStatus = message.pqProtection.name,
                     )
                 messageDao.insertMessage(messageEntity)
 
@@ -546,7 +553,11 @@ class ConversationRepository
          */
         suspend fun getReceivedMessageIds(since: Long): List<String> {
             val activeIdentity = localIdentityDao.getActiveIdentitySync() ?: return emptyList()
-            return messageDao.getReceivedMessageIds(activeIdentity.identityHash, since)
+            return messageDao.getReceivedMessageIds(
+                identityHash = activeIdentity.identityHash,
+                since = since,
+                unopenedStatus = PqProtection.UNOPENED.name,
+            )
         }
 
         /**
@@ -603,10 +614,30 @@ class ConversationRepository
                 replyToMessageId = replyToMessageId,
                 receivedHopCount = receivedHopCount,
                 receivedInterface = receivedInterface,
+                // Read back, not just written: saveMessage persists these two and
+                // this mapper used to skip them, so the message-details screen
+                // rendered an empty signal card for every received message even
+                // though the values were sitting in the row.
+                receivedRssi = receivedRssi,
+                receivedSnr = receivedSnr,
                 receivedAt = receivedAt,
                 sentInterface = sentInterface,
                 reactionsJson = reactionsJson,
+                pqProtection = PqProtection.fromStored(pqStatus),
             )
+
+        /**
+         * Record what the post-quantum layer did to a message, after the fact.
+         *
+         * Used when a retry re-decides sealing for a row that already exists.
+         */
+        suspend fun updateMessagePqStatus(
+            messageId: String,
+            protection: PqProtection,
+        ) {
+            val activeIdentity = localIdentityDao.getActiveIdentitySync() ?: return
+            messageDao.updatePqStatus(messageId, activeIdentity.identityHash, protection.name)
+        }
 
         /**
          * Update the sent interface name for a message (active identity scoped).

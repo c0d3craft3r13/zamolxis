@@ -3,11 +3,14 @@ package network.zamolxis.app.service.pq
 import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.crypto.pq.HybridKem
 import network.zamolxis.crypto.pq.HybridKemException
+import network.zamolxis.crypto.pq.HybridPublicKey
 import network.zamolxis.crypto.pq.LinkCost
 import network.zamolxis.crypto.pq.PlainReason
+import network.zamolxis.crypto.pq.PqAad
 import network.zamolxis.crypto.pq.PqDecision
 import network.zamolxis.crypto.pq.PqEnvelope
 import network.zamolxis.crypto.pq.PqKeyExchange
@@ -20,8 +23,23 @@ import network.zamolxis.crypto.pq.PqPolicy
  * Everything that has to happen around a single message lives here rather than
  * in the view model: deciding whether to seal, sealing, attaching our key,
  * unsealing on arrival, and accepting a key that came with it. The send path is
- * a 3000-line class where a mistake does not leak data but silently strands
- * messages, so this logic is kept somewhere it can be exercised on its own.
+ * a 3000-line class, so this logic is kept somewhere it can be exercised on its
+ * own.
+ *
+ * ## What is and is not covered
+ *
+ * The layer seals the *text* of a message. Images, files and voice notes travel
+ * in their own LXMF fields and are not sealed — see
+ * [PlainReason.ATTACHMENT_NOT_SEALABLE]. That limit is reported, never hidden:
+ * an attachment downgrades the message to [PqProtection.SEALED_PARTIAL], and in
+ * [PqMode.REQUIRED] it refuses the send outright rather than letting a photo
+ * leave in the clear under a badge that says the conversation is protected.
+ *
+ * ## Failure direction
+ *
+ * Every failure path here is resolved by [PqMode], not by convenience. In
+ * [PqMode.REQUIRED] a fault produces [Outgoing.Refused] — the user asked for
+ * protection or nothing, and "or nothing" is the half that matters.
  */
 @Singleton
 class PqMessageSealer
@@ -37,10 +55,12 @@ class PqMessageSealer
              *
              * @property content what goes in the LXMF content slot — empty,
              *   because the real content is inside [extraFields]
+             * @property protection what to record against the stored message
              */
             data class Sealed(
                 val content: String,
                 val extraFields: Map<Int, ByteArray>,
+                val protection: PqProtection,
             ) : Outgoing
 
             /**
@@ -63,10 +83,10 @@ class PqMessageSealer
 
         /** What arrived, after the layer has had its turn. */
         data class Incoming(
-            /** Plaintext content, unsealed if it was sealed. */
+            /** Plaintext content, unsealed if it was sealed. Empty when it could not be opened. */
             val content: String,
-            /** True when this message was actually protected by the hybrid layer. */
-            val wasSealed: Boolean,
+            /** What the layer did to this message, for the stored row and the UI. */
+            val protection: PqProtection,
             /** Set when the sender's key could not be trusted; the UI must say so. */
             val keyProblem: PqKeyExchange.KeyAcceptance? = null,
         )
@@ -74,14 +94,22 @@ class PqMessageSealer
         /**
          * Decide and, if applicable, seal.
          *
+         * @param ourDestinationHash our own LXMF destination hash, bound into the
+         *   AAD so the payload is only valid in this direction of this conversation
+         * @param hasAttachments whether the message also carries an image, file or
+         *   voice note — those are not sealed, and the caller must say so rather
+         *   than letting the layer overstate what it covered
          * @param linkCost how expensive the chosen transport is — sealing adds
          *   [HybridKem.OVERHEAD_BYTES], which is free on TCP and seconds of
          *   airtime on LoRa
          */
+        @Suppress("LongParameterList")
         suspend fun prepareOutgoing(
             identityHash: String,
+            ourDestinationHash: String,
             peerHash: String,
             content: String,
+            hasAttachments: Boolean,
             mode: PqMode,
             linkCost: LinkCost,
         ): Outgoing {
@@ -108,7 +136,16 @@ class PqMessageSealer
                         reason = decision.reason,
                     )
 
-                PqDecision.Seal -> sealOrFallBack(state, content, ourKey, mode)
+                PqDecision.Seal ->
+                    sealOrFallBack(
+                        state = state,
+                        ourDestinationHash = ourDestinationHash,
+                        peerHash = peerHash,
+                        content = content,
+                        hasAttachments = hasAttachments,
+                        ourKey = ourKey,
+                        mode = mode,
+                    )
             }
         }
 
@@ -136,12 +173,23 @@ class PqMessageSealer
             return decisionFor(state, mode, linkCost) == PqDecision.Seal
         }
 
+        @Suppress("LongParameterList")
         private fun sealOrFallBack(
             state: PqKeyExchange.PeerState,
+            ourDestinationHash: String,
+            peerHash: String,
             content: String,
-            ourKey: network.zamolxis.crypto.pq.HybridPublicKey?,
+            hasAttachments: Boolean,
+            ourKey: HybridPublicKey?,
             mode: PqMode,
         ): Outgoing {
+            // An attachment cannot be sealed by this layer. In REQUIRED that is a
+            // refusal, not a footnote: the alternative is a photo on the wire in
+            // the clear while the conversation is badged as protected.
+            if (hasAttachments && mode == PqMode.REQUIRED) {
+                return Outgoing.Refused(PlainReason.ATTACHMENT_NOT_SEALABLE)
+            }
+
             val peerKey =
                 state.knownKey
                     // decide() only returns Seal when the key is known, so this is
@@ -155,13 +203,24 @@ class PqMessageSealer
                     content = "",
                     extraFields =
                         PqEnvelope.fieldsFor(
-                            sealedContent = kem.seal(peerKey, content.toByteArray(Charsets.UTF_8)),
+                            sealedContent =
+                                kem.seal(
+                                    recipient = peerKey,
+                                    plaintext = content.toByteArray(Charsets.UTF_8),
+                                    aad =
+                                        PqAad.forDirection(
+                                            senderDestinationHash = ourDestinationHash,
+                                            recipientDestinationHash = peerHash,
+                                        ),
+                                ),
                             ourKey = ourKey,
                         ),
+                    protection =
+                        if (hasAttachments) PqProtection.SEALED_PARTIAL else PqProtection.SEALED,
                 )
             } catch (e: HybridKemException) {
                 Log.e(TAG, "Sealing failed; falling back per mode", e)
-                refuseOrPlain(mode, content, ourKey, PlainReason.PEER_KEY_NOT_YET_KNOWN)
+                refuseOrPlain(mode, content, ourKey, PlainReason.LAYER_UNAVAILABLE)
             }
         }
 
@@ -172,7 +231,7 @@ class PqMessageSealer
         private fun refuseOrPlain(
             mode: PqMode,
             content: String,
-            ourKey: network.zamolxis.crypto.pq.HybridPublicKey?,
+            ourKey: HybridPublicKey?,
             reason: PlainReason,
         ): Outgoing =
             if (mode == PqMode.REQUIRED) {
@@ -201,18 +260,29 @@ class PqMessageSealer
         /**
          * Unseal an arriving message and take in any key it carried.
          *
+         * @param ourDestinationHash our own LXMF destination hash — the other half
+         *   of the AAD the sender bound the payload to
          * @param fallbackContent the LXMF content as received, used when the
          *   message is not sealed
-         * @return the content to store, or null if a sealed message could not be
-         *   opened — storing the ciphertext as if it were text would show the user
-         *   gibberish and hide the failure
+         * @param hasAttachments whether the message also carried an image, file or
+         *   voice note. Passed in rather than read off [fields] because [fields]
+         *   holds only what this layer owns — deriving it here would silently
+         *   report every sealed message as fully protected.
+         * @return never null. A sealed message that cannot be opened comes back as
+         *   [PqProtection.UNOPENED] with empty content so the caller stores an
+         *   honest placeholder: dropping it would mean the sender holds a delivery
+         *   proof for something the recipient never learns exists, and would throw
+         *   away ciphertext that a later key-change resolution could still open.
          */
+        @Suppress("LongParameterList")
         suspend fun processIncoming(
             identityHash: String,
+            ourDestinationHash: String,
             peerHash: String,
             fallbackContent: String,
             fields: Map<Int, ByteArray>,
-        ): Incoming? {
+            hasAttachments: Boolean = false,
+        ): Incoming {
             val keyProblem = takeInSenderKey(identityHash, peerHash, fields)
 
             // Read the sealed payload directly rather than through PqEnvelope.parse:
@@ -220,9 +290,16 @@ class PqMessageSealer
             // stop us opening it. The two concerns are independent.
             val sealedContent =
                 fields[PqEnvelope.FIELD_SEALED_CONTENT]
-                    ?: return Incoming(fallbackContent, wasSealed = false, keyProblem = keyProblem)
+                    ?: return Incoming(fallbackContent, PqProtection.NONE, keyProblem)
 
-            return unseal(identityHash, peerHash, sealedContent, keyProblem)
+            return unseal(
+                identityHash = identityHash,
+                ourDestinationHash = ourDestinationHash,
+                peerHash = peerHash,
+                sealedContent = sealedContent,
+                hasAttachments = hasAttachments,
+                keyProblem = keyProblem,
+            )
         }
 
         /**
@@ -252,27 +329,43 @@ class PqMessageSealer
             }
         }
 
+        @Suppress("LongParameterList")
         private suspend fun unseal(
             identityHash: String,
+            ourDestinationHash: String,
             peerHash: String,
             sealedContent: ByteArray,
+            hasAttachments: Boolean,
             keyProblem: PqKeyExchange.KeyAcceptance?,
-        ): Incoming? {
+        ): Incoming {
             val ourKeys = repository.ourKeyPair(identityHash)
             if (ourKeys == null) {
                 Log.e(TAG, "Sealed message arrived but our hybrid key pair is unavailable")
-                return null
+                return Incoming("", PqProtection.UNOPENED, keyProblem)
             }
 
             return try {
                 Incoming(
-                    content = String(kem.open(ourKeys, sealedContent), Charsets.UTF_8),
-                    wasSealed = true,
+                    content =
+                        String(
+                            kem.open(
+                                keyPair = ourKeys,
+                                wire = sealedContent,
+                                aad =
+                                    PqAad.forDirection(
+                                        senderDestinationHash = peerHash,
+                                        recipientDestinationHash = ourDestinationHash,
+                                    ),
+                            ),
+                            Charsets.UTF_8,
+                        ),
+                    protection =
+                        if (hasAttachments) PqProtection.SEALED_PARTIAL else PqProtection.SEALED,
                     keyProblem = keyProblem,
                 )
             } catch (e: HybridKemException) {
                 Log.e(TAG, "Could not open sealed message from $peerHash", e)
-                null
+                Incoming("", PqProtection.UNOPENED, keyProblem)
             }
         }
 

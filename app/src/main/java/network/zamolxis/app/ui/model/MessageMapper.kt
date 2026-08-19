@@ -84,6 +84,7 @@ fun Message.toMessageUi(): MessageUi {
         receivedSnr = receivedSnr,
         receivedAt = receivedAt,
         sentInterface = sentInterface,
+        pqProtection = pqProtection,
     )
 }
 

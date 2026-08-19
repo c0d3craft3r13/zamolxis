@@ -173,6 +173,46 @@ class ChatMessageFilterTest {
     }
 
     @Test
+    fun `sealed-content-only message surfaces a chat bubble`() {
+        // A post-quantum sealed message is exactly this shape: empty content,
+        // ciphertext in fields[0x51] (decimal 81). It MUST surface, or the
+        // recipient silently loses every sealed message while the sender sees
+        // a delivery proof. This is the regression that made the feature
+        // invisible end-to-end.
+        assertTrue(
+            received(
+                content = "",
+                fieldsJson = """{"81": "deadbeef"}""",
+            ).isUserVisibleChatMessage(),
+        )
+    }
+
+    @Test
+    fun `sealed content alongside the sender key surfaces`() {
+        // First sealed message in a conversation carries both the ciphertext
+        // and the sender's hybrid key (fields[0x50] = decimal 80).
+        assertTrue(
+            received(
+                content = "",
+                fieldsJson = """{"80": "aabb", "81": "deadbeef"}""",
+            ).isUserVisibleChatMessage(),
+        )
+    }
+
+    @Test
+    fun `sender key alone does not surface`() {
+        // Key-only frames ride along with plain messages to bootstrap the
+        // exchange. On their own they are side-channel and must not render as
+        // an empty bubble.
+        assertFalse(
+            received(
+                content = "",
+                fieldsJson = """{"80": "aabb"}""",
+            ).isUserVisibleChatMessage(),
+        )
+    }
+
+    @Test
     fun `reply with text surfaces (text wins, reply fields are inline metadata)`() {
         // Replies are normal text messages that ALSO carry reply
         // metadata in fields[0x30] / fields[0x31]. They should

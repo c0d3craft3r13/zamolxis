@@ -22,23 +22,17 @@ import org.robolectric.annotation.Config
 class AppDataPqFingerprintTest {
     private val fingerprint = ByteArray(16) { it.toByte() }
 
-    /** Mirrors NativeRnsBackendImpl.buildPeerAnnounceAppData. */
+    /**
+     * The real builder both backends use, not a copy of it.
+     *
+     * It used to be duplicated here, which meant the parser was only ever tested
+     * against this file's idea of the format — a drift between writer and reader
+     * would have passed.
+     */
     private fun announce(
         displayName: String = "peer",
         pqFingerprint: ByteArray? = null,
-    ): ByteArray {
-        val packer = MessagePack.newDefaultBufferPacker()
-        val nameBytes = displayName.toByteArray(Charsets.UTF_8)
-        packer.packArrayHeader(if (pqFingerprint != null) 3 else 2)
-        packer.packBinaryHeader(nameBytes.size)
-        packer.writePayload(nameBytes)
-        packer.packNil()
-        if (pqFingerprint != null) {
-            packer.packBinaryHeader(pqFingerprint.size)
-            packer.writePayload(pqFingerprint)
-        }
-        return packer.toByteArray()
-    }
+    ): ByteArray = PeerAnnounceAppData.build(displayName, pqFingerprint)
 
     @Test
     fun `reads a fingerprint the announce carries`() {

@@ -9,6 +9,7 @@ import network.zamolxis.app.data.db.dao.PqKeyDao
 import network.zamolxis.app.data.db.entity.LocalPqKeyEntity
 import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.crypto.pq.HybridKem
 import network.zamolxis.crypto.pq.HybridKeyCodec
@@ -19,6 +20,7 @@ import network.zamolxis.crypto.pq.PqKeyExchange
 import network.zamolxis.crypto.pq.PqMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -52,15 +54,73 @@ class PqMessageSealerTest {
         bob = PqMessageSealer(bobRepo, kem)
     }
 
+    // Named wrappers so every call site reads as the conversation direction it is,
+    // and so the AAD pair stays consistent without repeating it 40 times. In these
+    // tests an identity's hash doubles as its destination hash.
+    private suspend fun aliceSends(
+        content: String,
+        mode: PqMode = PqMode.OPPORTUNISTIC,
+        link: LinkCost = LinkCost.CHEAP,
+        peer: String = bobId,
+        hasAttachments: Boolean = false,
+    ) = alice.prepareOutgoing(
+        identityHash = aliceId,
+        ourDestinationHash = aliceId,
+        peerHash = peer,
+        content = content,
+        hasAttachments = hasAttachments,
+        mode = mode,
+        linkCost = link,
+    )
+
+    private suspend fun bobSends(
+        content: String,
+        mode: PqMode = PqMode.OPPORTUNISTIC,
+        link: LinkCost = LinkCost.CHEAP,
+        hasAttachments: Boolean = false,
+    ) = bob.prepareOutgoing(
+        identityHash = bobId,
+        ourDestinationHash = bobId,
+        peerHash = aliceId,
+        content = content,
+        hasAttachments = hasAttachments,
+        mode = mode,
+        linkCost = link,
+    )
+
+    private suspend fun bobReceives(
+        fields: Map<Int, ByteArray>,
+        fallback: String = "",
+        hasAttachments: Boolean = false,
+    ) = bob.processIncoming(
+        identityHash = bobId,
+        ourDestinationHash = bobId,
+        peerHash = aliceId,
+        fallbackContent = fallback,
+        fields = fields,
+        hasAttachments = hasAttachments,
+    )
+
+    private suspend fun aliceReceives(
+        fields: Map<Int, ByteArray>,
+        fallback: String = "",
+        hasAttachments: Boolean = false,
+    ) = alice.processIncoming(
+        identityHash = aliceId,
+        ourDestinationHash = aliceId,
+        peerHash = bobId,
+        fallbackContent = fallback,
+        fields = fields,
+        hasAttachments = hasAttachments,
+    )
+
     // ------------------------------------------------------------ first contact
 
     @Test
     fun `the opening message is plain but carries our key`() =
         runTest {
-            val outgoing =
-                alice.prepareOutgoing(aliceId, bobId, "hello", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
+            val plain = aliceSends("hello") as PqMessageSealer.Outgoing.Plain
 
-            val plain = outgoing as PqMessageSealer.Outgoing.Plain
             assertEquals("hello", plain.content)
             assertEquals(PlainReason.PEER_UNSUPPORTED, plain.reason)
             assertTrue(plain.extraFields.containsKey(PqEnvelope.FIELD_SENDER_KEY))
@@ -70,29 +130,23 @@ class PqMessageSealerTest {
     fun `a full exchange ends with both directions sealed`() =
         runTest {
             // 1. Alice opens; Bob takes in her key.
-            val first =
-                alice.prepareOutgoing(aliceId, bobId, "hello", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                    as PqMessageSealer.Outgoing.Plain
+            val first = aliceSends("hello") as PqMessageSealer.Outgoing.Plain
             alice.onSendSucceeded(aliceId, bobId, first)
-            val atBob = bob.processIncoming(bobId, aliceId, first.content, first.extraFields)!!
+            val atBob = bobReceives(first.extraFields, fallback = first.content)
             assertEquals("hello", atBob.content)
-            assertFalse(atBob.wasSealed)
+            assertEquals(PqProtection.NONE, atBob.protection)
 
             // 2. Bob replies — sealed, and carrying his own key.
-            val second =
-                bob.prepareOutgoing(bobId, aliceId, "hi back", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                    as PqMessageSealer.Outgoing.Sealed
+            val second = bobSends("hi back") as PqMessageSealer.Outgoing.Sealed
             bob.onSendSucceeded(bobId, aliceId, second)
-            val atAlice = alice.processIncoming(aliceId, bobId, second.content, second.extraFields)!!
+            val atAlice = aliceReceives(second.extraFields)
             assertEquals("hi back", atAlice.content)
-            assertTrue(atAlice.wasSealed)
+            assertEquals(PqProtection.SEALED, atAlice.protection)
 
             // 3. Alice now seals too, and stops attaching her key.
-            val third =
-                alice.prepareOutgoing(aliceId, bobId, "sealed now", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                    as PqMessageSealer.Outgoing.Sealed
+            val third = aliceSends("sealed now") as PqMessageSealer.Outgoing.Sealed
             assertFalse(third.extraFields.containsKey(PqEnvelope.FIELD_SENDER_KEY))
-            assertEquals("sealed now", bob.processIncoming(bobId, aliceId, "", third.extraFields)!!.content)
+            assertEquals("sealed now", bobReceives(third.extraFields).content)
         }
 
     @Test
@@ -100,13 +154,34 @@ class PqMessageSealerTest {
         runTest {
             establishExchange()
 
-            val sealed =
-                alice.prepareOutgoing(aliceId, bobId, "ATTACKATDAWN", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                    as PqMessageSealer.Outgoing.Sealed
+            val sealed = aliceSends("ATTACKATDAWN") as PqMessageSealer.Outgoing.Sealed
 
             assertEquals("", sealed.content)
             val blob = sealed.extraFields[PqEnvelope.FIELD_SEALED_CONTENT]!!
             assertFalse(String(blob, Charsets.ISO_8859_1).contains("ATTACKATDAWN"))
+        }
+
+    // ------------------------------------------------------ direction binding
+
+    @Test
+    fun `a sealed payload does not open in the other direction`() =
+        runTest {
+            establishExchange()
+            val sealed = aliceSends("for bob only") as PqMessageSealer.Outgoing.Sealed
+
+            // Bob's own key pair, Bob's own ciphertext — but reflected back as though
+            // Bob had sent it to Alice. The AAD binds sender and recipient, so this
+            // must not open even though the KEM half would succeed.
+            val reflected =
+                bob.processIncoming(
+                    identityHash = bobId,
+                    ourDestinationHash = aliceId,
+                    peerHash = bobId,
+                    fallbackContent = "",
+                    fields = sealed.extraFields,
+                )
+
+            assertEquals(PqProtection.UNOPENED, reflected.protection)
         }
 
     // ------------------------------------------------------------------- modes
@@ -116,10 +191,8 @@ class PqMessageSealerTest {
         runTest {
             establishExchange()
 
-            val outgoing =
-                alice.prepareOutgoing(aliceId, bobId, "plain", PqMode.OFF, LinkCost.CHEAP)
+            val plain = aliceSends("plain", mode = PqMode.OFF) as PqMessageSealer.Outgoing.Plain
 
-            val plain = outgoing as PqMessageSealer.Outgoing.Plain
             assertEquals(PlainReason.DISABLED_BY_USER, plain.reason)
             assertEquals("plain", plain.content)
         }
@@ -129,8 +202,7 @@ class PqMessageSealerTest {
         runTest {
             establishExchange()
 
-            val outgoing =
-                alice.prepareOutgoing(aliceId, bobId, "over lora", PqMode.OPPORTUNISTIC, LinkCost.EXPENSIVE)
+            val outgoing = aliceSends("over lora", link = LinkCost.EXPENSIVE)
 
             assertEquals(
                 PlainReason.LINK_TOO_EXPENSIVE,
@@ -143,8 +215,7 @@ class PqMessageSealerTest {
         runTest {
             establishExchange()
 
-            val outgoing =
-                alice.prepareOutgoing(aliceId, bobId, "must be sealed", PqMode.REQUIRED, LinkCost.EXPENSIVE)
+            val outgoing = aliceSends("must be sealed", mode = PqMode.REQUIRED, link = LinkCost.EXPENSIVE)
 
             assertTrue(outgoing is PqMessageSealer.Outgoing.Sealed)
         }
@@ -152,8 +223,7 @@ class PqMessageSealerTest {
     @Test
     fun `required refuses rather than sending readable to a plain peer`() =
         runTest {
-            val outgoing =
-                alice.prepareOutgoing(aliceId, "stranger", "secret", PqMode.REQUIRED, LinkCost.CHEAP)
+            val outgoing = aliceSends("secret", mode = PqMode.REQUIRED, peer = "stranger")
 
             assertEquals(
                 PlainReason.PEER_UNSUPPORTED,
@@ -168,13 +238,61 @@ class PqMessageSealerTest {
 
             for (peer in listOf(bobId, "stranger")) {
                 for (link in LinkCost.entries) {
-                    val outgoing = alice.prepareOutgoing(aliceId, peer, "x", PqMode.REQUIRED, link)
-                    assertTrue(
-                        "REQUIRED leaked a plain send to $peer over $link",
-                        outgoing !is PqMessageSealer.Outgoing.Plain,
-                    )
+                    for (attachments in listOf(false, true)) {
+                        val outgoing =
+                            aliceSends(
+                                "x",
+                                mode = PqMode.REQUIRED,
+                                link = link,
+                                peer = peer,
+                                hasAttachments = attachments,
+                            )
+                        assertTrue(
+                            "REQUIRED leaked a plain send to $peer over $link (attachments=$attachments)",
+                            outgoing !is PqMessageSealer.Outgoing.Plain,
+                        )
+                    }
                 }
             }
+        }
+
+    // -------------------------------------------------------------- attachments
+
+    @Test
+    fun `an attachment downgrades the recorded protection but still seals the text`() =
+        runTest {
+            establishExchange()
+
+            val sealed = aliceSends("caption", hasAttachments = true) as PqMessageSealer.Outgoing.Sealed
+
+            // The text is genuinely sealed; the status says the message as a whole
+            // was not, because the photo beside it was not.
+            assertEquals(PqProtection.SEALED_PARTIAL, sealed.protection)
+            assertEquals("caption", bobReceives(sealed.extraFields, hasAttachments = true).content)
+        }
+
+    @Test
+    fun `required refuses a message whose attachment cannot be sealed`() =
+        runTest {
+            establishExchange()
+
+            val outgoing = aliceSends("photo", mode = PqMode.REQUIRED, hasAttachments = true)
+
+            assertEquals(
+                PlainReason.ATTACHMENT_NOT_SEALABLE,
+                (outgoing as PqMessageSealer.Outgoing.Refused).reason,
+            )
+        }
+
+    @Test
+    fun `an attachment on a received sealed message is reported as partial`() =
+        runTest {
+            establishExchange()
+            val sealed = aliceSends("with photo", hasAttachments = true) as PqMessageSealer.Outgoing.Sealed
+
+            val incoming = bobReceives(sealed.extraFields, hasAttachments = true)
+
+            assertEquals(PqProtection.SEALED_PARTIAL, incoming.protection)
         }
 
     // -------------------------------------------------------------- key trouble
@@ -187,13 +305,25 @@ class PqMessageSealerTest {
 
             // An attacker's key arrives instead of Bob's.
             val attacker = kem.generateKeyPair().publicKey
-            val incoming =
-                alice.processIncoming(aliceId, bobId, "hi", PqEnvelope.keyOnlyFields(attacker))!!
+            val incoming = aliceReceives(PqEnvelope.keyOnlyFields(attacker), fallback = "hi")
 
             assertEquals(PqKeyExchange.KeyAcceptance.FingerprintMismatch, incoming.keyProblem)
-            val outgoing =
-                alice.prepareOutgoing(aliceId, bobId, "reply", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-            assertTrue(outgoing is PqMessageSealer.Outgoing.Plain)
+            assertTrue(aliceSends("reply") is PqMessageSealer.Outgoing.Plain)
+        }
+
+    @Test
+    fun `a substituted key is recorded so the user can be told`() =
+        runTest {
+            val bobKey = bobRepo.ourPublicKey(bobId)!!
+            aliceRepo.recordAnnouncedFingerprint(bobId, HybridKeyCodec.fingerprint(bobKey))
+
+            aliceReceives(PqEnvelope.keyOnlyFields(kem.generateKeyPair().publicKey))
+
+            // Used to be a log line only, which meant nobody ever saw the one event
+            // that says the announce or the message was altered in transit.
+            assertTrue(aliceRepo.hasFingerprintMismatch(bobId))
+            aliceRepo.acknowledgeFingerprintMismatch(bobId)
+            assertFalse(aliceRepo.hasFingerprintMismatch(bobId))
         }
 
     @Test
@@ -202,25 +332,41 @@ class PqMessageSealerTest {
             establishExchange()
 
             val replacement = kem.generateKeyPair().publicKey
-            val incoming =
-                alice.processIncoming(aliceId, bobId, "hi", PqEnvelope.keyOnlyFields(replacement))!!
+            val incoming = aliceReceives(PqEnvelope.keyOnlyFields(replacement), fallback = "hi")
 
             assertEquals(PqKeyExchange.KeyAcceptance.ChangedKey, incoming.keyProblem)
-            assertTrue(
-                alice.prepareOutgoing(aliceId, bobId, "x", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                    is PqMessageSealer.Outgoing.Plain,
-            )
+            assertTrue(aliceSends("x") is PqMessageSealer.Outgoing.Plain)
         }
 
     @Test
     fun `required refuses once a key change is unresolved`() =
         runTest {
             establishExchange()
-            alice.processIncoming(aliceId, bobId, "hi", PqEnvelope.keyOnlyFields(kem.generateKeyPair().publicKey))
+            aliceReceives(PqEnvelope.keyOnlyFields(kem.generateKeyPair().publicKey))
 
+            assertTrue(aliceSends("x", mode = PqMode.REQUIRED) is PqMessageSealer.Outgoing.Refused)
+        }
+
+    @Test
+    fun `rotating our key makes it attachable to peers again`() =
+        runTest {
+            establishExchange()
+            // Bob believes he holds Alice's key, so she has stopped attaching it.
+            assertFalse(
+                (aliceSends("x") as PqMessageSealer.Outgoing.Sealed)
+                    .extraFields
+                    .containsKey(PqEnvelope.FIELD_SENDER_KEY),
+            )
+
+            val rotated = aliceRepo.rotateOurKeyPair(aliceId)
+            assertNotNull(rotated)
+
+            // Without clearing delivery records the replacement would never reach
+            // anyone, and every peer would keep sealing to a key Alice no longer has.
             assertTrue(
-                alice.prepareOutgoing(aliceId, bobId, "x", PqMode.REQUIRED, LinkCost.CHEAP)
-                    is PqMessageSealer.Outgoing.Refused,
+                (aliceSends("x") as PqMessageSealer.Outgoing.Sealed)
+                    .extraFields
+                    .containsKey(PqEnvelope.FIELD_SENDER_KEY),
             )
         }
 
@@ -237,9 +383,8 @@ class PqMessageSealerTest {
             for (peer in listOf(bobId, "stranger")) {
                 for (mode in PqMode.entries) {
                     for (link in LinkCost.entries) {
-                        val sealedByIndicator =
-                            alice.isConversationSealed(aliceId, peer, mode, link)
-                        val sent = alice.prepareOutgoing(aliceId, peer, "x", mode, link)
+                        val sealedByIndicator = alice.isConversationSealed(aliceId, peer, mode, link)
+                        val sent = aliceSends("x", mode = mode, link = link, peer = peer)
                         val sealedBySend = sent is PqMessageSealer.Outgoing.Sealed
 
                         assertEquals(
@@ -255,9 +400,7 @@ class PqMessageSealerTest {
     @Test
     fun `the indicator is off before any key exchange`() =
         runTest {
-            assertFalse(
-                alice.isConversationSealed(aliceId, bobId, PqMode.OPPORTUNISTIC, LinkCost.CHEAP),
-            )
+            assertFalse(alice.isConversationSealed(aliceId, bobId, PqMode.OPPORTUNISTIC, LinkCost.CHEAP))
         }
 
     @Test
@@ -266,11 +409,9 @@ class PqMessageSealerTest {
             establishExchange()
             assertTrue(alice.isConversationSealed(aliceId, bobId, PqMode.OPPORTUNISTIC, LinkCost.CHEAP))
 
-            alice.processIncoming(aliceId, bobId, "hi", PqEnvelope.keyOnlyFields(kem.generateKeyPair().publicKey))
+            aliceReceives(PqEnvelope.keyOnlyFields(kem.generateKeyPair().publicKey))
 
-            assertFalse(
-                alice.isConversationSealed(aliceId, bobId, PqMode.OPPORTUNISTIC, LinkCost.CHEAP),
-            )
+            assertFalse(alice.isConversationSealed(aliceId, bobId, PqMode.OPPORTUNISTIC, LinkCost.CHEAP))
         }
 
     // ---------------------------------------------------------------- incoming
@@ -278,46 +419,49 @@ class PqMessageSealerTest {
     @Test
     fun `an ordinary message passes through untouched`() =
         runTest {
-            val incoming = alice.processIncoming(aliceId, bobId, "just text", emptyMap())!!
+            val incoming = aliceReceives(emptyMap(), fallback = "just text")
 
             assertEquals("just text", incoming.content)
-            assertFalse(incoming.wasSealed)
+            assertEquals(PqProtection.NONE, incoming.protection)
             assertNull(incoming.keyProblem)
         }
 
     @Test
-    fun `a sealed message we cannot open yields null rather than gibberish`() =
+    fun `a sealed message we cannot open is kept as unopened, not dropped`() =
         runTest {
             // Sealed to someone else entirely.
             val stranger = kem.generateKeyPair().publicKey
             val fields = PqEnvelope.fieldsFor(kem.seal(stranger, "not for you".toByteArray()), null)
 
-            assertNull(alice.processIncoming(aliceId, bobId, "", fields))
+            val incoming = aliceReceives(fields)
+
+            // Dropping it would leave the sender holding a delivery proof for a
+            // message the recipient never learns exists.
+            assertEquals(PqProtection.UNOPENED, incoming.protection)
+            assertEquals("", incoming.content)
         }
 
     @Test
-    fun `a tampered sealed message yields null`() =
+    fun `a tampered sealed message is reported as unopened`() =
         runTest {
             establishExchange()
-            val sealed =
-                alice.prepareOutgoing(aliceId, bobId, "intact", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                    as PqMessageSealer.Outgoing.Sealed
+            val sealed = aliceSends("intact") as PqMessageSealer.Outgoing.Sealed
             val blob = sealed.extraFields[PqEnvelope.FIELD_SEALED_CONTENT]!!.copyOf()
             blob[blob.size - 1] = (blob[blob.size - 1].toInt() xor 0x01).toByte()
 
-            assertNull(
-                bob.processIncoming(bobId, aliceId, "", mapOf(PqEnvelope.FIELD_SEALED_CONTENT to blob)),
-            )
+            val incoming = bobReceives(mapOf(PqEnvelope.FIELD_SEALED_CONTENT to blob))
+
+            assertEquals(PqProtection.UNOPENED, incoming.protection)
         }
 
     @Test
     fun `a malformed sender key does not read as no key`() =
         runTest {
             val incoming =
-                alice.processIncoming(aliceId, bobId, "text", mapOf(PqEnvelope.FIELD_SENDER_KEY to ByteArray(9)))!!
+                aliceReceives(mapOf(PqEnvelope.FIELD_SENDER_KEY to ByteArray(9)), fallback = "text")
 
             assertEquals("text", incoming.content)
-            assertFalse(incoming.wasSealed)
+            assertEquals(PqProtection.NONE, incoming.protection)
             // The peer stays un-established rather than being recorded as plain.
             assertNull(aliceDao.peerKeys[bobId]?.publicKey)
         }
@@ -326,19 +470,16 @@ class PqMessageSealerTest {
     fun `a sealed message still opens when the attached sender key is corrupt`() =
         runTest {
             establishExchange()
-            val sealed =
-                alice.prepareOutgoing(aliceId, bobId, "still readable", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                    as PqMessageSealer.Outgoing.Sealed
+            val sealed = aliceSends("still readable") as PqMessageSealer.Outgoing.Sealed
 
             // The payload is sealed to Bob's key; a mangled sender-key field is a
             // separate concern and must not cost him the message.
-            val fields =
-                sealed.extraFields + mapOf(PqEnvelope.FIELD_SENDER_KEY to ByteArray(11))
+            val fields = sealed.extraFields + mapOf(PqEnvelope.FIELD_SENDER_KEY to ByteArray(11))
 
-            val incoming = bob.processIncoming(bobId, aliceId, "", fields)!!
+            val incoming = bobReceives(fields)
 
             assertEquals("still readable", incoming.content)
-            assertTrue(incoming.wasSealed)
+            assertEquals(PqProtection.SEALED, incoming.protection)
         }
 
     @Test
@@ -347,26 +488,20 @@ class PqMessageSealerTest {
             establishExchange()
             val message = "Здравей, свят — 🕊 مرحبا"
 
-            val sealed =
-                alice.prepareOutgoing(aliceId, bobId, message, PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                    as PqMessageSealer.Outgoing.Sealed
+            val sealed = aliceSends(message) as PqMessageSealer.Outgoing.Sealed
 
-            assertEquals(message, bob.processIncoming(bobId, aliceId, "", sealed.extraFields)!!.content)
+            assertEquals(message, bobReceives(sealed.extraFields).content)
         }
 
     /** Runs the two-message handshake so both sides hold each other's key. */
     private suspend fun establishExchange() {
-        val first =
-            alice.prepareOutgoing(aliceId, bobId, "hello", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                as PqMessageSealer.Outgoing.Plain
+        val first = aliceSends("hello") as PqMessageSealer.Outgoing.Plain
         alice.onSendSucceeded(aliceId, bobId, first)
-        bob.processIncoming(bobId, aliceId, first.content, first.extraFields)
+        bobReceives(first.extraFields, fallback = first.content)
 
-        val second =
-            bob.prepareOutgoing(bobId, aliceId, "hi", PqMode.OPPORTUNISTIC, LinkCost.CHEAP)
-                as PqMessageSealer.Outgoing.Sealed
+        val second = bobSends("hi") as PqMessageSealer.Outgoing.Sealed
         bob.onSendSucceeded(bobId, aliceId, second)
-        alice.processIncoming(aliceId, bobId, second.content, second.extraFields)
+        aliceReceives(second.extraFields, fallback = second.content)
     }
 }
 
@@ -447,6 +582,15 @@ private class FakePqKeyDao : PqKeyDao {
                     keyChangeUnresolved = false,
                     updatedTimestamp = now,
                 )
+        }
+    }
+
+    override suspend fun clearFingerprintMismatch(
+        peerHash: String,
+        now: Long,
+    ) {
+        peerKeys[peerHash]?.let {
+            peerKeys[peerHash] = it.copy(fingerprintMismatchTimestamp = null, updatedTimestamp = now)
         }
     }
 

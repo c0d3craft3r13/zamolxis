@@ -71,7 +71,7 @@ import network.zamolxis.app.data.db.entity.RmspServerEntity
         PeerPqKeyEntity::class,
         PqKeyDeliveryEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 abstract class ZamolxisDatabase : RoomDatabase() {
@@ -362,6 +362,27 @@ abstract class ZamolxisDatabase : RoomDatabase() {
             object : Migration(7, 8) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     db.execSQL("ALTER TABLE peer_pq_keys ADD COLUMN pendingPublicKey BLOB")
+                }
+            }
+
+        /**
+         * v8 → v9: record per message what the post-quantum layer did to it.
+         *
+         * One nullable column holding a `PqProtection` name. Nullable rather
+         * than `NOT NULL DEFAULT 'NONE'` because null is the honest value for
+         * every existing row: those messages predate the layer, and claiming
+         * they were consciously left unprotected would be a fabricated audit
+         * trail. `PqProtection.fromStored` reads null back as `NONE`.
+         */
+        val MIGRATION_8_9: Migration =
+            object : Migration(8, 9) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE messages ADD COLUMN pqStatus TEXT")
+                    // Second column, same migration: a peer offering a key that
+                    // contradicts its announced fingerprint used to be a log line
+                    // and nothing else. Storing it is what lets the UI tell the one
+                    // person who can check the key out of band.
+                    db.execSQL("ALTER TABLE peer_pq_keys ADD COLUMN fingerprintMismatchTimestamp INTEGER")
                 }
             }
 

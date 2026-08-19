@@ -521,6 +521,9 @@ fun SettingsScreen(
                     onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.POST_QUANTUM, it) },
                     selectedMode = state.postQuantumMode,
                     onModeChange = { viewModel.setPostQuantumMode(it) },
+                    onRotateKey = { viewModel.rotatePostQuantumKey() },
+                    rotationMessage = state.postQuantumRotationMessage,
+                    onRotationMessageShown = { viewModel.clearPostQuantumRotationMessage() },
                 )
 
                 ImageCompressionCard(

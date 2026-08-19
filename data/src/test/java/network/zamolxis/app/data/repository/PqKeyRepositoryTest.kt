@@ -15,6 +15,8 @@ import network.zamolxis.crypto.pq.PeerPqSupport
 import network.zamolxis.crypto.pq.PqKeyExchange
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -309,6 +311,87 @@ class PqKeyRepositoryTest {
             // identity-b has a different key pair, so the peer does not have it yet.
             assertTrue(PqKeyExchange.shouldAttachOurKey(repository.peerState("identity-b", peer)))
         }
+
+    // ---------------------------------------------------- fingerprint mismatch
+
+    @Test
+    fun `a key contradicting the announced fingerprint is recorded, not just rejected`() =
+        runTest {
+            val announced = kem.generateKeyPair().publicKey
+            repository.recordAnnouncedFingerprint(peer, HybridKeyCodec.fingerprint(announced))
+
+            repository.acceptIncomingKey(identity, peer, kem.generateKeyPair().publicKey)
+
+            // Rejecting silently used to be the whole response, which left the one
+            // event meaning "someone altered this in transit" visible only in logcat.
+            assertTrue(repository.hasFingerprintMismatch(peer))
+            // And the offered key is still not usable for sealing.
+            assertNull(repository.peerState(identity, peer).knownKey)
+        }
+
+    @Test
+    fun `acknowledging a mismatch clears it`() =
+        runTest {
+            val announced = kem.generateKeyPair().publicKey
+            repository.recordAnnouncedFingerprint(peer, HybridKeyCodec.fingerprint(announced))
+            repository.acceptIncomingKey(identity, peer, kem.generateKeyPair().publicKey)
+
+            repository.acknowledgeFingerprintMismatch(peer)
+
+            assertFalse(repository.hasFingerprintMismatch(peer))
+        }
+
+    @Test
+    fun `a matching key records no mismatch`() =
+        runTest {
+            val bobKey = kem.generateKeyPair().publicKey
+            repository.recordAnnouncedFingerprint(peer, HybridKeyCodec.fingerprint(bobKey))
+
+            repository.acceptIncomingKey(identity, peer, bobKey)
+
+            assertFalse(repository.hasFingerprintMismatch(peer))
+            assertEquals(bobKey, repository.peerState(identity, peer).knownKey)
+        }
+
+    // -------------------------------------------------------------- rotation
+
+    @Test
+    fun `rotation replaces the key pair`() =
+        runTest {
+            val original = repository.ourKeyPair(identity)!!.publicKey
+
+            val rotated = repository.rotateOurKeyPair(identity)
+
+            assertNotNull(rotated)
+            assertNotEquals(original, rotated)
+            assertEquals(rotated, repository.ourKeyPair(identity)!!.publicKey)
+        }
+
+    @Test
+    fun `rotation makes our key attachable to peers again`() =
+        runTest {
+            repository.ourKeyPair(identity)
+            repository.markOurKeyDelivered(identity, peer)
+            assertFalse(PqKeyExchange.shouldAttachOurKey(repository.peerState(identity, peer)))
+
+            repository.rotateOurKeyPair(identity)
+
+            // Every peer still believes it holds the old key. Without clearing the
+            // delivery records the replacement would never be sent, and those
+            // conversations would seal to a key this device no longer has.
+            assertTrue(PqKeyExchange.shouldAttachOurKey(repository.peerState(identity, peer)))
+        }
+
+    @Test
+    fun `rotation leaves other identities alone`() =
+        runTest {
+            val otherBefore = repository.ourKeyPair("identity-b")!!.publicKey
+            repository.ourKeyPair(identity)
+
+            repository.rotateOurKeyPair(identity)
+
+            assertEquals(otherBefore, repository.ourKeyPair("identity-b")!!.publicKey)
+        }
 }
 
 /** Keystore stand-in: Robolectric has no real AndroidKeyStore to exercise. */
@@ -391,6 +474,15 @@ private class FakePqKeyDao : PqKeyDao {
                     keyChangeUnresolved = false,
                     updatedTimestamp = now,
                 )
+        }
+    }
+
+    override suspend fun clearFingerprintMismatch(
+        peerHash: String,
+        now: Long,
+    ) {
+        peerKeys[peerHash]?.let {
+            peerKeys[peerHash] = it.copy(fingerprintMismatchTimestamp = null, updatedTimestamp = now)
         }
     }
 

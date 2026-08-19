@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import network.zamolxis.app.di.IoDispatcher
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.service.pq.PqAnnounceFingerprint
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.RnsTransportAdmin
 import network.zamolxis.app.util.IdentityQrCodeUtils
@@ -103,6 +104,7 @@ class DebugViewModel
         private val identityRepository: network.zamolxis.app.data.repository.IdentityRepository,
         private val interfaceConfigManager: network.zamolxis.app.service.InterfaceConfigManager,
         private val interfaceRepository: network.zamolxis.app.repository.InterfaceRepository,
+        private val pqAnnounceFingerprint: PqAnnounceFingerprint,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : ViewModel() {
         companion object {
@@ -372,7 +374,7 @@ class DebugViewModel
                     // failed outright with "Identity not found" because the delivery
                     // destination isn't in the generic destination cache (#988).
                     rnsCore
-                        .triggerAutoAnnounce(displayName)
+                        .triggerAutoAnnounce(displayName, pqAnnounceFingerprint.current())
                         .getOrThrow()
 
                     Log.d(TAG, "Test announce sent successfully")

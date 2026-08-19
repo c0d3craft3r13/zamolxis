@@ -132,6 +132,25 @@ interface MessageDao {
         sentInterface: String?,
     )
 
+    /**
+     * Overwrite what the post-quantum layer did to one message.
+     *
+     * Needed by the retry path: a retry decides sealing afresh, so a row written
+     * by the first attempt can otherwise keep claiming a protection level the
+     * retried send did not use.
+     */
+    @Query(
+        """
+        UPDATE messages SET pqStatus = :pqStatus
+        WHERE id = :messageId AND identityHash = :identityHash
+        """,
+    )
+    suspend fun updatePqStatus(
+        messageId: String,
+        identityHash: String,
+        pqStatus: String?,
+    )
+
     @Query(
         """
         UPDATE messages
@@ -197,11 +216,24 @@ interface MessageDao {
      * Get IDs of received (not from me) messages for an identity since a cutoff time.
      * Used to pre-seed duplicate notification prevention cache at startup.
      * Bounded to recent messages to avoid unbounded memory growth.
+     *
+     * Rows still awaiting an unseal are excluded ([unopenedStatus]). Those are
+     * unfinished work, not messages already handled: the service process persists
+     * a sealed message as ciphertext because it holds no key material, and the app
+     * process has to get another chance at opening it when the stream replays.
+     * Seeding them here would freeze them as blank messages forever.
      */
-    @Query("SELECT id FROM messages WHERE identityHash = :identityHash AND isFromMe = 0 AND timestamp >= :since")
+    @Query(
+        """
+        SELECT id FROM messages
+        WHERE identityHash = :identityHash AND isFromMe = 0 AND timestamp >= :since
+          AND (pqStatus IS NULL OR pqStatus != :unopenedStatus)
+        """,
+    )
     suspend fun getReceivedMessageIds(
         identityHash: String,
         since: Long,
+        unopenedStatus: String,
     ): List<String>
 
     /**

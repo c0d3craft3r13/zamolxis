@@ -44,7 +44,7 @@ class AutoAnnounceManagerTest {
     private lateinit var mockSettingsRepository: SettingsRepository
     private lateinit var mockIdentityRepository: IdentityRepository
     private lateinit var mockRnsCore: RnsCore
-    private lateinit var mockPqKeyRepository: network.zamolxis.app.data.repository.PqKeyRepository
+    private lateinit var mockPqAnnounceFingerprint: network.zamolxis.app.service.pq.PqAnnounceFingerprint
     private lateinit var manager: AutoAnnounceManager
 
     @Before
@@ -61,15 +61,15 @@ class AutoAnnounceManagerTest {
         every { mockSettingsRepository.autoAnnounceIntervalHoursFlow } returns flowOf(3)
         every { mockSettingsRepository.networkChangeAnnounceTimeFlow } returns flowOf(null)
         every { mockIdentityRepository.activeIdentity } returns flowOf(null)
-        mockPqKeyRepository = mockk()
-        coEvery { mockPqKeyRepository.ourFingerprint(any()) } returns null
+        mockPqAnnounceFingerprint = mockk()
+        coEvery { mockPqAnnounceFingerprint.current() } returns null
 
         manager =
             AutoAnnounceManager(
                 mockSettingsRepository,
                 mockIdentityRepository,
                 mockRnsCore,
-                mockPqKeyRepository,
+                mockPqAnnounceFingerprint,
                 testScope,
             )
     }
@@ -289,7 +289,7 @@ class AutoAnnounceManagerTest {
                     mockSettingsRepository,
                     mockIdentityRepository,
                     mockRnsCore,
-                    mockPqKeyRepository,
+                    mockPqAnnounceFingerprint,
                     testScope,
                 )
 

@@ -35,7 +35,10 @@ import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.api.model.BatteryProfile
 import network.zamolxis.app.rns.api.model.NetworkStatus
 import network.zamolxis.app.rns.api.RnsBackend
+import network.zamolxis.app.R
+import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.service.pq.PqAnnounceFingerprint
 import network.zamolxis.app.rns.api.RnsException
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.RnsTransportAdmin
@@ -171,6 +174,8 @@ data class SettingsState(
     // Image compression state
     val imageCompressionPreset: ImageCompressionPreset = ImageCompressionPreset.AUTO,
     val postQuantumMode: network.zamolxis.crypto.pq.PqMode = network.zamolxis.crypto.pq.PqMode.OPPORTUNISTIC,
+    /** Result of the last key rotation, shown once and then cleared. */
+    val postQuantumRotationMessage: String? = null,
     /** Optimal preset based on interfaces */
     val detectedCompressionPreset: ImageCompressionPreset? = null,
     // Map source state
@@ -234,6 +239,8 @@ class SettingsViewModel
         private val contactRepository: ContactRepository,
         private val updateChecker: network.zamolxis.app.service.UpdateChecker,
         private val crashReportManager: network.zamolxis.app.util.CrashReportManager,
+        private val pqAnnounceFingerprint: PqAnnounceFingerprint,
+        private val pqKeyRepository: PqKeyRepository,
     ) : ViewModel() {
         companion object {
             private const val TAG = "SettingsViewModel"
@@ -937,7 +944,10 @@ class SettingsViewModel
                     // Get display name
                     val displayName = state.value.displayName
 
-                    val result = rnsCore.triggerAutoAnnounce(displayName)
+                    // Same fingerprint the scheduled announce carries — a manual
+                    // announce that omitted it would quietly retract the capability.
+                    val result =
+                        rnsCore.triggerAutoAnnounce(displayName, pqAnnounceFingerprint.current())
 
                     if (result.isSuccess) {
                         // Update last announce timestamp
@@ -2151,6 +2161,50 @@ class SettingsViewModel
                 settingsRepository.savePostQuantumMode(mode)
                 Log.d(TAG, "Post-quantum mode set to: ${mode.name}")
             }
+        }
+
+        /**
+         * Replace this identity's hybrid key pair with a fresh one.
+         *
+         * Offered because the ML-KEM half of the construction is long-lived and has
+         * no forward secrecy: everything sealed to it stays readable to anyone who
+         * later obtains it. Rotation is the only mitigation, so it has to be
+         * something a user can actually do rather than a line in a doc comment.
+         *
+         * Contacts will each be asked to confirm the new key, since from their side
+         * a rotation is indistinguishable from a substitution.
+         */
+        fun rotatePostQuantumKey() {
+            viewModelScope.launch {
+                val identityHash = identityRepository.getActiveIdentitySync()?.identityHash
+                val rotated =
+                    identityHash?.let { pqKeyRepository.rotateOurKeyPair(it) }
+                _state.value =
+                    _state.value.copy(
+                        postQuantumRotationMessage =
+                            if (rotated != null) {
+                                context.getString(R.string.pq_rotate_done)
+                            } else {
+                                context.getString(R.string.pq_rotate_failed)
+                            },
+                    )
+                if (rotated != null) {
+                    // Re-announce immediately: the fingerprint we were advertising
+                    // belongs to a key that no longer exists, and a peer acting on
+                    // the stale one would be told our key changed for no reason.
+                    runCatching {
+                        rnsCore.triggerAutoAnnounce(
+                            _state.value.displayName,
+                            pqAnnounceFingerprint.current(),
+                        )
+                    }.onFailure { Log.w(TAG, "Could not re-announce after key rotation", it) }
+                }
+            }
+        }
+
+        /** Clear the rotation result once the UI has shown it. */
+        fun clearPostQuantumRotationMessage() {
+            _state.value = _state.value.copy(postQuantumRotationMessage = null)
         }
 
         fun setImageCompressionPreset(preset: ImageCompressionPreset) {

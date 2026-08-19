@@ -112,6 +112,55 @@ fun PqKeyChangeDialog(
     )
 }
 
+/**
+ * Reports a key that was rejected because it contradicted its own announcement.
+ *
+ * Distinct from [PqKeyChangeDialog] because there is nothing to decide. A key
+ * that does not match the fingerprint its owner broadcast was never stored and
+ * nothing was sealed to it, so the app has already done the safe thing. What
+ * remains is telling the user, because the only explanations are that the
+ * announce was tampered with or the message was — and they are the only party
+ * who can check the real key against the real person.
+ *
+ * @param peerName who sent the mismatching key
+ * @param onDismiss acknowledge the warning; it does not reappear for this event
+ */
+@Composable
+fun PqKeyMismatchDialog(
+    peerName: String,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+            )
+        },
+        title = { Text(stringResource(R.string.pq_key_mismatch_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(R.string.pq_key_change_peer, peerName),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = stringResource(R.string.pq_key_mismatch_warning),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.pq_key_mismatch_dismiss))
+            }
+        },
+    )
+}
+
 @Composable
 private fun FingerprintBlock(
     label: String,

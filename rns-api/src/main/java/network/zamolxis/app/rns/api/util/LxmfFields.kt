@@ -59,6 +59,27 @@ object LxmfFields {
     /** Command structures (Sideband telemetry-request RPCs). */
     const val FIELD_COMMANDS = 0x09
 
+    /**
+     * Sender's hybrid post-quantum public key, encoded by `HybridKeyCodec.encode`.
+     *
+     * Mirrors `PqEnvelope.FIELD_SENDER_KEY` in `:crypto-pq`, which is a plain JVM
+     * module this one cannot depend on. `PqEnvelopeFieldNumbersTest` in `:app`
+     * sees both and fails if the two ever drift.
+     */
+    const val FIELD_SENDER_KEY = 0x50
+
+    /**
+     * Hybrid-sealed message content, produced by `HybridKem.seal`.
+     *
+     * A sealed message carries its text here and leaves the LXMF content slot
+     * empty, so [isUserVisibleChatMessage] must count this field as
+     * user-visible payload — otherwise every sealed message is discarded before
+     * anything gets the chance to open it.
+     *
+     * Mirrors `PqEnvelope.FIELD_SEALED_CONTENT`; see [FIELD_SENDER_KEY].
+     */
+    const val FIELD_SEALED_CONTENT = 0x51
+
     /** Optional hint describing how the UTF-8 message content should be rendered. */
     const val FIELD_RENDERER = 0x0F
 

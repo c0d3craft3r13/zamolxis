@@ -12,6 +12,13 @@ import org.json.JSONObject
  *   - an image       (`fields[0x06]` = [FIELD_IMAGE])
  *   - file attachments (`fields[0x05]` = [LxmfFields.FIELD_FILE_ATTACHMENTS])
  *   - audio          (`fields[0x07]` = [LxmfFields.FIELD_AUDIO])
+ *   - hybrid-sealed content (`fields[0x51]` = [LxmfFields.FIELD_SEALED_CONTENT])
+ *
+ * The sealed-content case is not optional. A post-quantum sealed message puts
+ * its text in `fields[0x51]` and leaves the LXMF content slot empty, so without
+ * it every sealed message looks like a side-channel frame and is dropped here —
+ * before `MessageCollector` ever gets to open it. The sender still sees its own
+ * copy and a delivery proof, so the failure is invisible on both ends.
  *
  * Returns false otherwise. Side-channel-only frames — telemetry-only
  * location shares (FIELD_TELEMETRY / FIELD_TELEMETRY_STREAM /
@@ -38,7 +45,8 @@ fun ReceivedMessage.isUserVisibleChatMessage(): Boolean {
         val parsed = JSONObject(json)
         parsed.has(LxmfFields.FIELD_IMAGE.toString()) ||
             parsed.has(LxmfFields.FIELD_FILE_ATTACHMENTS.toString()) ||
-            parsed.has(LxmfFields.FIELD_AUDIO.toString())
+            parsed.has(LxmfFields.FIELD_AUDIO.toString()) ||
+            parsed.has(LxmfFields.FIELD_SEALED_CONTENT.toString())
     } catch (_: Exception) {
         // Malformed fieldsJson with blank content — safer to drop
         // than render an empty bubble. The backend logs the parse

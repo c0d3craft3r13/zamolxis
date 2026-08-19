@@ -21,6 +21,7 @@ import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
 import network.zamolxis.app.rns.api.model.IconAppearance
 import network.zamolxis.app.rns.api.model.ReceivedMessage
 import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.service.pq.PqAnnounceFingerprint
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.RnsTelemetry
 import network.zamolxis.app.rns.api.util.LxmfFields
@@ -55,6 +56,7 @@ object TestController {
         fun rnsTelemetry(): RnsTelemetry
         fun interfaceRepository(): InterfaceRepository
         fun interfaceConfigManager(): InterfaceConfigManager
+        fun pqAnnounceFingerprint(): PqAnnounceFingerprint
     }
 
     // Surface uncaught throws inside any scope.launch as a parseable
@@ -80,6 +82,7 @@ object TestController {
     private var rnsTelemetry: RnsTelemetry? = null
     private var interfaceRepo: InterfaceRepository? = null
     private var interfaceConfigManager: InterfaceConfigManager? = null
+    private var pqAnnounceFingerprint: PqAnnounceFingerprint? = null
     private val rxQueue = mutableListOf<ReceivedMessage>()
     private val rxLock = Any()
     private val deliveryStates = mutableMapOf<String, String>() // msgHashHex -> stateName
@@ -100,6 +103,7 @@ object TestController {
         rnsTelemetry = ep.rnsTelemetry()
         interfaceRepo = ep.interfaceRepository()
         interfaceConfigManager = ep.interfaceConfigManager()
+        pqAnnounceFingerprint = ep.pqAnnounceFingerprint()
         receiveJob = scope.launch {
             rnsLxmf!!.observeMessages().collect { msg ->
                 synchronized(rxLock) { rxQueue.add(msg) }
@@ -558,7 +562,14 @@ object TestController {
             // through announceDestination() can fail after a debug-package reinstall
             // if UI identity records were reset while the backend retained its active
             // LXMF destination.
-            val result = rnsCore!!.triggerAutoAnnounce("Zamolxis Android BLE Physical Test")
+            // Carries the fingerprint like every other announce path: the on-device
+            // interop tests exercise post-quantum sealing, which cannot start if the
+            // announce this controller sends says the capability is absent.
+            val result =
+                rnsCore!!.triggerAutoAnnounce(
+                    "Zamolxis Android BLE Physical Test",
+                    pqAnnounceFingerprint?.current(),
+                )
             if (result.isSuccess) {
                 Log.i(LOGCAT_TAG, "announced dest=${dest.hexHash}")
             } else {

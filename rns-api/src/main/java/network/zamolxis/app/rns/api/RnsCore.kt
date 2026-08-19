@@ -112,10 +112,16 @@ interface RnsCore {
      *   null when there is none. Advertising it lets peers know sealing is
      *   possible before the first message; the key itself is far too large to put
      *   in a message the whole mesh rebroadcasts.
+     *
+     *   Deliberately **not** defaulted. It used to default to null, and three of
+     *   the four call sites — every manual "announce now" path — silently took
+     *   that default, so a peer that only ever heard a manual announce never
+     *   learned this identity could be sealed to. Making it explicit turns that
+     *   class of omission into a compile error.
      */
     suspend fun triggerAutoAnnounce(
         displayName: String,
-        pqFingerprint: ByteArray? = null,
+        pqFingerprint: ByteArray?,
     ): Result<Unit>
 
     // ==================== Packet operations ====================

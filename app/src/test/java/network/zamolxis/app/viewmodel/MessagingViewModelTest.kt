@@ -83,6 +83,7 @@ import org.junit.Assert.assertTrue
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.service.pq.PqMessageSealer
 import network.zamolxis.crypto.pq.PlainReason
+import network.zamolxis.crypto.pq.PqMode
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -262,8 +263,12 @@ class MessagingViewModelTest {
         rnsTelephony = mockk()
         pqMessageSealer = mockk()
         coEvery {
-            pqMessageSealer.prepareOutgoing(any(), any(), any(), any(), any())
-        } answers { PqMessageSealer.Outgoing.Plain(arg(2), emptyMap(), PlainReason.PEER_UNSUPPORTED) }
+            pqMessageSealer.prepareOutgoing(any(), any(), any(), any(), any(), any(), any())
+        } answers {
+            // arg(3) is the content: the parameter list gained ourDestinationHash
+            // ahead of it (AAD binding) and hasAttachments after it.
+            PqMessageSealer.Outgoing.Plain(arg(3), emptyMap(), PlainReason.PEER_UNSUPPORTED)
+        }
         coEvery { pqMessageSealer.onSendSucceeded(any(), any(), any()) } just Runs
         pqKeyRepository = mockk()
         coEvery { pqKeyRepository.keyChangeFingerprints(any()) } returns null
@@ -279,6 +284,11 @@ class MessagingViewModelTest {
         coEvery { settingsRepository.getDefaultDeliveryMethod() } returns "direct"
         coEvery { settingsRepository.getTryPropagationOnFail() } returns true
         coEvery { settingsRepository.getIncomingMessageSizeLimitKb() } returns 500
+        // Required, not optional: the send path refuses to send when it cannot read
+        // the post-quantum mode, because guessing "plaintext is fine" is the one
+        // guess that cannot be taken back. An unstubbed mode used to be swallowed
+        // and the message went out unsealed.
+        coEvery { settingsRepository.getPostQuantumMode() } returns PqMode.OPPORTUNISTIC
         every { settingsRepository.messageFontScaleFlow } returns flowOf(1.0f)
         every { settingsRepository.sortMessagesBySentTime } returns flowOf(false)
 

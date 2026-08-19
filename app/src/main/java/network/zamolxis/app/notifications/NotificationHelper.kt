@@ -146,6 +146,14 @@ class NotificationHelper
             peerName: String,
             messagePreview: String,
             isFavorite: Boolean,
+            /**
+             * True when the message arrived post-quantum sealed and could not be
+             * opened, so there is no preview to show. Resolved to a localised
+             * placeholder here rather than at the call site, which has no
+             * `Context`; an empty preview would otherwise read as a blank message
+             * and hide the failure.
+             */
+            isUnreadable: Boolean = false,
         ) {
             // Check master notification toggle
             if (!settingsRepository.notificationsEnabledFlow.first()) return
@@ -197,13 +205,20 @@ class NotificationHelper
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
 
+            val previewText =
+                if (isUnreadable) {
+                    context.getString(R.string.pq_message_unreadable)
+                } else {
+                    messagePreview
+                }
+
             // Create notification
             val notification =
                 NotificationCompat
                     .Builder(context, CHANNEL_ID_MESSAGES)
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setContentTitle(peerName)
-                    .setContentText(messagePreview)
+                    .setContentText(previewText)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                     .setAutoCancel(true)

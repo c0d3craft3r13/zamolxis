@@ -2,6 +2,7 @@ package network.zamolxis.app.ui.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.ImageBitmap
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.rns.api.util.LxmfFields
 
 /** Rendering hint authenticated in the LXMF message fields. */
@@ -196,6 +197,14 @@ data class MessageUi(
      * Null for received messages or messages sent before this feature was added.
      */
     val sentInterface: String? = null,
+    /**
+     * What the hybrid post-quantum layer did to this message.
+     *
+     * Read from the stored row, not recomputed: the conversation's ability to
+     * seal changes over time, so deriving it here would relabel old messages
+     * every time a key arrived or a link changed.
+     */
+    val pqProtection: PqProtection = PqProtection.NONE,
 ) {
     /**
      * Whether this message should be displayed as a standalone media item without a bubble.

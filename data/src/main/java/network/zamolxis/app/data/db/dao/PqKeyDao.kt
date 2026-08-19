@@ -114,6 +114,39 @@ interface PqKeyDao {
     @Query("SELECT * FROM peer_pq_keys WHERE keyChangeUnresolved = 1")
     fun observeUnresolvedKeyChanges(): Flow<List<PeerPqKeyEntity>>
 
+    /**
+     * Record that a peer offered a key contradicting its announced fingerprint.
+     *
+     * Creates the row if the mismatch is the first thing we ever stored about
+     * this peer — the event is worth keeping even with no key to compare against
+     * later.
+     */
+    @Transaction
+    suspend fun recordFingerprintMismatch(
+        peerHash: String,
+        now: Long,
+    ) {
+        val existing = getPeerKey(peerHash)
+        upsertPeerKey(
+            existing?.copy(fingerprintMismatchTimestamp = now, updatedTimestamp = now)
+                ?: PeerPqKeyEntity(
+                    peerHash = peerHash,
+                    fingerprintMismatchTimestamp = now,
+                    updatedTimestamp = now,
+                ),
+        )
+    }
+
+    /** Clear the mismatch marker once the user has seen it. */
+    @Query(
+        "UPDATE peer_pq_keys SET fingerprintMismatchTimestamp = NULL, updatedTimestamp = :now " +
+            "WHERE peerHash = :peerHash",
+    )
+    suspend fun clearFingerprintMismatch(
+        peerHash: String,
+        now: Long,
+    )
+
     // ------------------------------------------------------------- deliveries
 
     @Query(

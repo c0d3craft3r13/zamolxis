@@ -54,6 +54,7 @@ import org.junit.Rule
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.service.pq.PqMessageSealer
 import network.zamolxis.crypto.pq.PlainReason
+import network.zamolxis.crypto.pq.PqMode
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -134,8 +135,10 @@ class MessagingViewModelImageLoadingTest {
                     // untouched and no post-quantum fields are added, so these tests
                     // keep exercising exactly what they did before.
                     pqMessageSealer = mockk<PqMessageSealer>().also {
-                        coEvery { it.prepareOutgoing(any(), any(), any(), any(), any()) } answers {
-                            PqMessageSealer.Outgoing.Plain(arg(2), emptyMap(), PlainReason.PEER_UNSUPPORTED)
+                        coEvery {
+                            it.prepareOutgoing(any(), any(), any(), any(), any(), any(), any())
+                        } answers {
+                            PqMessageSealer.Outgoing.Plain(arg(3), emptyMap(), PlainReason.PEER_UNSUPPORTED)
                         }
                         coEvery { it.onSendSucceeded(any(), any(), any()) } just Runs
                     },
@@ -186,6 +189,10 @@ class MessagingViewModelImageLoadingTest {
         // Mock settingsRepository
         every { settingsRepository.messageFontScaleFlow } returns flowOf(1.0f)
         every { settingsRepository.sortMessagesBySentTime } returns flowOf(false)
+        // The send path reads the mode before anything else and refuses rather than
+        // guessing when it cannot; these tests are about image loading, so the mode
+        // is simply "seal when possible".
+        coEvery { settingsRepository.getPostQuantumMode() } returns PqMode.OPPORTUNISTIC
 
         // Mock identityRepository
         coEvery { identityRepository.getActiveIdentitySync() } returns null

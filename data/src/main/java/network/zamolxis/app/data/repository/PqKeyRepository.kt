@@ -171,8 +171,14 @@ class PqKeyRepository
                     Log.w(TAG, "Peer $peerHash offered a different hybrid key; flagged for review")
                 }
 
-                PqKeyExchange.KeyAcceptance.FingerprintMismatch ->
+                PqKeyExchange.KeyAcceptance.FingerprintMismatch -> {
+                    // Persisted, not just logged. This is the loudest signal the
+                    // layer can produce — the announce or the message was altered
+                    // in transit — and the only party who can resolve it is the
+                    // user, by checking the key against the person out of band.
+                    dao.recordFingerprintMismatch(peerHash, now)
                     Log.w(TAG, "Rejected hybrid key from $peerHash: does not match announced fingerprint")
+                }
 
                 PqKeyExchange.KeyAcceptance.AlreadyKnown -> Unit
             }
@@ -226,6 +232,50 @@ class PqKeyRepository
                 null
             }
         }
+
+        /** Whether this peer has an unacknowledged fingerprint mismatch. */
+        suspend fun hasFingerprintMismatch(peerHash: String): Boolean =
+            dao.getPeerKey(peerHash)?.fingerprintMismatchTimestamp != null
+
+        /** Mark the mismatch as seen, once the user has been shown it. */
+        suspend fun acknowledgeFingerprintMismatch(peerHash: String) {
+            dao.clearFingerprintMismatch(peerHash, System.currentTimeMillis())
+        }
+
+        /**
+         * Replace this identity's hybrid key pair with a fresh one.
+         *
+         * The old key stops being used the moment the row is overwritten. Delivery
+         * records are cleared in the same breath, because every peer still believes
+         * it holds our key: without that, the replacement would never be attached
+         * to a message and those conversations would go quiet in one direction —
+         * they would seal to a key we no longer have.
+         *
+         * Peers see the new key as a change and are asked to confirm it, which is
+         * the correct outcome: from their side a rotation and an impostor look
+         * identical, and only the user can tell them apart.
+         *
+         * @return the new public key, or null if generation or storage failed
+         */
+        suspend fun rotateOurKeyPair(identityHash: String): HybridPublicKey? =
+            try {
+                val generated = kem.generateKeyPair()
+                dao.upsertLocalKey(
+                    LocalPqKeyEntity(
+                        identityHash = identityHash,
+                        publicKey = HybridKeyCodec.encode(generated.publicKey),
+                        encryptedKeyPair =
+                            encryptor.encryptBlobWithDeviceKey(HybridKeyCodec.encodeKeyPair(generated)),
+                        createdTimestamp = System.currentTimeMillis(),
+                    ),
+                )
+                dao.clearDeliveriesFor(identityHash)
+                Log.i(TAG, "Rotated hybrid post-quantum key pair for identity $identityHash")
+                generated.publicKey
+            } catch (e: Exception) {
+                Log.e(TAG, "Could not rotate the hybrid key pair for $identityHash", e)
+                null
+            }
 
         /**
          * Resolve a pending key change on the user's explicit instruction.

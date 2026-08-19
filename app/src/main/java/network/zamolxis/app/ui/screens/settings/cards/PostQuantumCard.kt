@@ -16,11 +16,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import network.zamolxis.app.R
 import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 import network.zamolxis.crypto.pq.PqMode
@@ -37,6 +40,9 @@ import network.zamolxis.crypto.pq.PqMode
  * @param onExpandedChange callback when expansion state changes
  * @param selectedMode the currently active mode
  * @param onModeChange callback when the user picks a different mode
+ * @param onRotateKey regenerate this identity's hybrid key pair
+ * @param rotationMessage result of the last rotation, shown until dismissed
+ * @param onRotationMessageShown clear [rotationMessage] once the user has read it
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -45,6 +51,9 @@ fun PostQuantumCard(
     onExpandedChange: (Boolean) -> Unit,
     selectedMode: PqMode,
     onModeChange: (PqMode) -> Unit,
+    onRotateKey: () -> Unit = {},
+    rotationMessage: String? = null,
+    onRotationMessageShown: () -> Unit = {},
 ) {
     CollapsibleSettingsCard(
         title = stringResource(R.string.pq_title),
@@ -88,8 +97,41 @@ fun PostQuantumCard(
         if (selectedMode != PqMode.OFF) {
             FirstMessageNote()
         }
+
+        // Rotation is offered because the ML-KEM half of the construction is
+        // long-lived: anything sealed to it stays readable to whoever later obtains
+        // it. Replacing the key is the only mitigation, so it has to be reachable
+        // by a user rather than a note in a source comment.
+        Text(
+            text = stringResource(R.string.pq_rotate_title),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(
+            text = stringResource(R.string.pq_rotate_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TextButton(onClick = onRotateKey) {
+            Text(stringResource(R.string.pq_rotate_action))
+        }
+        rotationMessage?.let { message ->
+            LaunchedEffect(message) {
+                // Long enough to read, then gone: it reports a completed action, not
+                // a state the user has to act on.
+                delay(ROTATION_MESSAGE_MS)
+                onRotationMessageShown()
+            }
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
     }
 }
+
+/** How long the rotation result stays on screen. */
+private const val ROTATION_MESSAGE_MS = 5_000L
 
 @Composable
 private fun FirstMessageNote() {

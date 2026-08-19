@@ -4,6 +4,7 @@ import network.zamolxis.app.data.db.entity.AnnounceEntity
 import network.zamolxis.app.data.db.entity.ContactEntity
 import network.zamolxis.app.data.db.entity.ConversationEntity
 import network.zamolxis.app.data.db.entity.MessageEntity
+import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.rns.host.di.ServiceDatabaseProvider
 import network.zamolxis.app.test.DatabaseTest
 import io.mockk.clearAllMocks
@@ -272,6 +273,54 @@ class ServicePersistenceManagerDatabaseTest : DatabaseTest() {
             assertEquals("Hello, world!", saved?.content)
             assertEquals(TEST_PEER_HASH, saved?.conversationHash)
             assertFalse("Message should be marked as received", saved?.isFromMe ?: true)
+        }
+
+    @Test
+    fun `persistMessage marks a sealed message as unopened`() =
+        testScope.runTest {
+            insertTestIdentity()
+
+            // This process has no access to the hybrid private key — it is
+            // Keystore-wrapped and only unwrapped in the app process — so the honest
+            // record for a sealed message is "unopened". The marker is load-bearing:
+            // it is what tells the app process the row is unfinished work rather than
+            // a duplicate to skip, which is the difference between the recipient
+            // seeing the message and staring at a blank bubble.
+            persistenceManager.persistMessage(
+                messageHash = "msg_sealed_1234567890123456789012",
+                content = "",
+                sourceHash = TEST_PEER_HASH,
+                timestamp = 1000L,
+                fieldsJson = """{"81": "deadbeef"}""",
+                publicKey = null,
+                replyToMessageId = null,
+                deliveryMethod = null,
+            )
+            advanceUntilIdle()
+
+            val saved = messageDao.getMessageById("msg_sealed_1234567890123456789012", TEST_IDENTITY_HASH)
+            assertEquals(PqProtection.UNOPENED.name, saved?.pqStatus)
+        }
+
+    @Test
+    fun `persistMessage records an ordinary message as unprotected`() =
+        testScope.runTest {
+            insertTestIdentity()
+
+            persistenceManager.persistMessage(
+                messageHash = "msg_plain_12345678901234567890123",
+                content = "in the clear",
+                sourceHash = TEST_PEER_HASH,
+                timestamp = 1000L,
+                fieldsJson = """{"6": ["png", "aabb"]}""",
+                publicKey = null,
+                replyToMessageId = null,
+                deliveryMethod = null,
+            )
+            advanceUntilIdle()
+
+            val saved = messageDao.getMessageById("msg_plain_12345678901234567890123", TEST_IDENTITY_HASH)
+            assertEquals(PqProtection.NONE.name, saved?.pqStatus)
         }
 
     @Test

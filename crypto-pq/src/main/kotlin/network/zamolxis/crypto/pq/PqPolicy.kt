@@ -66,6 +66,26 @@ public enum class PlainReason {
 
     /** Link is too slow to justify the overhead, and the user allowed the tradeoff. */
     LINK_TOO_EXPENSIVE,
+
+    /**
+     * The message carries an attachment the hybrid layer does not cover.
+     *
+     * Images, files and voice notes travel in their own LXMF fields, which this
+     * layer does not seal. In [PqMode.REQUIRED] that is a refusal: a user who
+     * asked for post-quantum protection and is shown a protected conversation
+     * must not have a photo leave in the clear because the rule only ever
+     * covered the text next to it.
+     */
+    ATTACHMENT_NOT_SEALABLE,
+
+    /**
+     * Sealing was attempted and failed, or the layer could not run at all.
+     *
+     * Distinct from the other reasons because it is a fault rather than a
+     * decision — in [PqMode.REQUIRED] it must stop the send instead of quietly
+     * falling back to plaintext.
+     */
+    LAYER_UNAVAILABLE,
 }
 
 /**

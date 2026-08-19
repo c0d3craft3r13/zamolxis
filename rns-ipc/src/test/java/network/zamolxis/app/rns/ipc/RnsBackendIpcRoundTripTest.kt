@@ -617,7 +617,10 @@ private class FakeRnsCore : RnsCore {
     ): Result<Destination> = Result.failure(NotImplementedError())
 
     override suspend fun announceDestination(destination: Destination, appData: ByteArray?) = Result.success(Unit)
-    override suspend fun triggerAutoAnnounce(displayName: String) = Result.success(Unit)
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        pqFingerprint: ByteArray?,
+    ) = Result.success(Unit)
     override suspend fun sendPacket(
         destination: Destination,
         data: ByteArray,

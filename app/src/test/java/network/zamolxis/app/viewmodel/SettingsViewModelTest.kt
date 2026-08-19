@@ -312,6 +312,11 @@ class SettingsViewModelTest {
             contactRepository = contactRepository,
             updateChecker = updateChecker,
             crashReportManager = crashReportManager,
+            pqAnnounceFingerprint =
+                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                    coEvery { it.current() } returns null
+                },
+            pqKeyRepository = mockk(relaxed = true),
         )
 
     @Test
@@ -1648,7 +1653,7 @@ class SettingsViewModelTest {
             val serviceRnsCore =
                 mockk<RnsCore>(relaxed = true) {
                     every { networkStatus } returns networkStatusFlow
-                    coEvery { triggerAutoAnnounce(any()) } returns Result.success(Unit)
+                    coEvery { triggerAutoAnnounce(any(), any()) } returns Result.success(Unit)
                 }
 
             viewModel =
@@ -1670,6 +1675,11 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
+            pqAnnounceFingerprint =
+                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                    coEvery { it.current() } returns null
+                },
+            pqKeyRepository = mockk(relaxed = true),
                 )
 
             viewModel.state.test {
@@ -1690,7 +1700,7 @@ class SettingsViewModelTest {
             }
 
             // Verify announce was called and timestamp was saved
-            coVerify { serviceRnsCore.triggerAutoAnnounce(any()) }
+            coVerify { serviceRnsCore.triggerAutoAnnounce(any(), any()) }
             coVerify { settingsRepository.saveLastAutoAnnounceTime(any()) }
         }
 
@@ -1701,7 +1711,7 @@ class SettingsViewModelTest {
             val serviceRnsCore =
                 mockk<RnsCore>(relaxed = true) {
                     every { networkStatus } returns networkStatusFlow
-                    coEvery { triggerAutoAnnounce(any()) } returns Result.failure(RuntimeException("Announce failed"))
+                    coEvery { triggerAutoAnnounce(any(), any()) } returns Result.failure(RuntimeException("Announce failed"))
                 }
 
             viewModel =
@@ -1723,6 +1733,11 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
+            pqAnnounceFingerprint =
+                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                    coEvery { it.current() } returns null
+                },
+            pqKeyRepository = mockk(relaxed = true),
                 )
 
             viewModel.state.test {
@@ -2386,6 +2401,11 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
+            pqAnnounceFingerprint =
+                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                    coEvery { it.current() } returns null
+                },
+            pqKeyRepository = mockk(relaxed = true),
                 )
 
             // Wait for any potential async operations to settle
@@ -2555,6 +2575,11 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
+            pqAnnounceFingerprint =
+                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                    coEvery { it.current() } returns null
+                },
+            pqKeyRepository = mockk(relaxed = true),
                 )
 
             // The ViewModel should be created successfully with NativeReticulumProtocol

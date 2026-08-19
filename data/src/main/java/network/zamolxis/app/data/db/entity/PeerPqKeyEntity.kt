@@ -29,6 +29,14 @@ import androidx.room.PrimaryKey
  *   again and the user could never accept a legitimate rotation. Storing it is
  *   safe precisely because nothing reads it for sealing — only the resolution
  *   flow promotes it to [publicKey], and only on an explicit human decision.
+ * @property fingerprintMismatchTimestamp when this peer last offered a key that
+ *   contradicted the fingerprint in its own announce, or null if that never
+ *   happened.
+ *
+ *   Persisted rather than logged. A mismatch means either the announce or the
+ *   message was altered in transit, which is the loudest signal this layer can
+ *   produce — and the user is the only party who can check the key out of band.
+ *   Leaving it in logcat means nobody ever sees it.
  * @property updatedTimestamp when this row last changed
  */
 @Entity(tableName = "peer_pq_keys")
@@ -39,6 +47,7 @@ data class PeerPqKeyEntity(
     val announcedFingerprint: ByteArray? = null,
     val keyChangeUnresolved: Boolean = false,
     val pendingPublicKey: ByteArray? = null,
+    val fingerprintMismatchTimestamp: Long? = null,
     val updatedTimestamp: Long,
 ) {
     override fun equals(other: Any?): Boolean {

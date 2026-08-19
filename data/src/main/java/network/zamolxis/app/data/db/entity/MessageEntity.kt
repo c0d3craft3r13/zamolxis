@@ -71,4 +71,10 @@ data class MessageEntity(
     val receivedAt: Long? = null,
     // Interface name through which message was sent (null for received messages or pre-feature messages)
     val sentInterface: String? = null,
+    // What the hybrid post-quantum layer did to this message: the name of a
+    // PqProtection entry, or null for messages stored before the feature
+    // existed (read back as PqProtection.NONE). Stored per message on purpose —
+    // whether a peer can be sealed to changes over time, so a status derived
+    // from the conversation's current state would relabel old history.
+    val pqStatus: String? = null,
 )

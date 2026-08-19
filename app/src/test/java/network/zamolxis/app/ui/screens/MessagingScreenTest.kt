@@ -122,6 +122,7 @@ class MessagingScreenTest {
         // No pending key change: these tests exercise the ordinary chat surface,
         // not the key-substitution warning.
         every { mockViewModel.pqKeyChange } returns MutableStateFlow(null)
+        every { mockViewModel.pqKeyMismatch } returns MutableStateFlow(null)
         every { mockViewModel.pqSealed } returns MutableStateFlow(false)
         every { mockViewModel.refreshPqKeyChange(any()) } just Runs
         every { mockViewModel.currentConversationHash } returns

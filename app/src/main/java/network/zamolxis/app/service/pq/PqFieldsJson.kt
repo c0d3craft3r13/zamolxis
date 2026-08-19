@@ -1,6 +1,7 @@
 package network.zamolxis.app.service.pq
 
 import android.util.Log
+import network.zamolxis.app.rns.api.util.LxmfFields
 import network.zamolxis.crypto.pq.PqEnvelope
 import org.json.JSONObject
 
@@ -41,6 +42,35 @@ object PqFieldsJson {
             emptyMap()
         }
     }
+
+    /**
+     * Whether a received message carries payload the hybrid layer does not seal.
+     *
+     * Image, file attachments and audio travel in their own LXMF fields and are
+     * not covered by the seal. The receiver has to know, or it would record a
+     * message with an unencrypted photo in it as fully protected.
+     */
+    fun hasUnsealedAttachments(fieldsJson: String?): Boolean {
+        if (fieldsJson.isNullOrBlank()) return false
+        return try {
+            val json = JSONObject(fieldsJson)
+            ATTACHMENT_FIELDS.any { json.has(it.toString()) }
+        } catch (e: Exception) {
+            // A blob we cannot parse might carry anything. Reporting "attachments
+            // present" understates protection, which is the safe direction to be
+            // wrong in.
+            Log.w(TAG, "Could not inspect message fields for attachments", e)
+            true
+        }
+    }
+
+    /** Image, file-attachment and audio field numbers — payload this layer leaves in the clear. */
+    private val ATTACHMENT_FIELDS =
+        setOf(
+            LxmfFields.FIELD_FILE_ATTACHMENTS,
+            LxmfFields.FIELD_IMAGE,
+            LxmfFields.FIELD_AUDIO,
+        )
 
     /**
      * Decode a hex string, or null if it is not one.

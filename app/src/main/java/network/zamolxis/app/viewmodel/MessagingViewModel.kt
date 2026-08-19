@@ -11,7 +11,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import network.zamolxis.app.R
 import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.data.model.PqProtection
+import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.data.model.ImageCompressionPreset
 import network.zamolxis.app.data.repository.ReceivedLocationRepository
 import network.zamolxis.app.repository.SettingsRepository
@@ -27,6 +30,11 @@ import network.zamolxis.app.service.LocationSharingManager
 import network.zamolxis.app.service.PropagationNodeManager
 import network.zamolxis.app.service.SyncProgress
 import network.zamolxis.app.service.SyncResult
+import network.zamolxis.app.service.pq.LinkCostResolver
+import network.zamolxis.app.service.pq.PqMessageSealer
+import network.zamolxis.crypto.pq.LinkCost
+import network.zamolxis.crypto.pq.PlainReason
+import network.zamolxis.crypto.pq.PqMode
 import network.zamolxis.app.ui.model.CodecProfile
 import network.zamolxis.app.audio.VoiceMessageRecorder
 import network.zamolxis.app.audio.VoiceMessageFormat
@@ -119,8 +127,8 @@ class MessagingViewModel
         private val identityResolutionManager: network.zamolxis.app.service.IdentityResolutionManager,
         private val notificationHelper: network.zamolxis.app.notifications.NotificationHelper,
         private val rnsTelephony: RnsTelephony,
-        private val pqMessageSealer: network.zamolxis.app.service.pq.PqMessageSealer,
-        private val pqKeyRepository: network.zamolxis.app.data.repository.PqKeyRepository,
+        private val pqMessageSealer: PqMessageSealer,
+        private val pqKeyRepository: PqKeyRepository,
         private val microphoneArbiter: MicrophoneAdmissionArbiter = MicrophoneAdmissionArbiter(),
     ) : ViewModel() {
         companion object {
@@ -293,12 +301,26 @@ class MessagingViewModel
         val pqKeyChange: StateFlow<PqKeyChangePrompt?> = _pqKeyChange.asStateFlow()
 
         /**
-         * Whether messages in the open conversation are currently being sealed.
+         * The peer of the open conversation when it has an unacknowledged
+         * fingerprint mismatch, or null.
          *
-         * Answers the question a user actually has — "is this protected right
-         * now?" — rather than labelling individual messages, and it is derived from
-         * the same decision the send path makes, so the badge cannot promise
-         * protection that is not being applied.
+         * Separate from [pqKeyChange] because the two are different events with
+         * different answers. A key *change* is a question for the user — accept or
+         * keep. A *mismatch* is already decided: the key was rejected. What is left
+         * is telling them that someone altered either the announce or the message,
+         * which no amount of logging accomplishes.
+         */
+        private val _pqKeyMismatch = MutableStateFlow<String?>(null)
+        val pqKeyMismatch: StateFlow<String?> = _pqKeyMismatch.asStateFlow()
+
+        /**
+         * Whether a message sent to the open conversation *right now* would be
+         * sealed.
+         *
+         * This is a live property of the conversation, not a label for its history:
+         * per-message status is stored on each row as [PqProtection] and rendered
+         * from there. It is derived from the same decision the send path makes, so
+         * the badge cannot promise protection that is not being applied.
          */
         private val _pqSealed = MutableStateFlow(false)
         val pqSealed: StateFlow<Boolean> = _pqSealed.asStateFlow()
@@ -1397,11 +1419,16 @@ class MessagingViewModel
                             }
                         }
 
-                    // Post-quantum layer. A null plan means it could not take part,
-                    // in which case everything below behaves exactly as before.
-                    // Held rather than sent readable when the user demanded
-                    // post-quantum protection this peer cannot receive.
-                    val pqPlan = preparePqSend(destinationHash, sanitized)
+                    // Post-quantum layer. Held rather than sent readable when the
+                    // user demanded post-quantum protection this peer cannot
+                    // receive, or when the layer itself failed.
+                    val pqPlan =
+                        preparePqSend(
+                            destinationHash = destinationHash,
+                            content = sanitized,
+                            hasAttachments =
+                                imageData != null || fileAttachments.isNotEmpty() || voiceBytes != null,
+                        )
                     if (refusedToSend(pqPlan, destinationHash)) return@launch
 
                     val pqContent = pqContentFor(pqPlan, sanitized)
@@ -1460,6 +1487,7 @@ class MessagingViewModel
                                     voiceRecording,
                                     voiceBytes,
                                     voiceMode,
+                                    pqProtectionFor(pqPlan),
                                 )
                             if (persisted) {
                                 clearSubmittedDraft(destinationHash, content, replyToId)
@@ -1505,6 +1533,7 @@ class MessagingViewModel
             voiceRecording: tech.torlando.lxst.recording.RecordedAudio? = null,
             voiceBytes: ByteArray? = null,
             voiceMode: Int? = null,
+            pqProtection: PqProtection = PqProtection.NONE,
         ): Boolean {
             Log.d(TAG, "Message sent successfully${if (replyToMessageId != null) " (reply to ${replyToMessageId.take(16)})" else ""}")
             var attachmentFieldsPersisted = true
@@ -1577,6 +1606,9 @@ class MessagingViewModel
                     replyToMessageId = replyToMessageId,
                     receivedAt = receipt.timestamp, // For sent messages, receivedAt = our timestamp
                     sentInterface = sentInterface,
+                    // Taken from the plan the send actually used, so the row can
+                    // never claim protection the wire did not carry.
+                    pqProtection = pqProtection,
                 )
             val persisted = saveMessageToDatabase(actualDestHash, currentPeerName, message)
             val composerCanClear = persisted && attachmentFieldsPersisted
@@ -2468,7 +2500,15 @@ class MessagingViewModel
 
                 Log.d(TAG, "Sending shared image to $destinationHash (${imageData.size} bytes, format=$imageFormat)")
 
-                val pqPlan = preparePqSend(destinationHash, sanitized)
+                // hasAttachments is unconditionally true here: this path exists to
+                // send an image, and the hybrid layer does not cover it. Under
+                // PqMode.REQUIRED that is a refusal rather than a quiet exception.
+                val pqPlan =
+                    preparePqSend(
+                        destinationHash = destinationHash,
+                        content = sanitized,
+                        hasAttachments = true,
+                    )
                 if (refusedToSend(pqPlan, destinationHash)) return
 
                 val result =
@@ -2489,7 +2529,16 @@ class MessagingViewModel
                 result
                     .onSuccess { receipt ->
                         recordPqDelivery(pqPlan, destinationHash)
-                        handleSendSuccess(receipt, sanitized, destinationHash, imageData, imageFormat, emptyList(), deliveryMethodString)
+                        handleSendSuccess(
+                            receipt = receipt,
+                            sanitized = sanitized,
+                            destinationHash = destinationHash,
+                            imageData = imageData,
+                            imageFormat = imageFormat,
+                            fileAttachments = emptyList(),
+                            deliveryMethodString = deliveryMethodString,
+                            pqProtection = pqProtectionFor(pqPlan),
+                        )
                     }.onFailure { error ->
                         handleSendFailure(
                             error = error,
@@ -2730,6 +2779,29 @@ class MessagingViewModel
                         Log.w(TAG, "Could not read key-change state for $destinationHash", it)
                         null
                     }
+
+                _pqKeyMismatch.value =
+                    runCatching {
+                        destinationHash.takeIf { pqKeyRepository.hasFingerprintMismatch(it) }
+                    }.getOrElse {
+                        Log.w(TAG, "Could not read fingerprint-mismatch state for $destinationHash", it)
+                        null
+                    }
+            }
+        }
+
+        /**
+         * Acknowledge a fingerprint mismatch, on the user's explicit action.
+         *
+         * Cleared only once they have actually seen it — the marker survives app
+         * restarts precisely so a warning cannot be missed by being off-screen when
+         * the message arrived.
+         */
+        fun acknowledgePqKeyMismatch(peerHash: String) {
+            viewModelScope.launch {
+                runCatching { pqKeyRepository.acknowledgeFingerprintMismatch(peerHash) }
+                    .onFailure { Log.w(TAG, "Could not acknowledge fingerprint mismatch for $peerHash", it) }
+                _pqKeyMismatch.value = null
             }
         }
 
@@ -2761,38 +2833,63 @@ class MessagingViewModel
          *   the message must not go out. Only reachable in [PqMode.REQUIRED].
          */
         private suspend fun refusedToSend(
-            plan: network.zamolxis.app.service.pq.PqMessageSealer.Outgoing?,
+            plan: PqMessageSealer.Outgoing,
             destinationHash: String,
         ): Boolean {
-            if (plan !is network.zamolxis.app.service.pq.PqMessageSealer.Outgoing.Refused) return false
+            if (plan !is PqMessageSealer.Outgoing.Refused) return false
             Log.w(TAG, "Refusing to send unsealed to $destinationHash: ${plan.reason}")
             _fileAttachmentError.emit(
-                applicationContext.getString(
-                    network.zamolxis.app.R.string.pq_refused_send,
-                    plan.reason.name,
-                ),
+                applicationContext.getString(R.string.pq_refused_send, reasonText(plan.reason)),
             )
             return true
         }
 
+        /**
+         * Human-readable rendering of why a message is not being sealed.
+         *
+         * Localised rather than the enum name: the string lands in a user-facing
+         * error, and "PEER_UNSUPPORTED" tells a user nothing about what to do.
+         */
+        private fun reasonText(reason: PlainReason): String =
+            applicationContext.getString(
+                when (reason) {
+                    PlainReason.PEER_UNSUPPORTED -> R.string.pq_reason_peer_unsupported
+                    PlainReason.PEER_KEY_NOT_YET_KNOWN -> R.string.pq_reason_key_not_known
+                    PlainReason.DISABLED_BY_USER -> R.string.pq_reason_disabled
+                    PlainReason.LINK_TOO_EXPENSIVE -> R.string.pq_reason_link_expensive
+                    PlainReason.ATTACHMENT_NOT_SEALABLE -> R.string.pq_reason_attachment
+                    PlainReason.LAYER_UNAVAILABLE -> R.string.pq_reason_unavailable
+                },
+            )
+
         /** The content to put on the wire: empty for a sealed message, plaintext otherwise. */
         private fun pqContentFor(
-            plan: network.zamolxis.app.service.pq.PqMessageSealer.Outgoing?,
+            plan: PqMessageSealer.Outgoing,
             fallback: String,
         ): String =
             when (plan) {
-                is network.zamolxis.app.service.pq.PqMessageSealer.Outgoing.Sealed -> plan.content
+                is PqMessageSealer.Outgoing.Sealed -> plan.content
                 else -> fallback
             }
 
         /** The LXMF fields the post-quantum layer wants added, if any. */
-        private fun pqFieldsFor(
-            plan: network.zamolxis.app.service.pq.PqMessageSealer.Outgoing?,
-        ): Map<Int, Any> =
+        private fun pqFieldsFor(plan: PqMessageSealer.Outgoing): Map<Int, Any> =
             when (plan) {
-                is network.zamolxis.app.service.pq.PqMessageSealer.Outgoing.Sealed -> plan.extraFields
-                is network.zamolxis.app.service.pq.PqMessageSealer.Outgoing.Plain -> plan.extraFields
+                is PqMessageSealer.Outgoing.Sealed -> plan.extraFields
+                is PqMessageSealer.Outgoing.Plain -> plan.extraFields
                 else -> emptyMap()
+            }
+
+        /**
+         * What to record against the stored message.
+         *
+         * Taken from the plan the send actually used, so the row cannot claim
+         * protection the wire did not carry.
+         */
+        private fun pqProtectionFor(plan: PqMessageSealer.Outgoing): PqProtection =
+            when (plan) {
+                is PqMessageSealer.Outgoing.Sealed -> plan.protection
+                else -> PqProtection.NONE
             }
 
         /**
@@ -2802,10 +2899,9 @@ class MessagingViewModel
          * that never received it, and the pair could then never seal anything.
          */
         private suspend fun recordPqDelivery(
-            plan: network.zamolxis.app.service.pq.PqMessageSealer.Outgoing?,
+            plan: PqMessageSealer.Outgoing,
             destinationHash: String,
         ) {
-            if (plan == null) return
             runCatching {
                 identityRepository.getActiveIdentitySync()?.identityHash?.let { identityHash ->
                     pqMessageSealer.onSendSucceeded(identityHash, destinationHash, plan)
@@ -2820,51 +2916,90 @@ class MessagingViewModel
          * twice is how a badge ends up claiming protection that the sender is not
          * actually applying.
          */
-        private suspend fun linkCostFor(destinationHash: String): network.zamolxis.crypto.pq.LinkCost =
+        private suspend fun linkCostFor(destinationHash: String): LinkCost =
             runCatching {
                 val sightings =
                     announceRepository.getRecentInterfaceSightings(destinationHash).first()
-                network.zamolxis.app.service.pq.LinkCostResolver.costOfTypes(
-                    sightings.map { it.interfaceType },
-                )
+                LinkCostResolver.costOfTypes(sightings.map { it.interfaceType })
             }.getOrElse {
                 // Unknown path: treat as cheap, matching LinkCostResolver's default.
                 // Being wrong here spends airtime, not secrecy.
                 Log.w(TAG, "Could not determine link cost for $destinationHash", it)
-                network.zamolxis.crypto.pq.LinkCost.CHEAP
+                LinkCost.CHEAP
             }
 
         /**
          * Ask the post-quantum layer what to do with an outgoing message.
          *
-         * Returns null when the layer cannot participate at all — no active
-         * identity, or its hybrid key pair is unreadable. Null means "send exactly
-         * as before", so a fault here degrades to the app's previous behaviour
-         * rather than blocking the user's message.
+         * Never falls back to plaintext on its own. Every failure is resolved
+         * against the user's [PqMode]: in [PqMode.REQUIRED] a fault produces
+         * [PqMessageSealer.Outgoing.Refused] and the send stops. The previous
+         * behaviour — swallow the exception, return null, "send exactly as
+         * before" — meant a database or Keystore error silently put a message the
+         * user had demanded be sealed onto the wire in the clear, which is the one
+         * outcome REQUIRED exists to prevent.
+         *
+         * @param hasAttachments whether an image, file or voice note rides along.
+         *   Those are not sealed by this layer, so the layer must be told rather
+         *   than left to overstate what it covered.
          */
         private suspend fun preparePqSend(
             destinationHash: String,
             content: String,
-        ): network.zamolxis.app.service.pq.PqMessageSealer.Outgoing? {
-            val identityHash =
-                identityRepository.getActiveIdentitySync()?.identityHash ?: run {
-                    Log.w(TAG, "No active identity; sending without the post-quantum layer")
-                    return null
+            hasAttachments: Boolean,
+        ): PqMessageSealer.Outgoing {
+            val mode =
+                runCatching { settingsRepository.getPostQuantumMode() }.getOrElse {
+                    // Without the mode there is no way to know whether plaintext is
+                    // acceptable to this user, and guessing "yes" is the one guess
+                    // that cannot be taken back. Refusing is visible and the user
+                    // can retry.
+                    Log.e(TAG, "Could not read the post-quantum mode; refusing rather than guessing", it)
+                    return PqMessageSealer.Outgoing.Refused(PlainReason.LAYER_UNAVAILABLE)
                 }
+
+            if (mode == PqMode.OFF) {
+                return PqMessageSealer.Outgoing.Plain(content, emptyMap(), PlainReason.DISABLED_BY_USER)
+            }
+
+            val identity =
+                runCatching { identityRepository.getActiveIdentitySync() }.getOrNull()
+                    ?: run {
+                        Log.w(TAG, "No active identity; post-quantum layer cannot run")
+                        return failClosedOrPlain(mode, content)
+                    }
 
             return runCatching {
                 pqMessageSealer.prepareOutgoing(
-                    identityHash = identityHash,
+                    identityHash = identity.identityHash,
+                    // Our destination hash, not the identity hash: it is the half of
+                    // the AAD the recipient can reconstruct from the LXMF source.
+                    ourDestinationHash = identity.destinationHash,
                     peerHash = destinationHash,
                     content = content,
-                    mode = settingsRepository.getPostQuantumMode(),
+                    hasAttachments = hasAttachments,
+                    mode = mode,
                     linkCost = linkCostFor(destinationHash),
                 )
             }.getOrElse {
-                Log.e(TAG, "Post-quantum preparation failed; sending unchanged", it)
-                null
+                Log.e(TAG, "Post-quantum preparation failed", it)
+                failClosedOrPlain(mode, content)
             }
         }
+
+        /**
+         * How a fault in the layer resolves: refusal under [PqMode.REQUIRED],
+         * an ordinary send otherwise.
+         */
+        private fun failClosedOrPlain(
+            mode: PqMode,
+            content: String,
+        ): PqMessageSealer.Outgoing =
+            if (mode == PqMode.REQUIRED) {
+                PqMessageSealer.Outgoing.Refused(PlainReason.LAYER_UNAVAILABLE)
+            } else {
+                PqMessageSealer.Outgoing.Plain(content, emptyMap(), PlainReason.LAYER_UNAVAILABLE)
+            }
 
         private suspend fun reconstructImageForRetry(fieldsJson: String?): Pair<Boolean, ByteArray?> {
             val hasImage = fieldsJson?.let { runCatching { JSONObject(it).has("6") }.getOrDefault(false) } == true
@@ -2974,7 +3109,13 @@ class MessagingViewModel
                     // Decided fresh rather than reused from the original attempt: the
                     // peer may have exchanged keys, or the user changed the mode, in
                     // the time since it failed.
-                    val pqPlan = preparePqSend(failedMessage.conversationHash, failedMessage.content)
+                    val pqPlan =
+                        preparePqSend(
+                            destinationHash = failedMessage.conversationHash,
+                            content = failedMessage.content,
+                            hasAttachments =
+                                imageData != null || fileAttachments.isNotEmpty() || voiceBytes != null,
+                        )
                     if (refusedToSend(pqPlan, failedMessage.conversationHash)) {
                         // Left at "failed" rather than moved to "pending": nothing
                         // was sent, and showing it as in flight would be a lie.
@@ -3018,6 +3159,14 @@ class MessagingViewModel
                             // Update the message with the new hash
                             // Delete the old message entry and create a new one with the new hash
                             conversationRepository.updateMessageId(messageId, newMessageHash)
+                            // The retry decided sealing afresh, so the stored status
+                            // has to follow. Leaving the original value would show a
+                            // protection badge for a wire format the retry did not
+                            // use — in either direction.
+                            conversationRepository.updateMessagePqStatus(
+                                newMessageHash,
+                                pqProtectionFor(pqPlan),
+                            )
                         }.onFailure { error ->
                             Log.e(TAG, "Retry failed: ${error.message}", error)
                             // Mark as failed again with the error message

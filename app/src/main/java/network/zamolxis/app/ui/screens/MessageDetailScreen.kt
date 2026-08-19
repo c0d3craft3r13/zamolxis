@@ -19,6 +19,8 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Link
@@ -54,6 +56,7 @@ import java.util.Locale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import network.zamolxis.app.R
+import network.zamolxis.app.data.model.PqProtection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,6 +152,19 @@ fun MessageDetailScreen(
                             },
                     )
                 }
+
+                // Encryption card, for sent and received alike. This is the screen a
+                // user opens to audit one message, and "was this actually protected"
+                // is a question the conversation-level badge cannot answer about a
+                // message from last week — the answer is stored per row.
+                val pqInfo = getPqProtectionInfo(msg.pqProtection)
+                MessageInfoCard(
+                    icon = pqInfo.icon,
+                    iconTint = pqInfo.tint ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                    title = stringResource(R.string.msgdetail_encryption),
+                    content = pqInfo.text,
+                    subtitle = pqInfo.subtitle,
+                )
 
                 // Status, delivery method, and error cards only apply to sent messages
                 if (msg.isFromMe) {
@@ -373,6 +389,55 @@ private fun getStatusInfo(status: String): StatusInfo =
                 color = MaterialTheme.colorScheme.primary,
                 text = stringResource(R.string.msgdetail_status_sent),
                 subtitle = stringResource(R.string.msgdetail_status_sent_sub),
+            )
+    }
+
+/**
+ * How one message's post-quantum state reads on the detail screen.
+ *
+ * @property tint null for the neutral states; only the unopened case is coloured,
+ *   because it is the only one that means something went wrong.
+ */
+private data class PqProtectionInfo(
+    val icon: ImageVector,
+    val tint: Color?,
+    val text: String,
+    val subtitle: String,
+)
+
+@Composable
+private fun getPqProtectionInfo(protection: PqProtection): PqProtectionInfo =
+    when (protection) {
+        PqProtection.NONE ->
+            PqProtectionInfo(
+                icon = Icons.Default.LockOpen,
+                tint = null,
+                text = stringResource(R.string.pq_state_none),
+                subtitle = stringResource(R.string.pq_state_none_sub),
+            )
+
+        PqProtection.SEALED ->
+            PqProtectionInfo(
+                icon = Icons.Default.Lock,
+                tint = MaterialTheme.colorScheme.primary,
+                text = stringResource(R.string.pq_state_sealed),
+                subtitle = stringResource(R.string.pq_state_sealed_sub),
+            )
+
+        PqProtection.SEALED_PARTIAL ->
+            PqProtectionInfo(
+                icon = Icons.Default.LockOpen,
+                tint = null,
+                text = stringResource(R.string.pq_state_partial),
+                subtitle = stringResource(R.string.pq_state_partial_sub),
+            )
+
+        PqProtection.UNOPENED ->
+            PqProtectionInfo(
+                icon = Icons.Default.Error,
+                tint = MaterialTheme.colorScheme.error,
+                text = stringResource(R.string.pq_state_unopened),
+                subtitle = stringResource(R.string.pq_state_unopened_sub),
             )
     }
 

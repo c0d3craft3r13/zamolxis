@@ -45,6 +45,7 @@ import network.zamolxis.app.rns.api.model.VoiceCallState
 import network.zamolxis.app.rns.api.util.AppDataParser
 import network.zamolxis.app.rns.api.util.Aspects
 import network.zamolxis.app.rns.api.util.LxmfFields
+import network.zamolxis.app.rns.api.util.PeerAnnounceAppData
 import network.zamolxis.app.rns.api.util.ReactionWireCodec
 import network.zamolxis.app.rns.api.util.hexToBytes
 import network.zamolxis.app.rns.api.util.isUserVisibleChatMessage
@@ -183,19 +184,7 @@ class NativeRnsBackendImpl(
         fun buildPeerAnnounceAppData(
             displayName: String,
             pqFingerprint: ByteArray? = null,
-        ): ByteArray {
-            val packer = MessagePack.newDefaultBufferPacker()
-            val nameBytes = displayName.toByteArray(Charsets.UTF_8)
-            packer.packArrayHeader(if (pqFingerprint != null) 3 else 2)
-            packer.packBinaryHeader(nameBytes.size)
-            packer.writePayload(nameBytes)
-            packer.packNil()
-            if (pqFingerprint != null) {
-                packer.packBinaryHeader(pqFingerprint.size)
-                packer.writePayload(pqFingerprint)
-            }
-            return packer.toByteArray()
-        }
+        ): ByteArray = PeerAnnounceAppData.build(displayName, pqFingerprint)
 
         fun network.reticulum.link.Link.toZamolxisLink(destHash: ByteArray): ZamolxisLink {
             val identity =

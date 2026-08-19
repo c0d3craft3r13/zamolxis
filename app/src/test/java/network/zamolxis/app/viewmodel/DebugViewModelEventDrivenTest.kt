@@ -80,6 +80,11 @@ class DebugViewModelEventDrivenTest {
             mockIdentityRepo,
             mockInterfaceConfigManager,
             mockInterfaceRepository,
+            // Announces from the debug controller carry the post-quantum fingerprint
+            // like every other announce path; these tests do not exercise it.
+            mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                coEvery { it.current() } returns null
+            },
             ioDispatcher,
         )
 
