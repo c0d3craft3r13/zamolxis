@@ -1,0 +1,124 @@
+{
+  "formatVersion" : "1.1",
+  "component" : {
+    "group" : "com.github.torlando-tech",
+    "module" : "reticulum-kt",
+    "version" : "v0.0.22",
+    "attributes" : {
+      "org.gradle.status" : "release"
+    }
+  },
+  "createdBy" : {
+    "gradle" : {
+      "version" : "9.4.1"
+    }
+  },
+  "variants" : [ {
+    "name" : "apiElements",
+    "attributes" : {
+      "org.gradle.category" : "library",
+      "org.gradle.dependency.bundling" : "external",
+      "org.gradle.jvm.environment" : "standard-jvm",
+      "org.gradle.jvm.version" : "21",
+      "org.gradle.libraryelements" : "jar",
+      "org.gradle.usage" : "java-api",
+      "org.jetbrains.kotlin.platform.type" : "jvm"
+    },
+    "dependencies" : [ {
+      "group" : "org.msgpack",
+      "module" : "msgpack-core",
+      "version" : {
+        "requires" : "0.9.8"
+      }
+    }, {
+      "group" : "org.jetbrains.kotlin",
+      "module" : "kotlin-stdlib",
+      "version" : {
+        "requires" : "2.3.0"
+      }
+    } ],
+    "files" : [ {
+      "name" : "rns-core-v0.0.22.jar",
+      "url" : "rns-core-v0.0.22.jar",
+      "size" : 540096,
+      "sha512" : "cbd730ebbc422151458dae56242e94e52e7e264ff2f34feeb8b3634e6ff7ff2e0b8922a56abed5baafc2a13105b97638e6f7557462fd50be718c560811cb524a",
+      "sha256" : "fdbb3239528a3bc065d8d37b39753d550a3ec4c059c5bbf6c52ab45b589af7aa",
+      "sha1" : "5be6969403668eebeb1a9fc2b8af44323b448884",
+      "md5" : "afb40d03a3521c832a3e0a9363c5a63c"
+    } ]
+  }, {
+    "name" : "runtimeElements",
+    "attributes" : {
+      "org.gradle.category" : "library",
+      "org.gradle.dependency.bundling" : "external",
+      "org.gradle.jvm.environment" : "standard-jvm",
+      "org.gradle.jvm.version" : "21",
+      "org.gradle.libraryelements" : "jar",
+      "org.gradle.usage" : "java-runtime",
+      "org.jetbrains.kotlin.platform.type" : "jvm"
+    },
+    "dependencies" : [ {
+      "group" : "org.jetbrains.kotlinx",
+      "module" : "kotlinx-coroutines-core",
+      "version" : {
+        "requires" : "1.8.0"
+      }
+    }, {
+      "group" : "org.bouncycastle",
+      "module" : "bcprov-jdk18on",
+      "version" : {
+        "requires" : "1.77"
+      }
+    }, {
+      "group" : "org.apache.commons",
+      "module" : "commons-compress",
+      "version" : {
+        "requires" : "1.26.0"
+      }
+    }, {
+      "group" : "io.github.microutils",
+      "module" : "kotlin-logging-jvm",
+      "version" : {
+        "requires" : "3.0.5"
+      }
+    }, {
+      "group" : "org.msgpack",
+      "module" : "msgpack-core",
+      "version" : {
+        "requires" : "0.9.8"
+      }
+    }, {
+      "group" : "org.jetbrains.kotlin",
+      "module" : "kotlin-stdlib",
+      "version" : {
+        "requires" : "2.3.0"
+      }
+    } ],
+    "files" : [ {
+      "name" : "rns-core-v0.0.22.jar",
+      "url" : "rns-core-v0.0.22.jar",
+      "size" : 540096,
+      "sha512" : "cbd730ebbc422151458dae56242e94e52e7e264ff2f34feeb8b3634e6ff7ff2e0b8922a56abed5baafc2a13105b97638e6f7557462fd50be718c560811cb524a",
+      "sha256" : "fdbb3239528a3bc065d8d37b39753d550a3ec4c059c5bbf6c52ab45b589af7aa",
+      "sha1" : "5be6969403668eebeb1a9fc2b8af44323b448884",
+      "md5" : "afb40d03a3521c832a3e0a9363c5a63c"
+    } ]
+  }, {
+    "name" : "sourcesElements",
+    "attributes" : {
+      "org.gradle.category" : "documentation",
+      "org.gradle.dependency.bundling" : "external",
+      "org.gradle.docstype" : "sources",
+      "org.gradle.usage" : "java-runtime"
+    },
+    "files" : [ {
+      "name" : "rns-core-v0.0.22.jar",
+      "url" : "rns-core-v0.0.22.jar",
+      "size" : 230645,
+      "sha512" : "1ff0e077c454ae8531c2e23828553688834eaa92930377dc42c7aae9c7229b2d9b496b04063b0f01a9e5b9ab07d1c9be08648ee998dc977fb237e21e4b100398",
+      "sha256" : "d9b179fda228d5267a5ee657932d84db4480fc909bad33be4577b041141044a8",
+      "sha1" : "77176d8d2109bf1e09ee06171b4ae4b4979f3452",
+      "md5" : "1b691aa7e14b3e6562626ce9b0d3a9e4"
+    } ]
+  } ]
+}
