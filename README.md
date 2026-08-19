@@ -47,4 +47,4 @@ Zamolxis carries private messages and identity keys. Report vulnerabilities priv
 
 Zamolxis is released under the Mozilla Public License 2.0 — see [LICENSE.md](./LICENSE.md).
 
-It is a fork of [Zamolxis](https://github.com/torlando-tech/columba) by the Zamolxis Contributors, used under the same license. The upstream project is not affiliated with Zamolxis and does not endorse it.
+It is a fork of [Columba](https://github.com/torlando-tech/columba) by the Columba Contributors, used under the same license. The upstream project is not affiliated with Zamolxis and does not endorse it.
