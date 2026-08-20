@@ -76,17 +76,19 @@ Bluetooth LE, LoRa, and local Wi-Fi with no internet at all.
 
 **Partly covered: post-quantum.** Reticulum's transport encryption is classical,
 so traffic captured today could be decrypted by a future quantum adversary. On top
-of it, Zamolxis seals *message text* with a hybrid X25519 + ML-KEM-768 layer
-whenever the other side is also running Zamolxis and has exchanged keys — on by
-default, switchable to "always" or off in Settings. Three limits are worth stating
-plainly:
+of it, Zamolxis seals the message payload — text, images, files, voice notes, and
+the quoted text of a reply — with a hybrid X25519 + ML-KEM-768 layer whenever the
+other side is also running Zamolxis and has exchanged keys. On by default,
+switchable to "always" or off in Settings. Three limits are worth stating plainly:
 
 - The first message in each direction cannot be sealed: it is what carries the key.
-- Attachments — images, files, voice notes — are **not** sealed by this layer. A
-  message whose text was sealed while a photo travelled without it is labelled as
-  such in the conversation, and "always seal" mode refuses to send it at all.
-- Routing metadata (who talks to whom, when, how large) is protected only by
-  Reticulum, exactly as before.
+- An attachment over 4 MB is sealed only as far as its text. Sealing is not
+  streamed, so a large payload would need several times its own size in memory;
+  above that limit the attachment travels with Reticulum's encryption alone, the
+  message says so, and "always seal" mode refuses to send it.
+- Routing metadata is protected only by Reticulum, exactly as before: who talks to
+  whom, when, how large, the reply target, reactions, telemetry and profile icon.
+  The protocol layer has to read those to deliver and route the message at all.
 
 Each message records what it actually got, and the message-detail screen shows it,
 so this is auditable per message rather than a claim about the app.

@@ -1,6 +1,8 @@
 package network.zamolxis.app.service.pq
 
 import android.util.Log
+import network.zamolxis.app.data.model.PqProtection
+import network.zamolxis.app.rns.api.util.AppDataParser
 import network.zamolxis.app.rns.api.util.LxmfFields
 import network.zamolxis.crypto.pq.PqEnvelope
 import org.json.JSONObject
@@ -44,11 +46,58 @@ object PqFieldsJson {
     }
 
     /**
-     * Whether a received message carries payload the hybrid layer does not seal.
+     * The fields to store against a received message.
      *
-     * Image, file attachments and audio travel in their own LXMF fields and are
-     * not covered by the seal. The receiver has to know, or it would record a
-     * message with an unencrypted photo in it as fully protected.
+     * Three things happen here, and all three matter:
+     *
+     *  * anything recovered from inside the seal is put back under the field
+     *    number the sender removed it from, rendered by the same serializer both
+     *    backends use for unsealed fields — so a rebuilt attachment is
+     *    indistinguishable from one that never travelled sealed;
+     *  * the sealed blob is dropped once opened, because keeping it would store a
+     *    second copy of every attachment as hex;
+     *  * the blob is *kept* when the message could not be opened, since that
+     *    ciphertext is the only copy and a later key-change resolution may still
+     *    open it.
+     *
+     * The sender-key field is always dropped: it has already been taken in, and
+     * it is 1217 bytes of no further use.
+     */
+    fun storedFieldsFor(
+        receivedFieldsJson: String?,
+        incoming: PqMessageSealer.Incoming,
+    ): String? {
+        if (incoming.protection == PqProtection.UNOPENED) return receivedFieldsJson
+        return try {
+            val merged = JSONObject(receivedFieldsJson?.takeIf { it.isNotBlank() } ?: "{}")
+            merged.remove(PqEnvelope.FIELD_SENDER_KEY.toString())
+            merged.remove(PqEnvelope.FIELD_SEALED_CONTENT.toString())
+
+            if (incoming.unsealedFields.isNotEmpty()) {
+                val rebuilt = AppDataParser.serializeFieldsToJson(incoming.unsealedFields)
+                if (rebuilt == null) {
+                    // The payload opened but cannot be rendered into fields. Better
+                    // to keep the text and lose the attachment than to lose both.
+                    Log.e(TAG, "Could not serialize unsealed fields; storing message without them")
+                } else {
+                    val rebuiltJson = JSONObject(rebuilt)
+                    rebuiltJson.keys().forEach { key -> merged.put(key, rebuiltJson.get(key)) }
+                }
+            }
+
+            merged.takeIf { it.length() > 0 }?.toString()
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not assemble stored fields; keeping what arrived", e)
+            receivedFieldsJson
+        }
+    }
+
+    /**
+     * Whether a received message carries payload that rode *outside* the seal.
+     *
+     * The sender's oversize fallback leaves a large attachment in its own LXMF
+     * field and seals only the text. The receiver has to know, or it would record
+     * a message with an unencrypted photo in it as fully protected.
      */
     fun hasUnsealedAttachments(fieldsJson: String?): Boolean {
         if (fieldsJson.isNullOrBlank()) return false

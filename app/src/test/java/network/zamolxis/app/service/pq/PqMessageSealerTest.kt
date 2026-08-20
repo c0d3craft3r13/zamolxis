@@ -11,6 +11,7 @@ import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
 import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.repository.PqKeyRepository
+import network.zamolxis.app.rns.api.util.LxmfFields
 import network.zamolxis.crypto.pq.HybridKem
 import network.zamolxis.crypto.pq.HybridKeyCodec
 import network.zamolxis.crypto.pq.LinkCost
@@ -18,6 +19,7 @@ import network.zamolxis.crypto.pq.PlainReason
 import network.zamolxis.crypto.pq.PqEnvelope
 import network.zamolxis.crypto.pq.PqKeyExchange
 import network.zamolxis.crypto.pq.PqMode
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -62,13 +64,12 @@ class PqMessageSealerTest {
         mode: PqMode = PqMode.OPPORTUNISTIC,
         link: LinkCost = LinkCost.CHEAP,
         peer: String = bobId,
-        hasAttachments: Boolean = false,
+        payload: SealedPayload = SealedPayload(content),
     ) = alice.prepareOutgoing(
         identityHash = aliceId,
         ourDestinationHash = aliceId,
         peerHash = peer,
-        content = content,
-        hasAttachments = hasAttachments,
+        payload = payload,
         mode = mode,
         linkCost = link,
     )
@@ -77,13 +78,11 @@ class PqMessageSealerTest {
         content: String,
         mode: PqMode = PqMode.OPPORTUNISTIC,
         link: LinkCost = LinkCost.CHEAP,
-        hasAttachments: Boolean = false,
     ) = bob.prepareOutgoing(
         identityHash = bobId,
         ourDestinationHash = bobId,
         peerHash = aliceId,
-        content = content,
-        hasAttachments = hasAttachments,
+        payload = SealedPayload(content),
         mode = mode,
         linkCost = link,
     )
@@ -91,28 +90,39 @@ class PqMessageSealerTest {
     private suspend fun bobReceives(
         fields: Map<Int, ByteArray>,
         fallback: String = "",
-        hasAttachments: Boolean = false,
+        hasUnsealedAttachments: Boolean = false,
     ) = bob.processIncoming(
         identityHash = bobId,
         ourDestinationHash = bobId,
         peerHash = aliceId,
         fallbackContent = fallback,
         fields = fields,
-        hasAttachments = hasAttachments,
+        hasUnsealedAttachments = hasUnsealedAttachments,
     )
 
     private suspend fun aliceReceives(
         fields: Map<Int, ByteArray>,
         fallback: String = "",
-        hasAttachments: Boolean = false,
+        hasUnsealedAttachments: Boolean = false,
     ) = alice.processIncoming(
         identityHash = aliceId,
         ourDestinationHash = aliceId,
         peerHash = bobId,
         fallbackContent = fallback,
         fields = fields,
-        hasAttachments = hasAttachments,
+        hasUnsealedAttachments = hasUnsealedAttachments,
     )
+
+    /** An attachment big enough to fall outside the sealable limit. */
+    private fun oversizedImage() =
+        SealedPayload(
+            content = "caption",
+            image =
+                SealedPayload.Image(
+                    format = "png",
+                    bytes = ByteArray((PqMessageSealer.MAX_SEALABLE_ATTACHMENT_BYTES + 1).toInt()),
+                ),
+        )
 
     // ------------------------------------------------------------ first contact
 
@@ -121,9 +131,9 @@ class PqMessageSealerTest {
         runTest {
             val plain = aliceSends("hello") as PqMessageSealer.Outgoing.Plain
 
-            assertEquals("hello", plain.content)
+            assertEquals("hello", plain.wire.content)
             assertEquals(PlainReason.PEER_UNSUPPORTED, plain.reason)
-            assertTrue(plain.extraFields.containsKey(PqEnvelope.FIELD_SENDER_KEY))
+            assertTrue(plain.wire.extraFields.containsKey(PqEnvelope.FIELD_SENDER_KEY))
         }
 
     @Test
@@ -132,21 +142,21 @@ class PqMessageSealerTest {
             // 1. Alice opens; Bob takes in her key.
             val first = aliceSends("hello") as PqMessageSealer.Outgoing.Plain
             alice.onSendSucceeded(aliceId, bobId, first)
-            val atBob = bobReceives(first.extraFields, fallback = first.content)
+            val atBob = bobReceives(first.wire.extraFields, fallback = first.wire.content)
             assertEquals("hello", atBob.content)
             assertEquals(PqProtection.NONE, atBob.protection)
 
             // 2. Bob replies — sealed, and carrying his own key.
             val second = bobSends("hi back") as PqMessageSealer.Outgoing.Sealed
             bob.onSendSucceeded(bobId, aliceId, second)
-            val atAlice = aliceReceives(second.extraFields)
+            val atAlice = aliceReceives(second.wire.extraFields)
             assertEquals("hi back", atAlice.content)
             assertEquals(PqProtection.SEALED, atAlice.protection)
 
             // 3. Alice now seals too, and stops attaching her key.
             val third = aliceSends("sealed now") as PqMessageSealer.Outgoing.Sealed
-            assertFalse(third.extraFields.containsKey(PqEnvelope.FIELD_SENDER_KEY))
-            assertEquals("sealed now", bobReceives(third.extraFields).content)
+            assertFalse(third.wire.extraFields.containsKey(PqEnvelope.FIELD_SENDER_KEY))
+            assertEquals("sealed now", bobReceives(third.wire.extraFields).content)
         }
 
     @Test
@@ -156,8 +166,8 @@ class PqMessageSealerTest {
 
             val sealed = aliceSends("ATTACKATDAWN") as PqMessageSealer.Outgoing.Sealed
 
-            assertEquals("", sealed.content)
-            val blob = sealed.extraFields[PqEnvelope.FIELD_SEALED_CONTENT]!!
+            assertEquals("", sealed.wire.content)
+            val blob = sealed.wire.extraFields[PqEnvelope.FIELD_SEALED_CONTENT]!!
             assertFalse(String(blob, Charsets.ISO_8859_1).contains("ATTACKATDAWN"))
         }
 
@@ -178,7 +188,7 @@ class PqMessageSealerTest {
                     ourDestinationHash = aliceId,
                     peerHash = bobId,
                     fallbackContent = "",
-                    fields = sealed.extraFields,
+                    fields = sealed.wire.extraFields,
                 )
 
             assertEquals(PqProtection.UNOPENED, reflected.protection)
@@ -194,7 +204,7 @@ class PqMessageSealerTest {
             val plain = aliceSends("plain", mode = PqMode.OFF) as PqMessageSealer.Outgoing.Plain
 
             assertEquals(PlainReason.DISABLED_BY_USER, plain.reason)
-            assertEquals("plain", plain.content)
+            assertEquals("plain", plain.wire.content)
         }
 
     @Test
@@ -245,7 +255,7 @@ class PqMessageSealerTest {
                                 mode = PqMode.REQUIRED,
                                 link = link,
                                 peer = peer,
-                                hasAttachments = attachments,
+                                payload = if (attachments) oversizedImage() else SealedPayload("x"),
                             )
                         assertTrue(
                             "REQUIRED leaked a plain send to $peer over $link (attachments=$attachments)",
@@ -259,24 +269,104 @@ class PqMessageSealerTest {
     // -------------------------------------------------------------- attachments
 
     @Test
-    fun `an attachment downgrades the recorded protection but still seals the text`() =
+    fun `an image goes inside the seal and comes back out intact`() =
         runTest {
             establishExchange()
+            val bytes = ByteArray(4096) { (it % 253).toByte() }
 
-            val sealed = aliceSends("caption", hasAttachments = true) as PqMessageSealer.Outgoing.Sealed
+            val sealed =
+                aliceSends(
+                    "caption",
+                    payload = SealedPayload("caption", image = SealedPayload.Image("png", bytes)),
+                ) as PqMessageSealer.Outgoing.Sealed
 
-            // The text is genuinely sealed; the status says the message as a whole
-            // was not, because the photo beside it was not.
-            assertEquals(PqProtection.SEALED_PARTIAL, sealed.protection)
-            assertEquals("caption", bobReceives(sealed.extraFields, hasAttachments = true).content)
+            // Nothing recognisable is left on the wire: no image argument, no
+            // plaintext content, and the bytes do not appear in the blob.
+            assertNull(sealed.wire.imageData)
+            assertEquals("", sealed.wire.content)
+            assertEquals(PqProtection.SEALED, sealed.protection)
+
+            val incoming = bobReceives(sealed.wire.extraFields)
+            assertEquals("caption", incoming.content)
+            val image = incoming.unsealedFields[LxmfFields.FIELD_IMAGE] as List<*>
+            assertEquals("png", image[0])
+            assertArrayEquals(bytes, image[1] as ByteArray)
         }
 
     @Test
-    fun `required refuses a message whose attachment cannot be sealed`() =
+    fun `files and a voice note go inside the seal`() =
         runTest {
             establishExchange()
 
-            val outgoing = aliceSends("photo", mode = PqMode.REQUIRED, hasAttachments = true)
+            val sealed =
+                aliceSends(
+                    "",
+                    payload =
+                        SealedPayload(
+                            content = "",
+                            files = listOf(SealedPayload.FileAttachment("notes.txt", byteArrayOf(1, 2))),
+                            audio = SealedPayload.Audio(LxmfFields.AM_OPUS_OGG, byteArrayOf(3, 4)),
+                        ),
+                ) as PqMessageSealer.Outgoing.Sealed
+
+            assertNull(sealed.wire.fileAttachments)
+            assertNull(sealed.wire.audio)
+
+            val incoming = bobReceives(sealed.wire.extraFields)
+            val files = incoming.unsealedFields[LxmfFields.FIELD_FILE_ATTACHMENTS] as List<*>
+            assertEquals("notes.txt", (files.single() as List<*>)[0])
+            val audio = incoming.unsealedFields[LxmfFields.FIELD_AUDIO] as List<*>
+            assertEquals(LxmfFields.AM_OPUS_OGG, audio[0])
+        }
+
+    @Test
+    fun `a reply quote is sealed rather than left in the clear`() =
+        runTest {
+            establishExchange()
+
+            val sealed =
+                aliceSends(
+                    "agreed",
+                    payload = SealedPayload("agreed", replyQuote = "the original text"),
+                ) as PqMessageSealer.Outgoing.Sealed
+
+            // The quote is the content of an earlier message; publishing it beside
+            // the ciphertext would undo that message's protection.
+            assertNull(sealed.wire.replyQuote)
+            val blob = sealed.wire.extraFields[PqEnvelope.FIELD_SEALED_CONTENT]!!
+            assertFalse(String(blob, Charsets.ISO_8859_1).contains("the original text"))
+
+            val incoming = bobReceives(sealed.wire.extraFields)
+            assertArrayEquals(
+                "the original text".toByteArray(),
+                incoming.unsealedFields[LxmfFields.FIELD_REPLY_QUOTE] as ByteArray,
+            )
+        }
+
+    @Test
+    fun `an attachment too large to seal travels outside it, and says so`() =
+        runTest {
+            establishExchange()
+
+            val sealed = aliceSends("caption", payload = oversizedImage()) as PqMessageSealer.Outgoing.Sealed
+
+            // The text still gets the layer; the photo goes as it always did, and the
+            // message is labelled for what it is rather than as fully protected.
+            assertEquals(PqProtection.SEALED_PARTIAL, sealed.protection)
+            assertNotNull(sealed.wire.imageData)
+            assertEquals("", sealed.wire.content)
+            assertEquals(
+                "caption",
+                bobReceives(sealed.wire.extraFields, hasUnsealedAttachments = true).content,
+            )
+        }
+
+    @Test
+    fun `required refuses an attachment too large to seal`() =
+        runTest {
+            establishExchange()
+
+            val outgoing = aliceSends("photo", mode = PqMode.REQUIRED, payload = oversizedImage())
 
             assertEquals(
                 PlainReason.ATTACHMENT_NOT_SEALABLE,
@@ -285,14 +375,34 @@ class PqMessageSealerTest {
         }
 
     @Test
-    fun `an attachment on a received sealed message is reported as partial`() =
+    fun `an attachment left outside the seal is reported as partial on receive`() =
         runTest {
             establishExchange()
-            val sealed = aliceSends("with photo", hasAttachments = true) as PqMessageSealer.Outgoing.Sealed
+            val sealed = aliceSends("with photo", payload = oversizedImage()) as PqMessageSealer.Outgoing.Sealed
 
-            val incoming = bobReceives(sealed.extraFields, hasAttachments = true)
+            val incoming = bobReceives(sealed.wire.extraFields, hasUnsealedAttachments = true)
 
             assertEquals(PqProtection.SEALED_PARTIAL, incoming.protection)
+        }
+
+    @Test
+    fun `an attachment at the limit is still sealed`() =
+        runTest {
+            establishExchange()
+            val atLimit =
+                SealedPayload(
+                    content = "",
+                    image =
+                        SealedPayload.Image(
+                            "png",
+                            ByteArray(PqMessageSealer.MAX_SEALABLE_ATTACHMENT_BYTES.toInt()),
+                        ),
+                )
+
+            val sealed = aliceSends("", payload = atLimit) as PqMessageSealer.Outgoing.Sealed
+
+            assertEquals(PqProtection.SEALED, sealed.protection)
+            assertNull(sealed.wire.imageData)
         }
 
     // -------------------------------------------------------------- key trouble
@@ -354,6 +464,7 @@ class PqMessageSealerTest {
             // Bob believes he holds Alice's key, so she has stopped attaching it.
             assertFalse(
                 (aliceSends("x") as PqMessageSealer.Outgoing.Sealed)
+                    .wire
                     .extraFields
                     .containsKey(PqEnvelope.FIELD_SENDER_KEY),
             )
@@ -365,6 +476,7 @@ class PqMessageSealerTest {
             // anyone, and every peer would keep sealing to a key Alice no longer has.
             assertTrue(
                 (aliceSends("x") as PqMessageSealer.Outgoing.Sealed)
+                    .wire
                     .extraFields
                     .containsKey(PqEnvelope.FIELD_SENDER_KEY),
             )
@@ -446,7 +558,7 @@ class PqMessageSealerTest {
         runTest {
             establishExchange()
             val sealed = aliceSends("intact") as PqMessageSealer.Outgoing.Sealed
-            val blob = sealed.extraFields[PqEnvelope.FIELD_SEALED_CONTENT]!!.copyOf()
+            val blob = sealed.wire.extraFields[PqEnvelope.FIELD_SEALED_CONTENT]!!.copyOf()
             blob[blob.size - 1] = (blob[blob.size - 1].toInt() xor 0x01).toByte()
 
             val incoming = bobReceives(mapOf(PqEnvelope.FIELD_SEALED_CONTENT to blob))
@@ -474,7 +586,7 @@ class PqMessageSealerTest {
 
             // The payload is sealed to Bob's key; a mangled sender-key field is a
             // separate concern and must not cost him the message.
-            val fields = sealed.extraFields + mapOf(PqEnvelope.FIELD_SENDER_KEY to ByteArray(11))
+            val fields = sealed.wire.extraFields + mapOf(PqEnvelope.FIELD_SENDER_KEY to ByteArray(11))
 
             val incoming = bobReceives(fields)
 
@@ -490,18 +602,18 @@ class PqMessageSealerTest {
 
             val sealed = aliceSends(message) as PqMessageSealer.Outgoing.Sealed
 
-            assertEquals(message, bobReceives(sealed.extraFields).content)
+            assertEquals(message, bobReceives(sealed.wire.extraFields).content)
         }
 
     /** Runs the two-message handshake so both sides hold each other's key. */
     private suspend fun establishExchange() {
         val first = aliceSends("hello") as PqMessageSealer.Outgoing.Plain
         alice.onSendSucceeded(aliceId, bobId, first)
-        bobReceives(first.extraFields, fallback = first.content)
+        bobReceives(first.wire.extraFields, fallback = first.wire.content)
 
         val second = bobSends("hi") as PqMessageSealer.Outgoing.Sealed
         bob.onSendSucceeded(bobId, aliceId, second)
-        aliceReceives(second.extraFields, fallback = second.content)
+        aliceReceives(second.wire.extraFields, fallback = second.wire.content)
     }
 }
 

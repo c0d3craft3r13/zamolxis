@@ -32,6 +32,7 @@ import network.zamolxis.app.service.SyncProgress
 import network.zamolxis.app.service.SyncResult
 import network.zamolxis.app.service.pq.LinkCostResolver
 import network.zamolxis.app.service.pq.PqMessageSealer
+import network.zamolxis.app.service.pq.SealedPayload
 import network.zamolxis.crypto.pq.LinkCost
 import network.zamolxis.crypto.pq.PlainReason
 import network.zamolxis.crypto.pq.PqMode
@@ -1422,51 +1423,53 @@ class MessagingViewModel
                     // Post-quantum layer. Held rather than sent readable when the
                     // user demanded post-quantum protection this peer cannot
                     // receive, or when the layer itself failed.
-                    val pqPlan =
-                        preparePqSend(
-                            destinationHash = destinationHash,
+                    // MeshChatX-interop reply format ships the quoted content inline
+                    // (fields[0x31]) so recipients render the preview even when they
+                    // don't have the original in their local store (cross-app
+                    // interop, or peer history aged out). We pull it from the local
+                    // DB at send time the same way MeshChatX does — and hand it to
+                    // the post-quantum layer, because it is the content of an earlier
+                    // message and belongs inside the seal with everything else.
+                    val replyQuote =
+                        replyToId?.let { id ->
+                            runCatching {
+                                conversationRepository.getMessageById(id)?.content?.takeIf { it.isNotEmpty() }
+                            }.getOrNull()
+                        }
+
+                    val payload =
+                        SealedPayload(
                             content = sanitized,
-                            hasAttachments =
-                                imageData != null || fileAttachments.isNotEmpty() || voiceBytes != null,
+                            image =
+                                imageData?.let {
+                                    SealedPayload.Image(format = imageFormat ?: "webp", bytes = it)
+                                },
+                            files = fileAttachmentPairs.map { SealedPayload.FileAttachment(it.first, it.second) },
+                            audio =
+                                voiceBytes?.let {
+                                    SealedPayload.Audio(mode = checkNotNull(voiceMode), bytes = it)
+                                },
+                            replyQuote = replyQuote,
                         )
+
+                    val pqPlan = preparePqSend(destinationHash, payload)
                     if (refusedToSend(pqPlan, destinationHash)) return@launch
 
-                    val pqContent = pqContentFor(pqPlan, sanitized)
-                    val pqFields = pqFieldsFor(pqPlan)
+                    val wire = pqWireFor(pqPlan, asWire(payload))
 
                     val result =
                         rnsLxmf.sendLxmfMessageWithMethod(
                             destinationHash = destHashBytes,
-                            content = pqContent,
+                            content = wire.content,
                             sourceIdentity = identity,
                             deliveryMethod = deliveryMethod,
                             tryPropagationOnFail = tryPropOnFail,
-                            imageData = imageData,
-                            imageFormat = imageFormat,
-                            fileAttachments = fileAttachmentPairs.ifEmpty { null },
-                            extraFields =
-                                (
-                                    voiceBytes?.let {
-                                        mapOf(
-                                            network.zamolxis.app.rns.api.util.LxmfFields.FIELD_AUDIO to
-                                                listOf(checkNotNull(voiceMode), it),
-                                        )
-                                    } ?: emptyMap()
-                                ).plus(pqFields).ifEmpty { null },
+                            imageData = wire.imageData,
+                            imageFormat = wire.imageFormat,
+                            fileAttachments = wire.fileAttachments,
+                            extraFields = extraFieldsFor(wire).ifEmpty { null },
                             replyToMessageId = replyToId,
-                            // MeshChatX-interop reply format ships the
-                            // quoted content inline (fields[0x31]) so
-                            // recipients render the preview even when
-                            // they don't have the original in their
-                            // local store (cross-app interop, or peer
-                            // history aged out). We pull it from local
-                            // DB at send time the same way MeshChatX
-                            // does.
-                            replyQuotedContent = replyToId?.let { id ->
-                                runCatching {
-                                    conversationRepository.getMessageById(id)?.content?.takeIf { it.isNotEmpty() }
-                                }.getOrNull()
-                            },
+                            replyQuotedContent = wire.replyQuote,
                             iconAppearance = iconAppearance,
                         )
 
@@ -2500,30 +2503,29 @@ class MessagingViewModel
 
                 Log.d(TAG, "Sending shared image to $destinationHash (${imageData.size} bytes, format=$imageFormat)")
 
-                // hasAttachments is unconditionally true here: this path exists to
-                // send an image, and the hybrid layer does not cover it. Under
-                // PqMode.REQUIRED that is a refusal rather than a quiet exception.
-                val pqPlan =
-                    preparePqSend(
-                        destinationHash = destinationHash,
+                val payload =
+                    SealedPayload(
                         content = sanitized,
-                        hasAttachments = true,
+                        image = SealedPayload.Image(format = imageFormat, bytes = imageData),
                     )
+                val pqPlan = preparePqSend(destinationHash, payload)
                 if (refusedToSend(pqPlan, destinationHash)) return
+
+                val wire = pqWireFor(pqPlan, asWire(payload))
 
                 val result =
                     rnsLxmf.sendLxmfMessageWithMethod(
                         destinationHash = destHashBytes,
-                        content = pqContentFor(pqPlan, sanitized),
+                        content = wire.content,
                         sourceIdentity = identity,
                         deliveryMethod = deliveryMethod,
                         tryPropagationOnFail = tryPropOnFail,
-                        imageData = imageData,
-                        imageFormat = imageFormat,
-                        fileAttachments = null,
+                        imageData = wire.imageData,
+                        imageFormat = wire.imageFormat,
+                        fileAttachments = wire.fileAttachments,
                         replyToMessageId = null,
                         iconAppearance = iconAppearance,
-                        extraFields = pqFieldsFor(pqPlan).ifEmpty { null },
+                        extraFields = extraFieldsFor(wire).ifEmpty { null },
                     )
 
                 recordSharedImageOutcome(
@@ -2890,22 +2892,44 @@ class MessagingViewModel
                 },
             )
 
-        /** The content to put on the wire: empty for a sealed message, plaintext otherwise. */
-        private fun pqContentFor(
+        /**
+         * What to put on the wire.
+         *
+         * Every send argument comes from here, including the ones the layer blanks
+         * out. When a payload is sealed the plaintext image, files, voice note and
+         * reply quote all have to become null, and a call site that blanked the
+         * content but kept the image would put the photo on the wire next to its own
+         * ciphertext. Taking the whole set from one object makes that impossible.
+         */
+        private fun pqWireFor(
             plan: PqMessageSealer.Outgoing,
-            fallback: String,
-        ): String =
+            fallback: PqMessageSealer.WirePayload,
+        ): PqMessageSealer.WirePayload =
             when (plan) {
-                is PqMessageSealer.Outgoing.Sealed -> plan.content
-                else -> fallback
+                is PqMessageSealer.Outgoing.Sealed -> plan.wire
+                is PqMessageSealer.Outgoing.Plain -> plan.wire
+                // Refused never reaches a send; the caller has already stopped.
+                is PqMessageSealer.Outgoing.Refused -> fallback
             }
 
-        /** The LXMF fields the post-quantum layer wants added, if any. */
-        private fun pqFieldsFor(plan: PqMessageSealer.Outgoing): Map<Int, Any> =
-            when (plan) {
-                is PqMessageSealer.Outgoing.Sealed -> plan.extraFields
-                is PqMessageSealer.Outgoing.Plain -> plan.extraFields
-                else -> emptyMap()
+        /** The payload as composed, for the one case where no plan applies. */
+        private fun asWire(payload: SealedPayload) =
+            PqMessageSealer.WirePayload(
+                content = payload.content,
+                imageData = payload.image?.bytes,
+                imageFormat = payload.image?.format,
+                fileAttachments = payload.files.map { it.name to it.bytes }.ifEmpty { null },
+                audio = payload.audio?.let { it.mode to it.bytes },
+                replyQuote = payload.replyQuote,
+            )
+
+        /** The extra LXMF fields to merge into the send: sealed content, our key, audio. */
+        private fun extraFieldsFor(wire: PqMessageSealer.WirePayload): Map<Int, Any> =
+            buildMap<Int, Any> {
+                wire.audio?.let { (mode, bytes) ->
+                    put(network.zamolxis.app.rns.api.util.LxmfFields.FIELD_AUDIO, listOf(mode, bytes))
+                }
+                putAll(wire.extraFields)
             }
 
         /**
@@ -2967,9 +2991,9 @@ class MessagingViewModel
          * user had demanded be sealed onto the wire in the clear, which is the one
          * outcome REQUIRED exists to prevent.
          *
-         * @param hasAttachments whether an image, file or voice note rides along.
-         *   Those are not sealed by this layer, so the layer must be told rather
-         *   than left to overstate what it covered.
+         * @param payload everything the user is sending — text, attachments and the
+         *   quoted text of a reply. All of it goes inside the seal, so the layer has
+         *   to be handed all of it.
          */
         // ReturnCount: three guards and the result. Each guard is a distinct reason
         // the layer cannot run, and each resolves differently against the mode —
@@ -2978,8 +3002,7 @@ class MessagingViewModel
         @Suppress("ReturnCount")
         private suspend fun preparePqSend(
             destinationHash: String,
-            content: String,
-            hasAttachments: Boolean,
+            payload: SealedPayload,
         ): PqMessageSealer.Outgoing {
             // Null means the mode itself could not be read. There is then no way to
             // know whether plaintext is acceptable to this user, and guessing "yes"
@@ -2992,13 +3015,13 @@ class MessagingViewModel
                 } ?: return PqMessageSealer.Outgoing.Refused(PlainReason.LAYER_UNAVAILABLE)
 
             if (mode == PqMode.OFF) {
-                return PqMessageSealer.Outgoing.Plain(content, emptyMap(), PlainReason.DISABLED_BY_USER)
+                return asIsPlain(payload, PlainReason.DISABLED_BY_USER)
             }
 
             val identity = runCatching { identityRepository.getActiveIdentitySync() }.getOrNull()
             if (identity == null) {
                 Log.w(TAG, "No active identity; post-quantum layer cannot run")
-                return failClosedOrPlain(mode, content)
+                return failClosedOrPlain(mode, payload)
             }
 
             return runCatching {
@@ -3008,14 +3031,13 @@ class MessagingViewModel
                     // the AAD the recipient can reconstruct from the LXMF source.
                     ourDestinationHash = identity.destinationHash,
                     peerHash = destinationHash,
-                    content = content,
-                    hasAttachments = hasAttachments,
+                    payload = payload,
                     mode = mode,
                     linkCost = linkCostFor(destinationHash),
                 )
             }.getOrElse {
                 Log.e(TAG, "Post-quantum preparation failed", it)
-                failClosedOrPlain(mode, content)
+                failClosedOrPlain(mode, payload)
             }
         }
 
@@ -3025,13 +3047,37 @@ class MessagingViewModel
          */
         private fun failClosedOrPlain(
             mode: PqMode,
-            content: String,
+            payload: SealedPayload,
         ): PqMessageSealer.Outgoing =
             if (mode == PqMode.REQUIRED) {
                 PqMessageSealer.Outgoing.Refused(PlainReason.LAYER_UNAVAILABLE)
             } else {
-                PqMessageSealer.Outgoing.Plain(content, emptyMap(), PlainReason.LAYER_UNAVAILABLE)
+                asIsPlain(payload, PlainReason.LAYER_UNAVAILABLE)
             }
+
+        /**
+         * The message exactly as composed, with nothing added.
+         *
+         * Used when the layer takes no part at all: no key is attached either,
+         * because a key handed out while the feature is off would advertise a
+         * capability the send path will never act on.
+         */
+        private fun asIsPlain(
+            payload: SealedPayload,
+            reason: PlainReason,
+        ): PqMessageSealer.Outgoing =
+            PqMessageSealer.Outgoing.Plain(
+                wire =
+                    PqMessageSealer.WirePayload(
+                        content = payload.content,
+                        imageData = payload.image?.bytes,
+                        imageFormat = payload.image?.format,
+                        fileAttachments = payload.files.map { it.name to it.bytes }.ifEmpty { null },
+                        audio = payload.audio?.let { it.mode to it.bytes },
+                        replyQuote = payload.replyQuote,
+                    ),
+                reason = reason,
+            )
 
         private suspend fun reconstructImageForRetry(fieldsJson: String?): Pair<Boolean, ByteArray?> {
             val hasImage = fieldsJson?.let { runCatching { JSONObject(it).has("6") }.getOrDefault(false) } == true
@@ -3141,13 +3187,22 @@ class MessagingViewModel
                     // Decided fresh rather than reused from the original attempt: the
                     // peer may have exchanged keys, or the user changed the mode, in
                     // the time since it failed.
-                    val pqPlan =
-                        preparePqSend(
-                            destinationHash = failedMessage.conversationHash,
+                    val payload =
+                        SealedPayload(
                             content = failedMessage.content,
-                            hasAttachments =
-                                imageData != null || fileAttachments.isNotEmpty() || voiceBytes != null,
+                            image =
+                                imageData?.let {
+                                    SealedPayload.Image(format = imageFormat ?: "webp", bytes = it)
+                                },
+                            files =
+                                fileAttachments.map { SealedPayload.FileAttachment(it.filename, it.data) },
+                            audio =
+                                voiceBytes?.let {
+                                    SealedPayload.Audio(mode = checkNotNull(voiceMode), bytes = it)
+                                },
                         )
+
+                    val pqPlan = preparePqSend(failedMessage.conversationHash, payload)
                     if (refusedToSend(pqPlan, failedMessage.conversationHash)) {
                         // Left at "failed" rather than moved to "pending": nothing
                         // was sent, and showing it as in flight would be a lie.
@@ -3158,26 +3213,20 @@ class MessagingViewModel
                     // Mark message as pending before sending
                     conversationRepository.updateMessageStatus(messageId, "pending")
 
+                    val wire = pqWireFor(pqPlan, asWire(payload))
+
                     // Send the message
                     val result =
                         rnsLxmf.sendLxmfMessageWithMethod(
                             destinationHash = destHashBytes,
-                            content = pqContentFor(pqPlan, failedMessage.content),
+                            content = wire.content,
                             sourceIdentity = identity,
                             deliveryMethod = deliveryMethod,
                             tryPropagationOnFail = tryPropOnFail,
-                            imageData = imageData,
-                            imageFormat = imageFormat,
-                            fileAttachments = fileAttachments.map { it.filename to it.data }.ifEmpty { null },
-                            extraFields =
-                                (
-                                    voiceBytes?.let {
-                                        mapOf(
-                                            network.zamolxis.app.rns.api.util.LxmfFields.FIELD_AUDIO to
-                                                listOf(checkNotNull(voiceMode), it),
-                                        )
-                                    } ?: emptyMap()
-                                ).plus(pqFieldsFor(pqPlan)).ifEmpty { null },
+                            imageData = wire.imageData,
+                            imageFormat = wire.imageFormat,
+                            fileAttachments = wire.fileAttachments,
+                            extraFields = extraFieldsFor(wire).ifEmpty { null },
                             // Preserve reply on retry
                             replyToMessageId = failedMessage.replyToMessageId,
                         )

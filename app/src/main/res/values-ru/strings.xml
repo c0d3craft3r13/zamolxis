@@ -1016,7 +1016,7 @@
     <string name="about_license">MPL 2.0</string>
     <string name="about_copyright">© 2025–%1$s Участники Zamolxis</string>
     <string name="pq_title">Постквантовая защита</string>
-    <string name="pq_desc">Запечатывает содержимое сообщений гибридным шифрованием X25519 + ML-KEM-768 поверх собственного шифрования Reticulum. Защищает от того, кто записывает трафик сегодня, чтобы расшифровать его после появления квантовых компьютеров.</string>
+    <string name="pq_desc">Запечатывает текст и вложения сообщений гибридным шифрованием X25519 + ML-KEM-768 поверх собственного шифрования Reticulum. Защищает от того, кто записывает трафик сегодня, чтобы расшифровать его после появления квантовых компьютеров.</string>
     <string name="pq_mode_off">Выключено</string>
     <string name="pq_mode_opportunistic">Когда возможно</string>
     <string name="pq_mode_required">Всегда</string>
@@ -1039,11 +1039,11 @@
     <string name="pq_reason_key_not_known">его ключ ещё до нас не дошёл</string>
     <string name="pq_reason_disabled">она отключена в настройках</string>
     <string name="pq_reason_link_expensive">радиоканал слишком медленный для лишних данных</string>
-    <string name="pq_reason_attachment">вложения этот слой не защищает</string>
+    <string name="pq_reason_attachment">вложение слишком велико, чтобы запечатать его на этом устройстве</string>
     <string name="pq_reason_unavailable">слой шифрования на этом устройстве недоступен</string>
     <string name="pq_message_unreadable">Не удалось открыть запечатанное сообщение</string>
     <string name="pq_message_unreadable_hint">Оно пришло запечатанным на ключ, который это устройство использовать не может — обычно так бывает после смены ключа или восстановления резервной копии. Сообщение сохранено и может открыться, когда ситуация с ключом разрешится.</string>
-    <string name="pq_indicator_partial">Текст запечатан, вложение — нет</string>
+    <string name="pq_indicator_partial">Текст запечатан, крупное вложение — нет</string>
     <string name="pq_message_sealed_cd">Сообщение с постквантовой защитой</string>
     <string name="pq_message_partial_cd">Текст запечатан, вложение ушло без защиты</string>
     <string name="pq_message_unopened_cd">Запечатанное сообщение, которое не удалось открыть</string>
@@ -1059,9 +1059,9 @@
     <string name="pq_state_none">Обычное шифрование Reticulum</string>
     <string name="pq_state_none_sub">Зашифровано в канале классической эллиптической криптографией. Тот, кто запишет трафик сегодня, прочтёт его, когда получит квантовый компьютер.</string>
     <string name="pq_state_sealed">Запечатано постквантово</string>
-    <string name="pq_state_sealed_sub">Содержимое запечатано гибридом X25519 + ML-KEM-768 поверх собственного шифрования Reticulum.</string>
+    <string name="pq_state_sealed_sub">Текст и вложения запечатаны гибридом X25519 + ML-KEM-768 поверх собственного шифрования Reticulum.</string>
     <string name="pq_state_partial">Текст запечатан, вложение — нет</string>
-    <string name="pq_state_partial_sub">Гибридный слой получил только текст. Вложение ушло лишь под шифрованием Reticulum — вложения этот слой не покрывает.</string>
+    <string name="pq_state_partial_sub">Гибридный слой получил только текст. Вложение оказалось слишком крупным, чтобы запечатать его в памяти, и ушло лишь под шифрованием Reticulum.</string>
     <string name="pq_state_unopened">Запечатано, открыть не удалось</string>
     <string name="pq_state_unopened_sub">Шифртекст сохранён, поэтому сообщение может открыться после решения по смене ключа или восстановления пары ключей.</string>
     <string name="about_forked_from">Форк проекта Columba © Участники Columba, используется по лицензии MPL 2.0</string>

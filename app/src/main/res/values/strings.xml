@@ -992,7 +992,7 @@ TO TALK</string>
          is not optional decoration — do not remove it. -->
     <!-- Shown when PqMode.REQUIRED cannot be satisfied: the message is held, not sent readable. -->
     <string name="pq_title">Post-Quantum Protection</string>
-    <string name="pq_desc">Seals message content with hybrid X25519 + ML-KEM-768 encryption, on top of Reticulum\'s own. Protects against an adversary who records traffic today and decrypts it once quantum computers exist.</string>
+    <string name="pq_desc">Seals message text and attachments with hybrid X25519 + ML-KEM-768 encryption, on top of Reticulum\'s own. Protects against an adversary who records traffic today and decrypts it once quantum computers exist.</string>
     <string name="pq_mode_off">Off</string>
     <string name="pq_mode_opportunistic">When possible</string>
     <string name="pq_mode_required">Always</string>
@@ -1015,11 +1015,11 @@ TO TALK</string>
     <string name="pq_reason_key_not_known">their key has not reached us yet</string>
     <string name="pq_reason_disabled">it is switched off in settings</string>
     <string name="pq_reason_link_expensive">the radio link is too slow for the extra data</string>
-    <string name="pq_reason_attachment">attachments are not covered by this layer</string>
+    <string name="pq_reason_attachment">the attachment is too large to seal on this device</string>
     <string name="pq_reason_unavailable">the encryption layer is unavailable on this device</string>
     <string name="pq_message_unreadable">Sealed message could not be opened</string>
     <string name="pq_message_unreadable_hint">It arrived post-quantum sealed to a key this device cannot use — usually after a key change or a restored backup. The message is kept, so it may open once the key situation is resolved.</string>
-    <string name="pq_indicator_partial">Text sealed, attachment not</string>
+    <string name="pq_indicator_partial">Text sealed, large attachment not</string>
     <string name="pq_message_sealed_cd">Post-quantum sealed message</string>
     <string name="pq_message_partial_cd">Text sealed; the attachment travelled unsealed</string>
     <string name="pq_message_unopened_cd">Sealed message that could not be opened</string>
@@ -1035,9 +1035,9 @@ TO TALK</string>
     <string name="pq_state_none">Reticulum standard encryption</string>
     <string name="pq_state_none_sub">Encrypted in transit with classical elliptic-curve cryptography. Readable by anyone who records it today and has a quantum computer later.</string>
     <string name="pq_state_sealed">Post-quantum sealed</string>
-    <string name="pq_state_sealed_sub">Content sealed with hybrid X25519 + ML-KEM-768 on top of Reticulum\'s own encryption.</string>
+    <string name="pq_state_sealed_sub">Text and attachments sealed with hybrid X25519 + ML-KEM-768 on top of Reticulum\'s own encryption.</string>
     <string name="pq_state_partial">Text sealed, attachment not</string>
-    <string name="pq_state_partial_sub">The text got the hybrid layer. The attachment travelled with Reticulum\'s encryption only — this layer does not cover attachments.</string>
+    <string name="pq_state_partial_sub">The text got the hybrid layer. The attachment was too large to seal in memory, so it travelled with Reticulum\'s encryption only.</string>
     <string name="pq_state_unopened">Sealed, could not be opened</string>
     <string name="pq_state_unopened_sub">The ciphertext is kept, so it may still open once a key change is resolved or a key pair is restored.</string>
     <string name="about_forked_from">Forked from Columba © Columba Contributors, used under MPL 2.0</string>

@@ -82,6 +82,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.service.pq.PqMessageSealer
+import network.zamolxis.app.service.pq.SealedPayload
 import network.zamolxis.crypto.pq.PlainReason
 import network.zamolxis.crypto.pq.PqMode
 import org.junit.Before
@@ -96,6 +97,34 @@ import network.zamolxis.app.data.repository.Message as DataMessage
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MessagingViewModelTest {
+
+    /**
+     * The layer takes no part: the message goes out exactly as composed.
+     *
+     * These tests are about the send path itself, so the plan mirrors the payload
+     * back rather than sealing it — the same thing that happens against a peer with
+     * no post-quantum support.
+     */
+    private fun stubPqMessageSealer() {
+        coEvery {
+            pqMessageSealer.prepareOutgoing(any(), any(), any(), any(), any(), any())
+        } answers {
+            val payload = arg<SealedPayload>(3)
+            PqMessageSealer.Outgoing.Plain(
+                wire =
+                    PqMessageSealer.WirePayload(
+                        content = payload.content,
+                        imageData = payload.image?.bytes,
+                        imageFormat = payload.image?.format,
+                        fileAttachments = payload.files.map { it.name to it.bytes }.ifEmpty { null },
+                        audio = payload.audio?.let { it.mode to it.bytes },
+                        replyQuote = payload.replyQuote,
+                    ),
+                reason = PlainReason.PEER_UNSUPPORTED,
+            )
+        }
+        coEvery { pqMessageSealer.onSendSucceeded(any(), any(), any()) } just Runs
+    }
 
     /** Settings the view model reads on construction and on every send. */
     private fun stubSettingsRepository() {
@@ -276,14 +305,7 @@ class MessagingViewModelTest {
         every { notificationHelper.cancelNotificationForConversation(any()) } just Runs
         rnsTelephony = mockk()
         pqMessageSealer = mockk()
-        coEvery {
-            pqMessageSealer.prepareOutgoing(any(), any(), any(), any(), any(), any(), any())
-        } answers {
-            // arg(3) is the content: the parameter list gained ourDestinationHash
-            // ahead of it (AAD binding) and hasAttachments after it.
-            PqMessageSealer.Outgoing.Plain(arg(3), emptyMap(), PlainReason.PEER_UNSUPPORTED)
-        }
-        coEvery { pqMessageSealer.onSendSucceeded(any(), any(), any()) } just Runs
+        stubPqMessageSealer()
         pqKeyRepository = mockk()
         coEvery { pqKeyRepository.keyChangeFingerprints(any()) } returns null
         every { rnsTelephony.callState } returns MutableStateFlow(CallState.Idle)

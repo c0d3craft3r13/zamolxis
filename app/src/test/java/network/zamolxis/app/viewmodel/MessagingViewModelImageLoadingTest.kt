@@ -53,6 +53,7 @@ import org.junit.Before
 import org.junit.Rule
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.service.pq.PqMessageSealer
+import network.zamolxis.app.service.pq.SealedPayload
 import network.zamolxis.crypto.pq.PlainReason
 import network.zamolxis.crypto.pq.PqMode
 import org.junit.Test
@@ -136,9 +137,22 @@ class MessagingViewModelImageLoadingTest {
                     // keep exercising exactly what they did before.
                     pqMessageSealer = mockk<PqMessageSealer>().also {
                         coEvery {
-                            it.prepareOutgoing(any(), any(), any(), any(), any(), any(), any())
+                            it.prepareOutgoing(any(), any(), any(), any(), any(), any())
                         } answers {
-                            PqMessageSealer.Outgoing.Plain(arg(3), emptyMap(), PlainReason.PEER_UNSUPPORTED)
+                            val payload = arg<SealedPayload>(3)
+                            PqMessageSealer.Outgoing.Plain(
+                                wire =
+                                    PqMessageSealer.WirePayload(
+                                        content = payload.content,
+                                        imageData = payload.image?.bytes,
+                                        imageFormat = payload.image?.format,
+                                        fileAttachments =
+                                            payload.files.map { it.name to it.bytes }.ifEmpty { null },
+                                        audio = payload.audio?.let { it.mode to it.bytes },
+                                        replyQuote = payload.replyQuote,
+                                    ),
+                                reason = PlainReason.PEER_UNSUPPORTED,
+                            )
                         }
                         coEvery { it.onSendSucceeded(any(), any(), any()) } just Runs
                     },

@@ -250,8 +250,10 @@ class MessageCollector
                                 timestamp = receivedMessage.timestamp,
                                 isFromMe = false,
                                 status = "delivered",
-                                // LXMF attachments
-                                fieldsJson = receivedMessage.fieldsJson,
+                                // LXMF attachments, with anything recovered from
+                                // inside the seal put back where the sender took it
+                                // from — see storedFieldsFor.
+                                fieldsJson = PqFieldsJson.storedFieldsFor(receivedMessage.fieldsJson, pqIncoming),
                                 // Routing info (hop count and receiving interface)
                                 receivedHopCount = receivedMessage.receivedHopCount,
                                 receivedInterface = receivedMessage.receivedInterface,
@@ -580,7 +582,10 @@ class MessageCollector
                     peerHash = sourceHash,
                     fallbackContent = receivedMessage.content,
                     fields = fields,
-                    hasAttachments = PqFieldsJson.hasUnsealedAttachments(receivedMessage.fieldsJson),
+                    // True only when the sender's own oversize fallback left an
+                    // attachment outside the seal; everything else it carried is
+                    // inside, and comes back as fields to rebuild.
+                    hasUnsealedAttachments = PqFieldsJson.hasUnsealedAttachments(receivedMessage.fieldsJson),
                 )
             }.getOrElse {
                 Log.e(TAG, "Post-quantum processing failed for message from $sourceHash", it)
