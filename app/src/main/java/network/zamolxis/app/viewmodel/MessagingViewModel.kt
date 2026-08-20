@@ -16,7 +16,6 @@ import network.zamolxis.app.data.model.EnrichedContact
 import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.data.model.ImageCompressionPreset
-import network.zamolxis.app.data.repository.ReceivedLocationRepository
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.api.model.Identity
 import network.zamolxis.app.rns.api.model.DeliveryMethod
@@ -26,7 +25,6 @@ import network.zamolxis.app.rns.api.RnsTelephony
 import network.zamolxis.app.rns.api.RnsTransportAdmin
 import network.zamolxis.app.rns.api.model.CallState
 import network.zamolxis.app.service.ConversationLinkManager
-import network.zamolxis.app.service.LocationSharingManager
 import network.zamolxis.app.service.PropagationNodeManager
 import network.zamolxis.app.service.SyncProgress
 import network.zamolxis.app.service.SyncResult
@@ -43,9 +41,7 @@ import network.zamolxis.app.audio.MicrophoneAdmissionArbiter
 import network.zamolxis.app.ui.model.AudioAttachmentLoader
 import network.zamolxis.app.ui.model.DecodedImageResult
 import network.zamolxis.app.ui.model.ImageCache
-import network.zamolxis.app.ui.model.LocationSharingState
 import network.zamolxis.app.ui.model.MessageUi
-import network.zamolxis.app.ui.model.SharingDuration
 import network.zamolxis.app.ui.model.decodeImageWithAnimation
 import network.zamolxis.app.ui.model.getImageMetadata
 import network.zamolxis.app.ui.model.loadFileAttachmentData
@@ -120,10 +116,8 @@ class MessagingViewModel
         private val activeConversationManager: network.zamolxis.app.service.ActiveConversationManager,
         private val settingsRepository: SettingsRepository,
         private val propagationNodeManager: PropagationNodeManager,
-        private val locationSharingManager: LocationSharingManager,
         private val identityRepository: network.zamolxis.app.data.repository.IdentityRepository,
         private val conversationLinkManager: ConversationLinkManager,
-        private val receivedLocationRepository: ReceivedLocationRepository,
         private val blockedPeerRepository: network.zamolxis.app.data.repository.BlockedPeerRepository,
         private val identityResolutionManager: network.zamolxis.app.service.IdentityResolutionManager,
         private val notificationHelper: network.zamolxis.app.notifications.NotificationHelper,
@@ -340,13 +334,6 @@ class MessagingViewModel
         private val _sharedImageError = MutableSharedFlow<String>()
         val sharedImageError: SharedFlow<String> = _sharedImageError.asSharedFlow()
 
-        // User-facing feedback from location-sharing actions. Fires when
-        // `LocationSharingManager` refuses an outbound share (master-gate
-        // off, currently the only Blocked source). MessagingScreen
-        // collects this and shows a Snackbar pointing back to Settings.
-        private val _locationSharingMessage = MutableSharedFlow<String>(extraBufferCapacity = 4)
-        val locationSharingMessage: SharedFlow<String> = _locationSharingMessage.asSharedFlow()
-
         // Image quality selection dialog state
         private val _qualitySelectionState = MutableStateFlow<QualitySelectionState?>(null)
         val qualitySelectionState: StateFlow<QualitySelectionState?> = _qualitySelectionState.asStateFlow()
@@ -449,48 +436,6 @@ class MessagingViewModel
                     scope = viewModelScope,
                     started = SharingStarted.Lazily,
                     initialValue = emptyList(),
-                )
-
-        // Location sharing state with current peer - for TopAppBar icon state
-        val locationSharingState: StateFlow<LocationSharingState> =
-            combine(
-                locationSharingManager.activeSessions,
-                _currentConversation,
-                contactRepository.getEnrichedContacts(),
-            ) { sessions, currentHash, allContacts ->
-                if (currentHash == null) return@combine LocationSharingState.NONE
-
-                val sharingWithThem = sessions.any { it.destinationHash == currentHash }
-                val theyShareWithUs =
-                    allContacts
-                        .find { it.destinationHash == currentHash }
-                        ?.isReceivingLocationFrom == true
-
-                when {
-                    sharingWithThem && theyShareWithUs -> LocationSharingState.MUTUAL
-                    sharingWithThem -> LocationSharingState.SHARING_WITH_THEM
-                    theyShareWithUs -> LocationSharingState.THEY_SHARE_WITH_ME
-                    else -> LocationSharingState.NONE
-                }
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000L),
-                initialValue = LocationSharingState.NONE,
-            )
-
-        // Whether the current peer has a known location (for "Locate on Map" button)
-        val hasContactLocation: StateFlow<Boolean> =
-            _currentConversation
-                .flatMapLatest { hash ->
-                    if (hash == null) {
-                        flowOf(false)
-                    } else {
-                        receivedLocationRepository.observeHasLocation(hash)
-                    }
-                }.stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000L),
-                    initialValue = false,
                 )
 
         // Contact toggle result events for toast notifications
@@ -828,37 +773,6 @@ class MessagingViewModel
             }
         }
 
-        /**
-         * Start sharing location with a single peer.
-         * Used from the conversation screen where the target is already known.
-         *
-         * @param peerHash The destination hash of the peer to share with
-         * @param peerName The display name of the peer
-         * @param duration How long to share location
-         */
-        fun startSharingWithPeer(
-            peerHash: String,
-            peerName: String,
-            duration: SharingDuration,
-        ) {
-            Log.d(TAG, "Starting location sharing with $peerName for $duration")
-            locationSharingManager.startSharing(
-                contactHashes = listOf(peerHash),
-                displayNames = mapOf(peerHash to peerName),
-                duration = duration,
-            )
-        }
-
-        /**
-         * Stop sharing location with a specific peer.
-         *
-         * @param peerHash The destination hash of the peer to stop sharing with
-         */
-        fun stopSharingWithPeer(peerHash: String) {
-            Log.d(TAG, "Stopping location sharing with $peerHash")
-            locationSharingManager.stopSharing(peerHash)
-        }
-
         init {
             viewModelScope.launch {
                 rnsTelephony.callState.collect { state ->
@@ -886,23 +800,6 @@ class MessagingViewModel
                     _isTransportEnabled.value = rnsCore.isTransportEnabled()
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to check transport status", e)
-                }
-            }
-
-            // Translate LocationSharingManager events into user-visible
-            // messages. `Blocked` is the only one MessagingScreen needs
-            // today (master-gate refused a share); other events
-            // (Started/Stopped/Error/SessionsExpired) are surfaced
-            // elsewhere or don't need explicit UI in this context.
-            viewModelScope.launch {
-                locationSharingManager.sharingEvents.collect { event ->
-                    when (event) {
-                        is network.zamolxis.app.service.SharingEvent.Blocked ->
-                            _locationSharingMessage.emit(
-                                "Location sharing is off. Enable it in Settings → Location Sharing.",
-                            )
-                        else -> Unit
-                    }
                 }
             }
 

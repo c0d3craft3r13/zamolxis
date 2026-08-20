@@ -1,31 +1,41 @@
 package network.zamolxis.app.viewmodel
 
+import android.app.Application
 import network.zamolxis.app.data.model.EnrichedContact
 import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.repository.ReceivedLocationRepository
 import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.SharingEvent
 import network.zamolxis.app.service.SharingSession
 import network.zamolxis.app.ui.model.LocationSharingState
 import network.zamolxis.app.ui.model.SharingDuration
 import io.mockk.Runs
 import io.mockk.clearAllMocks
+import androidx.test.core.app.ApplicationProvider
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Unit tests for LocationSharingViewModel.
@@ -33,10 +43,13 @@ import org.junit.Test
  * Tests the location sharing state computation and action delegation.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class LocationSharingViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var mockLocationSharingManager: LocationSharingManager
     private lateinit var mockContactRepository: ContactRepository
+    private lateinit var mockReceivedLocationRepository: ReceivedLocationRepository
     private lateinit var viewModel: LocationSharingViewModel
 
     // Flows for mocking
@@ -48,6 +61,7 @@ class LocationSharingViewModelTest {
         Dispatchers.setMain(testDispatcher)
         mockLocationSharingManager = mockk()
         mockContactRepository = mockk()
+        mockReceivedLocationRepository = mockk()
 
         // Initialize flows
         activeSessionsFlow = MutableStateFlow(emptyList())
@@ -64,7 +78,16 @@ class LocationSharingViewModelTest {
         // Mock repository - default empty contacts
         every { mockContactRepository.getEnrichedContacts() } returns flowOf(emptyList())
 
-        viewModel = LocationSharingViewModel(mockLocationSharingManager, mockContactRepository)
+        every { mockLocationSharingManager.sharingEvents } returns MutableSharedFlow()
+        every { mockReceivedLocationRepository.observeHasLocation(any()) } returns flowOf(false)
+
+        viewModel =
+            LocationSharingViewModel(
+                context = ApplicationProvider.getApplicationContext(),
+                locationSharingManager = mockLocationSharingManager,
+                contactRepository = mockContactRepository,
+                receivedLocationRepository = mockReceivedLocationRepository,
+            )
     }
 
     @After
@@ -153,7 +176,12 @@ class LocationSharingViewModelTest {
             every { mockContactRepository.getEnrichedContacts() } returns flowOf(listOf(contact))
 
             // Recreate viewModel with updated mock
-            viewModel = LocationSharingViewModel(mockLocationSharingManager, mockContactRepository)
+            viewModel = LocationSharingViewModel(
+                    context = ApplicationProvider.getApplicationContext(),
+                    locationSharingManager = mockLocationSharingManager,
+                    contactRepository = mockContactRepository,
+                    receivedLocationRepository = mockReceivedLocationRepository,
+                )
 
             viewModel.setCurrentPeer(peerHash)
 
@@ -183,7 +211,12 @@ class LocationSharingViewModelTest {
             every { mockContactRepository.getEnrichedContacts() } returns flowOf(listOf(contact))
 
             // Recreate viewModel with updated mock
-            viewModel = LocationSharingViewModel(mockLocationSharingManager, mockContactRepository)
+            viewModel = LocationSharingViewModel(
+                    context = ApplicationProvider.getApplicationContext(),
+                    locationSharingManager = mockLocationSharingManager,
+                    contactRepository = mockContactRepository,
+                    receivedLocationRepository = mockReceivedLocationRepository,
+                )
 
             viewModel.setCurrentPeer(peerHash)
 
@@ -300,6 +333,67 @@ class LocationSharingViewModelTest {
     }
 
     // ========== isSharing Tests ==========
+
+    // ========== Moved from MessagingViewModel ==========
+
+    @Test
+    fun `a blocked share is reported to the user`() =
+        runTest {
+            // The master toggle lives in Settings, so a share refused there is
+            // invisible on the conversation screen: without this the tap looks like
+            // it worked and nothing happens.
+            val events = MutableSharedFlow<SharingEvent>(extraBufferCapacity = 4)
+            every { mockLocationSharingManager.sharingEvents } returns events
+            val vm =
+                LocationSharingViewModel(
+                    context = ApplicationProvider.getApplicationContext(),
+                    locationSharingManager = mockLocationSharingManager,
+                    contactRepository = mockContactRepository,
+                    receivedLocationRepository = mockReceivedLocationRepository,
+                )
+
+            // Collected on Main, which this test sets to an unconfined dispatcher, so
+            // the subscription is live before the event is emitted. sharingMessage
+            // has no replay: a late collector would simply miss it.
+            val seen = mutableListOf<String>()
+            val job = backgroundScope.launch(Dispatchers.Main) { vm.sharingMessage.collect { seen += it } }
+
+            events.emit(SharingEvent.Blocked)
+            testDispatcher.scheduler.advanceUntilIdle()
+            job.cancel()
+
+            assertEquals(1, seen.size)
+            assertTrue("message should point at Settings", seen.first().contains("Settings"))
+        }
+
+    @Test
+    fun `hasContactLocation follows the current peer`() =
+        runTest {
+            every { mockReceivedLocationRepository.observeHasLocation("peer-with") } returns flowOf(true)
+            every { mockReceivedLocationRepository.observeHasLocation("peer-without") } returns flowOf(false)
+
+            // WhileSubscribed: the flow only tracks the peer while something collects it.
+            val job = backgroundScope.launch { viewModel.hasContactLocation.collect { } }
+
+            viewModel.setCurrentPeer("peer-with")
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(true, viewModel.hasContactLocation.value)
+
+            viewModel.setCurrentPeer("peer-without")
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(false, viewModel.hasContactLocation.value)
+            job.cancel()
+        }
+
+    @Test
+    fun `hasContactLocation is false with no peer`() =
+        runTest {
+            val job = backgroundScope.launch { viewModel.hasContactLocation.collect { } }
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(false, viewModel.hasContactLocation.value)
+            job.cancel()
+        }
 
     @Test
     fun `isSharing exposes manager isSharing state`() {

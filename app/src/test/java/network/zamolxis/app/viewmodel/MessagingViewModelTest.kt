@@ -415,10 +415,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                     notificationHelper,
@@ -448,10 +446,8 @@ class MessagingViewModelTest {
             activeConversationManager,
             settingsRepository,
             propagationNodeManager,
-            locationSharingManager,
             identityRepository,
             conversationLinkManager,
-            receivedLocationRepository,
             blockedPeerRepository,
             identityResolutionManager,
             notificationHelper,
@@ -1030,16 +1026,14 @@ class MessagingViewModelTest {
                     failingActiveConversationManager,
                     failingSettingsRepository,
                     failingPropagationNodeManager,
-                    failingLocationSharingManager,
                     identityRepository,
                     failingConversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
 
             // Attempt to send message
@@ -1520,10 +1514,8 @@ class MessagingViewModelTest {
                 activeConversationManager,
                 settingsRepository,
                 propagationNodeManager,
-                locationSharingManager,
                 identityRepository,
                 conversationLinkManager,
-                receivedLocationRepository,
                 blockedPeerRepository,
                 identityResolutionManager,
             notificationHelper,
@@ -1598,10 +1590,8 @@ class MessagingViewModelTest {
                 activeConversationManager,
                 settingsRepository,
                 propagationNodeManager,
-                locationSharingManager,
                 identityRepository,
                 conversationLinkManager,
-                receivedLocationRepository,
                 blockedPeerRepository,
                 identityResolutionManager,
             notificationHelper,
@@ -1674,10 +1664,8 @@ class MessagingViewModelTest {
                 activeConversationManager,
                 settingsRepository,
                 propagationNodeManager,
-                locationSharingManager,
                 identityRepository,
                 conversationLinkManager,
-                receivedLocationRepository,
                 blockedPeerRepository,
                 identityResolutionManager,
             notificationHelper,
@@ -1738,10 +1726,8 @@ class MessagingViewModelTest {
                 activeConversationManager,
                 settingsRepository,
                 propagationNodeManager,
-                locationSharingManager,
                 identityRepository,
                 conversationLinkManager,
-                receivedLocationRepository,
                 blockedPeerRepository,
                 identityResolutionManager,
             notificationHelper,
@@ -1816,10 +1802,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                 notificationHelper,
@@ -1887,10 +1871,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                 notificationHelper,
@@ -1958,10 +1940,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                 notificationHelper,
@@ -2029,10 +2009,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                 notificationHelper,
@@ -2100,10 +2078,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                 notificationHelper,
@@ -2170,10 +2146,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                 notificationHelper,
@@ -2235,10 +2209,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                 notificationHelper,
@@ -2300,10 +2272,8 @@ class MessagingViewModelTest {
                     activeConversationManager,
                     settingsRepository,
                     propagationNodeManager,
-                    locationSharingManager,
                     identityRepository,
                     conversationLinkManager,
-                    receivedLocationRepository,
                     blockedPeerRepository,
                     identityResolutionManager,
                 notificationHelper,
@@ -4937,36 +4907,6 @@ class MessagingViewModelTest {
     fun `showReactionPicker initial state is false`() =
         runViewModelTest {
             assertFalse(viewModel.showReactionPicker.value)
-        }
-
-    // ========== LOCATION SHARING TESTS ==========
-
-    @Test
-    fun `startSharingWithPeer calls location sharing manager`() =
-        runViewModelTest {
-            val duration = network.zamolxis.app.ui.model.SharingDuration.FIFTEEN_MINUTES
-
-            val result = runCatching { viewModel.startSharingWithPeer(testPeerHash, testPeerName, duration) }
-            advanceUntilIdle()
-
-            assertTrue("startSharingWithPeer should complete without error", result.isSuccess)
-            verify {
-                locationSharingManager.startSharing(
-                    contactHashes = listOf(testPeerHash),
-                    displayNames = mapOf(testPeerHash to testPeerName),
-                    duration = duration,
-                )
-            }
-        }
-
-    @Test
-    fun `stopSharingWithPeer calls location sharing manager`() =
-        runViewModelTest {
-            val result = runCatching { viewModel.stopSharingWithPeer(testPeerHash) }
-            advanceUntilIdle()
-
-            assertTrue("stopSharingWithPeer should complete without error", result.isSuccess)
-            verify { locationSharingManager.stopSharing(testPeerHash) }
         }
 
     // ========== SENDING STATE TESTS ==========

@@ -1054,6 +1054,7 @@
     <string name="pq_rotate_desc">Создаёт новую гибридную пару ключей для этой личности. Старый ключ перестаёт использоваться сразу; контакты получат новый с вашим следующим сообщением, и каждого попросят подтвердить смену.</string>
     <string name="pq_rotate_action">Сменить ключ</string>
     <string name="pq_rotate_done">Новый постквантовый ключ создан</string>
+    <string name="location_sharing_blocked">Делёж местоположением отключён. Включите его в Настройках → Делёж местоположением.</string>
     <string name="pq_rotate_failed">Не удалось сменить постквантовый ключ</string>
     <string name="msgdetail_encryption">Шифрование</string>
     <string name="pq_state_none">Обычное шифрование Reticulum</string>

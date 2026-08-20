@@ -117,10 +117,8 @@ class MessagingViewModelImageLoadingTest {
                     activeConversationManager = activeConversationManager,
                     settingsRepository = settingsRepository,
                     propagationNodeManager = propagationNodeManager,
-                    locationSharingManager = locationSharingManager,
                     identityRepository = identityRepository,
                     conversationLinkManager = conversationLinkManager,
-                    receivedLocationRepository = receivedLocationRepository,
                     blockedPeerRepository = mockk(),
                     identityResolutionManager =
                         mockk<IdentityResolutionManager>().also {

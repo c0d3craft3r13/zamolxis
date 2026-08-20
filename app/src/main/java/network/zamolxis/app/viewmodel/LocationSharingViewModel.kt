@@ -4,11 +4,20 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import network.zamolxis.app.data.repository.ContactRepository
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import network.zamolxis.app.R
+import network.zamolxis.app.data.repository.ReceivedLocationRepository
 import network.zamolxis.app.service.LocationSharingManager
+import network.zamolxis.app.service.SharingEvent
 import network.zamolxis.app.ui.model.LocationSharingState
 import network.zamolxis.app.ui.model.SharingDuration
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -48,8 +57,10 @@ import javax.inject.Inject
 class LocationSharingViewModel
     @Inject
     constructor(
+        @ApplicationContext private val context: Context,
         private val locationSharingManager: LocationSharingManager,
         private val contactRepository: ContactRepository,
+        private val receivedLocationRepository: ReceivedLocationRepository,
     ) : ViewModel() {
         companion object {
             private const val TAG = "LocationSharingVM"
@@ -58,6 +69,37 @@ class LocationSharingViewModel
         // The current peer we're viewing/interacting with
         private val _currentPeerHash = MutableStateFlow<String?>(null)
         val currentPeerHash: StateFlow<String?> = _currentPeerHash
+
+        /**
+         * User-facing feedback from location-sharing actions.
+         *
+         * Fires when [LocationSharingManager] refuses an outbound share — today the
+         * only cause is the master toggle being off, which is invisible from this
+         * screen, so a share that silently does nothing would look like a bug.
+         */
+        private val _sharingMessage = MutableSharedFlow<String>(extraBufferCapacity = 4)
+        val sharingMessage: SharedFlow<String> = _sharingMessage.asSharedFlow()
+
+        /** Whether the current peer has a known location, for the "locate on map" action. */
+        val hasContactLocation: StateFlow<Boolean> =
+            _currentPeerHash
+                .flatMapLatest { hash ->
+                    if (hash == null) flowOf(false) else receivedLocationRepository.observeHasLocation(hash)
+                }.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000L),
+                    initialValue = false,
+                )
+
+        init {
+            viewModelScope.launch {
+                locationSharingManager.sharingEvents.collect { event ->
+                    if (event is SharingEvent.Blocked) {
+                        _sharingMessage.emit(context.getString(R.string.location_sharing_blocked))
+                    }
+                }
+            }
+        }
 
         /**
          * Location sharing state with the current peer.

@@ -245,6 +245,7 @@ import network.zamolxis.app.util.formatRelativeTime
 import network.zamolxis.app.util.formatTimeSince
 import network.zamolxis.app.util.validation.ValidationConstants
 import network.zamolxis.app.viewmodel.ContactToggleResult
+import network.zamolxis.app.viewmodel.LocationSharingViewModel
 import network.zamolxis.app.viewmodel.MessagingViewModel
 import network.zamolxis.app.viewmodel.SharedImageViewModel
 import network.zamolxis.app.viewmodel.SharedTextViewModel
@@ -380,6 +381,8 @@ fun MessagingScreen(
     fromNotification: Boolean = false,
     notificationEventId: Long = 0L,
     viewModel: MessagingViewModel = hiltViewModel(),
+    // Injectable like `viewModel` above, so a screen test can hand in its own.
+    locationViewModel: LocationSharingViewModel = hiltViewModel(),
 ) {
     val pagingItems = viewModel.messages.collectAsLazyPagingItems()
     val peerActivity by viewModel.peerActivity.collectAsStateWithLifecycle()
@@ -486,8 +489,12 @@ fun MessagingScreen(
     val decodedImages by viewModel.decodedImages.collectAsStateWithLifecycle()
 
     // Location sharing state
-    val locationSharingState by viewModel.locationSharingState.collectAsStateWithLifecycle()
-    val hasContactLocation by viewModel.hasContactLocation.collectAsStateWithLifecycle()
+    // Location sharing has its own view model — a self-contained concern that was
+    // already written and tested but never wired to a screen, so MessagingViewModel
+    // carried a second copy of it.
+    LaunchedEffect(destinationHash) { locationViewModel.setCurrentPeer(destinationHash) }
+    val locationSharingState by locationViewModel.locationSharingState.collectAsStateWithLifecycle()
+    val hasContactLocation by locationViewModel.hasContactLocation.collectAsStateWithLifecycle()
     var showShareLocationSheet by remember { mutableStateOf(false) }
     val shareLocationSheetState = rememberModalBottomSheetState()
     var showLocationPermissionSheet by remember { mutableStateOf(false) }
@@ -588,7 +595,7 @@ fun MessagingScreen(
     // was already refused inside LocationSharingManager — this is purely
     // user feedback so the tap doesn't feel silently dropped.
     LaunchedEffect(Unit) {
-        viewModel.locationSharingMessage.collect { message ->
+        locationViewModel.sharingMessage.collect { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
@@ -1945,7 +1952,7 @@ fun MessagingScreen(
             contactName = peerName,
             onDismiss = { showShareLocationSheet = false },
             onStartSharing = { duration ->
-                viewModel.startSharingWithPeer(destinationHash, peerName, duration)
+                locationViewModel.startSharingWith(destinationHash, peerName, duration)
                 showShareLocationSheet = false
             },
             sheetState = shareLocationSheetState,
@@ -1968,7 +1975,7 @@ fun MessagingScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.stopSharingWithPeer(destinationHash)
+                        locationViewModel.stopSharingWith(destinationHash)
                         showStopSharingDialog = false
                     },
                     colors =

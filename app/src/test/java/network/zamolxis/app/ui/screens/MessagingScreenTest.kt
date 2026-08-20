@@ -36,6 +36,7 @@ import network.zamolxis.app.ui.model.CodecProfile
 import network.zamolxis.app.ui.model.LocationSharingState
 import network.zamolxis.app.ui.model.ReplyPreviewUi
 import network.zamolxis.app.viewmodel.ContactToggleResult
+import network.zamolxis.app.viewmodel.LocationSharingViewModel
 import network.zamolxis.app.viewmodel.MessagingViewModel
 import network.zamolxis.app.viewmodel.ComposerSendResult
 import io.mockk.Runs
@@ -99,6 +100,7 @@ class MessagingScreenTest {
     val composeTestRule get() = composeRule
 
     private lateinit var mockViewModel: MessagingViewModel
+    private lateinit var mockLocationViewModel: LocationSharingViewModel
 
     @Suppress("NoRelaxedMocks") // MessagingViewModel is a complex Android ViewModel with many internal behaviors
     @Before
@@ -143,9 +145,12 @@ class MessagingScreenTest {
         every { mockViewModel.fileAttachmentError } returns MutableSharedFlow()
         every { mockViewModel.composerSendResult } returns MutableSharedFlow()
         every { mockViewModel.isProcessingFile } returns MutableStateFlow(false)
-        // Location sharing mocks
+        // Location sharing lives in its own view model, injected the same way.
+        mockLocationViewModel = mockk(relaxed = true)
+        every { mockLocationViewModel.locationSharingState } returns MutableStateFlow(LocationSharingState.NONE)
+        every { mockLocationViewModel.hasContactLocation } returns MutableStateFlow(false)
+        every { mockLocationViewModel.sharingMessage } returns MutableSharedFlow()
         every { mockViewModel.contacts } returns MutableStateFlow(emptyList())
-        every { mockViewModel.locationSharingState } returns MutableStateFlow(LocationSharingState.NONE)
         // Reply mocks
         every { mockViewModel.pendingReplyTo } returns MutableStateFlow(null)
         every { mockViewModel.replyPreviewCache } returns MutableStateFlow(emptyMap())
@@ -165,14 +170,10 @@ class MessagingScreenTest {
         every { mockViewModel.draftText } returns MutableStateFlow(null)
         // Shared image error mock (share pictures feature)
         every { mockViewModel.sharedImageError } returns MutableSharedFlow()
-        // Location-sharing refusal message (master-gate OFF Toast)
-        every { mockViewModel.locationSharingMessage } returns MutableSharedFlow()
         // Recent photos mock (share pictures feature)
         every { mockViewModel.recentPhotos } returns MutableStateFlow(emptyList())
         // Message font scale mock (text size dialog)
         every { mockViewModel.messageFontScale } returns MutableStateFlow(1.0f)
-        // Contact location mock (locate on map feature)
-        every { mockViewModel.hasContactLocation } returns MutableStateFlow(false)
         // Voice-message recording mocks
         every { mockViewModel.voiceRecordingState } returns MutableStateFlow(VoiceMessageRecordingState())
         every { mockViewModel.isVoiceMessageSupported } returns true
@@ -195,6 +196,7 @@ class MessagingScreenTest {
                 onPeerClick = {},
                 onViewMessageDetails = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -214,6 +216,7 @@ class MessagingScreenTest {
                 peerName = "Alice",
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -232,6 +235,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = { backClicked = true },
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -252,6 +256,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = { backClicked = true },
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -273,6 +278,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -311,6 +317,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 onPeerClick = { peerClicked = true },
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -330,6 +337,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -354,6 +362,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -379,6 +388,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -398,6 +408,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -416,6 +427,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -441,6 +453,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -477,6 +490,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -504,6 +518,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -528,6 +543,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -549,6 +565,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -570,6 +587,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -606,6 +624,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -622,6 +641,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -646,6 +666,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -662,6 +683,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -686,6 +708,7 @@ class MessagingScreenTest {
                     peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                     onBackClick = {},
                     viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                 )
             }
         }
@@ -716,6 +739,7 @@ class MessagingScreenTest {
                     peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                     onBackClick = {},
                     viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                 )
             }
         }
@@ -747,6 +771,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.onNodeWithText("Type a message...").performTextInput("Test message")
@@ -783,6 +808,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         val submitted = "  Test message  "
@@ -812,6 +838,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -835,6 +862,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -857,6 +885,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -901,6 +930,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -929,6 +959,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -954,6 +985,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -979,6 +1011,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -1004,6 +1037,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -1030,6 +1064,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -1054,6 +1089,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -1082,6 +1118,7 @@ class MessagingScreenTest {
                         peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                         onBackClick = {},
                         viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                     )
                 }
             }
@@ -1106,6 +1143,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1127,6 +1165,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1148,6 +1187,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1169,6 +1209,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1190,6 +1231,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1211,6 +1253,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1232,6 +1275,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1254,6 +1298,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -1278,6 +1323,7 @@ class MessagingScreenTest {
                         peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                         onBackClick = {},
                         viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1307,6 +1353,7 @@ class MessagingScreenTest {
                         peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                         onBackClick = {},
                         viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1332,6 +1379,7 @@ class MessagingScreenTest {
                         peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                         onBackClick = {},
                         viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1361,6 +1409,7 @@ class MessagingScreenTest {
                         peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                         onBackClick = {},
                         viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1394,6 +1443,7 @@ class MessagingScreenTest {
                         peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                         onBackClick = {},
                         viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1421,6 +1471,7 @@ class MessagingScreenTest {
                         peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                         onBackClick = {},
                         viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1447,6 +1498,7 @@ class MessagingScreenTest {
                 peerName = "Alice",
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1468,6 +1520,7 @@ class MessagingScreenTest {
                 peerName = "Bob",
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1487,6 +1540,7 @@ class MessagingScreenTest {
                 peerName = "Charlie",
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1512,6 +1566,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1533,6 +1588,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1558,6 +1614,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1592,6 +1649,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1620,6 +1678,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1645,6 +1704,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -1678,6 +1738,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1708,6 +1769,7 @@ class MessagingScreenTest {
                         peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                         onBackClick = {},
                         viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1744,6 +1806,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1771,6 +1834,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1794,6 +1858,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1822,6 +1887,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1844,6 +1910,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1865,6 +1932,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1887,6 +1955,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1917,6 +1986,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1953,6 +2023,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1975,6 +2046,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1996,6 +2068,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2017,6 +2090,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2037,6 +2111,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -2061,6 +2136,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -2089,6 +2165,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2108,6 +2185,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -2129,6 +2207,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2148,6 +2227,7 @@ class MessagingScreenTest {
                 peerName = longName,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
 
@@ -2169,6 +2249,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2190,6 +2271,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2211,6 +2293,7 @@ class MessagingScreenTest {
                 peerName = MessagingTestFixtures.Constants.TEST_PEER_NAME,
                 onBackClick = {},
                 viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2242,6 +2325,7 @@ class MessagingScreenTest {
                     onBackClick = {},
                     fromNotification = true,
                     viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                 )
             }
             composeTestRule.waitForIdle()
@@ -2269,6 +2353,7 @@ class MessagingScreenTest {
                     onBackClick = {},
                     fromNotification = false,
                     viewModel = mockViewModel,
+                locationViewModel = mockLocationViewModel,
                 )
             }
             composeTestRule.waitForIdle()

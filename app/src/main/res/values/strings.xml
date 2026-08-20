@@ -1030,6 +1030,7 @@ TO TALK</string>
     <string name="pq_rotate_desc">Generates a fresh hybrid key pair for this identity. The old key stops being used immediately; contacts receive the new one with your next message to them, and each will be asked to confirm the change.</string>
     <string name="pq_rotate_action">Rotate key</string>
     <string name="pq_rotate_done">New post-quantum key generated</string>
+    <string name="location_sharing_blocked">Location sharing is off. Enable it in Settings → Location Sharing.</string>
     <string name="pq_rotate_failed">Could not rotate the post-quantum key</string>
     <string name="msgdetail_encryption">Encryption</string>
     <string name="pq_state_none">Reticulum standard encryption</string>
