@@ -124,6 +124,11 @@ tasks.named<de.aaschmid.gradle.plugins.cpd.Cpd>("cpdCheck") {
             include("**/*.kt")
             exclude("**/generated/**")
             exclude("**/build/**")
+            // Generated framebuffer data: 512 byte literals, one per line, produced
+            // by scripts/convert_icon_to_framebuffer.py. CPD reported 67 "duplications"
+            // inside it — rows of identical zeros matching each other — which is noise
+            // nobody can act on and which buries the findings that are real.
+            exclude("**/rnode/ZamolxisLogo.kt")
         }
     // Advisory mode initially - duplicates are reported but don't fail the build
     ignoreFailures = true
