@@ -28,21 +28,34 @@ data class TcpCommunityServer(
 object TcpCommunityServers {
     val servers: List<TcpCommunityServer> =
         listOf(
-            // Bootstrap servers: well-established, reliable nodes for initial network discovery
-            TcpCommunityServer("Beleth RNS Hub", "rns.beleth.net", 4242, isBootstrap = true),
-            TcpCommunityServer("Quad4 TCP Node 1", "rns.quad4.io", 4242, isBootstrap = true),
-            TcpCommunityServer("FireZen", "firezen.com", 4242, isBootstrap = true),
+            // Bootstrap servers: the ones a fresh install depends on, so they are
+            // chosen from measurement rather than reputation. Each was left
+            // connected for five minutes and judged on two things: whether the
+            // socket survived, and how many announces it actually delivered.
+            //
+            // The previous three bootstrap entries (rns.beleth.net,
+            // rns.quad4.io, firezen.com) all failed the first test: they accept
+            // the TCP connection, deliver nothing, and drop the client every
+            // ~82 seconds — measured identically under both the Python and the
+            // Kotlin backend, so it is the hosts, not our stack. A fresh install
+            // pointed only at those reached the network never, and the Network
+            // tab stayed empty forever with no error to explain it.
+            TcpCommunityServer("g00n.cloud Hub", "dfw.us.g00n.cloud", 6969, isBootstrap = true),
+            TcpCommunityServer("Jon's Node", "rns.jlamothe.net", 4242, isBootstrap = true),
+            TcpCommunityServer("noDNS2", "193.26.158.230", 4965, isBootstrap = true),
             // Regular community servers
-            TcpCommunityServer("g00n.cloud Hub", "dfw.us.g00n.cloud", 6969),
             TcpCommunityServer("interloper node", "intr.cx", 4242),
             TcpCommunityServer(
                 "interloper node (Tor)",
                 "intrcxv4fa72e5ovler5dpfwsiyuo34tkcwfy5snzstxkhec75okowqd.onion",
                 4242,
             ),
-            TcpCommunityServer("Jon's Node", "rns.jlamothe.net", 4242),
             TcpCommunityServer("noDNS1", "202.61.243.41", 4965),
-            TcpCommunityServer("noDNS2", "193.26.158.230", 4965),
+            // Unreachable when last measured (see the bootstrap note above);
+            // kept listed so a user can still pick them if they come back.
+            TcpCommunityServer("Beleth RNS Hub", "rns.beleth.net", 4242),
+            TcpCommunityServer("Quad4 TCP Node 1", "rns.quad4.io", 4242),
+            TcpCommunityServer("FireZen", "firezen.com", 4242),
             TcpCommunityServer("NomadNode SEAsia TCP", "rns.jaykayenn.net", 4242),
             TcpCommunityServer("0rbit-Net", "93.95.227.8", 49952),
             TcpCommunityServer("Quad4 TCP Node 2", "rns2.quad4.io", 4242),

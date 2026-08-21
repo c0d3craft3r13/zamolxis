@@ -642,6 +642,15 @@ class _AnnounceHandler:
         # a junk display name (whatever their app_data decodes to) and an
         # "unknown" aspect, and collide into the "Site" filter.
         if enrichment.get("aspect") is None:
+            # Logged because a silent drop here is invisible end to end: the
+            # stack keeps caching announces while the UI shows an empty network,
+            # with nothing in between to say why. Diagnosing that from a field
+            # report meant instrumenting a build; now it does not.
+            RNS.log(
+                "event_bridge: dropped announce %s (identity=%s, no tracked aspect)"
+                % (_hex(destination_hash), "known" if announced_identity is not None else "unknown"),
+                RNS.LOG_DEBUG,
+            )
             return
         # Receiving interface annotation. RNS doesn't surface a per-announce
         # `received_on` interface on `received_announce(...)` — we have to

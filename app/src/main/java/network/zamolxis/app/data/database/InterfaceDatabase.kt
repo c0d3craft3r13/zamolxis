@@ -111,18 +111,19 @@ abstract class InterfaceDatabase : RoomDatabase() {
                 ),
             )
 
-            // Insert Beleth RNS Hub as bootstrap server
+            // Insert the bootstrap hub (see the note on bootstrapServerInterface
+            // for why this is no longer rns.beleth.net).
             db.execSQL(
                 """
                 INSERT INTO interfaces (name, type, enabled, configJson, displayOrder)
                 VALUES (?, ?, ?, ?, ?)
             """,
                 arrayOf<Any>(
-                    "Beleth RNS Hub",
+                    "g00n.cloud Hub",
                     "TCPClient",
                     // enabled=true
                     1,
-                    """{"target_host":"rns.beleth.net","target_port":4242,"kiss_framing":false,"mode":"full","bootstrap_only":true}""",
+                    """{"target_host":"dfw.us.g00n.cloud","target_port":6969,"kiss_framing":false,"mode":"full","bootstrap_only":true}""",
                     2,
                 ),
             )
@@ -224,16 +225,23 @@ abstract class InterfaceDatabase : RoomDatabase() {
                     displayOrder = 1,
                 )
 
-            val belethServerInterface =
+            // Bootstrap hub for a fresh install. rns.beleth.net:4242 used to sit
+            // here and is unreachable: it accepts the connection, delivers no
+            // announces, and drops the client every ~82 seconds — the same under
+            // both backends, so it is the host, not us. An install that only ever
+            // saw that hub showed an empty Network tab forever. This host was
+            // measured as the busiest of the reachable ones. See
+            // TcpCommunityServers for the full measurement note.
+            val bootstrapServerInterface =
                 InterfaceEntity(
-                    name = "Beleth RNS Hub",
+                    name = "g00n.cloud Hub",
                     type = "TCPClient",
                     enabled = true,
                     configJson =
                         """
                         {
-                            "target_host": "rns.beleth.net",
-                            "target_port": 4242,
+                            "target_host": "dfw.us.g00n.cloud",
+                            "target_port": 6969,
                             "kiss_framing": false,
                             "mode": "full",
                             "bootstrap_only": true
@@ -244,7 +252,7 @@ abstract class InterfaceDatabase : RoomDatabase() {
 
             interfaceDao.insertInterface(defaultAutoInterface)
             interfaceDao.insertInterface(defaultBleInterface)
-            interfaceDao.insertInterface(belethServerInterface)
+            interfaceDao.insertInterface(bootstrapServerInterface)
         }
 
         /**
