@@ -24,6 +24,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +41,7 @@ import network.zamolxis.app.R
 import network.zamolxis.app.service.AppUpdateResult
 import network.zamolxis.app.ui.components.CollapsibleSettingsCard
 import network.zamolxis.app.util.SystemInfo
+import network.zamolxis.app.ui.screens.settings.dialogs.LicensesDialog
 import network.zamolxis.app.util.safeOpenUrl
 
 @Composable
@@ -52,6 +57,11 @@ fun AboutCard(
     onSetIncludePrereleaseUpdates: (Boolean) -> Unit = {},
 ) {
     val context = LocalContext.current
+    var showLicenses by remember { mutableStateOf(false) }
+
+    if (showLicenses) {
+        LicensesDialog(onDismiss = { showLicenses = false })
+    }
 
     CollapsibleSettingsCard(
         title = stringResource(R.string.about_title),
@@ -164,11 +174,10 @@ fun AboutCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                TextButton(
-                    onClick = {
-                        openExternalUrl(context, "https://github.com/c0d3craft3r13/zamolxis/blob/main/LICENSE.md")
-                    },
-                ) {
+                // Opens the bundled copy rather than GitHub: the licence has to
+                // be readable by someone holding an offline build, which is most
+                // of this app's point.
+                TextButton(onClick = { showLicenses = true }) {
                     Text(stringResource(R.string.about_view_license), style = MaterialTheme.typography.bodySmall)
                 }
             }

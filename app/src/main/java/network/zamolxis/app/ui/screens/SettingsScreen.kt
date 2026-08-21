@@ -72,6 +72,8 @@ import network.zamolxis.app.ui.screens.settings.cards.MapSourcesCard
 import network.zamolxis.app.ui.screens.settings.cards.MessageDeliveryRetrievalCard
 import network.zamolxis.app.ui.screens.settings.cards.NetworkCard
 import network.zamolxis.app.ui.screens.settings.cards.NotificationSettingsCard
+import network.zamolxis.app.security.AppLockRepository
+import network.zamolxis.app.ui.screens.settings.cards.AppLockCard
 import network.zamolxis.app.ui.screens.settings.cards.PrivacyCard
 import network.zamolxis.app.ui.screens.settings.cards.RNodeFlasherCard
 import network.zamolxis.app.ui.screens.settings.cards.ShareZamolxisCard
@@ -90,6 +92,7 @@ import network.zamolxis.app.util.LocationPermissionManager
 import network.zamolxis.app.util.safeOpenUrl
 import network.zamolxis.app.viewmodel.BlockedUsersViewModel
 import network.zamolxis.app.viewmodel.DebugViewModel
+import network.zamolxis.app.viewmodel.AppLockViewModel
 import network.zamolxis.app.viewmodel.SettingsCardId
 import network.zamolxis.app.viewmodel.SettingsViewModel
 import network.zamolxis.app.viewmodel.SharedInstanceAccessEvent
@@ -99,6 +102,10 @@ import network.zamolxis.app.viewmodel.SharedInstanceAccessEvent
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     crashReportManager: CrashReportManager,
+    // Injected rather than reached through a view model: the lock's
+    // configuration is read and written synchronously by the card, and a
+    // screen test needs to hand in its own.
+    appLockRepository: AppLockRepository,
     debugViewModel: DebugViewModel = hiltViewModel(),
     onNavigateToInterfaces: () -> Unit = {},
     onNavigateToBleConnections: () -> Unit = {},
@@ -115,6 +122,7 @@ fun SettingsScreen(
     onNavigateToBlockedUsers: () -> Unit = {},
 ) {
     val blockedUsersViewModel: BlockedUsersViewModel = hiltViewModel()
+    val appLockViewModel: AppLockViewModel = hiltViewModel()
     val state by viewModel.state.collectAsState()
     val blockedPeerCount by blockedUsersViewModel.blockedPeerCount.collectAsState()
     val qrCodeData by debugViewModel.qrCodeData.collectAsState()
@@ -338,6 +346,13 @@ fun SettingsScreen(
                     onAllowCallsFromContactsOnlyChange = { viewModel.setAllowCallsFromContactsOnly(it) },
                     blockedPeerCount = blockedPeerCount,
                     onNavigateToBlockedUsers = onNavigateToBlockedUsers,
+                )
+
+                AppLockCard(
+                    isExpanded = state.cardExpansionStates[SettingsCardId.APP_LOCK.name] ?: false,
+                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.APP_LOCK, it) },
+                    repository = appLockRepository,
+                    onConfigurationChanged = { appLockViewModel.refreshConfiguration() },
                 )
 
                 NotificationSettingsCard(

@@ -15,6 +15,7 @@ data class OnboardingState(
     val notificationsEnabled: Boolean = false,
     val notificationsGranted: Boolean = false,
     val batteryOptimizationExempt: Boolean = false,
+    val microphoneGranted: Boolean = false,
     val crashReportingEnabled: Boolean = false,
     val isSaving: Boolean = false,
     val isLoading: Boolean = true,

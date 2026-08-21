@@ -3,6 +3,9 @@ package network.zamolxis.app.ui.screens.onboarding.pages
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -47,7 +50,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -65,7 +70,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -85,7 +92,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -103,7 +112,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -121,7 +132,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -141,7 +154,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -159,7 +174,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -177,7 +194,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = true, // Battery already exempt to isolate notification button
+                microphoneGranted = true, // Granted so only the notification card offers Enable
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -196,7 +215,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = true, // Battery already exempt to isolate notification button
+                microphoneGranted = true, // Granted so only the notification card offers Enable
                 onEnableNotifications = { callbackInvoked = true },
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -217,7 +238,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = true,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -237,7 +260,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -255,7 +280,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -273,7 +300,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -291,7 +320,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = true, // Notification granted to isolate battery button
                 batteryOptimizationExempt = false,
+                microphoneGranted = true, // Granted so this test keeps exactly one Enable button
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -310,7 +341,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = true, // Notification granted to isolate battery button
                 batteryOptimizationExempt = false,
+                microphoneGranted = true, // Granted so this test keeps exactly one Enable button
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = { callbackInvoked = true },
                 onBack = {},
                 onContinue = {},
@@ -331,7 +364,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = true,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -345,13 +380,15 @@ class PermissionsPageTest {
     // ========== Both Permissions Granted Tests ==========
 
     @Test
-    fun bothPermissionsGranted_showsTwoSuccessIndicators() {
+    fun allPermissionsGranted_showsNoEnableButtons() {
         // When
         composeTestRule.setContent {
             PermissionsPage(
                 notificationsGranted = true,
                 batteryOptimizationExempt = true,
+                microphoneGranted = true, // Granted so this test keeps exactly one Enable button
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -363,22 +400,89 @@ class PermissionsPageTest {
     }
 
     @Test
-    fun noPermissionsGranted_showsTwoEnableButtons() {
+    fun noPermissionsGranted_showsEveryPermissionCard() {
         // When
         composeTestRule.setContent {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
             )
         }
 
-        // Then - Both permission cards should show their titles
+        // Then - Every permission card should show its title
         composeTestRule.onNodeWithText("Notifications").assertIsDisplayed()
         composeTestRule.onNodeWithText("Unrestricted Battery").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Microphone").performScrollTo().assertIsDisplayed()
+    }
+
+    // ========== Microphone Tests ==========
+
+    /**
+     * The reason this card exists: asking for the microphone at the first
+     * incoming call means a permission dialog on top of a ringing phone, and
+     * the call is usually gone by the time it is answered.
+     */
+    @Test
+    fun microphoneCard_showsEnableButton_whenNotGranted() {
+        composeTestRule.setContent {
+            PermissionsPage(
+                notificationsGranted = true, // Granted so only the microphone card offers Enable
+                batteryOptimizationExempt = true,
+                microphoneGranted = false,
+                onEnableNotifications = {},
+                onEnableMicrophone = {},
+                onEnableBatteryOptimization = {},
+                onBack = {},
+                onContinue = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("Enable").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun microphoneEnableButton_triggersCallback() {
+        var callbackInvoked = false
+        composeTestRule.setContent {
+            PermissionsPage(
+                notificationsGranted = true, // Granted so only the microphone card offers Enable
+                batteryOptimizationExempt = true,
+                microphoneGranted = false,
+                onEnableNotifications = {},
+                onEnableMicrophone = { callbackInvoked = true },
+                onEnableBatteryOptimization = {},
+                onBack = {},
+                onContinue = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("Enable").performScrollTo().performClick()
+
+        assertTrue("onEnableMicrophone callback should be invoked", callbackInvoked)
+    }
+
+    @Test
+    fun microphoneCard_showsSuccessIndicator_whenGranted() {
+        composeTestRule.setContent {
+            PermissionsPage(
+                notificationsGranted = false,
+                batteryOptimizationExempt = false,
+                microphoneGranted = true,
+                onEnableNotifications = {},
+                onEnableMicrophone = {},
+                onEnableBatteryOptimization = {},
+                onBack = {},
+                onContinue = {},
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Granted").performScrollTo().assertIsDisplayed()
     }
 
     // ========== Navigation Button Tests ==========
@@ -390,7 +494,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -409,7 +515,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = { callbackInvoked = true },
                 onContinue = {},
@@ -430,7 +538,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -449,7 +559,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = { callbackInvoked = true },
@@ -473,7 +585,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = { callCount++ },
                 onContinue = {},
@@ -495,7 +609,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = { callCount++ },
@@ -517,7 +633,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = true, // Isolate notification button
+                microphoneGranted = true, // Granted so only the notification card offers Enable
                 onEnableNotifications = { callCount++ },
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
@@ -539,7 +657,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = true, // Isolate battery button
                 batteryOptimizationExempt = false,
+                microphoneGranted = true, // Granted so this test keeps exactly one Enable button
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = { callCount++ },
                 onBack = {},
                 onContinue = {},
@@ -561,19 +681,22 @@ class PermissionsPageTest {
         composeTestRule.setContent {
             PermissionsPage(
                 notificationsGranted = true,
-                batteryOptimizationExempt = false, // Battery not exempt so we have exactly one Granted icon
+                batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},
             )
         }
 
-        // Then - Notification Granted indicator should be visible (scroll to make visible)
-        composeTestRule.onNodeWithContentDescription("Granted").performScrollTo().assertIsDisplayed()
-
-        // And - Battery Enable button should still exist
-        composeTestRule.onNodeWithText("Enable").performScrollTo().assertIsDisplayed()
+        // Then - exactly the granted card shows a success indicator, and the two
+        // that are not granted still offer their buttons. Asserted by count
+        // rather than by a single node: with three cards on the page, "the
+        // Granted icon" is no longer unambiguous.
+        composeTestRule.onAllNodesWithContentDescription("Granted").assertCountEquals(1)
+        composeTestRule.onAllNodesWithText("Enable").assertCountEquals(2)
     }
 
     // ========== Complete Page Layout Tests ==========
@@ -585,7 +708,9 @@ class PermissionsPageTest {
             PermissionsPage(
                 notificationsGranted = false,
                 batteryOptimizationExempt = false,
+                microphoneGranted = false,
                 onEnableNotifications = {},
+                onEnableMicrophone = {},
                 onEnableBatteryOptimization = {},
                 onBack = {},
                 onContinue = {},

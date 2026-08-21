@@ -57,6 +57,7 @@ import javax.inject.Inject
  */
 enum class SettingsCardId {
     NETWORK,
+    APP_LOCK,
     IDENTITY,
     PRIVACY,
     NOTIFICATIONS,

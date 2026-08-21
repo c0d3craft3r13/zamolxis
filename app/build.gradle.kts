@@ -490,6 +490,11 @@ dependencies {
 
     implementation(project(":data"))
     implementation(project(":crypto-pq"))
+    // PBKDF2-HMAC-SHA256 for the app-lock PIN. The platform's
+    // SecretKeyFactory only offers SHA-256 from API 26 and this app supports
+    // 24, where it would quietly fall back to SHA-1. Already in the APK via
+    // :crypto-pq, so declaring it here costs nothing.
+    implementation(libs.bouncycastle)
     implementation(libs.lxst.kt)
     // :rns-api — the backend-seam contract (value types, sub-interfaces, AIDL).
     // Was reaching :app transitively through :reticulum until A.12 deleted that

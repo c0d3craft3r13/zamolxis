@@ -325,6 +325,9 @@
     <string name="onboarding_battery_title">Без ограничений батареи</string>
     <string name="onboarding_battery_description">Получайте сообщения даже в режиме ожидания</string>
     <string name="onboarding_battery_secondary">Не даёт Android приостанавливать Zamolxis</string>
+    <string name="onboarding_microphone_title">Микрофон</string>
+    <string name="onboarding_microphone_description">Звонить и отвечать на звонки, записывать голосовые</string>
+    <string name="onboarding_microphone_secondary">Спрашиваем заранее, чтобы запрос не всплыл поверх входящего звонка</string>
     <string name="onboarding_permission_granted">Разрешено</string>
     <string name="onboarding_connectivity_title">Как вы будете подключаться?</string>
     <string name="onboarding_connectivity_subtitle">Выберите сети, которые хотите использовать:</string>
@@ -1067,6 +1070,38 @@
     <string name="pq_state_unopened_sub">Шифртекст сохранён, поэтому сообщение может открыться после решения по смене ключа или восстановления пары ключей.</string>
     <string name="about_forked_from">Форк проекта Columba © Участники Columba, используется по лицензии MPL 2.0</string>
     <string name="about_view_license">Открыть лицензию</string>
+    <string name="licenses_title">Лицензии</string>
+    <string name="licenses_this_app_title">Zamolxis</string>
+    <string name="licenses_this_app_body">Распространяется по Mozilla Public License 2.0. Программу можно использовать, изменять и распространять; если вы распространяете изменённый файл, он остаётся под той же лицензией, а его исходный код должен быть доступен.</string>
+    <string name="licenses_upstream_title">Апстрим</string>
+    <string name="licenses_upstream_body">Zamolxis — форк Columba © Columba Contributors, используется по Mozilla Public License 2.0. Апстрим-проект не связан с Zamolxis и не поддерживает его. Это уведомление требуется MPL 2.0 §3.3 и остаётся в каждой сборке.</string>
+    <string name="licenses_components_title">Встроенные компоненты</string>
+    <string name="licenses_components_body">reticulum-kt, LXMF-kt и LXST-kt © torlando-tech, Mozilla Public License 2.0 — вендорены в сборку, чтобы она собиралась без внешнего репозитория.
+
+Reticulum и LXMF (python-бэкенд) © Mark Qvist и контрибьюторы, Mozilla Public License 2.0.
+
+Bouncy Castle © The Legion of the Bouncy Castle Inc., лицензия MIT — даёт ML-KEM-768, X25519, HKDF и AES-GCM для постквантового слоя.</string>
+    <string name="licenses_full_text_title">Mozilla Public License 2.0</string>
+    <string name="app_lock_title">Введите PIN</string>
+    <string name="app_lock_subtitle">Zamolxis заблокирован</string>
+    <string name="app_lock_incorrect">Неверный PIN</string>
+    <string name="app_lock_backspace">Стереть последнюю цифру</string>
+    <string name="app_lock_confirm">Подтвердить</string>
+    <string name="app_lock_settings_title">Блокировка приложения</string>
+    <string name="app_lock_settings_description">Спрашивать PIN при открытии Zamolxis</string>
+    <string name="app_lock_set_unlock">Задать PIN разблокировки</string>
+    <string name="app_lock_change_unlock">Сменить PIN разблокировки</string>
+    <string name="app_lock_set_duress">Задать PIN уничтожения</string>
+    <string name="app_lock_change_duress">Сменить PIN уничтожения</string>
+    <string name="app_lock_remove_duress">Убрать PIN уничтожения</string>
+    <string name="app_lock_disable">Выключить блокировку</string>
+    <string name="app_lock_duress_explainer">Второй PIN, который стирает все сообщения, контакты и ключи на этом устройстве, а затем открывает Zamolxis так, будто он только что установлен. Ни предупреждения, ни подтверждения — со стороны видно лишь пустое приложение. Для случая, когда вас заставляют разблокировать телефон.</string>
+    <string name="app_lock_duress_warning">Отмены нет и резервной копии нет. Ввод этого PIN уничтожает всё.</string>
+    <string name="app_lock_enter_new">Введите новый PIN (%1$d–%2$d цифр)</string>
+    <string name="app_lock_repeat">Повторите PIN</string>
+    <string name="app_lock_mismatch">Введённые PIN не совпали</string>
+    <string name="app_lock_rejected">Выберите другой PIN — он не должен совпадать со вторым</string>
+    <string name="app_lock_duress_needs_unlock">Сначала задайте PIN разблокировки</string>
     <string name="about_built_with">Создано с помощью</string>
     <string name="about_updates">Обновления</string>
     <string name="about_prereleases">Включая предрелизы</string>

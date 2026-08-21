@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -37,14 +38,17 @@ import androidx.compose.ui.res.stringResource
 import network.zamolxis.app.R
 
 /**
- * Permissions page - explains and requests notification and battery permissions.
+ * Permissions page - explains and requests notification, battery and
+ * microphone permissions.
  */
 @Composable
 fun PermissionsPage(
     notificationsGranted: Boolean,
     batteryOptimizationExempt: Boolean,
+    microphoneGranted: Boolean,
     onEnableNotifications: () -> Unit,
     onEnableBatteryOptimization: () -> Unit,
+    onEnableMicrophone: () -> Unit,
     onBack: () -> Unit,
     onContinue: () -> Unit,
     modifier: Modifier = Modifier,
@@ -121,6 +125,19 @@ fun PermissionsPage(
             secondaryDescription = stringResource(R.string.onboarding_battery_secondary),
             isGranted = batteryOptimizationExempt,
             onEnable = onEnableBatteryOptimization,
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Microphone card. Asked here rather than when a call arrives — by then
+        // the phone is ringing and the dialog eats the seconds the call had.
+        PermissionCard(
+            icon = Icons.Default.Mic,
+            title = stringResource(R.string.onboarding_microphone_title),
+            description = stringResource(R.string.onboarding_microphone_description),
+            secondaryDescription = stringResource(R.string.onboarding_microphone_secondary),
+            isGranted = microphoneGranted,
+            onEnable = onEnableMicrophone,
         )
 
         Spacer(modifier = Modifier.weight(1f))

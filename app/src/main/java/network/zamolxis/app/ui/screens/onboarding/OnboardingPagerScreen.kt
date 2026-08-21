@@ -95,6 +95,14 @@ fun OnboardingPagerScreen(
             viewModel.onNotificationPermissionResult(granted)
         }
 
+    // Microphone permission launcher (voice calls and voice messages)
+    val microphonePermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            viewModel.onMicrophonePermissionResult(granted)
+        }
+
     // BLE permissions launcher
     val blePermissionsLauncher =
         rememberLauncherForActivityResult(
@@ -123,6 +131,7 @@ fun OnboardingPagerScreen(
                 if (event == Lifecycle.Event.ON_RESUME) {
                     viewModel.checkBatteryOptimizationStatus(context)
                     viewModel.checkNotificationPermissionStatus(context)
+                    viewModel.checkMicrophonePermissionStatus(context)
                     viewModel.checkBlePermissionsStatus(context)
                 }
             }
@@ -227,6 +236,10 @@ fun OnboardingPagerScreen(
                             PermissionsPage(
                                 notificationsGranted = state.notificationsGranted,
                                 batteryOptimizationExempt = state.batteryOptimizationExempt,
+                                microphoneGranted = state.microphoneGranted,
+                                onEnableMicrophone = {
+                                    microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                },
                                 onEnableNotifications = {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                         notificationPermissionLauncher.launch(

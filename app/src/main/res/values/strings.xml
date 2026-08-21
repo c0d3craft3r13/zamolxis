@@ -317,6 +317,9 @@ TO TALK</string>
     <string name="onboarding_battery_title">Unrestricted Battery</string>
     <string name="onboarding_battery_description">Receive messages even when phone is idle</string>
     <string name="onboarding_battery_secondary">Prevents Android from pausing Zamolxis</string>
+    <string name="onboarding_microphone_title">Microphone</string>
+    <string name="onboarding_microphone_description">Make and answer voice calls, record voice messages</string>
+    <string name="onboarding_microphone_secondary">Asked now so a ringing call is not interrupted by a permission prompt</string>
     <string name="onboarding_permission_granted">Granted</string>
     <string name="onboarding_connectivity_title">How will you connect?</string>
     <string name="onboarding_connectivity_subtitle">Select the networks you\'d like to use:</string>
@@ -1043,6 +1046,38 @@ TO TALK</string>
     <string name="pq_state_unopened_sub">The ciphertext is kept, so it may still open once a key change is resolved or a key pair is restored.</string>
     <string name="about_forked_from">Forked from Columba © Columba Contributors, used under MPL 2.0</string>
     <string name="about_view_license">View License</string>
+    <string name="licenses_title">Licences</string>
+    <string name="licenses_this_app_title">Zamolxis</string>
+    <string name="licenses_this_app_body">Released under the Mozilla Public License 2.0. You may use, modify and redistribute this software; if you distribute a modified version of a covered file, that file stays under the same licence and its source must be made available.</string>
+    <string name="licenses_upstream_title">Upstream</string>
+    <string name="licenses_upstream_body">Zamolxis is a fork of Columba © Columba Contributors, used under the Mozilla Public License 2.0. The upstream project is not affiliated with Zamolxis and does not endorse it. This notice is required by MPL 2.0 §3.3 and stays with every build.</string>
+    <string name="licenses_components_title">Bundled components</string>
+    <string name="licenses_components_body">reticulum-kt, LXMF-kt and LXST-kt © torlando-tech, under the Mozilla Public License 2.0 — vendored into this build so it needs no package host to compile.
+
+Reticulum and LXMF (Python backend) © Mark Qvist and contributors, under the Mozilla Public License 2.0.
+
+Bouncy Castle © The Legion of the Bouncy Castle Inc., under the MIT licence — provides ML-KEM-768, X25519, HKDF and AES-GCM for the post-quantum layer.</string>
+    <string name="licenses_full_text_title">Mozilla Public License 2.0</string>
+    <string name="app_lock_title">Enter PIN</string>
+    <string name="app_lock_subtitle">Zamolxis is locked</string>
+    <string name="app_lock_incorrect">Incorrect PIN</string>
+    <string name="app_lock_backspace">Delete last digit</string>
+    <string name="app_lock_confirm">Confirm</string>
+    <string name="app_lock_settings_title">App lock</string>
+    <string name="app_lock_settings_description">Require a PIN to open Zamolxis</string>
+    <string name="app_lock_set_unlock">Set unlock PIN</string>
+    <string name="app_lock_change_unlock">Change unlock PIN</string>
+    <string name="app_lock_set_duress">Set duress PIN</string>
+    <string name="app_lock_change_duress">Change duress PIN</string>
+    <string name="app_lock_remove_duress">Remove duress PIN</string>
+    <string name="app_lock_disable">Turn off app lock</string>
+    <string name="app_lock_duress_explainer">A second PIN that erases every message, contact and key on this device, then opens Zamolxis as if it were newly installed. It gives no warning and shows no confirmation — anyone watching sees only an empty app. Use it when you are made to unlock the phone.</string>
+    <string name="app_lock_duress_warning">There is no undo and no backup. Entering this PIN destroys everything.</string>
+    <string name="app_lock_enter_new">Enter a new PIN (%1$d–%2$d digits)</string>
+    <string name="app_lock_repeat">Repeat the PIN</string>
+    <string name="app_lock_mismatch">The two entries did not match</string>
+    <string name="app_lock_rejected">Pick a different PIN — it must not match your other one</string>
+    <string name="app_lock_duress_needs_unlock">Set an unlock PIN first</string>
     <string name="about_built_with">Built With</string>
     <string name="about_updates">Updates</string>
     <string name="about_prereleases">Include pre-releases</string>

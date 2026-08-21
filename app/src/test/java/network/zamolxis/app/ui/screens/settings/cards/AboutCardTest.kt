@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -180,9 +181,46 @@ class AboutCardTest {
         composeTestRule.onNodeWithText("Report Bug").assertExists()
     }
 
+    /**
+     * The licence button used to open GitHub, and this test used to assert it
+     * failed gracefully with no browser. It now opens the bundled copy instead,
+     * so the thing worth asserting is that it launches nothing at all — an
+     * offline build has to be able to show its licence.
+     */
     @Test
-    fun `view license handles missing external activity without crashing`() {
-        assertMissingExternalActivityHandled("View License")
+    fun `view license opens in app without launching anything external`() {
+        val baseContext = ApplicationProvider.getApplicationContext<Context>()
+        var launchAttempts = 0
+        val noExternalActivityContext =
+            object : ContextWrapper(baseContext) {
+                override fun startActivity(intent: Intent) {
+                    launchAttempts += 1
+                }
+            }
+
+        composeTestRule.setContent {
+            CompositionLocalProvider(LocalContext provides noExternalActivityContext) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    ZamolxisTheme {
+                        AboutCard(
+                            isExpanded = true,
+                            onExpandedChange = {},
+                            systemInfo = fullSystemInfo,
+                            onCopySystemInfo = {},
+                            onReportBug = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        composeTestRule
+            .onNodeWithText("View License")
+            .performScrollTo()
+            .performClick()
+
+        assertEquals("licence must not leave the app", 0, launchAttempts)
+        composeTestRule.onNodeWithText("Licences").assertIsDisplayed()
     }
 
     @Test
@@ -207,7 +245,7 @@ class AboutCardTest {
     @Test
     fun `external links handle security exception without crashing`() {
         assertMissingExternalActivityHandled(
-            buttonText = "View License",
+            buttonText = "GitHub Repository",
             launchFailure = SecurityException("External activities blocked"),
         )
     }

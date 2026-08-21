@@ -145,6 +145,33 @@ class OnboardingViewModel
         }
 
         /**
+         * Handle microphone permission result.
+         */
+        fun onMicrophonePermissionResult(granted: Boolean) {
+            _state.value = _state.value.copy(microphoneGranted = granted)
+            Log.d(TAG, "Microphone permission result: granted=$granted")
+        }
+
+        /**
+         * Re-evaluate the RECORD_AUDIO runtime permission.
+         *
+         * Asked during onboarding rather than at the first call, because the
+         * first call is an incoming one: the phone is already ringing, and a
+         * permission dialog on top of it costs the seconds the call had.
+         * Declining here is fine — the call screens still ask, and the
+         * microphone is not needed for anything else.
+         */
+        fun checkMicrophonePermissionStatus(context: Context) {
+            val granted =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.RECORD_AUDIO,
+                ) == PackageManager.PERMISSION_GRANTED
+            _state.value = _state.value.copy(microphoneGranted = granted)
+            Log.d(TAG, "Microphone permission status: granted=$granted")
+        }
+
+        /**
          * Handle BLE permissions result.
          */
         fun onBlePermissionsResult(

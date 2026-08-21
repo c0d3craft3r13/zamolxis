@@ -44,6 +44,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -59,6 +60,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -128,6 +131,8 @@ import network.zamolxis.app.ui.screens.flasher.PyxisUpdaterScreen
 import network.zamolxis.app.ui.screens.flasher.RNodeFlasherScreen
 import network.zamolxis.app.ui.screens.offlinemaps.OfflineMapDownloadScreen
 import network.zamolxis.app.ui.screens.offlinemaps.OfflineMapsScreen
+import network.zamolxis.app.security.AppLockRepository
+import network.zamolxis.app.ui.screens.AppLockScreen
 import network.zamolxis.app.ui.screens.onboarding.OnboardingPagerScreen
 import network.zamolxis.app.ui.screens.tcpclient.TcpClientWizardScreen
 import network.zamolxis.app.ui.theme.ZamolxisTheme
@@ -135,6 +140,8 @@ import network.zamolxis.app.ui.theme.ThemeMode
 import network.zamolxis.app.ui.util.LifecycleGuard
 import network.zamolxis.app.util.CrashReportManager
 import network.zamolxis.app.util.InterfaceReconnectSignal
+import network.zamolxis.app.viewmodel.AppLockState
+import network.zamolxis.app.viewmodel.AppLockViewModel
 import network.zamolxis.app.viewmodel.ContactsViewModel
 import network.zamolxis.app.viewmodel.MapViewModel
 import network.zamolxis.app.viewmodel.OnboardingViewModel
@@ -169,6 +176,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var crashReportManager: CrashReportManager
+
+    @Inject
+    lateinit var appLockRepository: AppLockRepository
 
     @Inject
     lateinit var transportAdmin: RnsTransportAdmin
@@ -356,12 +366,15 @@ class MainActivity : ComponentActivity() {
                 LocalCapabilities provides capabilities,
                 LocalWindowSize provides windowSizeClass,
             ) {
-                ZamolxisNavigation(
-                    pendingNavigation = pendingNavigation,
-                    interfaceRepository = interfaceRepository,
-                    crashReportManager = crashReportManager,
-                    detachedUsbDeviceEvents = detachedUsbDeviceEvents,
-                )
+                AppLockGate(activity = this@MainActivity) {
+                    ZamolxisNavigation(
+                        pendingNavigation = pendingNavigation,
+                        interfaceRepository = interfaceRepository,
+                        crashReportManager = crashReportManager,
+                        appLockRepository = appLockRepository,
+                        detachedUsbDeviceEvents = detachedUsbDeviceEvents,
+                    )
+                }
             }
         }
 
@@ -703,12 +716,49 @@ sealed class Screen(
     object Settings : Screen(AppDestination.SETTINGS.routePattern, "Settings", Icons.Default.Settings)
 }
 
+/**
+ * Renders [content] only once the app is unlocked.
+ *
+ * Placed above the navigation host rather than inside it as a route. A route
+ * can be arrived at without passing through a gate — by a deep link, a
+ * notification tap, or a back stack restored after process death — and each of
+ * those would open a conversation without the PIN ever being asked for.
+ */
+@Composable
+private fun AppLockGate(
+    activity: ComponentActivity,
+    content: @Composable () -> Unit,
+) {
+    val appLockViewModel: AppLockViewModel = hiltViewModel()
+    val appLockState by appLockViewModel.state.collectAsState()
+
+    DisposableEffect(activity, appLockViewModel) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_STOP) appLockViewModel.onMovedToBackground()
+            }
+        activity.lifecycle.addObserver(observer)
+        onDispose { activity.lifecycle.removeObserver(observer) }
+    }
+
+    when (val lock = appLockState) {
+        is AppLockState.Locked ->
+            AppLockScreen(
+                failedAttempts = lock.failedAttempts,
+                busy = lock.busy,
+                onSubmit = { pin -> appLockViewModel.submitPin(activity, pin) },
+            )
+        else -> content()
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ZamolxisNavigation(
     pendingNavigation: MutableState<PendingNavigation?>,
     interfaceRepository: InterfaceRepository,
     crashReportManager: CrashReportManager,
+    appLockRepository: AppLockRepository,
     detachedUsbDeviceEvents: Flow<Int>,
 ) {
     val context = LocalContext.current
@@ -1656,6 +1706,7 @@ fun ZamolxisNavigation(
                                 SettingsScreen(
                                     viewModel = settingsViewModel,
                                     crashReportManager = crashReportManager,
+                                    appLockRepository = appLockRepository,
                                     onNavigateToInterfaces = {
                                         navController.navigate("interface_management")
                                     },
