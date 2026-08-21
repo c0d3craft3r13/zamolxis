@@ -29,6 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -39,7 +41,7 @@ import network.zamolxis.app.R
 import network.zamolxis.app.security.AppLockRepository
 
 /**
- * The PIN pad shown in place of the app's contents while it is locked.
+ * The PIN pad drawn over the app's contents while it is locked.
  *
  * Deliberately plain. It says "Enter PIN" and nothing else — no hint about
  * how long the PIN is, no mention that a second PIN exists, and no distinct
@@ -67,7 +69,26 @@ fun AppLockScreen(
         onSubmit(entered)
     }
 
-    Surface(modifier = modifier.fillMaxSize()) {
+    Surface(
+        modifier =
+            modifier
+                .fillMaxSize()
+                // Makes the overlay hit-testable, so touches stop here instead
+                // of falling through to the navigation host still composed
+                // underneath. Consuming happens on the Final pass, after the
+                // children have had theirs: the keypad needs its own taps, and
+                // swallowing on Initial would block the very buttons the user
+                // has to press to get in.
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            awaitPointerEvent(PointerEventPass.Final)
+                                .changes
+                                .forEach { it.consume() }
+                        }
+                    }
+                },
+    ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

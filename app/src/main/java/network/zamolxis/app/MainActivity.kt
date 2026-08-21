@@ -717,7 +717,7 @@ sealed class Screen(
 }
 
 /**
- * Renders [content] only once the app is unlocked.
+ * Covers [content] with a PIN pad while the app is locked.
  *
  * Placed above the navigation host rather than inside it as a route. A route
  * can be arrived at without passing through a gate — by a deep link, a
@@ -741,14 +741,25 @@ private fun AppLockGate(
         onDispose { activity.lifecycle.removeObserver(observer) }
     }
 
-    when (val lock = appLockState) {
-        is AppLockState.Locked ->
+    // The lock is drawn *over* the content, never in place of it. Swapping the
+    // two removes the navigation host from the composition, and Compose then
+    // disposes everything under it: the NavController and its back stack, the
+    // remembered start destination, and the view models scoped to them. On
+    // unlock the tree rebuilds from nothing, resolves its start destination
+    // again, and lands on the welcome wizard — asking the user to set up an
+    // identity they already have. Locking the screen must not cost the app its
+    // state.
+    Box(modifier = Modifier.fillMaxSize()) {
+        content()
+
+        val lock = appLockState
+        if (lock is AppLockState.Locked) {
             AppLockScreen(
                 failedAttempts = lock.failedAttempts,
                 busy = lock.busy,
                 onSubmit = { pin -> appLockViewModel.submitPin(activity, pin) },
             )
-        else -> content()
+        }
     }
 }
 

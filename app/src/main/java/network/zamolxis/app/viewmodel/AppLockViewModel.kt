@@ -23,7 +23,7 @@ sealed interface AppLockState {
     /** No PIN configured — the lock is not part of this install. */
     data object Disabled : AppLockState
 
-    /** A PIN is set and has not been entered. Nothing below is rendered. */
+    /** A PIN is set and has not been entered. The app is covered, not torn down. */
     data class Locked(
         val failedAttempts: Int = 0,
         val busy: Boolean = false,
