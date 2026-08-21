@@ -244,6 +244,7 @@ import network.zamolxis.app.util.MediaPermissionManager
 import network.zamolxis.app.util.formatRelativeTime
 import network.zamolxis.app.util.formatTimeSince
 import network.zamolxis.app.util.validation.ValidationConstants
+import network.zamolxis.app.viewmodel.AttachmentViewModel
 import network.zamolxis.app.viewmodel.ContactToggleResult
 import network.zamolxis.app.viewmodel.LocationSharingViewModel
 import network.zamolxis.app.viewmodel.MessagingViewModel
@@ -383,6 +384,7 @@ fun MessagingScreen(
     viewModel: MessagingViewModel = hiltViewModel(),
     // Injectable like `viewModel` above, so a screen test can hand in its own.
     locationViewModel: LocationSharingViewModel = hiltViewModel(),
+    attachmentViewModel: AttachmentViewModel = hiltViewModel(),
 ) {
     val pagingItems = viewModel.messages.collectAsLazyPagingItems()
     val peerActivity by viewModel.peerActivity.collectAsStateWithLifecycle()
@@ -435,27 +437,30 @@ fun MessagingScreen(
     }
 
     // Consume shared images from external share intent.
-    // For a single image, processImageWithCompression reads _currentConversation which may
-    // not be set yet from the loadMessages LaunchedEffect — it falls back to the saved
-    // compression preset, which is functionally safe (just skips link-based recommendation).
     LaunchedEffect(destinationHash, sharedImagesFromViewModel) {
         val pendingUris = sharedImageViewModel.consumeForDestination(destinationHash)
         if (!pendingUris.isNullOrEmpty()) {
             if (pendingUris.size == 1) {
                 // Single image: use existing flow (preview in composer, user sends manually)
-                viewModel.processImageWithCompression(context, pendingUris.first())
+                attachmentViewModel.processImageWithCompression(context, pendingUris.first(), destinationHash)
             } else {
                 // Multiple images: show one quality dialog, then compress+send each as a message
-                viewModel.processSharedImages(context, pendingUris, destinationHash)
+                attachmentViewModel.processSharedImages(context, pendingUris, destinationHash)
             }
         }
     }
 
+    // The quality dialog is answered in AttachmentViewModel; the batch it approves
+    // is sent here, because sending is not the composer's job.
+    LaunchedEffect(attachmentViewModel, viewModel) {
+        attachmentViewModel.sharedImageRequest.collect { request ->
+            viewModel.sendSharedImages(request)
+        }
+    }
+
     // Image selection state
-    val selectedImageData by viewModel.selectedImageData.collectAsStateWithLifecycle()
-    val selectedImageFormat by viewModel.selectedImageFormat.collectAsStateWithLifecycle()
-    val selectedImageIsAnimated by viewModel.selectedImageIsAnimated.collectAsStateWithLifecycle()
-    val isProcessingImage by viewModel.isProcessingImage.collectAsStateWithLifecycle()
+    val selectedImageData by attachmentViewModel.selectedImageData.collectAsStateWithLifecycle()
+    val selectedImageIsAnimated by attachmentViewModel.selectedImageIsAnimated.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
     val syncProgress by viewModel.syncProgress.collectAsStateWithLifecycle()
     val transferProgress by viewModel.transferProgress.collectAsStateWithLifecycle()
@@ -476,9 +481,8 @@ fun MessagingScreen(
     val isTransportEnabled by viewModel.isTransportEnabled.collectAsStateWithLifecycle()
 
     // File attachment state
-    val selectedFileAttachments by viewModel.selectedFileAttachments.collectAsStateWithLifecycle()
-    val totalAttachmentSize by viewModel.totalAttachmentSize.collectAsStateWithLifecycle()
-    val isProcessingFile by viewModel.isProcessingFile.collectAsStateWithLifecycle()
+    val selectedFileAttachments by attachmentViewModel.selectedFileAttachments.collectAsStateWithLifecycle()
+    val totalAttachmentSize by attachmentViewModel.totalAttachmentSize.collectAsStateWithLifecycle()
     val isSending by viewModel.isSending.collectAsStateWithLifecycle()
     val voiceRecordingState by viewModel.voiceRecordingState.collectAsStateWithLifecycle()
     val isVoiceRecordingBlockedByCall by viewModel.isVoiceRecordingBlockedByCall.collectAsStateWithLifecycle()
@@ -539,7 +543,7 @@ fun MessagingScreen(
     val scope = rememberCoroutineScope()
 
     // Image quality selection dialog state
-    val qualitySelectionState by viewModel.qualitySelectionState.collectAsStateWithLifecycle()
+    val qualitySelectionState by attachmentViewModel.qualitySelectionState.collectAsStateWithLifecycle()
 
     // Current link state for showing path info in quality dialog
     val currentLinkState by viewModel.currentLinkState.collectAsStateWithLifecycle()
@@ -612,7 +616,7 @@ fun MessagingScreen(
             contract = ActivityResultContracts.GetContent(),
         ) { uri: android.net.Uri? ->
             uri?.let {
-                viewModel.processImageWithCompression(context, it)
+                attachmentViewModel.processImageWithCompression(context, it, destinationHash)
             }
         }
 
@@ -622,13 +626,13 @@ fun MessagingScreen(
             contract = ActivityResultContracts.OpenMultipleDocuments(),
         ) { uris ->
             uris.forEach { uri ->
-                viewModel.setProcessingFile(true)
+                attachmentViewModel.setProcessingFile(true)
                 scope.launch(Dispatchers.IO) {
                     val result = FileUtils.readFileFromUriWithResult(context, uri)
                     withContext(Dispatchers.Main) {
                         when (result) {
                             is FileUtils.FileReadResult.Success -> {
-                                viewModel.addFileAttachment(result.attachment)
+                                attachmentViewModel.addFileAttachment(result.attachment, destinationHash)
                             }
                             is FileUtils.FileReadResult.FileTooLarge -> {
                                 val maxSizeKb = result.maxSize / 1024
@@ -649,7 +653,7 @@ fun MessagingScreen(
                                     ).show()
                             }
                         }
-                        viewModel.setProcessingFile(false)
+                        attachmentViewModel.setProcessingFile(false)
                     }
                 }
             }
@@ -774,11 +778,11 @@ fun MessagingScreen(
     var audioPermissionPermanentlyDenied by remember { mutableStateOf(false) }
     LaunchedEffect(destinationHash, viewModel) {
         viewModel.composerSendResult.collect { result ->
-            if (
-                result.destinationHash == destinationHash &&
-                result.clearComposer &&
-                messageText == result.submittedText
-            ) {
+            if (result.destinationHash != destinationHash || !result.clearComposer) return@collect
+            // Clears only the instances this send carried, so a photo attached
+            // while it was in flight survives.
+            result.consumedAttachments?.let(attachmentViewModel::clearSubmitted)
+            if (messageText == result.submittedText) {
                 messageText = ""
                 showVoiceControls = false
             }
@@ -1574,12 +1578,12 @@ fun MessagingScreen(
                     selectedImageData = selectedImageData,
                     selectedImageIsAnimated = selectedImageIsAnimated,
                     onImageContentReceived = { data, format, isAnimated ->
-                        viewModel.selectImage(data, format, isAnimated)
+                        attachmentViewModel.selectImage(data, format, isAnimated)
                     },
-                    onClearImage = { viewModel.clearSelectedImage() },
+                    onClearImage = { attachmentViewModel.clearSelectedImage() },
                     selectedFileAttachments = selectedFileAttachments,
                     totalAttachmentSize = totalAttachmentSize,
-                    onRemoveFileAttachment = { index -> viewModel.removeFileAttachment(index) },
+                    onRemoveFileAttachment = { index -> attachmentViewModel.removeFileAttachment(index) },
                     hasVoiceAttachment = voiceRecordingState.selectedRecording != null,
                     voiceAttachmentDurationMillis = voiceRecordingState.selectedRecording?.durationMillis,
                     voicePreviewState =
@@ -1610,7 +1614,7 @@ fun MessagingScreen(
                         if (hasComposerContent) {
                             voicePlayer.close()
                             val wasVoiceMessage = voiceRecordingState.selectedRecording != null
-                            viewModel.sendMessage(destinationHash, messageText)
+                            viewModel.sendMessage(destinationHash, messageText, attachmentViewModel.snapshot())
                             inputPanelMode =
                                 inputPanelModeAfterSend(
                                     currentMode = inputPanelMode,
@@ -1648,7 +1652,7 @@ fun MessagingScreen(
                                 )
                             },
                             onPhotoSelected = { uri ->
-                                viewModel.processImageWithCompression(context, uri)
+                                attachmentViewModel.processImageWithCompression(context, uri, destinationHash)
                                 inputPanelMode = InputPanelMode.NONE
                             },
                             onGalleryClick = {
@@ -2005,19 +2009,19 @@ fun MessagingScreen(
 
     // Image quality selection dialog
     qualitySelectionState?.let { state ->
-        val sharedImageCount = viewModel.pendingSharedImageCount()
+        val sharedImageCount = attachmentViewModel.pendingSharedImageCount()
         ImageQualitySelectionDialog(
             recommendedPreset = state.recommendedPreset,
             linkState = currentLinkState,
             transferTimeEstimates = state.transferTimeEstimates,
             onSelect = { preset ->
                 if (sharedImageCount > 1) {
-                    viewModel.selectImageQualityForSharedImages(preset)
+                    attachmentViewModel.selectImageQualityForSharedImages(preset)
                 } else {
-                    viewModel.selectImageQuality(preset)
+                    attachmentViewModel.selectImageQuality(preset)
                 }
             },
-            onDismiss = { viewModel.dismissQualitySelection() },
+            onDismiss = { attachmentViewModel.dismissQualitySelection() },
             imageCount = sharedImageCount,
         )
     }

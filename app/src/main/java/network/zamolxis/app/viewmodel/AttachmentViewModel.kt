@@ -6,47 +6,66 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import network.zamolxis.app.data.model.ImageCompressionPreset
-import network.zamolxis.app.service.AttachmentStorageService
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.service.ConversationLinkManager
 import network.zamolxis.app.util.FileAttachment
+import network.zamolxis.app.util.FileUtils
 import network.zamolxis.app.util.ImageUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 /**
- * ViewModel for managing message attachment selection and compression.
+ * Everything the composer has staged but not yet sent: the image, the file
+ * attachments, and the quality dialog that produces the image.
  *
- * Extracted from MessagingViewModel to follow single responsibility principle.
- * Handles UI state for:
- * - Image selection, compression, and quality options
- * - File attachment management (add, remove, clear)
+ * Split out of [MessagingViewModel] because it is a different job. This class
+ * answers "what is attached right now"; [MessagingViewModel] answers "put it on
+ * the wire". The two used to be one object, which is why the send path could
+ * reach into composer state mid-send and why the file was 3641 lines.
  *
- * For saving/sharing received attachments, use [AttachmentStorageService] directly.
- * This separation keeps the ViewModel focused on UI state management while
- * storage operations are handled by a dedicated service.
+ * The seam between them is deliberately one-directional and passes through the
+ * screen:
  *
- * @see AttachmentStorageService for save/share operations
+ *  - to send, the screen reads [snapshot] and hands it to
+ *    `MessagingViewModel.sendMessage(...)`. The send path never reads live
+ *    composer state, so an attachment staged while a send is in flight cannot
+ *    be picked up half-way and shipped next to somebody else's ciphertext.
+ *  - to clear, the send path reports back which instances it consumed
+ *    ([ComposerSendResult.consumedAttachments]) and the screen passes them to
+ *    [clearSubmitted], which compares by identity. Staging a new photo during a
+ *    send therefore survives that send completing.
+ *
+ * Voice recordings stay in [MessagingViewModel]: they are owned by a recorder
+ * with its own lifecycle and microphone lease, not by composer state.
  */
 @HiltViewModel
+@Suppress("TooManyFunctions")
 class AttachmentViewModel
     @Inject
     constructor(
-        val storageService: AttachmentStorageService,
+        private val settingsRepository: SettingsRepository,
+        private val conversationLinkManager: ConversationLinkManager,
     ) : ViewModel() {
         companion object {
             private const val TAG = "AttachmentViewModel"
+
+            /** How long to wait for a link probe before falling back to the saved preset. */
+            private const val LINK_PROBE_TIMEOUT_MS = 5_000L
         }
 
         // ========== Image Attachment State ==========
@@ -57,13 +76,13 @@ class AttachmentViewModel
         private val _selectedImageFormat = MutableStateFlow<String?>(null)
         val selectedImageFormat: StateFlow<String?> = _selectedImageFormat.asStateFlow()
 
-        private val _isProcessingImage = MutableStateFlow(false)
-        val isProcessingImage: StateFlow<Boolean> = _isProcessingImage.asStateFlow()
-
         private val _selectedImageIsAnimated = MutableStateFlow(false)
         val selectedImageIsAnimated: StateFlow<Boolean> = _selectedImageIsAnimated.asStateFlow()
 
-        // ========== File Attachment State ==========
+        private val _isProcessingImage = MutableStateFlow(false)
+        val isProcessingImage: StateFlow<Boolean> = _isProcessingImage.asStateFlow()
+
+        // ========== File Attachment State (LXMF Field 5) ==========
 
         private val _selectedFileAttachments = MutableStateFlow<List<FileAttachment>>(emptyList())
         val selectedFileAttachments: StateFlow<List<FileAttachment>> = _selectedFileAttachments.asStateFlow()
@@ -71,11 +90,9 @@ class AttachmentViewModel
         private val _isProcessingFile = MutableStateFlow(false)
         val isProcessingFile: StateFlow<Boolean> = _isProcessingFile.asStateFlow()
 
-        private val _fileAttachmentError = MutableSharedFlow<String>()
-        val fileAttachmentError: SharedFlow<String> = _fileAttachmentError.asSharedFlow()
-
         // ========== Computed State ==========
 
+        /** Combined size of the staged file attachments, for the composer's size chip. */
         val totalAttachmentSize: StateFlow<Int> =
             _selectedFileAttachments
                 .map { files -> files.sumOf { it.sizeBytes } }
@@ -85,9 +102,7 @@ class AttachmentViewModel
                     initialValue = 0,
                 )
 
-        /**
-         * Check if any attachments are selected (image or files).
-         */
+        /** Whether anything is staged (image or files). Voice is tracked separately. */
         val hasAttachments: StateFlow<Boolean> =
             combine(
                 _selectedImageData,
@@ -102,17 +117,34 @@ class AttachmentViewModel
 
         // ========== Quality Selection State ==========
 
-        private val _qualitySelectionState = MutableStateFlow<ImageQualitySelectionState?>(null)
-        val qualitySelectionState: StateFlow<ImageQualitySelectionState?> = _qualitySelectionState.asStateFlow()
+        private val _qualitySelectionState = MutableStateFlow<QualitySelectionState?>(null)
+        val qualitySelectionState: StateFlow<QualitySelectionState?> = _qualitySelectionState.asStateFlow()
 
-        // ========== Image Selection Methods ==========
+        // Multi-image share state: URIs pending compression+send after quality selection.
+        // Plain vars (not StateFlows) because they are always written before
+        // _qualitySelectionState triggers recomposition, so no reactive subscription is needed.
+        private var pendingSharedImageUris: List<Uri> = emptyList()
+        private var pendingSharedImageDestHash: String? = null
+
+        private val sharedImageRequests = Channel<SharedImageRequest>(Channel.BUFFERED)
 
         /**
-         * Select an image for attachment.
+         * Emitted when the user picks a quality preset for an externally shared
+         * batch of images. The batch is compressed and sent by
+         * [MessagingViewModel], which owns the send path — this view model only
+         * asks the question and reports the answer.
+         */
+        val sharedImageRequest: Flow<SharedImageRequest> = sharedImageRequests.receiveAsFlow()
+
+        // ========== Image Selection ==========
+
+        /**
+         * Stage an image for the next send.
          *
-         * @param imageData The raw image bytes
-         * @param imageFormat The image format (e.g., "jpg", "png", "gif")
-         * @param isAnimated Whether the image is animated (GIF)
+         * @param imageData the encoded image bytes
+         * @param imageFormat the container format ("jpg", "png", "gif")
+         * @param isAnimated true for a GIF whose animation survived, so the
+         *   preview plays it instead of showing a still frame
          */
         fun selectImage(
             imageData: ByteArray,
@@ -125,9 +157,6 @@ class AttachmentViewModel
             _selectedImageIsAnimated.value = isAnimated
         }
 
-        /**
-         * Clear the currently selected image.
-         */
         fun clearSelectedImage() {
             Log.d(TAG, "Clearing selected image")
             _selectedImageData.value = null
@@ -135,36 +164,37 @@ class AttachmentViewModel
             _selectedImageIsAnimated.value = false
         }
 
-        /**
-         * Set the image processing state (shown during compression).
-         */
         fun setProcessingImage(processing: Boolean) {
             _isProcessingImage.value = processing
         }
 
-        // ========== File Attachment Methods ==========
+        // ========== File Attachments ==========
 
         /**
-         * Add a file attachment.
+         * Stage a file attachment.
          *
-         * File attachments have no size limit - they are sent uncompressed.
-         * Large files may be slow or unreliable over mesh networks.
+         * File attachments have no size limit here — they are sent uncompressed,
+         * and the send path rejects a payload that is too large to fit in memory.
          *
-         * @param attachment The file attachment to add
+         * @param destinationHash the open conversation, or null when there is none.
+         *   Intent-to-transmit: the user picking a file is an explicit action that
+         *   justifies establishing the link now, so the transfer does not start
+         *   with a cold path. Passed in rather than read from a shared "current
+         *   conversation" so this view model owns no conversation state.
          */
-        fun addFileAttachment(attachment: FileAttachment) {
+        fun addFileAttachment(
+            attachment: FileAttachment,
+            destinationHash: String? = null,
+        ) {
             viewModelScope.launch {
                 val currentFiles = _selectedFileAttachments.value
                 _selectedFileAttachments.value = currentFiles + attachment
                 Log.d(TAG, "Added file attachment: ${attachment.filename} (${attachment.sizeBytes} bytes)")
+
+                destinationHash?.let { conversationLinkManager.openConversationLink(it) }
             }
         }
 
-        /**
-         * Remove a file attachment by index.
-         *
-         * @param index The index of the file to remove
-         */
         fun removeFileAttachment(index: Int) {
             val currentFiles = _selectedFileAttachments.value
             if (index in currentFiles.indices) {
@@ -174,97 +204,153 @@ class AttachmentViewModel
             }
         }
 
-        /**
-         * Clear all selected file attachments.
-         */
         fun clearFileAttachments() {
             Log.d(TAG, "Clearing all file attachments")
             _selectedFileAttachments.value = emptyList()
         }
 
-        /**
-         * Set the file processing state.
-         */
         fun setProcessingFile(processing: Boolean) {
             _isProcessingFile.value = processing
         }
 
-        /**
-         * Clear all attachments (images and files).
-         */
+        /** Drop everything staged, image and files alike. */
         fun clearAllAttachments() {
             clearSelectedImage()
             clearFileAttachments()
         }
 
+        // ========== Send hand-off ==========
+
+        /**
+         * What is staged right now, frozen for one send.
+         *
+         * The send path takes this by value. Reading composer state again later
+         * would let an attachment the user stages mid-send join a message it was
+         * never meant for.
+         */
+        fun snapshot(): ComposerAttachments =
+            ComposerAttachments(
+                imageData = _selectedImageData.value,
+                imageFormat = _selectedImageFormat.value,
+                files = _selectedFileAttachments.value,
+            )
+
+        /**
+         * Clear exactly what a completed send consumed.
+         *
+         * Compared by identity, not equality: if the user staged a new photo
+         * while the old one was going out, the new one must stay. Two photos can
+         * easily have equal bytes; they are still different attachments.
+         */
+        fun clearSubmitted(consumed: ComposerAttachments) {
+            if (consumed.imageData != null && _selectedImageData.value === consumed.imageData) {
+                clearSelectedImage()
+            }
+            if (_selectedFileAttachments.value === consumed.files) {
+                clearFileAttachments()
+            }
+        }
+
         // ========== Image Compression ==========
 
         /**
-         * Process image with compression based on user's selection.
+         * Open the quality selection dialog for a single image.
          *
-         * Shows quality selection dialog for non-animated images.
-         * For animated GIFs under the size limit, preserves animation.
-         * For oversized GIFs, compresses (losing animation).
+         * The recommended preset comes from the live link when there is one, so
+         * the default is what this path can actually carry, and falls back to the
+         * saved preference otherwise.
          *
-         * @param context Android context for compression operations
-         * @param uri URI of the image to process
-         * @param recommendedPreset The recommended preset based on network conditions
+         * @param destinationHash the open conversation, or null when the screen
+         *   has not resolved one yet — the dialog still opens, only without a
+         *   link-based recommendation.
          */
         fun processImageWithCompression(
             context: Context,
             uri: Uri,
-            recommendedPreset: ImageCompressionPreset = ImageCompressionPreset.AUTO,
+            destinationHash: String? = null,
         ) {
             viewModelScope.launch {
-                setProcessingImage(true)
+                Log.d(TAG, "Opening quality selection for image")
 
-                try {
-                    // Check for animated GIF first
-                    val rawBytes =
-                        withContext(Dispatchers.IO) {
-                            context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                        }
+                // Trigger link establishment for speed probing when the user attaches an image
+                destinationHash?.let { conversationLinkManager.openConversationLink(it) }
 
-                    if (rawBytes != null && ImageUtils.isAnimatedGif(rawBytes)) {
-                        if (rawBytes.size <= ImageUtils.MAX_IMAGE_SIZE_BYTES) {
-                            // Small animated GIF - preserve animation
-                            Log.d(TAG, "Preserving animated GIF (${rawBytes.size} bytes)")
-                            selectImage(rawBytes, "gif", isAnimated = true)
-                            return@launch
-                        } else {
-                            Log.w(TAG, "Animated GIF too large, will compress (animation lost)")
-                        }
-                    }
+                val linkState = destinationHash?.let { conversationLinkManager.linkStates.value[it] }
+                val recommendedPreset = recommendPreset(linkState)
+                val transferTimeEstimates = calculateTransferTimeEstimates(linkState, context, uri)
 
-                    // Show quality selection dialog for non-animated or oversized images
-                    _qualitySelectionState.value =
-                        ImageQualitySelectionState(
-                            imageUri = uri,
-                            context = context,
-                            recommendedPreset = recommendedPreset,
-                        )
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error processing image", e)
-                } finally {
-                    setProcessingImage(false)
-                }
+                _qualitySelectionState.value =
+                    QualitySelectionState(
+                        imageUri = uri,
+                        context = context,
+                        recommendedPreset = recommendedPreset,
+                        transferTimeEstimates = transferTimeEstimates,
+                    )
             }
         }
 
         /**
-         * User selected a quality preset from the dialog.
+         * Open one quality dialog for a batch of externally shared images.
          *
-         * Uses ImageUtils.compressImageWithPreset which handles:
-         * - EXIF orientation correction
-         * - Progressive quality reduction to meet target size
-         * - Proper bitmap recycling
+         * Unlike the single-image path this waits for the link probe (bounded by
+         * [LINK_PROBE_TIMEOUT_MS]) before showing the dialog: the batch is about
+         * to be sent unattended, so the transfer-time estimates the user decides
+         * on had better be real.
          */
+        fun processSharedImages(
+            context: Context,
+            uris: List<Uri>,
+            destinationHash: String,
+        ) {
+            if (uris.isEmpty()) return
+
+            // Dismiss any in-progress quality dialog to avoid sending the wrong images
+            if (_qualitySelectionState.value != null) {
+                dismissQualitySelection()
+            }
+
+            pendingSharedImageUris = uris
+            pendingSharedImageDestHash = destinationHash
+
+            viewModelScope.launch {
+                conversationLinkManager.openConversationLink(destinationHash)
+
+                val linkState =
+                    withTimeoutOrNull(LINK_PROBE_TIMEOUT_MS) {
+                        conversationLinkManager.linkStates
+                            .map { it[destinationHash] }
+                            .first { state -> state != null && !state.isEstablishing }
+                    }
+
+                val recommendedPreset = recommendPreset(linkState)
+                val transferTimeEstimates = calculateTransferTimeEstimates(linkState, context, uris.first())
+
+                _qualitySelectionState.value =
+                    QualitySelectionState(
+                        imageUri = uris.first(),
+                        context = context,
+                        recommendedPreset = recommendedPreset,
+                        transferTimeEstimates = transferTimeEstimates,
+                    )
+            }
+        }
+
+        /**
+         * How many externally shared images the open dialog is deciding for, or
+         * 0 when it belongs to the composer.
+         *
+         * The screen needs this twice: to label the dialog ("Send 5 images") and
+         * to know which of the two "user picked a preset" calls to make.
+         */
+        fun pendingSharedImageCount(): Int = pendingSharedImageUris.size
+
+        /** User picked a preset — compress and stage the image. */
         fun selectImageQuality(preset: ImageCompressionPreset) {
             val state = _qualitySelectionState.value ?: return
             _qualitySelectionState.value = null
 
             viewModelScope.launch {
-                setProcessingImage(true)
+                _isProcessingImage.value = true
                 try {
                     Log.d(TAG, "User selected quality: ${preset.name}")
 
@@ -283,37 +369,133 @@ class AttachmentViewModel
                 } catch (e: Exception) {
                     Log.e(TAG, "Error compressing image with selected quality", e)
                 } finally {
-                    setProcessingImage(false)
+                    _isProcessingImage.value = false
                 }
             }
         }
 
         /**
-         * Dismiss quality selection dialog without selecting.
+         * User picked a preset for a shared batch — hand it to the send path.
+         *
+         * Nothing is staged in the composer: the batch goes out as one message
+         * per image, so routing it through the single-image state flows would be
+         * a race with whatever the user has already typed.
          */
-        fun dismissQualitySelection() {
+        fun selectImageQualityForSharedImages(preset: ImageCompressionPreset) {
+            val state = _qualitySelectionState.value ?: return
+            val uris = pendingSharedImageUris.toList()
+            val destHash = pendingSharedImageDestHash ?: return
+
             _qualitySelectionState.value = null
+            pendingSharedImageUris = emptyList()
+            pendingSharedImageDestHash = null
+
+            viewModelScope.launch {
+                sharedImageRequests.send(
+                    SharedImageRequest(
+                        context = state.context,
+                        uris = uris,
+                        destinationHash = destHash,
+                        preset = preset,
+                    ),
+                )
+            }
         }
 
+        /** Close the dialog without choosing, discarding any pending shared batch. */
+        fun dismissQualitySelection() {
+            Log.d(TAG, "Dismissing quality selection dialog")
+            _qualitySelectionState.value = null
+            pendingSharedImageUris = emptyList()
+            pendingSharedImageDestHash = null
+        }
+
+        private suspend fun recommendPreset(linkState: ConversationLinkManager.LinkState?): ImageCompressionPreset =
+            if (linkState != null && linkState.isActive) {
+                linkState.recommendPreset()
+            } else {
+                // No active link - use saved preset or default to MEDIUM
+                val savedPreset = settingsRepository.getImageCompressionPreset()
+                if (savedPreset == ImageCompressionPreset.AUTO) {
+                    ImageCompressionPreset.MEDIUM
+                } else {
+                    savedPreset
+                }
+            }
+
         /**
-         * Emit a file attachment error for UI feedback.
+         * Transfer time estimates for each preset based on link state.
+         *
+         * For ORIGINAL preset, uses actual file size since it applies minimal compression.
+         * For other presets, uses the target size (worst-case estimate).
          */
-        fun emitFileAttachmentError(error: String) {
-            viewModelScope.launch {
-                _fileAttachmentError.emit(error)
+        private fun calculateTransferTimeEstimates(
+            linkState: ConversationLinkManager.LinkState?,
+            context: Context,
+            imageUri: Uri,
+        ): Map<ImageCompressionPreset, String?> {
+            val actualFileSize = FileUtils.getFileSize(context, imageUri)
+
+            return listOf(
+                ImageCompressionPreset.LOW,
+                ImageCompressionPreset.MEDIUM,
+                ImageCompressionPreset.HIGH,
+                ImageCompressionPreset.ORIGINAL,
+            ).associateWith { preset ->
+                val sizeBytes =
+                    if (preset == ImageCompressionPreset.ORIGINAL && actualFileSize > 0) {
+                        actualFileSize
+                    } else {
+                        preset.targetSizeBytes
+                    }
+                linkState?.estimateTransferTimeFormatted(sizeBytes)
             }
         }
     }
 
 /**
+ * The attachments one send was handed, frozen at the moment the user hit send.
+ *
+ * Deliberately not a data class: [AttachmentViewModel.clearSubmitted] compares
+ * these by identity, and generated equality over a `ByteArray` would compare by
+ * identity in one field and by value in another — the worst of both.
+ */
+class ComposerAttachments(
+    val imageData: ByteArray? = null,
+    val imageFormat: String? = null,
+    val files: List<FileAttachment> = emptyList(),
+) {
+    val isEmpty: Boolean get() = imageData == null && files.isEmpty()
+
+    companion object {
+        val NONE = ComposerAttachments()
+    }
+}
+
+/**
+ * A batch of externally shared images the user has approved a quality for.
+ *
+ * @property preset the compression the user chose, applied to every image
+ */
+data class SharedImageRequest(
+    val context: Context,
+    val uris: List<Uri>,
+    val destinationHash: String,
+    val preset: ImageCompressionPreset,
+)
+
+/**
  * State for the image quality selection dialog.
  *
- * @property imageUri The URI of the image to compress
+ * @property imageUri the image to compress, or the first of a shared batch
  * @property context Android context for compression operations
- * @property recommendedPreset The preset recommended based on network conditions
+ * @property recommendedPreset the preset recommended for the current link
+ * @property transferTimeEstimates how long each preset would take on this link,
+ *   or null entries when there is no link to estimate from
  */
-data class ImageQualitySelectionState(
+data class QualitySelectionState(
     val imageUri: Uri,
     val context: Context,
     val recommendedPreset: ImageCompressionPreset,
+    val transferTimeEstimates: Map<ImageCompressionPreset, String?>,
 )

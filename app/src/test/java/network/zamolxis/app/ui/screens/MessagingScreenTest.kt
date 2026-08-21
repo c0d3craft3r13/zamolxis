@@ -38,6 +38,8 @@ import network.zamolxis.app.ui.model.ReplyPreviewUi
 import network.zamolxis.app.viewmodel.ContactToggleResult
 import network.zamolxis.app.viewmodel.LocationSharingViewModel
 import network.zamolxis.app.viewmodel.MessagingViewModel
+import network.zamolxis.app.viewmodel.AttachmentViewModel
+import network.zamolxis.app.viewmodel.ComposerAttachments
 import network.zamolxis.app.viewmodel.ComposerSendResult
 import io.mockk.Runs
 import io.mockk.every
@@ -101,17 +103,23 @@ class MessagingScreenTest {
 
     private lateinit var mockViewModel: MessagingViewModel
     private lateinit var mockLocationViewModel: LocationSharingViewModel
+    private lateinit var mockAttachmentViewModel: AttachmentViewModel
 
     @Suppress("NoRelaxedMocks") // MessagingViewModel is a complex Android ViewModel with many internal behaviors
     @Before
     fun setup() {
         mockViewModel = mockk(relaxed = true)
+        // Composer attachments live in their own view model, injected the same way.
+        mockAttachmentViewModel = mockk(relaxed = true)
+        every { mockAttachmentViewModel.snapshot() } returns ComposerAttachments.NONE
+        every { mockAttachmentViewModel.sharedImageRequest } returns MutableSharedFlow()
+        every { mockAttachmentViewModel.pendingSharedImageCount() } returns 0
 
         // Stub void methods called by UI interactions
         every { mockViewModel.syncFromPropagationNode() } just Runs
         every { mockViewModel.toggleContact() } just Runs
-        every { mockViewModel.sendMessage(any(), any()) } just Runs
-        every { mockViewModel.clearSelectedImage() } just Runs
+        every { mockViewModel.sendMessage(any(), any(), any()) } just Runs
+        every { mockAttachmentViewModel.clearSelectedImage() } just Runs
         every { mockViewModel.loadMessages(any(), any()) } just Runs
         every { mockViewModel.loadImageAsync(any(), any()) } just Runs
         every { mockViewModel.clearReplyTo() } just Runs
@@ -129,9 +137,9 @@ class MessagingScreenTest {
         every { mockViewModel.refreshPqKeyChange(any()) } just Runs
         every { mockViewModel.currentConversationHash } returns
             MutableStateFlow(MessagingTestFixtures.Constants.TEST_DESTINATION_HASH)
-        every { mockViewModel.selectedImageData } returns MutableStateFlow(null)
-        every { mockViewModel.selectedImageFormat } returns MutableStateFlow(null)
-        every { mockViewModel.isProcessingImage } returns MutableStateFlow(false)
+        every { mockAttachmentViewModel.selectedImageData } returns MutableStateFlow(null)
+        every { mockAttachmentViewModel.selectedImageFormat } returns MutableStateFlow(null)
+        every { mockAttachmentViewModel.isProcessingImage } returns MutableStateFlow(false)
         every { mockViewModel.isSyncing } returns MutableStateFlow(false)
         every { mockViewModel.syncProgress } returns MutableStateFlow(SyncProgress.Idle)
         every { mockViewModel.isContactSaved } returns MutableStateFlow(false)
@@ -140,11 +148,11 @@ class MessagingScreenTest {
         every { mockViewModel.loadedImageIds } returns MutableStateFlow(emptySet())
         every { mockViewModel.contactToggleResult } returns MutableSharedFlow()
         // File attachment mocks
-        every { mockViewModel.selectedFileAttachments } returns MutableStateFlow(emptyList())
-        every { mockViewModel.totalAttachmentSize } returns MutableStateFlow(0)
+        every { mockAttachmentViewModel.selectedFileAttachments } returns MutableStateFlow(emptyList())
+        every { mockAttachmentViewModel.totalAttachmentSize } returns MutableStateFlow(0)
         every { mockViewModel.fileAttachmentError } returns MutableSharedFlow()
         every { mockViewModel.composerSendResult } returns MutableSharedFlow()
-        every { mockViewModel.isProcessingFile } returns MutableStateFlow(false)
+        every { mockAttachmentViewModel.isProcessingFile } returns MutableStateFlow(false)
         // Location sharing lives in its own view model, injected the same way.
         mockLocationViewModel = mockk(relaxed = true)
         every { mockLocationViewModel.locationSharingState } returns MutableStateFlow(LocationSharingState.NONE)
@@ -158,10 +166,10 @@ class MessagingScreenTest {
         every { mockViewModel.reactionModeState } returns MutableStateFlow(null)
         every { mockViewModel.myIdentityHash } returns MutableStateFlow("my-identity-hash")
         // Animated image mocks
-        every { mockViewModel.selectedImageIsAnimated } returns MutableStateFlow(false)
+        every { mockAttachmentViewModel.selectedImageIsAnimated } returns MutableStateFlow(false)
         every { mockViewModel.decodedImages } returns MutableStateFlow(emptyMap())
         // Image quality selection mocks
-        every { mockViewModel.qualitySelectionState } returns MutableStateFlow(null)
+        every { mockAttachmentViewModel.qualitySelectionState } returns MutableStateFlow(null)
         // Link state mock (replaces linkSpeedProbeState)
         every { mockViewModel.currentLinkState } returns MutableStateFlow(null)
         // Conversation link state mock
@@ -197,6 +205,7 @@ class MessagingScreenTest {
                 onViewMessageDetails = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -217,6 +226,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -236,6 +246,7 @@ class MessagingScreenTest {
                 onBackClick = { backClicked = true },
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -257,6 +268,7 @@ class MessagingScreenTest {
                 onBackClick = { backClicked = true },
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -279,6 +291,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -318,6 +331,7 @@ class MessagingScreenTest {
                 onPeerClick = { peerClicked = true },
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -338,6 +352,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -363,6 +378,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -389,6 +405,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -409,6 +426,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -428,6 +446,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -454,6 +473,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -491,6 +511,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -519,6 +540,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -544,6 +566,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -566,6 +589,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -588,6 +612,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -625,6 +650,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -642,6 +668,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -655,7 +682,7 @@ class MessagingScreenTest {
     @Test
     fun inputBar_withImageOnly_sendButtonEnabled() {
         // Given - image selected but no text
-        every { mockViewModel.selectedImageData } returns
+        every { mockAttachmentViewModel.selectedImageData } returns
             MutableStateFlow(
                 MessagingTestFixtures.createTestImageData(),
             )
@@ -667,6 +694,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -684,6 +712,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -709,6 +738,7 @@ class MessagingScreenTest {
                     onBackClick = {},
                     viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                 )
             }
         }
@@ -740,6 +770,7 @@ class MessagingScreenTest {
                     onBackClick = {},
                     viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                 )
             }
         }
@@ -772,6 +803,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.onNodeWithText("Type a message...").performTextInput("Test message")
@@ -809,6 +841,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         val submitted = "  Test message  "
@@ -830,7 +863,7 @@ class MessagingScreenTest {
     @Test
     fun inputBar_attachmentButton_showsLoadingIndicator_whenProcessing() {
         // Given - image processing in progress
-        every { mockViewModel.isProcessingImage } returns MutableStateFlow(true)
+        every { mockAttachmentViewModel.isProcessingImage } returns MutableStateFlow(true)
 
         composeTestRule.setContent {
             MessagingScreen(
@@ -839,6 +872,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -850,7 +884,7 @@ class MessagingScreenTest {
     @Test
     fun inputBar_imagePreview_shown_whenImageSelected() {
         // Given - image selected
-        every { mockViewModel.selectedImageData } returns
+        every { mockAttachmentViewModel.selectedImageData } returns
             MutableStateFlow(
                 MessagingTestFixtures.createTestImageData(),
             )
@@ -863,6 +897,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -874,7 +909,7 @@ class MessagingScreenTest {
     @Test
     fun inputBar_clearImageButton_callsClearSelectedImage() {
         // Given - image selected
-        every { mockViewModel.selectedImageData } returns
+        every { mockAttachmentViewModel.selectedImageData } returns
             MutableStateFlow(
                 MessagingTestFixtures.createTestImageData(),
             )
@@ -886,6 +921,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -897,7 +933,7 @@ class MessagingScreenTest {
 
         // Then
         assertTrue("Clear image button click should succeed", result.isSuccess)
-        verify { mockViewModel.clearSelectedImage() }
+        verify { mockAttachmentViewModel.clearSelectedImage() }
     }
 
     // ========== Enter-to-Send Keyboard Tests ==========
@@ -914,7 +950,7 @@ class MessagingScreenTest {
     /** Re-stub sendMessage() to record (destinationHash, text) pairs it is called with. */
     private fun recordSentMessages(): List<Pair<String, String>> {
         val sent = mutableListOf<Pair<String, String>>()
-        every { mockViewModel.sendMessage(any(), any()) } answers {
+        every { mockViewModel.sendMessage(any(), any(), any()) } answers {
             sent.add(firstArg<String>() to secondArg<String>())
         }
         return sent
@@ -931,6 +967,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -960,6 +997,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -986,6 +1024,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -1012,6 +1051,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -1038,6 +1078,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -1065,6 +1106,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -1090,6 +1132,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         val field = composeTestRule.onNode(hasSetTextAction())
@@ -1119,6 +1162,7 @@ class MessagingScreenTest {
                         onBackClick = {},
                         viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                     )
                 }
             }
@@ -1144,6 +1188,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1166,6 +1211,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1188,6 +1234,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1210,6 +1257,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1232,6 +1280,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1254,6 +1303,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1276,6 +1326,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1299,6 +1350,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -1324,6 +1376,7 @@ class MessagingScreenTest {
                         onBackClick = {},
                         viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1354,6 +1407,7 @@ class MessagingScreenTest {
                         onBackClick = {},
                         viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1380,6 +1434,7 @@ class MessagingScreenTest {
                         onBackClick = {},
                         viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1410,6 +1465,7 @@ class MessagingScreenTest {
                         onBackClick = {},
                         viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1444,6 +1500,7 @@ class MessagingScreenTest {
                         onBackClick = {},
                         viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1472,6 +1529,7 @@ class MessagingScreenTest {
                         onBackClick = {},
                         viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1499,6 +1557,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1521,6 +1580,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1541,6 +1601,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1567,6 +1628,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1589,6 +1651,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1615,6 +1678,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1650,6 +1714,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1679,6 +1744,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1705,6 +1771,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -1739,6 +1806,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1770,6 +1838,7 @@ class MessagingScreenTest {
                         onBackClick = {},
                         viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                     )
                 }
                 composeTestRule.waitForIdle()
@@ -1807,6 +1876,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1835,6 +1905,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1859,6 +1930,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1888,6 +1960,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1911,6 +1984,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1922,8 +1996,8 @@ class MessagingScreenTest {
     @Test
     fun animatedGifPreview_displayed_whenSelectedAnimatedImage() {
         // Given - animated image selected for sending
-        every { mockViewModel.selectedImageData } returns MutableStateFlow(MessagingTestFixtures.createTestGifData())
-        every { mockViewModel.selectedImageIsAnimated } returns MutableStateFlow(true)
+        every { mockAttachmentViewModel.selectedImageData } returns MutableStateFlow(MessagingTestFixtures.createTestGifData())
+        every { mockAttachmentViewModel.selectedImageIsAnimated } returns MutableStateFlow(true)
 
         // When
         composeTestRule.setContent {
@@ -1933,6 +2007,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1945,8 +2020,8 @@ class MessagingScreenTest {
     @Test
     fun staticImagePreview_displayed_whenSelectedNonAnimatedImage() {
         // Given - static (non-animated) image selected
-        every { mockViewModel.selectedImageData } returns MutableStateFlow(MessagingTestFixtures.createTestImageData())
-        every { mockViewModel.selectedImageIsAnimated } returns MutableStateFlow(false)
+        every { mockAttachmentViewModel.selectedImageData } returns MutableStateFlow(MessagingTestFixtures.createTestImageData())
+        every { mockAttachmentViewModel.selectedImageIsAnimated } returns MutableStateFlow(false)
 
         // When
         composeTestRule.setContent {
@@ -1956,6 +2031,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -1987,6 +2063,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2024,6 +2101,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2047,6 +2125,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2069,6 +2148,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2091,6 +2171,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2102,8 +2183,8 @@ class MessagingScreenTest {
     @Test
     fun inputBar_withImageAndText_sendButtonEnabled() {
         // Given - image selected and text entered
-        every { mockViewModel.selectedImageData } returns MutableStateFlow(MessagingTestFixtures.createTestGifData())
-        every { mockViewModel.selectedImageIsAnimated } returns MutableStateFlow(true)
+        every { mockAttachmentViewModel.selectedImageData } returns MutableStateFlow(MessagingTestFixtures.createTestGifData())
+        every { mockAttachmentViewModel.selectedImageIsAnimated } returns MutableStateFlow(true)
 
         composeTestRule.setContent {
             MessagingScreen(
@@ -2112,6 +2193,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -2126,9 +2208,9 @@ class MessagingScreenTest {
     fun inputBar_sendWithGif_callsSendMessageWithImageData() {
         // Given - GIF selected
         val gifData = MessagingTestFixtures.createTestGifData()
-        every { mockViewModel.selectedImageData } returns MutableStateFlow(gifData)
-        every { mockViewModel.selectedImageFormat } returns MutableStateFlow("gif")
-        every { mockViewModel.selectedImageIsAnimated } returns MutableStateFlow(true)
+        every { mockAttachmentViewModel.selectedImageData } returns MutableStateFlow(gifData)
+        every { mockAttachmentViewModel.selectedImageFormat } returns MutableStateFlow("gif")
+        every { mockAttachmentViewModel.selectedImageIsAnimated } returns MutableStateFlow(true)
 
         composeTestRule.setContent {
             MessagingScreen(
@@ -2137,6 +2219,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -2166,6 +2249,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2177,7 +2261,7 @@ class MessagingScreenTest {
     @Test
     fun inputBar_processingFile_showsLoadingState() {
         // Given - file processing in progress
-        every { mockViewModel.isProcessingFile } returns MutableStateFlow(true)
+        every { mockAttachmentViewModel.isProcessingFile } returns MutableStateFlow(true)
 
         composeTestRule.setContent {
             MessagingScreen(
@@ -2186,6 +2270,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -2198,8 +2283,8 @@ class MessagingScreenTest {
     fun inputBar_gifAttached_showsCorrectSize() {
         // Given - GIF attached with known size
         val gifData = MessagingTestFixtures.createTestGifData()
-        every { mockViewModel.selectedImageData } returns MutableStateFlow(gifData)
-        every { mockViewModel.selectedImageIsAnimated } returns MutableStateFlow(true)
+        every { mockAttachmentViewModel.selectedImageData } returns MutableStateFlow(gifData)
+        every { mockAttachmentViewModel.selectedImageIsAnimated } returns MutableStateFlow(true)
 
         composeTestRule.setContent {
             MessagingScreen(
@@ -2208,6 +2293,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2228,6 +2314,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
 
@@ -2250,6 +2337,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2272,6 +2360,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2294,6 +2383,7 @@ class MessagingScreenTest {
                 onBackClick = {},
                 viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
             )
         }
         composeTestRule.waitForIdle()
@@ -2326,6 +2416,7 @@ class MessagingScreenTest {
                     fromNotification = true,
                     viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                 )
             }
             composeTestRule.waitForIdle()
@@ -2354,6 +2445,7 @@ class MessagingScreenTest {
                     fromNotification = false,
                     viewModel = mockViewModel,
                 locationViewModel = mockLocationViewModel,
+                attachmentViewModel = mockAttachmentViewModel,
                 )
             }
             composeTestRule.waitForIdle()

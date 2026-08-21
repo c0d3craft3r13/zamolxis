@@ -1,12 +1,16 @@
 package network.zamolxis.app.viewmodel
 
 import network.zamolxis.app.data.model.ImageCompressionPreset
-import network.zamolxis.app.service.AttachmentStorageService
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.service.ConversationLinkManager
 import network.zamolxis.app.util.FileAttachment
 import io.mockk.clearAllMocks
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -16,6 +20,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -23,20 +28,24 @@ import org.junit.Test
 /**
  * Unit tests for AttachmentViewModel.
  *
- * Tests image and file attachment state management, computed states,
- * and quality selection workflows.
+ * Covers what the composer stages, what it hands to the send path, and what it
+ * takes back afterwards. The compression itself is not exercised here — it goes
+ * through `ImageUtils`, which needs a real Android decoder.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AttachmentViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
-    private lateinit var mockStorageService: AttachmentStorageService
+    private lateinit var settingsRepository: SettingsRepository
+    private lateinit var conversationLinkManager: ConversationLinkManager
     private lateinit var viewModel: AttachmentViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        mockStorageService = mockk()
-        viewModel = AttachmentViewModel(mockStorageService)
+        settingsRepository = mockk(relaxed = true)
+        conversationLinkManager = mockk(relaxed = true)
+        every { conversationLinkManager.linkStates } returns MutableStateFlow(emptyMap())
+        viewModel = AttachmentViewModel(settingsRepository, conversationLinkManager)
     }
 
     @After
@@ -70,10 +79,8 @@ class AttachmentViewModelTest {
 
     @Test
     fun `clearSelectedImage resets all image state`() {
-        // First select an image
         viewModel.selectImage(byteArrayOf(1, 2, 3), "png", isAnimated = true)
 
-        // Then clear it
         viewModel.clearSelectedImage()
 
         assertNull(viewModel.selectedImageData.value)
@@ -121,19 +128,37 @@ class AttachmentViewModelTest {
             assertEquals("file2.doc", viewModel.selectedFileAttachments.value[1].filename)
         }
 
+    /**
+     * Intent-to-transmit: attaching a file is the user asking for a transfer, so
+     * the link may be established then — and only then. Reticulum's rule is that
+     * opening a chat must not put anything on the air.
+     */
+    @Test
+    fun `addFileAttachment opens the conversation link`() =
+        runTest {
+            viewModel.addFileAttachment(createFileAttachment("test.pdf", 1024), "abcdef")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify { conversationLinkManager.openConversationLink("abcdef") }
+        }
+
+    @Test
+    fun `addFileAttachment without a conversation opens no link`() =
+        runTest {
+            viewModel.addFileAttachment(createFileAttachment("test.pdf", 1024), null)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify(exactly = 0) { conversationLinkManager.openConversationLink(any()) }
+        }
+
     @Test
     fun `removeFileAttachment removes file at index`() =
         runTest {
-            val attachment1 = createFileAttachment("file1.pdf", 1024)
-            val attachment2 = createFileAttachment("file2.doc", 2048)
-            val attachment3 = createFileAttachment("file3.txt", 512)
-
-            viewModel.addFileAttachment(attachment1)
-            viewModel.addFileAttachment(attachment2)
-            viewModel.addFileAttachment(attachment3)
+            viewModel.addFileAttachment(createFileAttachment("file1.pdf", 1024))
+            viewModel.addFileAttachment(createFileAttachment("file2.doc", 2048))
+            viewModel.addFileAttachment(createFileAttachment("file3.txt", 512))
             testDispatcher.scheduler.advanceUntilIdle()
 
-            // Remove the middle file
             viewModel.removeFileAttachment(1)
 
             assertEquals(2, viewModel.selectedFileAttachments.value.size)
@@ -144,11 +169,9 @@ class AttachmentViewModelTest {
     @Test
     fun `removeFileAttachment with invalid index does nothing`() =
         runTest {
-            val attachment = createFileAttachment("test.pdf", 1024)
-            viewModel.addFileAttachment(attachment)
+            viewModel.addFileAttachment(createFileAttachment("test.pdf", 1024))
             testDispatcher.scheduler.advanceUntilIdle()
 
-            // Try to remove at invalid index
             viewModel.removeFileAttachment(5)
 
             assertEquals(1, viewModel.selectedFileAttachments.value.size)
@@ -157,8 +180,7 @@ class AttachmentViewModelTest {
     @Test
     fun `removeFileAttachment with negative index does nothing`() =
         runTest {
-            val attachment = createFileAttachment("test.pdf", 1024)
-            viewModel.addFileAttachment(attachment)
+            viewModel.addFileAttachment(createFileAttachment("test.pdf", 1024))
             testDispatcher.scheduler.advanceUntilIdle()
 
             viewModel.removeFileAttachment(-1)
@@ -194,14 +216,10 @@ class AttachmentViewModelTest {
     @Test
     fun `clearAllAttachments clears both images and files`() =
         runTest {
-            // Add image
             viewModel.selectImage(byteArrayOf(1, 2, 3), "jpg")
-
-            // Add file
             viewModel.addFileAttachment(createFileAttachment("test.pdf", 1024))
             testDispatcher.scheduler.advanceUntilIdle()
 
-            // Clear all
             viewModel.clearAllAttachments()
 
             assertNull(viewModel.selectedImageData.value)
@@ -211,7 +229,6 @@ class AttachmentViewModelTest {
     @Test
     fun `hasAttachments is true when image is selected`() =
         runTest {
-            // Collect to activate the flow (WhileSubscribed)
             val job =
                 backgroundScope.launch {
                     viewModel.hasAttachments.collect {}
@@ -284,16 +301,85 @@ class AttachmentViewModelTest {
             job.cancel()
         }
 
+    // ========== Send hand-off Tests ==========
+
+    @Test
+    fun `snapshot carries the staged image and files by reference`() =
+        runTest {
+            val imageData = byteArrayOf(9, 9, 9)
+            viewModel.selectImage(imageData, "png")
+            viewModel.addFileAttachment(createFileAttachment("test.pdf", 16))
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val snapshot = viewModel.snapshot()
+
+            assertSame(imageData, snapshot.imageData)
+            assertEquals("png", snapshot.imageFormat)
+            assertSame(viewModel.selectedFileAttachments.value, snapshot.files)
+            assertFalse(snapshot.isEmpty)
+        }
+
+    @Test
+    fun `snapshot of an empty composer is empty`() {
+        assertTrue(viewModel.snapshot().isEmpty)
+    }
+
+    /**
+     * A send takes a snapshot, not the live state, so what it later asks to
+     * clear must be exactly what it carried.
+     */
+    @Test
+    fun `clearSubmitted drops the attachments the send consumed`() =
+        runTest {
+            viewModel.selectImage(byteArrayOf(1, 2, 3), "jpg")
+            viewModel.addFileAttachment(createFileAttachment("test.pdf", 16))
+            testDispatcher.scheduler.advanceUntilIdle()
+            val submitted = viewModel.snapshot()
+
+            viewModel.clearSubmitted(submitted)
+
+            assertNull(viewModel.selectedImageData.value)
+            assertTrue(viewModel.selectedFileAttachments.value.isEmpty())
+        }
+
+    /**
+     * The whole reason [AttachmentViewModel.clearSubmitted] compares by identity:
+     * a photo staged while the previous one was going out must survive that send
+     * landing. Equal bytes are not the same attachment.
+     */
+    @Test
+    fun `clearSubmitted keeps an image staged after the send started`() =
+        runTest {
+            viewModel.selectImage(byteArrayOf(1, 2, 3), "jpg")
+            val submitted = viewModel.snapshot()
+
+            val restaged = byteArrayOf(1, 2, 3)
+            viewModel.selectImage(restaged, "jpg")
+            viewModel.clearSubmitted(submitted)
+
+            assertSame(restaged, viewModel.selectedImageData.value)
+        }
+
+    @Test
+    fun `clearSubmitted keeps files staged after the send started`() =
+        runTest {
+            viewModel.addFileAttachment(createFileAttachment("first.pdf", 16))
+            testDispatcher.scheduler.advanceUntilIdle()
+            val submitted = viewModel.snapshot()
+
+            viewModel.addFileAttachment(createFileAttachment("second.pdf", 16))
+            testDispatcher.scheduler.advanceUntilIdle()
+            viewModel.clearSubmitted(submitted)
+
+            assertEquals(2, viewModel.selectedFileAttachments.value.size)
+        }
+
     // ========== Quality Selection Tests ==========
 
     @Test
     fun `dismissQualitySelection clears quality state`() {
-        // Quality selection state starts as null
         assertNull(viewModel.qualitySelectionState.value)
 
-        // Test that dismissing maintains null state (no-op when already null)
-        // Note: We can't easily set qualitySelectionState directly as it's private
-        // The processImageWithCompression method would set it, but requires mocking ImageUtils
         viewModel.dismissQualitySelection()
 
         assertNull(viewModel.qualitySelectionState.value)
@@ -302,51 +388,29 @@ class AttachmentViewModelTest {
     @Test
     fun `selectImageQuality does nothing when no quality state`() =
         runTest {
-            // No quality selection state set
             viewModel.selectImageQuality(ImageCompressionPreset.MEDIUM)
 
-            // Should not crash and should not change image state
             assertNull(viewModel.selectedImageData.value)
         }
 
-    // ========== Error Emission Tests ==========
+    @Test
+    fun `pendingSharedImageCount is zero outside a shared batch`() {
+        assertEquals(0, viewModel.pendingSharedImageCount())
+    }
 
     @Test
-    fun `emitFileAttachmentError emits to SharedFlow`() =
+    fun `selectImageQualityForSharedImages emits nothing without a pending batch`() =
         runTest {
-            val errors = mutableListOf<String>()
-            // Start collector and ensure it's ready before emitting
-            val job =
-                backgroundScope.launch {
-                    viewModel.fileAttachmentError.collect { errors.add(it) }
-                }
-            // Let the collector start
+            val requests = mutableListOf<SharedImageRequest>()
+            val job = backgroundScope.launch { viewModel.sharedImageRequest.collect { requests.add(it) } }
             testDispatcher.scheduler.runCurrent()
 
-            viewModel.emitFileAttachmentError("File too large")
+            viewModel.selectImageQualityForSharedImages(ImageCompressionPreset.MEDIUM)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            assertEquals(1, errors.size)
-            assertEquals("File too large", errors[0])
+            assertTrue(requests.isEmpty())
             job.cancel()
         }
-
-    @Test
-    fun `fileAttachmentError is a SharedFlow exposed for UI`() {
-        // Verify the SharedFlow is properly exposed
-        // The actual emission behavior is tested by the "emitFileAttachmentError emits to SharedFlow" test
-        // SharedFlow timing with test dispatchers is complex, so we just verify the flow exists
-        // and has the expected type (asSharedFlow conversion was done correctly)
-        assertTrue(viewModel.fileAttachmentError is kotlinx.coroutines.flow.SharedFlow<String>)
-    }
-
-    // ========== Storage Service Exposure Test ==========
-
-    @Test
-    fun `storageService is exposed for direct access`() {
-        // AttachmentViewModel exposes storageService for use by composables
-        assertEquals(mockStorageService, viewModel.storageService)
-    }
 
     // ========== Helper Functions ==========
 

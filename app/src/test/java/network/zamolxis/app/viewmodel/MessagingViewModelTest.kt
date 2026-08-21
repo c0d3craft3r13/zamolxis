@@ -78,6 +78,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import network.zamolxis.app.data.repository.PqKeyRepository
@@ -1372,13 +1373,12 @@ class MessagingViewModelTest {
             viewModel.loadMessages(testPeerHash, testPeerName)
             advanceUntilIdle()
 
-            // Select an image first
+            // Attach an image
             val testImageData = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47) // PNG header
-            viewModel.selectImage(testImageData, "png")
-            advanceUntilIdle()
+            val attachments = ComposerAttachments(imageData = testImageData, imageFormat = "png")
 
             // Act: Send message with empty content but image attached
-            val result = runCatching { viewModel.sendMessage(testPeerHash, "") }
+            val result = runCatching { viewModel.sendMessage(testPeerHash, "", attachments) }
             advanceUntilIdle()
 
             // Assert: sendMessage completed successfully
@@ -1425,16 +1425,11 @@ class MessagingViewModelTest {
             viewModel.loadMessages(testPeerHash, testPeerName)
             advanceUntilIdle()
 
-            // Select an image
             val testImageData = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47)
-            viewModel.selectImage(testImageData, "png")
-            advanceUntilIdle()
+            val attachments = ComposerAttachments(imageData = testImageData, imageFormat = "png")
+            val sendResult = async { viewModel.composerSendResult.first() }
 
-            // Verify image is selected
-            assertEquals(testImageData, viewModel.selectedImageData.value)
-
-            // Send message
-            viewModel.sendMessage(testPeerHash, "Test with image")
+            viewModel.sendMessage(testPeerHash, "Test with image", attachments)
             advanceUntilIdle()
 
             // Verify protocol was called
@@ -1442,9 +1437,11 @@ class MessagingViewModelTest {
                 rnsLxmf.sendLxmfMessageWithMethod(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
             }
 
-            // Assert: Image was cleared after successful send
-            assertEquals(null, viewModel.selectedImageData.value)
-            assertEquals(null, viewModel.selectedImageFormat.value)
+            // Assert: the composer is told to drop exactly what this send carried.
+            // The state itself lives in AttachmentViewModel, which clears on this signal.
+            val result = sendResult.await()
+            assertTrue(result.clearComposer)
+            assertSame(attachments, result.consumedAttachments)
         }
 
     @Test
@@ -1466,14 +1463,13 @@ class MessagingViewModelTest {
             viewModel.loadMessages(testPeerHash, testPeerName)
             advanceUntilIdle()
             val image = byteArrayOf(0x01, 0x02, 0x03)
-            viewModel.selectImage(image, "png")
+            val attachments = ComposerAttachments(imageData = image, imageFormat = "png")
             val sendResult = async { viewModel.composerSendResult.first() }
 
-            viewModel.sendMessage(testPeerHash, "Keep attachment")
+            viewModel.sendMessage(testPeerHash, "Keep attachment", attachments)
             advanceUntilIdle()
 
-            assertArrayEquals(image, viewModel.selectedImageData.value)
-            assertEquals("png", viewModel.selectedImageFormat.value)
+            // Nothing persisted, so the composer keeps the image for a retry.
             assertFalse(sendResult.await().clearComposer)
             coVerify(exactly = 0) { conversationRepository.clearDraft(testPeerHash) }
         }
@@ -3074,160 +3070,10 @@ class MessagingViewModelTest {
         }
 
     // ========== FILE ATTACHMENT TESTS ==========
-
-    @Test
-    fun `addFileAttachment adds file to selectedFileAttachments`() =
-        runViewModelTest {
-            val attachment =
-                FileAttachment(
-                    filename = "test.pdf",
-                    data = ByteArray(1024),
-                    mimeType = "application/pdf",
-                    sizeBytes = 1024,
-                )
-
-            viewModel.addFileAttachment(attachment)
-            advanceUntilIdle()
-
-            assertEquals(1, viewModel.selectedFileAttachments.value.size)
-            assertEquals("test.pdf", viewModel.selectedFileAttachments.value[0].filename)
-        }
-
-    @Test
-    fun `addFileAttachment adds multiple files`() =
-        runViewModelTest {
-            val attachment1 =
-                FileAttachment(
-                    filename = "test1.pdf",
-                    data = ByteArray(1024),
-                    mimeType = "application/pdf",
-                    sizeBytes = 1024,
-                )
-            val attachment2 =
-                FileAttachment(
-                    filename = "test2.txt",
-                    data = ByteArray(512),
-                    mimeType = "text/plain",
-                    sizeBytes = 512,
-                )
-
-            viewModel.addFileAttachment(attachment1)
-            viewModel.addFileAttachment(attachment2)
-            advanceUntilIdle()
-
-            assertEquals(2, viewModel.selectedFileAttachments.value.size)
-            assertEquals("test1.pdf", viewModel.selectedFileAttachments.value[0].filename)
-            assertEquals("test2.txt", viewModel.selectedFileAttachments.value[1].filename)
-        }
-
-    @Test
-    fun `removeFileAttachment removes file at index`() =
-        runViewModelTest {
-            // Add two files
-            val attachment1 = FileAttachment("file1.pdf", ByteArray(100), "application/pdf", 100)
-            val attachment2 = FileAttachment("file2.txt", ByteArray(200), "text/plain", 200)
-            viewModel.addFileAttachment(attachment1)
-            viewModel.addFileAttachment(attachment2)
-            advanceUntilIdle()
-
-            assertEquals(2, viewModel.selectedFileAttachments.value.size)
-
-            // Remove first file
-            viewModel.removeFileAttachment(0)
-
-            assertEquals(1, viewModel.selectedFileAttachments.value.size)
-            assertEquals("file2.txt", viewModel.selectedFileAttachments.value[0].filename)
-        }
-
-    @Test
-    fun `removeFileAttachment does nothing for invalid index`() =
-        runViewModelTest {
-            val attachment = FileAttachment("file.pdf", ByteArray(100), "application/pdf", 100)
-            viewModel.addFileAttachment(attachment)
-            advanceUntilIdle()
-
-            // Try to remove at invalid index
-            viewModel.removeFileAttachment(5)
-
-            assertEquals(1, viewModel.selectedFileAttachments.value.size)
-        }
-
-    @Test
-    fun `removeFileAttachment handles negative index`() =
-        runViewModelTest {
-            val attachment = FileAttachment("file.pdf", ByteArray(100), "application/pdf", 100)
-            viewModel.addFileAttachment(attachment)
-            advanceUntilIdle()
-
-            // Try to remove at negative index
-            viewModel.removeFileAttachment(-1)
-
-            assertEquals(1, viewModel.selectedFileAttachments.value.size)
-        }
-
-    @Test
-    fun `clearFileAttachments removes all files`() =
-        runViewModelTest {
-            // Add multiple files
-            viewModel.addFileAttachment(FileAttachment("file1.pdf", ByteArray(100), "application/pdf", 100))
-            viewModel.addFileAttachment(FileAttachment("file2.txt", ByteArray(200), "text/plain", 200))
-            viewModel.addFileAttachment(FileAttachment("file3.zip", ByteArray(300), "application/zip", 300))
-            advanceUntilIdle()
-
-            assertEquals(3, viewModel.selectedFileAttachments.value.size)
-
-            // Clear all
-            viewModel.clearFileAttachments()
-
-            assertEquals(0, viewModel.selectedFileAttachments.value.size)
-        }
-
-    @Test
-    fun `totalAttachmentSize reflects sum of file sizes when files are added`() =
-        runViewModelTest {
-            viewModel.addFileAttachment(FileAttachment("file1.pdf", ByteArray(1000), "application/pdf", 1000))
-            advanceUntilIdle()
-
-            viewModel.addFileAttachment(FileAttachment("file2.txt", ByteArray(500), "text/plain", 500))
-            advanceUntilIdle()
-
-            // Verify files were added and their sizes are correct
-            assertEquals(2, viewModel.selectedFileAttachments.value.size)
-            val calculatedTotal = viewModel.selectedFileAttachments.value.sumOf { it.sizeBytes }
-            assertEquals(1500, calculatedTotal)
-        }
-
-    @Test
-    fun `totalAttachmentSize reflects sum of file sizes when files are removed`() =
-        runViewModelTest {
-            viewModel.addFileAttachment(FileAttachment("file1.pdf", ByteArray(1000), "application/pdf", 1000))
-            viewModel.addFileAttachment(FileAttachment("file2.txt", ByteArray(500), "text/plain", 500))
-            advanceUntilIdle()
-
-            assertEquals(2, viewModel.selectedFileAttachments.value.size)
-
-            viewModel.removeFileAttachment(0)
-            advanceUntilIdle()
-
-            // Verify remaining file and size
-            assertEquals(1, viewModel.selectedFileAttachments.value.size)
-            val calculatedTotal = viewModel.selectedFileAttachments.value.sumOf { it.sizeBytes }
-            assertEquals(500, calculatedTotal)
-        }
-
-    @Test
-    fun `setProcessingFile updates isProcessingFile state`() =
-        runViewModelTest {
-            assertEquals(false, viewModel.isProcessingFile.value)
-
-            viewModel.setProcessingFile(true)
-
-            assertEquals(true, viewModel.isProcessingFile.value)
-
-            viewModel.setProcessingFile(false)
-
-            assertEquals(false, viewModel.isProcessingFile.value)
-        }
+    //
+    // Staging files is AttachmentViewModel's job now; its own suite covers
+    // add/remove/clear and the running total. What is left here is the send
+    // path: what it does with the attachments it is handed.
 
     @Test
     fun `sendMessage with empty content but file attached succeeds`() =
@@ -3250,13 +3096,12 @@ class MessagingViewModelTest {
             viewModel.loadMessages(testPeerHash, testPeerName)
             advanceUntilIdle()
 
-            // Add a file attachment
+            // Attach a file
             val attachment = FileAttachment("document.pdf", ByteArray(1024), "application/pdf", 1024)
-            viewModel.addFileAttachment(attachment)
-            advanceUntilIdle()
+            val attachments = ComposerAttachments(files = listOf(attachment))
 
             // Send message with empty content but file attached
-            val result = runCatching { viewModel.sendMessage(testPeerHash, "") }
+            val result = runCatching { viewModel.sendMessage(testPeerHash, "", attachments) }
             advanceUntilIdle()
 
             // Assert: sendMessage completed successfully
@@ -3279,7 +3124,7 @@ class MessagingViewModelTest {
         }
 
     @Test
-    fun `sendMessage clears file attachments after successful send`() =
+    fun `sendMessage reports its file attachments as consumed after a successful send`() =
         runViewModelTest {
             val destHashBytes = testPeerHash.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
             val testReceipt =
@@ -3299,15 +3144,11 @@ class MessagingViewModelTest {
             viewModel.loadMessages(testPeerHash, testPeerName)
             advanceUntilIdle()
 
-            // Add a file attachment
             val attachment = FileAttachment("document.pdf", ByteArray(1024), "application/pdf", 1024)
-            viewModel.addFileAttachment(attachment)
-            advanceUntilIdle()
+            val attachments = ComposerAttachments(files = listOf(attachment))
+            val sendResult = async { viewModel.composerSendResult.first() }
 
-            assertEquals(1, viewModel.selectedFileAttachments.value.size)
-
-            // Send message
-            viewModel.sendMessage(testPeerHash, "Test with file")
+            viewModel.sendMessage(testPeerHash, "Test with file", attachments)
             advanceUntilIdle()
 
             // Verify protocol was called
@@ -3315,8 +3156,10 @@ class MessagingViewModelTest {
                 rnsLxmf.sendLxmfMessageWithMethod(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
             }
 
-            // File attachments should be cleared after successful send
-            assertEquals(0, viewModel.selectedFileAttachments.value.size)
+            // The composer is told to drop exactly the list this send carried.
+            val result = sendResult.await()
+            assertTrue(result.clearComposer)
+            assertSame(attachments, result.consumedAttachments)
         }
 
     @Test
@@ -3511,8 +3354,6 @@ class MessagingViewModelTest {
                     delete()
                     mkdirs()
                 }
-            val attachmentsDir = java.io.File(tempDir, "attachments")
-
             val context = mockk<android.content.Context>()
             every { context.cacheDir } returns tempDir
             every { context.packageName } returns "network.zamolxis.app"
@@ -3535,9 +3376,9 @@ class MessagingViewModelTest {
             assertEquals(mockUri, result!!.first)
             assertEquals("application/pdf", result.second)
 
-            // Verify file was created
-            val createdFile = java.io.File(attachmentsDir, "test.pdf")
-            assertTrue(createdFile.exists())
+            // Verify file was created, under its own directory but under its own name
+            val createdFile = cachedAttachments(tempDir).single()
+            assertEquals("test.pdf", createdFile.name)
             assertEquals("Hello", createdFile.readText())
 
             // Cleanup
@@ -3624,15 +3465,61 @@ class MessagingViewModelTest {
             assertEquals("text/plain", result!!.second)
 
             // Verify correct file was created
-            val attachmentsDir = java.io.File(tempDir, "attachments")
-            val createdFile = java.io.File(attachmentsDir, "second.txt")
-            assertTrue(createdFile.exists())
+            val createdFile = cachedAttachments(tempDir).single()
+            assertEquals("second.txt", createdFile.name)
             assertEquals("Two", createdFile.readText())
 
             // Cleanup
             unmockkStatic(androidx.core.content.FileProvider::class)
             tempDir.deleteRecursively()
         }
+
+    /**
+     * Two messages can easily carry a file with the same name. Both used to be
+     * written to `attachments/<name>`, so opening the second one overwrote the
+     * first while an external app might still be reading it off the URI it was
+     * handed — it would then see the wrong document.
+     */
+    @Test
+    fun `getFileAttachmentUri keeps same-named attachments apart`() =
+        runViewModelTest {
+            coEvery { conversationRepository.getMessageById("first-id") } returns
+                createMessageEntity(fieldsJson = """{"5": [{"filename": "report.pdf", "data": "4f6e65", "size": 3}]}""")
+            coEvery { conversationRepository.getMessageById("second-id") } returns
+                createMessageEntity(fieldsJson = """{"5": [{"filename": "report.pdf", "data": "54776f", "size": 3}]}""")
+
+            val tempDir =
+                java.io.File.createTempFile("test", "dir").apply {
+                    delete()
+                    mkdirs()
+                }
+            val context = mockk<android.content.Context>()
+            every { context.cacheDir } returns tempDir
+            every { context.packageName } returns "network.zamolxis.app"
+
+            mockkStatic(androidx.core.content.FileProvider::class)
+            every {
+                androidx.core.content.FileProvider.getUriForFile(any(), any(), any())
+            } returns mockk<android.net.Uri>()
+
+            viewModel.getFileAttachmentUri(context, "first-id", 0)
+            viewModel.getFileAttachmentUri(context, "second-id", 0)
+
+            val cached = cachedAttachments(tempDir)
+            assertEquals(2, cached.size)
+            assertTrue(cached.all { it.name == "report.pdf" })
+            assertEquals(setOf("One", "Two"), cached.map { it.readText() }.toSet())
+
+            unmockkStatic(androidx.core.content.FileProvider::class)
+            tempDir.deleteRecursively()
+        }
+
+    /** Every file staged for sharing, across the per-attachment directories. */
+    private fun cachedAttachments(tempDir: java.io.File): List<java.io.File> =
+        java.io.File(tempDir, "attachments")
+            .listFiles()
+            .orEmpty()
+            .flatMap { it.listFiles().orEmpty().asList() }
 
     @Test
     fun `getFileAttachmentUri creates attachments directory if not exists`() =
@@ -4791,65 +4678,8 @@ class MessagingViewModelTest {
             assertEquals(1, json.getJSONArray("❤️").length())
         }
 
-    // ========== IMAGE STATE TESTS ==========
-
-    @Test
-    fun `selectImage sets image data and format`() =
-        runViewModelTest {
-            val imageData = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47)
-
-            viewModel.selectImage(imageData, "png")
-            advanceUntilIdle()
-
-            assertEquals(imageData, viewModel.selectedImageData.value)
-            assertEquals("png", viewModel.selectedImageFormat.value)
-            assertFalse(viewModel.selectedImageIsAnimated.value)
-        }
-
-    @Test
-    fun `selectImage with animated flag sets isAnimated`() =
-        runViewModelTest {
-            val gifData = byteArrayOf(0x47, 0x49, 0x46) // GIF header
-
-            viewModel.selectImage(gifData, "gif", isAnimated = true)
-            advanceUntilIdle()
-
-            assertEquals(gifData, viewModel.selectedImageData.value)
-            assertEquals("gif", viewModel.selectedImageFormat.value)
-            assertTrue(viewModel.selectedImageIsAnimated.value)
-        }
-
-    @Test
-    fun `clearSelectedImage clears image state`() =
-        runViewModelTest {
-            // Set an image first
-            viewModel.selectImage(byteArrayOf(1, 2, 3), "jpg")
-            advanceUntilIdle()
-
-            assertNotNull(viewModel.selectedImageData.value)
-
-            // Clear it
-            viewModel.clearSelectedImage()
-            advanceUntilIdle()
-
-            assertNull(viewModel.selectedImageData.value)
-            assertNull(viewModel.selectedImageFormat.value)
-            assertFalse(viewModel.selectedImageIsAnimated.value)
-        }
-
-    @Test
-    fun `setProcessingImage updates isProcessingImage state`() =
-        runViewModelTest {
-            assertFalse(viewModel.isProcessingImage.value)
-
-            viewModel.setProcessingImage(true)
-
-            assertTrue(viewModel.isProcessingImage.value)
-
-            viewModel.setProcessingImage(false)
-
-            assertFalse(viewModel.isProcessingImage.value)
-        }
+    // Staged image state moved to AttachmentViewModel along with the composer;
+    // its suite owns select/clear/processing.
 
     // ========== REACTION PICKER STATE TESTS ==========
 
@@ -4975,35 +4805,6 @@ class MessagingViewModelTest {
                 rnsLxmf.sendLxmfMessageWithMethod(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
             }
             assertFalse(viewModel.isSending.value)
-        }
-
-    @Test
-    fun `send completion preserves a replacement attachment`() =
-        runViewModelTest {
-            val destHashBytes = testPeerHash.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-            val sendCompletion = CompletableDeferred<Result<MessageReceipt>>()
-            coEvery {
-                rnsLxmf.sendLxmfMessageWithMethod(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
-            } coAnswers { sendCompletion.await() }
-            coEvery { conversationRepository.saveMessage(any(), any(), any(), any()) } just Runs
-            val original = byteArrayOf(0x01)
-            val replacement = byteArrayOf(0x02)
-            viewModel.selectImage(original, "png")
-
-            viewModel.sendMessage(testPeerHash, "Test message")
-            viewModel.selectImage(replacement, "png")
-            sendCompletion.complete(
-                Result.success(
-                    MessageReceipt(
-                        messageHash = ByteArray(32) { it.toByte() },
-                        timestamp = 3_000L,
-                        destinationHash = destHashBytes,
-                    ),
-                ),
-            )
-            advanceUntilIdle()
-
-            assertArrayEquals(replacement, viewModel.selectedImageData.value)
         }
 
     @Test
@@ -5698,24 +5499,6 @@ class MessagingViewModelTest {
     }
     // The behavior is indirectly tested via the ViewModel lifecycle in integration tests
 
-    // ========== TOTAL ATTACHMENT SIZE TESTS ==========
-
-    @Test
-    fun `totalAttachmentSize initial value is zero`() =
-        runViewModelTest {
-            assertEquals(0, viewModel.totalAttachmentSize.value)
-        }
-
-    @Test
-    fun `totalAttachmentSize is zero when no files attached`() =
-        runViewModelTest {
-            // Make sure no files are attached
-            viewModel.clearFileAttachments()
-            advanceUntilIdle()
-
-            assertEquals(0, viewModel.totalAttachmentSize.value)
-        }
-
     // ========== SEND WITH FILE ATTACHMENT ==========
 
     @Test
@@ -5737,14 +5520,11 @@ class MessagingViewModelTest {
             viewModel.loadMessages(testPeerHash, testPeerName)
             advanceUntilIdle()
 
-            // Add file attachment only
-            viewModel.addFileAttachment(FileAttachment("doc.pdf", ByteArray(100), "application/pdf", 100))
-            advanceUntilIdle()
+            // Attach a file, nothing else
+            val attachments =
+                ComposerAttachments(files = listOf(FileAttachment("doc.pdf", ByteArray(100), "application/pdf", 100)))
 
-            assertEquals(1, viewModel.selectedFileAttachments.value.size)
-
-            // Send message
-            viewModel.sendMessage(testPeerHash, "Message with attachment")
+            viewModel.sendMessage(testPeerHash, "Message with attachment", attachments)
             advanceUntilIdle()
 
             // Verify protocol was called with file attachments
