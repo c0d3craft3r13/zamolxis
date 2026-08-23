@@ -5,44 +5,48 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Reliable off-grid messaging with a polished, responsive user experience.
-**Current focus:** v0.7.4-beta Bug Fixes - Phase 4 (Relay Loop Resolution) Complete
+**Current focus:** `zamolxis/rebrand-and-post-quantum` — rebrand, post-quantum sealing,
+encryption at rest, and repairing quality gates that had stopped checking anything.
 
 ## Current Position
 
-Phase: 5 of 6 (Memory Optimization)
-Plan: 01 of 03 complete
-Status: Executing Wave 2
-Last activity: 2026-01-29 - Completed 05-01-PLAN.md
+Branch: `zamolxis/rebrand-and-post-quantum` (v2.2.1-beta + 31 commits)
+Last activity: 2026-08-23
 
-Progress: [██████░░░░░░] 50% — Phase 5 in progress (2/4 phases complete)
+The phase numbering below belongs to the v0.7.4-beta milestone and has not advanced
+since January. Work did not stop — it moved off that plan onto this branch without the
+plan being updated, which is why this file said "Phase 5 of 6, Memory Optimization" for
+seven months. Phase 6 (Native Stability Verification) was never started, and the
+COLUMBA-E memory growth it was meant to close is still open.
 
 ## Milestone Summary
 
-**v0.7.4-beta Bug Fixes - In Progress**
+**v0.7.4-beta Bug Fixes — stalled, last touched 2026-01-29**
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 3 | ANR Elimination | ANR-01 | **Complete** |
 | 4 | Relay Loop Resolution | RELAY-03 | **Complete** |
-| 5 | Memory Optimization | MEM-01 | **In Progress** (1/3 plans) |
+| 5 | Memory Optimization | MEM-01 | **Stalled** (1/3 plans, no work since January) |
 | 6 | Native Stability Verification | NATIVE-01 | Not started |
+
+**Since then, off-plan, on this branch**
+
+| Stream | What landed | Commits |
+|--------|-------------|---------|
+| Rebrand + vendoring | Renamed to Zamolxis; Reticulum stack vendored into `libs/` so a fresh clone builds without JitPack | `e92a01d`, `76c1d07`, `4f9b2a3` |
+| Post-quantum sealing | Hybrid X25519 + ML-KEM-768 over message text and attachments, fail-closed; scope written into SECURITY.md | `40c8d7c`, `62d92b1`, `2418b8b` |
+| App lock | PIN over the app, microphone permission asked up front | `90bb42d`, `a6adec9` |
+| Encryption at rest | Message database on SQLCipher, device-bound Keystore passphrase, in-place conversion of existing installs, excluded from Android backup | `52c18ae`, `cf2cb2d`, `8e83e64`, `8543d6c` |
+| Quality gates that were not running | BLE logging-tag detekt rule matched zero files; ktlint linted no Kotlin in any Android module; two detekt baselines were read by nothing | `c83cca7`, `268c2f0`, `864f1e5` |
+| Correctness | Python polled from inside the stamp-search loop (GIL contention); attachment pick read unbounded into memory and OOM'd | `574f388`, `06567dd` |
 
 ## Performance Metrics
 
-**Velocity:**
-- Total plans completed: 3
-- Average duration: ~32 min
-- Total execution time: ~63 min (Phases 4-5)
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 3 | 1 | - | - |
-| 4 | 1 | 54 min | 54 min |
-| 5 | 1/3 | 9 min | 9 min |
-
-*Updated after each plan completion*
+**Not tracked since 2026-01-29.** The figures that were here (3 plans, ~32 min average)
+describe January's phase work only. Nothing on this branch went through the plan/execute
+loop that produced them, so there is no honest way to extend the table — treat plan
+velocity as unknown rather than as the stale numbers.
 
 ## Accumulated Context
 
@@ -62,7 +66,9 @@ Progress: [██████░░░░░░] 50% — Phase 5 in progress (2/
 **COLUMBA-E (OOM):**
 - Known ~1.4 MB/min memory growth in Python/Reticulum layer
 - **INSTRUMENTED in Phase 5** - Memory profiling infrastructure added (tracemalloc + native heap monitoring)
-- Investigation pending in next phase
+- Investigation still pending as of 2026-08-23. The instrumentation is in place; nobody
+  has read its output. Unrelated to the separate attachment OOM fixed in `06567dd`,
+  which was an unbounded read at file-pick time, not the Python-side growth.
 
 ### Decisions
 
@@ -103,7 +109,16 @@ v0.7.3 milestone complete. Next milestone (v0.7.4) will address:
 
 ## Session Continuity
 
-Last session: 2026-01-29
-Stopped at: Phase 5 complete (memory profiling infrastructure added)
+Last session: 2026-08-23
+Stopped at: supply-chain and release-trust work on `zamolxis/rebrand-and-post-quantum`
 Resume file: None
-Next: `/gsd:discuss-phase 6` or `/gsd:plan-phase 6`
+
+Open, in no particular order:
+- Phase 6 (Native Stability Verification) and the COLUMBA-E memory growth behind it.
+- ~5,100 ktlint findings sit in `config/ktlint-baseline.xml`, all formatting. The baseline
+  matches by line number, so editing a file resurfaces its own entries; the way out is one
+  deliberate whole-tree format, which is a 590-file diff and has not been decided.
+- Gradle dependency verification (`gradle/verification-metadata.xml`) not yet generated.
+- Python dependencies are the weakest link in the supply chain and are not covered by any
+  of the above: `cryptography>=42.0.0` and `u-msgpack-python` are unpinned ranges resolved
+  at build time (see `rns-backend-py/build.gradle.kts`).
