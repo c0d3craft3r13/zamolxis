@@ -4,6 +4,8 @@
 
 # Zamolxis
 
+[![CI](https://github.com/torlando-tech/columba/actions/workflows/ci.yml/badge.svg)](https://github.com/torlando-tech/columba/actions/workflows/ci.yml)
+
 Zamolxis is a messaging and voice app for the [Reticulum](https://github.com/markqvist/Reticulum) network on Android. Send [LXMF](https://github.com/markqvist/LXMF) messages and make [LXST](https://github.com/markqvist/LXST/tree/master/LXST) voice calls without relying on the internet, cell towers, or any central servers.
 
 It is built for people who cannot assume the network is neutral — reporters, field operators, and anyone who would rather not route their private conversations through an infrastructure someone else controls. No accounts, no phone numbers, no directory, nothing to seize.
