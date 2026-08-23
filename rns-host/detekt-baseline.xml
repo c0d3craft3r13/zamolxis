@@ -36,7 +36,6 @@
     <ID>TooManyFunctions:BleConnectionManager.kt$BleConnectionManager</ID>
     <ID>TooManyFunctions:BleGattClient.kt$BleGattClient</ID>
     <ID>TooManyFunctions:BleGattServer.kt$BleGattServer</ID>
-    <ID>TooManyFunctions:KotlinBLEBridge.kt$KotlinBLEBridge</ID>
     <ID>TooManyFunctions:KotlinRNodeBridge.kt$KotlinRNodeBridge</ID>
     <ID>UnusedParameter:BleGattClient.kt$BleGattClient$characteristic: BluetoothGattCharacteristic</ID>
     <ID>UnusedParameter:BleGattServer.kt$BleGattServer$preparedWrite: Boolean</ID>
