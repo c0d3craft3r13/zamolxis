@@ -51,9 +51,10 @@ subprojects {
         version.set("1.5.0")
         android.set(true)
         outputColorName.set("RED")
-        // Currently advisory - there are pre-existing style violations (primarily Compose
-        // function naming conventions which conflict with ktlint defaults).
-        // Run `./gradlew ktlintCheck` to see violations; contributions to fix them are welcome.
+        // This plugin only ever gets to lint `.kts` build scripts — see the comment on
+        // `ktlintSourceCheck` below for why. Kept advisory because that is what it has
+        // always been; the real gate on Kotlin sources is `ktlintSourceCheck`, which is
+        // not advisory.
         ignoreFailures.set(true)
         filter {
             exclude("**/generated/**")
@@ -136,6 +137,46 @@ tasks.named<de.aaschmid.gradle.plugins.cpd.Cpd>("cpdCheck") {
     reports {
         text.required.set(true)
     }
+}
+
+// ktlint over Kotlin sources, run through the CLI rather than the Gradle plugin.
+//
+// The plugin registers its per-source-set tasks from inside a
+// `withPlugin("org.jetbrains.kotlin.android")` callback. Since AGP 9 that plugin is
+// not applied — Kotlin support is built into AGP, and applying it explicitly is a
+// hard error — so the callback never fires and no Android module ever got a
+// `ktlintMainSourceSetCheck` task. `ktlintCheck` was still green because the one
+// task it could still find lints `.kts` build scripts. The pure-JVM modules
+// (:micron, :crypto-pq) were the only Kotlin the linter ever saw: about 1,700 lines
+// out of 185,000.
+//
+// The CLI does not care how the Kotlin plugin got applied, so this cannot drift back
+// into silence the same way. Both read rule configuration from .editorconfig, which
+// now pins `ktlint_code_style` — leaving it implicit is how `android.set(true)` above
+// came to contradict the style the code is actually written in without anyone
+// noticing.
+val ktlintCli: Configuration by configurations.creating
+
+dependencies {
+    ktlintCli("com.pinterest.ktlint:ktlint-cli:1.5.0")
+}
+
+val ktlintSourceCheck by tasks.registering(JavaExec::class) {
+    group = "verification"
+    description = "Runs ktlint over every module's Kotlin sources (the Gradle plugin only sees .kts)."
+    classpath = ktlintCli
+    mainClass.set("com.pinterest.ktlint.Main")
+    workingDir = rootDir
+    // Pre-existing violations live in the baseline and do not fail the build; anything
+    // new does. Regenerate deliberately by deleting the file and re-running, the same
+    // contract as the detekt and hardcoded-string baselines.
+    args(
+        "**/src/**/*.kt",
+        "!**/build/**",
+        "!**/generated/**",
+        "--baseline=config/ktlint-baseline.xml",
+        "--reporter=plain",
+    )
 }
 
 // Android Lint — progressive enforcement, NO baseline by design.

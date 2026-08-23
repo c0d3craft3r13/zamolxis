@@ -12,6 +12,14 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.{kt,kts}]
+# The style this codebase is actually written in, stated rather than left to the
+# default. Measured, not guessed: ktlint_official reports ~5,200 violations across
+# the tree, intellij_idea ~52,000 and android_studio ~67,000, because those two
+# disagree with the trailing commas and continuation indent used everywhere here.
+# Note this contradicts `android.set(true)` on the ktlint Gradle plugin in
+# build.gradle.kts, which went unnoticed while that plugin was linting nothing but
+# .kts files. Changing style here means reformatting the codebase, not editing config.
+ktlint_code_style = ktlint_official
 max_line_length = 160
 ktlint_standard_comment-wrapping = disabled
 ktlint_standard_function-naming = disabled

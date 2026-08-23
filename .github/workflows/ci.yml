@@ -75,7 +75,7 @@ jobs:
         # cover the flavor source the default misses (app/src/noSentry,
         # rns-host/src/pythonBackend) so NewApi is enforced across all variants.
         run: >-
-          ./gradlew ktlintCheck detekt cpdCheck
+          ./gradlew ktlintCheck ktlintSourceCheck detekt cpdCheck
           lint :app:lintNoSentryKotlinBackendDebug :rns-host:lintPythonBackendDebug
           --continue
 
