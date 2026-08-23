@@ -726,12 +726,12 @@ def _get_fragmenter_key(self, peer_identity, address):
 
 | Component | Path |
 |-----------|------|
-| BLEInterface.py | `app/build/python/pip/release/common/ble_reticulum/BLEInterface.py` |
-| AndroidBLEDriver | `python/ble_modules/android_ble_driver.py` |
-| KotlinBLEBridge | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/bridge/KotlinBLEBridge.kt` |
-| BleGattClient | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/client/BleGattClient.kt` |
-| BleGattServer | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/server/BleGattServer.kt` |
-| BleScanner | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/client/BleScanner.kt` |
-| BleAdvertiser | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/server/BleAdvertiser.kt` |
-| BleOperationQueue | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/util/BleOperationQueue.kt` |
-| BleConstants | `reticulum/src/main/java/network.zamolxis.app/reticulum/ble/model/BleConstants.kt` |
+| BLEInterface.py | pip-installed from `ble-reticulum` (see `rns-backend-py/build.gradle.kts`); unpacked under `rns-backend-py/build/python/pip/` at build time |
+| AndroidBLEDriver | `rns-backend-py/src/main/python/ble_modules/android_ble_driver.py` |
+| KotlinBLEBridge | `rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/bridge/KotlinBLEBridge.kt` |
+| BleGattClient | `rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/client/BleGattClient.kt` |
+| BleGattServer | `rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/server/BleGattServer.kt` |
+| BleScanner | `rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/client/BleScanner.kt` |
+| BleAdvertiser | `rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/server/BleAdvertiser.kt` |
+| BleOperationQueue | `rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/util/BleOperationQueue.kt` |
+| BleConstants | `rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/model/BleConstants.kt` |
