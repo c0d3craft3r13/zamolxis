@@ -22,7 +22,15 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/app/src/main/java"
 BASELINE="$ROOT/scripts/hardcoded-strings-baseline.txt"
 
-PATTERN='Text\("|text = "|contentDescription = "|Toast\.makeText\([^\n]*"|title = "|label = "'
+# `label = "..."` is ambiguous. Compose animation APIs
+# (rememberInfiniteTransition, animateFloat, updateTransition, ...) take a debug
+# `label` that is never rendered, and those are written as a single camelCase or
+# snake_case token. A label the user actually reads contains a space, an
+# interpolation, or punctuation. Requiring one non-identifier character inside the
+# quotes keeps the user-facing ones (ParamChip label = "4/<interpolation>") and
+# drops the animation ones (label = "ringColor") — which were the only thing this
+# alternative had ever flagged.
+PATTERN='Text\("|text = "|contentDescription = "|Toast\.makeText\([^\n]*"|title = "|label = "[^"]*[^A-Za-z0-9_"][^"]*"'
 
 current_counts() {
     grep -rE "$PATTERN" "$SRC" --include='*.kt' -l 2>/dev/null | while read -r f; do
