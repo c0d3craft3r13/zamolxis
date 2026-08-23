@@ -47,6 +47,10 @@ dependencies {
     implementation(libs.room)
     ksp(libs.room.compiler)
 
+    // SQLCipher — Room opens the message database through it, keyed by a
+    // device-bound passphrase. See ZamolxisDatabaseFactory.
+    implementation(libs.sqlcipher)
+
     // Room Paging (required for PagingSource)
     implementation("androidx.room:room-paging:${libs.versions.room.get()}")
 

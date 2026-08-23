@@ -6,6 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
+import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
 
 /**
  * The single place [ZamolxisDatabase] is opened.
@@ -50,8 +52,8 @@ object ZamolxisDatabaseFactory {
      * older Android kernels) can leave torn WAL pages and produce `SQLITE_CORRUPT` on
      * next read. `synchronous=FULL` fsyncs on every commit, closing that window.
      *
-     * Applied from both [provideZamolxisDatabase] and the `:reticulum` process's
-     * `ServiceDatabaseProvider` so both processes agree on journal mode and durability.
+     * Applied from [create], which both processes go through, so they agree on
+     * journal mode and durability.
      *
      * Note: `onOpen` fires after Room has already run any pending migrations, so the
      * migration window itself still runs at `synchronous=NORMAL`. That's a narrow
@@ -106,12 +108,22 @@ object ZamolxisDatabaseFactory {
         }
 
     /**
-     * Open the database for this process.
+     * Open the database for this process, encrypted at rest.
+     *
+     * The passphrase comes from [DatabaseKeyStore] — device-bound, never derived from
+     * anything the user types, because `:reticulum` has to store messages that arrive
+     * while the app is locked. An install that predates encryption is converted first;
+     * see [PlaintextDatabaseMigration].
      */
     fun create(context: Context): ZamolxisDatabase {
+        SqlCipherNative.ensureLoaded()
+        val appContext = context.applicationContext
+        val passphrase = keyStore(appContext).loadOrCreate()
+        PlaintextDatabaseMigration.migrateIfNeeded(appContext.getDatabasePath(DATABASE_NAME), passphrase)
+
         val builder =
             Room.databaseBuilder(
-                context.applicationContext,
+                appContext,
                 ZamolxisDatabase::class.java,
                 DATABASE_NAME,
             )
@@ -119,8 +131,16 @@ object ZamolxisDatabaseFactory {
         // thing tests read, and a spread would copy it on every open for no gain.
         MIGRATIONS.forEach { builder.addMigrations(it) }
         return builder
+            // `clearPassphrase = false`: SQLCipher zeroes the array it is given by
+            // default, which is fine for a single open and fatal for the reopens Room
+            // does after close() or when multi-instance invalidation reconnects.
+            .openHelperFactory(SupportOpenHelperFactory(passphrase, null, false))
             .enableMultiInstanceInvalidation()
             .addCallback(DURABILITY_CALLBACK)
             .build()
     }
+
+    /** The passphrase store for this app, keyed by the Keystore-backed encryptor. */
+    fun keyStore(context: Context): DatabaseKeyStore =
+        DatabaseKeyStore(context.applicationContext.filesDir, IdentityKeyEncryptor())
 }

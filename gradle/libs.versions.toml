@@ -19,6 +19,7 @@ lifecycle = "2.10.0"
 navigation = "2.9.8"
 
 bouncycastle = "1.85.2"
+sqlcipher = "4.11.0"
 msgpack = "0.9.12"
 dataStore = "1.2.1"
 paging = "3.5.1"
@@ -100,6 +101,7 @@ paging-testing = { module = "androidx.paging:paging-testing", version.ref = "pag
 # MessagePack
 # ML-KEM (FIPS 203) + X25519 for the hybrid post-quantum content layer.
 bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+sqlcipher = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipher" }
 msgpack = { module = "org.msgpack:msgpack-core", version.ref = "msgpack" }
 
 # Serialization
