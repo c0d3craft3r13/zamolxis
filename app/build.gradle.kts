@@ -616,6 +616,11 @@ dependencies {
     // Use real implementations or test doubles instead for instrumented tests
     androidTestImplementation(libs.coroutines.test)
     androidTestImplementation(libs.turbine)
+
+    // SQLCipher classes for the database-encryption migration test. :data keeps the
+    // dependency `implementation`, so it reaches the app at runtime but not the
+    // compile classpath — the instrumented test needs to name the types.
+    androidTestImplementation(libs.sqlcipher)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.test)
     androidTestImplementation(libs.test.services)

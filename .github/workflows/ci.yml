@@ -569,7 +569,7 @@ jobs:
             adb shell pm list packages | head -5;
             echo "Emulator is responsive, starting tests...";
             status=0;
-            ./gradlew :app:connectedNoSentryKotlinBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.smoke.SmokeTest,network.zamolxis.app.integration.MessageDataFlowTest,network.zamolxis.app.integration.ConversationCreationFlowTest,network.zamolxis.app.ui.components.MicronTrueColorRenderingTest --stacktrace || status=1;
+            ./gradlew :app:connectedNoSentryKotlinBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.smoke.SmokeTest,network.zamolxis.app.integration.MessageDataFlowTest,network.zamolxis.app.integration.ConversationCreationFlowTest,network.zamolxis.app.ui.components.MicronTrueColorRenderingTest,network.zamolxis.app.integration.DatabaseEncryptionMigrationInstrumentedTest,network.zamolxis.app.integration.EncryptedDatabaseOpenInstrumentedTest --stacktrace || status=1;
             ./gradlew :app:connectedNoSentryPythonBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.integration.IdentityRecoveryIpcInstrumentedTest,network.zamolxis.app.integration.IdentityRecoveryPersistenceInstrumentedTest --stacktrace || status=1;
             ./gradlew :rns-backend-py:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.rns.backend.py.PythonRnsCoreIdentityRecoveryInstrumentedTest --stacktrace || status=1;
             exit "$status"
