@@ -1,6 +1,7 @@
 package network.zamolxis.app.rns.backend.py
 
 import android.content.Context
+import android.os.SystemClock
 import android.util.Log
 import network.zamolxis.app.rns.api.annotation.ReflectivelyKept
 import network.zamolxis.app.rns.api.util.StampGenerator
@@ -14,6 +15,7 @@ import network.zamolxis.app.rns.api.model.ReticulumConfig
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Runtime state holder for the Python flavor.
@@ -496,7 +498,34 @@ internal class StampGeneratorCallback(
 ) {
     private companion object {
         const val TAG = "StampGeneratorCallback"
+
+        /**
+         * Minimum wall-clock gap between two `is_cancelled` round-trips into Python.
+         *
+         * [StampGenerator] polls its cancellation predicate every 256 candidates, per
+         * worker, across up to 8 workers. 256 SHA-256 rounds over a small buffer take
+         * tens of microseconds, so an unthrottled predicate reaches into Python tens of
+         * thousands of times a second from 8 threads at once — each call reacquiring the
+         * GIL and stalling the RNS reactor that is trying to run on it. Throttling to a
+         * few polls a second removes that contention; the cost is up to
+         * [CANCEL_POLL_INTERVAL_MS] of extra latency on a proof-of-work that runs for
+         * seconds to minutes, which nothing observes.
+         */
+        const val CANCEL_POLL_INTERVAL_MS = 250L
     }
+
+    /**
+     * Wraps [cancellationToken] in a predicate that crosses into Python at most once
+     * per [CANCEL_POLL_INTERVAL_MS], no matter how many workers poll it.
+     */
+    private fun throttledCancellationPredicate(cancellationToken: PyObject?): () -> Boolean =
+        if (cancellationToken == null) {
+            { false }
+        } else {
+            throttledLatchingPredicate(CANCEL_POLL_INTERVAL_MS) {
+                cancellationToken.callAttr("is_cancelled")?.toBoolean() == true
+            }
+        }
 
     fun generate(
         workblock: ByteArray,
@@ -517,11 +546,10 @@ internal class StampGeneratorCallback(
         // event_bridge.py calls this by name through Chaquopy on an RNS internal
         // thread and blocks on the returned PyObject, so there is no suspending
         // caller to hand the work back to. Never reached from the main thread.
+        val isCancelled = throttledCancellationPredicate(cancellationToken)
         val result =
             runBlocking(Dispatchers.Default) { // THREADING: allowed — synchronous Chaquopy callback
-                generator.generateStamp(workblock, stampCost) {
-                    cancellationToken?.callAttr("is_cancelled")?.toBoolean() == true
-                }
+                generator.generateStamp(workblock, stampCost, isCancelled)
             }
 
         Log.d(TAG, "Stamp generated: value=${result.value}, rounds=${result.rounds}")
@@ -534,5 +562,38 @@ internal class StampGeneratorCallback(
         pyList.callAttr("append", pyBytes)
         pyList.callAttr("append", result.rounds)
         return pyList
+    }
+}
+
+/**
+ * Rate-limits an expensive boolean [poll] so that concurrent callers cross the
+ * boundary at most once per [intervalMs].
+ *
+ * Exactly one caller wins the [AtomicLong.compareAndSet] per interval and performs the
+ * poll; everyone else reads the cached answer and returns immediately. The `true`
+ * result latches — once [poll] has said yes it is never asked again.
+ *
+ * [now] is injectable so the throttling window is testable without a clock shadow;
+ * production always reads [SystemClock.elapsedRealtime].
+ */
+internal fun throttledLatchingPredicate(
+    intervalMs: Long,
+    now: () -> Long = { SystemClock.elapsedRealtime() },
+    poll: () -> Boolean,
+): () -> Boolean {
+    val latched = AtomicBoolean(false)
+    val nextPollAt = AtomicLong(Long.MIN_VALUE)
+
+    return {
+        if (!latched.get()) {
+            val timestamp = now()
+            val due = nextPollAt.get()
+            if (timestamp >= due && nextPollAt.compareAndSet(due, timestamp + intervalMs)) {
+                if (poll()) {
+                    latched.set(true)
+                }
+            }
+        }
+        latched.get()
     }
 }
