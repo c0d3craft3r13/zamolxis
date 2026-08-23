@@ -3,15 +3,21 @@
   Backup configuration for Zamolxis
 
   SECURITY POLICY:
-  - Room databases (zamolxis_database, interface_database, reticulum.db): BACKED UP
-    * zamolxis_database: identities (Keystore-wrapped private keys),
-      conversations, messages, contacts, settings.
+  - zamolxis_database: EXCLUDED. It is encrypted at rest with SQLCipher under a
+    passphrase held in the Android Keystore, and a Keystore key never leaves the
+    device it was generated on. A copy restored onto other hardware could not be
+    opened by anything, so backing it up would only put the messages in Google's
+    cloud without buying the user a working restore. files/zamolxis_database.key
+    (the wrapped passphrase) is excluded for the same reason.
+    Consequence, and it is deliberate: message history, conversations and contacts
+    do not survive a device transfer. There is no encrypted-export flow yet.
+  - Other Room databases: BACKED UP
     * interface_database: user-configured RNS interfaces.
     * reticulum.db: RNS routing state (paths, announces, packet
       hashlist, tunnels, known destinations, identity ratchets,
       destination ratchets for LXMF forward secrecy).
   - SharedPreferences: BACKED UP
-  - Files under files/: BACKED UP (no sensitive state lives here anymore)
+  - Files under files/: BACKED UP apart from the database passphrase
   - Cache: EXCLUDED (Android default)
 
   The files/reticulum/ exclusion that earlier versions needed is gone:
@@ -29,11 +35,21 @@
         <include domain="database" path="." />
         <include domain="sharedpref" path="." />
         <include domain="file" path="." />
+
+        <exclude domain="database" path="zamolxis_database" />
+        <exclude domain="database" path="zamolxis_database-wal" />
+        <exclude domain="database" path="zamolxis_database-shm" />
+        <exclude domain="file" path="zamolxis_database.key" />
     </cloud-backup>
 
     <device-transfer>
         <include domain="database" path="." />
         <include domain="sharedpref" path="." />
         <include domain="file" path="." />
+
+        <exclude domain="database" path="zamolxis_database" />
+        <exclude domain="database" path="zamolxis_database-wal" />
+        <exclude domain="database" path="zamolxis_database-shm" />
+        <exclude domain="file" path="zamolxis_database.key" />
     </device-transfer>
 </data-extraction-rules>

@@ -2,9 +2,17 @@
 <!--
   Backup configuration for Android 11 and below (legacy format).
   See backup_rules.xml for the Android 12+ equivalent and security policy.
+
+  The message database and its Keystore-wrapped passphrase are excluded: the
+  passphrase cannot leave the device, so a restored copy would be unopenable.
 -->
 <full-backup-content>
     <include domain="database" path="." />
     <include domain="sharedpref" path="." />
     <include domain="file" path="." />
+
+    <exclude domain="database" path="zamolxis_database" />
+    <exclude domain="database" path="zamolxis_database-wal" />
+    <exclude domain="database" path="zamolxis_database-shm" />
+    <exclude domain="file" path="zamolxis_database.key" />
 </full-backup-content>

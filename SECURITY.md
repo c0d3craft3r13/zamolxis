@@ -93,9 +93,30 @@ switchable to "always" or off in Settings. Three limits are worth stating plainl
 Each message records what it actually got, and the message-detail screen shows it,
 so this is auditable per message rather than a claim about the app.
 
-**Not covered today.** The on-device message database is not encrypted at rest and
-screenshots are not blocked. Treat a seized unlocked device as fully compromised.
-These are known gaps with planned work, not accidents.
+**Covered: the message database at rest.** The database holding messages,
+conversations, contacts and identities is encrypted with SQLCipher. The passphrase
+is 256 random bits generated on the device at first launch and stored wrapped by a
+hardware-backed Android Keystore key, which never leaves the device. Nothing derives
+it from a PIN or password: the background service has to store messages that arrive
+while the app is locked or closed, so a key that needs a human present would mean
+losing those messages. An install that predates this is converted on first launch.
+
+What that does and does not buy you:
+
+- A device seized while powered off, or a copy of the app's data pulled off it,
+  yields ciphertext.
+- A device seized *unlocked*, or one with root access to the running app, yields
+  everything — the app is running, so the key is in use. The app PIN is a lock on
+  the UI, not on the database.
+- The database is deliberately excluded from Android cloud backup and device
+  transfer, because a restored copy could never be opened on other hardware. Message
+  history therefore does not survive a move to a new phone; there is no encrypted
+  export flow yet.
+
+**Not covered today.** Screenshots are not blocked. The interface-configuration
+database (`interface_database`) and Reticulum's routing state (`reticulum.db`) are
+not encrypted. Treat a seized unlocked device as fully compromised. These are known
+gaps with planned work, not accidents.
 
 ## Supported Versions
 
