@@ -40,7 +40,11 @@ class BleLoggingTagRule(config: Config = Config.empty) : Rule(config) {
     )
 
     private val tagPattern = Regex("""^Zamolxis:BLE:K:[A-Za-z]+$""")
-    private val blePackagePattern = Regex("""com\.lxmf\.messenger\.reticulum\.ble\.""")
+    // Matches any BLE package under the app namespace, whichever module owns it
+    // (currently `network.zamolxis.app.rns.host.ble.*`). Deliberately not pinned to a
+    // single module path: a hard-coded one silently stopped matching after the
+    // package rename and left this rule green-but-dead.
+    private val blePackagePattern = Regex("""^network\.zamolxis\.app\..*\.ble\.""")
 
     override fun visitKtFile(file: KtFile) {
         super.visitKtFile(file)

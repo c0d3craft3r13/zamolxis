@@ -313,7 +313,7 @@ jobs:
           retention-days: 7
 
   module-tests:
-    name: Module Tests (reticulum + data + micron)
+    name: Module Tests (rns-* + data + micron + detekt-rules)
     needs: [lint, validate-wrapper]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -371,7 +371,7 @@ jobs:
             robolectric-
 
       - name: Run RNS, stats, data, and micron module tests
-        run: ./gradlew :rns-api:testDebugUnitTest :rns-ipc:testDebugUnitTest :rns-host:testKotlinBackendDebugUnitTest :rns-host:testPythonBackendDebugUnitTest :rns-backend-kt:testDebugUnitTest :rns-backend-py:testDebugUnitTest :rns-stats:testDebugUnitTest :data:testDebugUnitTest :micron:test --stacktrace --max-workers=4
+        run: ./gradlew :rns-api:testDebugUnitTest :rns-ipc:testDebugUnitTest :rns-host:testKotlinBackendDebugUnitTest :rns-host:testPythonBackendDebugUnitTest :rns-backend-kt:testDebugUnitTest :rns-backend-py:testDebugUnitTest :rns-stats:testDebugUnitTest :data:testDebugUnitTest :micron:test :detekt-rules:test --stacktrace --max-workers=4
 
       - name: Upload unit test results
         if: always()

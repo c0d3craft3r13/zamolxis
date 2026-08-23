@@ -12,7 +12,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `valid TAG pattern passes`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.client
+            package network.zamolxis.app.rns.host.ble.client
 
             class BleScanner {
                 companion object {
@@ -28,7 +28,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `invalid TAG pattern reports issue`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.client
+            package network.zamolxis.app.rns.host.ble.client
 
             class BleScanner {
                 companion object {
@@ -45,7 +45,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `missing TAG reports issue`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.client
+            package network.zamolxis.app.rns.host.ble.client
 
             class BleScanner {
                 companion object {
@@ -62,7 +62,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `missing companion object reports issue`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.client
+            package network.zamolxis.app.rns.host.ble.client
 
             class BleScanner {
                 private val someField = "value"
@@ -76,7 +76,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `non-BLE package is ignored`() {
         val code = """
-            package network.zamolxis.app.reticulum.bridge
+            package network.zamolxis.app.rns.host.bridge
 
             class SomeBridge {
                 // No TAG needed - not in BLE package
@@ -90,7 +90,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `data class is ignored`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.model
+            package network.zamolxis.app.rns.host.ble.model
 
             data class BleDevice(val address: String, val name: String)
         """.trimIndent()
@@ -102,7 +102,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `enum class is ignored`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.model
+            package network.zamolxis.app.rns.host.ble.model
 
             enum class BleConnectionState { CONNECTED, DISCONNECTED }
         """.trimIndent()
@@ -114,7 +114,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `exception class is ignored`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.util
+            package network.zamolxis.app.rns.host.ble.util
 
             class TimeoutException(message: String) : Exception(message)
         """.trimIndent()
@@ -126,7 +126,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `interface is ignored`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.client
+            package network.zamolxis.app.rns.host.ble.client
 
             interface BleCallback {
                 fun onConnected()
@@ -140,7 +140,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `sealed class is ignored`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.util
+            package network.zamolxis.app.rns.host.ble.util
 
             sealed class BleOperation {
                 data class Connect(val address: String) : BleOperation()
@@ -154,7 +154,7 @@ class BleLoggingTagRuleTest {
     @Test
     fun `model package is ignored`() {
         val code = """
-            package network.zamolxis.app.reticulum.ble.model
+            package network.zamolxis.app.rns.host.ble.model
 
             class BleConfig {
                 val timeout = 5000
@@ -180,7 +180,7 @@ class BleLoggingTagRuleTest {
 
         for (tag in validTags) {
             val code = """
-                package network.zamolxis.app.reticulum.ble.service
+                package network.zamolxis.app.rns.host.ble.service
 
                 class TestComponent {
                     companion object {
@@ -207,7 +207,7 @@ class BleLoggingTagRuleTest {
 
         for (tag in invalidTags) {
             val code = """
-                package network.zamolxis.app.reticulum.ble.service
+                package network.zamolxis.app.rns.host.ble.service
 
                 class TestComponent {
                     companion object {
@@ -218,6 +218,37 @@ class BleLoggingTagRuleTest {
 
             val findings = rule.lint(code)
             assertEquals(1, findings.size, "TAG '$tag' should be invalid")
+        }
+    }
+
+    /**
+     * Regression guard. The package pattern used to be pinned to a module path that
+     * ceased to exist after the rename, so the rule matched nothing and stayed green
+     * while checking zero files. Every BLE package that actually ships must be seen.
+     */
+    @Test
+    fun `every shipping BLE package is checked`() {
+        val shippingBlePackages = listOf(
+            "network.zamolxis.app.rns.host.ble.bridge",
+            "network.zamolxis.app.rns.host.ble.client",
+            "network.zamolxis.app.rns.host.ble.server",
+            "network.zamolxis.app.rns.host.ble.service",
+            "network.zamolxis.app.rns.host.ble.util",
+        )
+
+        for (pkg in shippingBlePackages) {
+            val code = """
+                package $pkg
+
+                class TestComponent {
+                    companion object {
+                        private const val TAG = "wrong-tag"
+                    }
+                }
+            """.trimIndent()
+
+            val findings = rule.lint(code)
+            assertEquals(1, findings.size, "Package '$pkg' must be checked by the rule")
         }
     }
 }
