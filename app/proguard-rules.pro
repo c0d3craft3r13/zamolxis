@@ -110,6 +110,25 @@
 # silences the build-time warning.
 -dontwarn java.net.UnixDomainSocketAddress
 
+# ===== Strip debug logging from release builds =====
+# There are ~1,370 Log.d / Log.v calls in production code, most of them tracing BLE,
+# threading and link state. They are the right thing to have while debugging and the
+# wrong thing to ship: on a device they cost string building on hot paths, and logcat
+# on a messenger is a place user data leaks to any app holding READ_LOGS on older
+# releases.
+#
+# `-assumenosideeffects` lets R8 delete the calls and, because the arguments are pure,
+# the string interpolation that feeds them. Verified before adding: no Log.d/Log.v call
+# in this codebase passes an argument that mutates anything, so deleting the call cannot
+# change behaviour.
+#
+# Deliberately only d and v. Log.i, .w and .e stay — they are what makes a user-supplied
+# bug report readable, and they are few enough not to matter.
+-assumenosideeffects class android.util.Log {
+    public static int d(...);
+    public static int v(...);
+}
+
 # ===== ProGuard Debugging (Optional) =====
 # Uncomment these to see what R8 is removing in build/outputs/mapping/release/
 # -printconfiguration build/outputs/mapping/release/configuration.txt
