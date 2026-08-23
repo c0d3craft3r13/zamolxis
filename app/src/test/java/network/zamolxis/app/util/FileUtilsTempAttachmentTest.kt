@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -185,25 +186,31 @@ class FileUtilsTempAttachmentTest {
     }
 
     // ========== wouldExceedSizeLimit Tests ==========
-    // Note: With MAX_TOTAL_ATTACHMENT_SIZE = Int.MAX_VALUE, the limit is effectively unlimited.
-    // Testing "exceeding" the limit would require integer overflow, so we only test normal cases.
 
     @Test
-    fun `wouldExceedSizeLimit returns false for typical file sizes`() {
-        // With Int.MAX_VALUE limit, normal file sizes never exceed
-        assertTrue(!FileUtils.wouldExceedSizeLimit(0, 100 * 1024 * 1024)) // 100MB
-        assertTrue(!FileUtils.wouldExceedSizeLimit(500 * 1024 * 1024, 500 * 1024 * 1024)) // 1GB total
+    fun `wouldExceedSizeLimit returns false below the ceiling`() {
+        assertFalse(FileUtils.wouldExceedSizeLimit(0, 1024 * 1024))
+        assertFalse(FileUtils.wouldExceedSizeLimit(16 * 1024 * 1024, 16 * 1024 * 1024))
+    }
+
+    @Test
+    fun `wouldExceedSizeLimit returns true above the ceiling`() {
+        assertTrue(FileUtils.wouldExceedSizeLimit(0, FileUtils.MAX_TOTAL_ATTACHMENT_SIZE + 1))
+        assertTrue(FileUtils.wouldExceedSizeLimit(32 * 1024 * 1024, 1))
+    }
+
+    @Test
+    fun `wouldExceedSizeLimit does not wrap around on huge inputs`() {
+        // Two sizes that each fit in an Int but overflow when added. The sum used to be
+        // computed in Int arithmetic, so it came out negative and read as "fits".
+        assertTrue(FileUtils.wouldExceedSizeLimit(2_000_000_000, 2_000_000_000))
     }
 
     // ========== Size Constants Tests ==========
 
     @Test
-    fun `MAX_TOTAL_ATTACHMENT_SIZE is Int MAX_VALUE`() {
-        assertEquals(Int.MAX_VALUE, FileUtils.MAX_TOTAL_ATTACHMENT_SIZE)
-    }
-
-    @Test
-    fun `MAX_SINGLE_FILE_SIZE is Int MAX_VALUE`() {
-        assertEquals(Int.MAX_VALUE, FileUtils.MAX_SINGLE_FILE_SIZE)
+    fun `attachment ceilings are the 32 MB the send path enforces`() {
+        assertEquals(32 * 1024 * 1024, FileUtils.MAX_TOTAL_ATTACHMENT_SIZE)
+        assertEquals(FileUtils.MAX_TOTAL_ATTACHMENT_SIZE, FileUtils.MAX_SINGLE_FILE_SIZE)
     }
 }

@@ -3,7 +3,6 @@ package network.zamolxis.app.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import org.json.JSONObject
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
@@ -11,49 +10,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import network.zamolxis.app.R
-import network.zamolxis.app.data.model.EnrichedContact
-import network.zamolxis.app.data.model.PqProtection
-import network.zamolxis.app.data.repository.PqKeyRepository
-import network.zamolxis.app.repository.SettingsRepository
-import network.zamolxis.app.rns.api.model.Identity
-import network.zamolxis.app.rns.api.model.DeliveryMethod
-import network.zamolxis.app.rns.api.RnsCore
-import network.zamolxis.app.rns.api.RnsLxmf
-import network.zamolxis.app.rns.api.RnsTelephony
-import network.zamolxis.app.rns.api.RnsTransportAdmin
-import network.zamolxis.app.rns.api.model.CallState
-import network.zamolxis.app.service.ConversationLinkManager
-import network.zamolxis.app.service.PropagationNodeManager
-import network.zamolxis.app.service.SyncProgress
-import network.zamolxis.app.service.SyncResult
-import network.zamolxis.app.service.pq.LinkCostResolver
-import network.zamolxis.app.service.pq.PqMessageSealer
-import network.zamolxis.app.service.pq.SealedPayload
-import network.zamolxis.crypto.pq.LinkCost
-import network.zamolxis.crypto.pq.PlainReason
-import network.zamolxis.crypto.pq.PqMode
-import network.zamolxis.app.ui.model.CodecProfile
-import network.zamolxis.app.audio.VoiceMessageRecorder
-import network.zamolxis.app.audio.VoiceMessageFormat
-import network.zamolxis.app.audio.MicrophoneAdmissionArbiter
-import network.zamolxis.app.ui.model.AudioAttachmentLoader
-import network.zamolxis.app.ui.model.DecodedImageResult
-import network.zamolxis.app.ui.model.ImageCache
-import network.zamolxis.app.ui.model.MessageUi
-import network.zamolxis.app.ui.model.decodeImageWithAnimation
-import network.zamolxis.app.ui.model.getImageMetadata
-import network.zamolxis.app.ui.model.loadFileAttachmentData
-import network.zamolxis.app.ui.model.loadFileAttachmentMetadata
-import network.zamolxis.app.ui.model.loadImageBytes
-import network.zamolxis.app.ui.model.loadImageData
-import network.zamolxis.app.ui.model.parseAudioAttachment
-import network.zamolxis.app.ui.model.toMessageUi
-import network.zamolxis.app.util.FileAttachment
-import network.zamolxis.app.util.ImageUtils
-import network.zamolxis.app.util.streamHexToFile
-import network.zamolxis.app.util.validation.InputValidator
-import network.zamolxis.app.util.validation.ValidationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -83,12 +39,57 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import network.zamolxis.app.R
+import network.zamolxis.app.audio.MicrophoneAdmissionArbiter
+import network.zamolxis.app.audio.VoiceMessageFormat
+import network.zamolxis.app.audio.VoiceMessageRecorder
+import network.zamolxis.app.data.model.EnrichedContact
+import network.zamolxis.app.data.model.PqProtection
+import network.zamolxis.app.data.repository.PqKeyRepository
+import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.api.RnsLxmf
+import network.zamolxis.app.rns.api.RnsTelephony
+import network.zamolxis.app.rns.api.RnsTransportAdmin
+import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.rns.api.model.Identity
+import network.zamolxis.app.service.ConversationLinkManager
+import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.service.SyncProgress
+import network.zamolxis.app.service.SyncResult
+import network.zamolxis.app.service.pq.LinkCostResolver
+import network.zamolxis.app.service.pq.PqMessageSealer
+import network.zamolxis.app.service.pq.SealedPayload
+import network.zamolxis.app.ui.model.AudioAttachmentLoader
+import network.zamolxis.app.ui.model.CodecProfile
+import network.zamolxis.app.ui.model.DecodedImageResult
+import network.zamolxis.app.ui.model.ImageCache
+import network.zamolxis.app.ui.model.MessageUi
+import network.zamolxis.app.ui.model.decodeImageWithAnimation
+import network.zamolxis.app.ui.model.getImageMetadata
+import network.zamolxis.app.ui.model.loadFileAttachmentData
+import network.zamolxis.app.ui.model.loadFileAttachmentMetadata
+import network.zamolxis.app.ui.model.loadImageBytes
+import network.zamolxis.app.ui.model.loadImageData
+import network.zamolxis.app.ui.model.parseAudioAttachment
+import network.zamolxis.app.ui.model.toMessageUi
+import network.zamolxis.app.util.FileAttachment
+import network.zamolxis.app.util.FileUtils
+import network.zamolxis.app.util.ImageUtils
+import network.zamolxis.app.util.streamHexToFile
+import network.zamolxis.app.util.validation.InputValidator
+import network.zamolxis.app.util.validation.ValidationResult
+import network.zamolxis.crypto.pq.LinkCost
+import network.zamolxis.crypto.pq.PlainReason
+import network.zamolxis.crypto.pq.PqMode
+import org.json.JSONObject
 import java.io.File
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.concurrent.thread
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
+import kotlin.concurrent.thread
 import network.zamolxis.app.data.repository.Message as DataMessage
 import network.zamolxis.app.rns.api.model.Message as ReticulumMessage
 
@@ -311,6 +312,7 @@ class MessagingViewModel
         internal var attachmentIoDispatcher: CoroutineDispatcher = Dispatchers.IO
         private var voiceRecordingLease: MicrophoneAdmissionArbiter.Lease? = null
         private var voiceRecordingStartJob: Job? = null
+
         @Volatile private var voiceRecorderCleanupThread: Thread? = null
         private val retriesInProgress = ConcurrentHashMap.newKeySet<String>()
 
@@ -809,11 +811,12 @@ class MessagingViewModel
                 try {
                     rnsLxmf.observeTransferProgress().collect { update ->
                         val key = (update.messageHash ?: update.transferId).lowercase()
-                        _transferProgress.value = if (update.isTerminal) {
-                            _transferProgress.value - key
-                        } else {
-                            _transferProgress.value + (key to update)
-                        }
+                        _transferProgress.value =
+                            if (update.isTerminal) {
+                                _transferProgress.value - key
+                            } else {
+                                _transferProgress.value + (key to update)
+                            }
                     }
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
@@ -1467,8 +1470,9 @@ class MessagingViewModel
             // too. Falls back to the recipient hash for direct/opportunistic.
             val lookupHashForInterface =
                 if (deliveryMethodString == "propagated") {
-                    val propHash = runCatching { rnsLxmf.getOutboundPropagationNode().getOrNull() }
-                        .getOrNull()
+                    val propHash =
+                        runCatching { rnsLxmf.getOutboundPropagationNode().getOrNull() }
+                            .getOrNull()
                     Log.i(TAG, "sendSuccess: propagated path, outboundPropagationNode=$propHash")
                     propHash
                         ?.chunked(2)
@@ -1483,7 +1487,9 @@ class MessagingViewModel
                     val r = rnsCore.getNextHopInterfaceName(lookupHashForInterface)
                     Log.i(
                         TAG,
-                        "sendSuccess: getNextHopInterfaceName(${lookupHashForInterface.joinToString("") { "%02x".format(it) }.take(16)}) = $r (method=$deliveryMethodString)",
+                        "sendSuccess: getNextHopInterfaceName(${lookupHashForInterface.joinToString(
+                            "",
+                        ) { "%02x".format(it) }.take(16)}) = $r (method=$deliveryMethodString)",
                     )
                     r
                 } catch (e: Exception) {
@@ -1617,8 +1623,8 @@ class MessagingViewModel
         fun startVoiceRecording(
             format: VoiceMessageFormat = VoiceMessageFormat.DEFAULT,
             maxDurationMillis: Long = VoiceMessageRecorder.MAX_DURATION_MILLIS,
-        ): File {
-            return synchronized(voiceRecorderOperationLock) {
+        ): File =
+            synchronized(voiceRecorderOperationLock) {
                 check(!callUsesMicrophone(rnsTelephony.callState.value)) {
                     "Voice recording is unavailable during a call"
                 }
@@ -1642,7 +1648,7 @@ class MessagingViewModel
                     throw error
                 }
             }
-        }
+
         fun stopVoiceRecording() =
             synchronized(voiceRecorderOperationLock) {
                 try {
@@ -1651,6 +1657,7 @@ class MessagingViewModel
                     releaseVoiceRecordingLeaseLocked()
                 }
             }
+
         fun requestStartVoiceRecording(
             format: VoiceMessageFormat = VoiceMessageFormat.DEFAULT,
             maxDurationMillis: Long = VoiceMessageRecorder.MAX_DURATION_MILLIS,
@@ -1669,12 +1676,14 @@ class MessagingViewModel
                     }
                 }
         }
+
         fun requestStopVoiceRecording() {
             viewModelScope.launch(Dispatchers.IO) {
                 runCatching { stopVoiceRecording() }
                     .onFailure { Log.e(TAG, "Unable to finalize voice recording", it) }
             }
         }
+
         fun cancelVoiceRecording() =
             synchronized(voiceRecorderOperationLock) {
                 try {
@@ -1683,6 +1692,7 @@ class MessagingViewModel
                     releaseVoiceRecordingLeaseLocked()
                 }
             }
+
         fun requestCancelVoiceRecording() {
             voiceRecordingStartJob?.cancel()
             viewModelScope.launch(Dispatchers.IO) {
@@ -1690,6 +1700,7 @@ class MessagingViewModel
                     .onFailure { Log.e(TAG, "Unable to cancel voice recording", it) }
             }
         }
+
         fun cancelActiveVoiceRecording() {
             synchronized(voiceRecorderOperationLock) {
                 val state = voiceMessageRecorder.state.value
@@ -1705,6 +1716,7 @@ class MessagingViewModel
                 }
             }
         }
+
         fun requestCancelActiveVoiceRecording() {
             voiceRecordingStartJob?.cancel()
             viewModelScope.launch(Dispatchers.IO) {
@@ -1717,6 +1729,7 @@ class MessagingViewModel
             voiceRecordingLease?.let(microphoneArbiter::release)
             voiceRecordingLease = null
         }
+
         fun requestRemoveVoiceRecording() {
             val expectedRecording = voiceMessageRecorder.state.value.selectedRecording ?: return
             viewModelScope.launch(attachmentIoDispatcher) {
@@ -2092,7 +2105,6 @@ class MessagingViewModel
                 }
             }
         }
-
 
         /**
          * Send a message with an image directly, bypassing the single-image StateFlows.
@@ -3089,9 +3101,13 @@ private const val STREAM_HEX_THRESHOLD = 512 * 1024 // Stream to disk above 512K
  * — but the bytes are still held fully in memory in both processes plus
  * Reticulum's Resource buffers, so an unbounded file would OOM rather than
  * send. 32 MB is generous for the mesh use case (large files are slow but
- * allowed) while staying clear of that cliff. Tune here if needed.
+ * allowed) while staying clear of that cliff.
+ *
+ * The number itself lives in [FileUtils.MAX_TOTAL_ATTACHMENT_SIZE], which is where the
+ * file picker enforces it — that check has to reject a file before its bytes are read,
+ * because reaching this one means the allocation already happened. Tune it there.
  */
-internal const val MAX_ATTACHMENT_TOTAL_BYTES = 32L * 1024 * 1024
+internal val MAX_ATTACHMENT_TOTAL_BYTES: Long = FileUtils.MAX_TOTAL_ATTACHMENT_SIZE.toLong()
 
 /** Human-readable byte size for user-facing attachment messages (MB / KB / B). */
 private fun formatBytesHelper(bytes: Long): String =
@@ -3184,7 +3200,13 @@ internal suspend fun buildFieldsJson(
         }
 
         if (hasVoice && voiceBytes != null) {
-            json.put("7", org.json.JSONArray().put(checkNotNull(voiceMode)).put(voiceBytes.toHexString()))
+            json.put(
+                "7",
+                org.json
+                    .JSONArray()
+                    .put(checkNotNull(voiceMode))
+                    .put(voiceBytes.toHexString()),
+            )
         }
 
         // Add app extensions field (Field 16) for replies, reactions, and future features

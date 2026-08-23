@@ -1589,9 +1589,6 @@
         <error line="26" column="26" source="standard:class-signature" />
         <error line="26" column="45" source="standard:class-signature" />
     </file>
-    <file name="app/src/main/java/network/zamolxis/app/util/FileUtils.kt">
-        <error line="392" column="29" source="standard:chain-method-continuation" />
-    </file>
     <file name="app/src/main/java/network/zamolxis/app/util/IdentityQrCodeUtils.kt">
         <error line="153" column="49" source="standard:function-expression-body" />
     </file>
@@ -1786,35 +1783,10 @@
         <error line="37" column="21" source="standard:backing-property-naming" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/MessagingViewModel.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="158" column="21" source="standard:backing-property-naming" />
-        <error line="314" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="812" column="51" source="standard:multiline-expression-wrapping" />
-        <error line="1470" column="36" source="standard:multiline-expression-wrapping" />
-        <error line="1486" column="101" source="standard:argument-list-wrapping" />
-        <error line="1486" column="103" source="standard:argument-list-wrapping" />
-        <error line="1486" column="105" source="standard:function-literal" />
-        <error line="1486" column="121" source="standard:argument-list-wrapping" />
-        <error line="1486" column="123" source="standard:argument-list-wrapping" />
-        <error line="1486" column="125" source="standard:function-literal" />
-        <error line="1486" column="132" source="standard:argument-list-wrapping" />
-        <error line="1486" column="134" source="standard:argument-list-wrapping" />
-        <error line="1620" column="17" source="standard:function-expression-body" />
-        <error line="1646" column="9" source="standard:blank-line-before-declaration" />
-        <error line="1654" column="9" source="standard:blank-line-before-declaration" />
-        <error line="1672" column="9" source="standard:blank-line-before-declaration" />
-        <error line="1678" column="9" source="standard:blank-line-before-declaration" />
-        <error line="1686" column="9" source="standard:blank-line-before-declaration" />
-        <error line="1693" column="9" source="standard:blank-line-before-declaration" />
-        <error line="1708" column="9" source="standard:blank-line-before-declaration" />
-        <error line="1720" column="9" source="standard:blank-line-before-declaration" />
-        <error line="2096" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="2101" column="9" source="standard:no-consecutive-comments" />
-        <error line="2635" column="9" source="standard:no-consecutive-comments" />
-        <error line="2732" column="9" source="standard:no-consecutive-comments" />
-        <error line="3187" column="35" source="standard:chain-method-continuation" />
-        <error line="3187" column="47" source="standard:chain-method-continuation" />
-        <error line="3187" column="76" source="standard:chain-method-continuation" />
+        <error line="159" column="21" source="standard:backing-property-naming" />
+        <error line="2113" column="9" source="standard:no-consecutive-comments" />
+        <error line="2647" column="9" source="standard:no-consecutive-comments" />
+        <error line="2744" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/MigrationViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2674,9 +2646,6 @@
     </file>
     <file name="app/src/test/java/network/zamolxis/app/util/DestinationHashValidatorTest.kt">
         <error line="111" column="25" source="standard:chain-method-continuation" />
-    </file>
-    <file name="app/src/test/java/network/zamolxis/app/util/FileUtilsRobolectricTest.kt">
-        <error line="28" column="1" source="standard:no-consecutive-comments" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/util/ImageUtilsExifTest.kt">
         <error line="27" column="15" source="standard:function-expression-body" />

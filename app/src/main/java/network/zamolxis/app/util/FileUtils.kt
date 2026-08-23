@@ -12,7 +12,9 @@ import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.ui.graphics.vector.ImageVector
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 import java.util.Locale
 
 /**
@@ -26,15 +28,24 @@ object FileUtils {
 
     /**
      * Maximum total size for all file attachments combined.
-     * No practical limit - large files will be delivered via propagation node.
+     *
+     * The same ceiling the send path enforces (`MAX_ATTACHMENT_TOTAL_BYTES` in
+     * `MessagingViewModel`), applied here because this is where the bytes first enter
+     * memory. Attachment bytes are held fully in memory in both processes plus
+     * Reticulum's Resource buffers, so anything unbounded OOMs rather than sends.
+     *
+     * These were `Int.MAX_VALUE`, described as "no practical limit — large files will
+     * be delivered via propagation node". Nothing delivered them: attaching a large
+     * file crashed on the allocation, well before the send path's real 32 MB check
+     * could report anything.
      */
-    const val MAX_TOTAL_ATTACHMENT_SIZE = Int.MAX_VALUE
+    const val MAX_TOTAL_ATTACHMENT_SIZE = 32 * 1024 * 1024
 
     /**
-     * Maximum size for a single file attachment.
-     * No practical limit - large files will be delivered via propagation node.
+     * Maximum size for a single file attachment. One attachment cannot exceed what all
+     * of them together may be.
      */
-    const val MAX_SINGLE_FILE_SIZE = Int.MAX_VALUE
+    const val MAX_SINGLE_FILE_SIZE = MAX_TOTAL_ATTACHMENT_SIZE
 
     /**
      * Result of attempting to read a file attachment.
@@ -98,11 +109,17 @@ object FileUtils {
 
             // Read data
             contentResolver.openInputStream(uri)?.use { inputStream ->
-                val data = inputStream.readBytes()
-
-                if (data.size > MAX_SINGLE_FILE_SIZE) {
-                    return FileReadResult.FileTooLarge(data.size.toLong(), MAX_SINGLE_FILE_SIZE)
-                }
+                // Bounded rather than `readBytes()`: the size check above trusts whatever
+                // the provider reported, and `getFileSize` returns -1 when it cannot tell
+                // at all. Reading unbounded on that answer is what turned attaching a
+                // large file into an OutOfMemoryError instead of the "file too large"
+                // message this function already knows how to return.
+                val data =
+                    inputStream.readAtMost(MAX_SINGLE_FILE_SIZE)
+                        ?: return FileReadResult.FileTooLarge(
+                            maxOf(fileSize, MAX_SINGLE_FILE_SIZE.toLong() + 1),
+                            MAX_SINGLE_FILE_SIZE,
+                        )
 
                 FileReadResult.Success(
                     FileAttachment(
@@ -120,56 +137,27 @@ object FileUtils {
     }
 
     /**
-     * Read file data from a content URI.
+     * Read the whole stream, or give up if it turns out to hold more than [limit] bytes.
      *
-     * File attachments have no size limit - they are sent uncompressed.
-     * For large files, users should be aware that transmission over mesh
-     * networks may be slow or unreliable.
+     * @return the bytes, or null if the stream is longer than [limit].
      *
-     * @param context Android context for ContentResolver access
-     * @param uri The content URI of the file to read
-     * @return FileAttachment containing the file data and metadata, or null if the file
-     *         couldn't be read
+     * Internal rather than private so tests can drive it with a small limit; exercising
+     * it through the real 32 MB ceiling would mean allocating 32 MB per test.
      */
-    fun readFileFromUri(
-        context: Context,
-        uri: Uri,
-    ): FileAttachment? =
-        try {
-            val contentResolver = context.contentResolver
-
-            // Get filename
-            val filename = getFilename(context, uri) ?: "unknown"
-
-            // Get MIME type
-            val mimeType = contentResolver.getType(uri) ?: "application/octet-stream"
-
-            // Read data
-            contentResolver.openInputStream(uri)?.use { inputStream ->
-                val data = inputStream.readBytes()
-
-                FileAttachment(
-                    filename = filename,
-                    data = data,
-                    mimeType = mimeType,
-                    sizeBytes = data.size,
-                )
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to read file from URI: $uri", e)
-            null
+    internal fun InputStream.readAtMost(limit: Int): ByteArray? {
+        val collected = ByteArrayOutputStream()
+        val chunk = ByteArray(DEFAULT_BUFFER_SIZE)
+        var total = 0L
+        while (true) {
+            val read = read(chunk)
+            if (read < 0) break
+            total += read
+            if (total > limit) return null
+            collected.write(chunk, 0, read)
         }
+        return collected.toByteArray()
+    }
 
-    /**
-     * Extract filename from a content URI.
-     *
-     * Uses the OpenableColumns.DISPLAY_NAME column to get the original filename.
-     * Falls back to extracting the last path segment if the column is not available.
-     *
-     * @param context Android context for ContentResolver access
-     * @param uri The content URI to extract the filename from
-     * @return The filename, or null if it couldn't be determined
-     */
     fun getFilename(
         context: Context,
         uri: Uri,
@@ -296,7 +284,9 @@ object FileUtils {
     fun wouldExceedSizeLimit(
         currentTotal: Int,
         newFileSize: Int,
-    ): Boolean = (currentTotal + newFileSize) > MAX_TOTAL_ATTACHMENT_SIZE
+        // Long arithmetic: two Int sizes that each fit can still overflow when summed,
+        // and an overflowed sum compares as negative, i.e. "fits".
+    ): Boolean = (currentTotal.toLong() + newFileSize.toLong()) > MAX_TOTAL_ATTACHMENT_SIZE
 
     /**
      * Threshold for file-based transfer via temp files.
@@ -389,7 +379,8 @@ object FileUtils {
             listOf(TEMP_ATTACHMENTS_DIR, SHARE_IMAGES_DIR, INCOMING_SHARE_DIR, OUTGOING_HEX_DIR, VOICE_NOTES_DIR)
 
         val voiceRootCount =
-            context.cacheDir.listFiles()
+            context.cacheDir
+                .listFiles()
                 ?.asSequence()
                 ?.filter { file -> file.isFile && voiceCachePrefixes.any(file.name::startsWith) }
                 ?.filter { it.lastModified() < cutoffTime }

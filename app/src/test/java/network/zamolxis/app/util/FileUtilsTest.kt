@@ -174,8 +174,6 @@ class FileUtilsTest {
     }
 
     // ========== wouldExceedSizeLimit Tests ==========
-    // Note: With MAX_TOTAL_ATTACHMENT_SIZE = Int.MAX_VALUE, the limit is effectively unlimited.
-    // Testing "exceeding" would require integer overflow, so we only test normal use cases.
 
     @Test
     fun `wouldExceedSizeLimit returns false when within limit`() {
@@ -185,17 +183,16 @@ class FileUtilsTest {
     }
 
     @Test
-    fun `wouldExceedSizeLimit returns false for large file sizes`() {
-        // With Int.MAX_VALUE limit, realistic file sizes never exceed
-        assertFalse(FileUtils.wouldExceedSizeLimit(0, 100 * 1024 * 1024)) // 100MB
-        assertFalse(FileUtils.wouldExceedSizeLimit(500 * 1024 * 1024, 500 * 1024 * 1024)) // 1GB total
+    fun `wouldExceedSizeLimit returns true for file sizes past the ceiling`() {
+        assertTrue(FileUtils.wouldExceedSizeLimit(0, 100 * 1024 * 1024))
+        assertTrue(FileUtils.wouldExceedSizeLimit(500 * 1024 * 1024, 500 * 1024 * 1024))
     }
 
     // ========== Constants Tests ==========
 
     @Test
-    fun `MAX_TOTAL_ATTACHMENT_SIZE is Int MAX_VALUE`() {
-        assertEquals(Int.MAX_VALUE, FileUtils.MAX_TOTAL_ATTACHMENT_SIZE)
+    fun `MAX_TOTAL_ATTACHMENT_SIZE is the 32 MB the send path enforces`() {
+        assertEquals(32 * 1024 * 1024, FileUtils.MAX_TOTAL_ATTACHMENT_SIZE)
     }
 
     // ========== Additional getMimeTypeFromFilename Tests ==========
@@ -330,8 +327,8 @@ class FileUtilsTest {
     }
 
     @Test
-    fun `MAX_SINGLE_FILE_SIZE is Int MAX_VALUE`() {
-        assertEquals(Int.MAX_VALUE, FileUtils.MAX_SINGLE_FILE_SIZE)
+    fun `MAX_SINGLE_FILE_SIZE matches the combined ceiling`() {
+        assertEquals(FileUtils.MAX_TOTAL_ATTACHMENT_SIZE, FileUtils.MAX_SINGLE_FILE_SIZE)
     }
 
     // ========== Additional getFileIconForMimeType Edge Case Tests ==========
