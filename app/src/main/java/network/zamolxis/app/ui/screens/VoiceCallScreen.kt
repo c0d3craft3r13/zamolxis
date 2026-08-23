@@ -55,6 +55,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import network.zamolxis.app.call.PttMediaSessionManager
 import network.zamolxis.app.viewmodel.CallViewModel
+import network.zamolxis.app.audio.RingbackToneEffect
 import network.zamolxis.app.rns.api.model.CallState
 import androidx.compose.ui.res.stringResource
 import network.zamolxis.app.R
@@ -156,6 +157,15 @@ fun VoiceCallScreen(
             android.util.Log.w("VoiceCallScreen", "📞 CallState is NOT Idle, NOT calling initiateCall()")
         }
     }
+
+    // Ringback for the caller. Covers Connecting as well as Ringing: from the
+    // caller's side both are "nothing is happening yet", and starting the tone
+    // only once the far end reports Ringing leaves the first seconds of a mesh
+    // call — the slowest part, where a path is still being found — completely
+    // silent, which is exactly when a caller wonders whether it worked.
+    RingbackToneEffect(
+        ringing = callState is CallState.Connecting || callState is CallState.Ringing,
+    )
 
     // Handle call ended - navigate back
     LaunchedEffect(callState) {

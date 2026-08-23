@@ -2,15 +2,8 @@ package network.zamolxis.app
 
 import android.content.Context
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.AudioManager
-import android.media.Ringtone
-import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -29,6 +22,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import network.zamolxis.app.audio.CallRinger
 import network.zamolxis.app.notifications.CallNotificationHelper
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.ui.screens.IncomingCallActivityScreen
@@ -75,9 +69,8 @@ class IncomingCallActivity : ComponentActivity() {
             .fromApplication(applicationContext, RnsTelephonyEntryPoint::class.java)
             .settingsRepository()
     }
-    private var ringtone: Ringtone? = null
+    private val callRinger by lazy { CallRinger(applicationContext) }
     private var ringtoneLoopJob: Job? = null
-    private var vibrator: Vibrator? = null
 
     // Compose-observable state so UI updates when onNewIntent delivers a new call
     private val currentIdentityHash = mutableStateOf<String?>(null)
@@ -204,96 +197,30 @@ class IncomingCallActivity : ComponentActivity() {
     }
 
     /**
-     * Start playing the default ringtone and vibrating in a phone-call pattern.
-     * Respects the device's ringer mode (silent/vibrate/normal).
+     * Start the ringtone and vibration.
+     *
+     * Delegates to [CallRinger] so this activity and the in-app incoming-call
+     * screen ring identically — they used to differ, in that only this one rang
+     * at all.
      */
     private fun startRingtoneAndVibration() {
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val ringerMode = audioManager.ringerMode
-
-        // Play ringtone (only if not in silent/vibrate mode)
-        if (ringerMode == AudioManager.RINGER_MODE_NORMAL) {
-            try {
-                val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-                ringtone =
-                    RingtoneManager.getRingtone(this, ringtoneUri)?.apply {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            isLooping = true
-                        }
-                        audioAttributes =
-                            AudioAttributes
-                                .Builder()
-                                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                .build()
-                        play()
+        callRinger.start()
+        if (callRinger.needsManualLoop) {
+            ringtoneLoopJob =
+                lifecycleScope.launch {
+                    while (isActive) {
+                        delay(callRinger.loopPollMillis)
+                        callRinger.restartIfStopped()
                     }
-                // On pre-P devices, isLooping is not available; manually restart
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P && ringtone != null) {
-                    ringtoneLoopJob =
-                        lifecycleScope.launch {
-                            val rt = ringtone ?: return@launch
-                            while (isActive) {
-                                delay(1000)
-                                if (!rt.isPlaying) rt.play()
-                            }
-                        }
                 }
-                Log.d(TAG, "Ringtone started")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error starting ringtone", e)
-            }
-        }
-
-        // Vibrate (in normal or vibrate mode, not silent)
-        if (ringerMode != AudioManager.RINGER_MODE_SILENT) {
-            try {
-                vibrator =
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                        vibratorManager.defaultVibrator
-                    } else {
-                        @Suppress("DEPRECATION")
-                        getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                    }
-
-                // Phone-call vibration pattern: wait 0ms, vibrate 1s, pause 1s, repeat
-                val pattern = longArrayOf(0, 1000, 1000)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator?.vibrate(
-                        VibrationEffect.createWaveform(pattern, 0),
-                    )
-                } else {
-                    @Suppress("DEPRECATION")
-                    vibrator?.vibrate(pattern, 0)
-                }
-                Log.d(TAG, "Vibration started")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error starting vibration", e)
-            }
         }
     }
 
-    /**
-     * Stop ringtone and vibration.
-     */
+    /** Stop ringtone and vibration. */
     private fun stopRingtoneAndVibration() {
         ringtoneLoopJob?.cancel()
         ringtoneLoopJob = null
-        try {
-            ringtone?.stop()
-            ringtone = null
-            Log.d(TAG, "Ringtone stopped")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error stopping ringtone", e)
-        }
-        try {
-            vibrator?.cancel()
-            vibrator = null
-            Log.d(TAG, "Vibration stopped")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error stopping vibration", e)
-        }
+        callRinger.stop()
     }
 
     /**

@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import network.zamolxis.app.audio.CallRingtoneEffect
 import network.zamolxis.app.rns.api.model.CallState
 import network.zamolxis.app.ui.components.IncomingCallLayout
 import network.zamolxis.app.viewmodel.CallViewModel
@@ -87,6 +88,11 @@ fun IncomingCallScreen(
             else -> {}
         }
     }
+
+    // Ring while this is still an unanswered call. The lock-screen activity
+    // rang and this screen did not, so a call arriving with Zamolxis already
+    // open announced itself in silence.
+    CallRingtoneEffect(ringing = callState is CallState.Incoming)
 
     IncomingCallLayout(
         // The peer name arrives asynchronously; until it does, the hash stands in.
