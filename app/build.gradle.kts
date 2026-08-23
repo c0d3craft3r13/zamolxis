@@ -448,7 +448,28 @@ sentry {
     val hasAuth = !System.getenv("SENTRY_AUTH_TOKEN").isNullOrEmpty()
     autoUploadProguardMapping.set(hasAuth)
     autoUploadSourceContext.set(hasAuth)
-    autoUploadNativeSymbols.set(false) // No native code
+
+    // Off — but NOT because there is no native code, which is what this line claimed for a
+    // long time and is simply false. LXST-kt's AAR ships libopus, libcodec2, liboboe, the
+    // two JNI shims and the capture/playback engines, one set per ABI, and the COLUMBA-B1
+    // and B2 crashes were on that side of JNI.
+    //
+    // It is off because the plugin has nothing here to upload, which was verified rather
+    // than assumed: with an auth token present and both switches on, no native-symbol
+    // upload task appears in the task graph for `assembleSentryKotlinBackendRelease`. The
+    // plugin collects symbols from an in-project externalNativeBuild, and this project has
+    // none — the .so arrive prebuilt from a dependency, and `file` reports them stripped,
+    // with no debug sections to hand over.
+    //
+    // Note there are two switches, not one, in case someone revisits this:
+    // `uploadNativeSymbols` decides whether symbols are uploaded at all and defaults to
+    // false, while `autoUploadNativeSymbols` only decides whether that upload runs
+    // unattended. Flipping the second alone, the obvious-looking fix, changes nothing.
+    //
+    // Symbolicating those frames means publishing unstripped builds from LXST-kt and
+    // uploading them from there, not a setting in this file.
+    uploadNativeSymbols.set(false)
+    autoUploadNativeSymbols.set(false)
 
     // CRITICAL: the io.sentry:sentry-android dependency is declared manually and scoped to
     // the `sentry` flavor only (see `sentryImplementation` in dependencies). With
