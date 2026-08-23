@@ -217,9 +217,9 @@ object TelemeterCodec {
 
     // ---- msgpack value helpers ---------------------------------------
     // Type-routing packer/unpacker for the polymorphic SID_LOCATION list
-    // (contains ByteArray, Long, ...). Lifted from
-    // `rns-backend-kt/.../MsgpackHelper.kt` so the shared codec doesn't
-    // pull in that module.
+    // (contains ByteArray, Long, ...). This is the only copy: the original
+    // `rns-backend-kt/.../MsgpackHelper.kt` was left behind unused when the
+    // logic moved here, and has been deleted.
 
     private fun packValue(
         packer: MessagePacker,
