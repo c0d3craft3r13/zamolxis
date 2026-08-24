@@ -68,16 +68,24 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run all lint checks (ktlint, detekt, CPD, Android Lint)
+      # Split into per-tool steps so a failure is attributable from the job
+      # summary alone (step names are visible without log access).
+      - name: ktlint
+        run: ./gradlew ktlintCheck ktlintSourceCheck --continue --stacktrace
+
+      - name: detekt + CPD
+        run: ./gradlew detekt cpdCheck --continue --stacktrace
+
+      - name: Android Lint
         # Android `lint` enforces only the checks in `checkOnly` (round 1: NewApi);
         # see the Android Lint block in the root build.gradle.kts. No baseline.
         # `lint` covers each module's DEFAULT variant; the two extra variant tasks
         # cover the flavor source the default misses (app/src/noSentry,
         # rns-host/src/pythonBackend) so NewApi is enforced across all variants.
         run: >-
-          ./gradlew ktlintCheck ktlintSourceCheck detekt cpdCheck
-          lint :app:lintNoSentryKotlinBackendDebug :rns-host:lintPythonBackendDebug
-          --continue
+          ./gradlew lint :app:lintNoSentryKotlinBackendDebug
+          :rns-host:lintPythonBackendDebug
+          --continue --stacktrace
 
       - name: Check for forbidden test suppressions
         run: |
