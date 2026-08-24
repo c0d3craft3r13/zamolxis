@@ -6,7 +6,7 @@
 
 **[English](README.md) | Русский**
 
-[![CI](https://github.com/torlando-tech/columba/actions/workflows/ci.yml/badge.svg)](https://github.com/torlando-tech/columba/actions/workflows/ci.yml)
+[![CI](https://github.com/c0d3craft3r13/zamolxis/actions/workflows/ci.yml/badge.svg)](https://github.com/c0d3craft3r13/zamolxis/actions/workflows/ci.yml)
 
 Zamolxis — приложение для сообщений и голосовых звонков в сети [Reticulum](https://github.com/markqvist/Reticulum) на Android. Отправляйте сообщения [LXMF](https://github.com/markqvist/LXMF) и совершайте звонки [LXST](https://github.com/markqvist/LXST/tree/master/LXST) без интернета, вышек сотовой связи и центральных серверов.
 
