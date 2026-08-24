@@ -1,0 +1,22 @@
+# Files that ship inside the APK byte-for-byte must not depend on the platform they
+# were checked out on. Without this, a clone on Windows with core.autocrlf=true gets
+# CRLF, the build packages CRLF, and the APK differs from one built on Linux — which
+# was measured, not guessed: it accounted for every difference between two release
+# builds except the .pyc headers. See docs/reproducible-builds.md.
+#
+# Deliberately narrow. Kotlin sources are compiled, and a release build from a CRLF
+# checkout produced a byte-identical APK, so they are left alone.
+
+# Chaquopy packages these verbatim into assets/chaquopy/app.imy
+*.py text eol=lf
+
+# Bundled as raw resources and read at runtime (license_mpl2.txt becomes res/S_.txt)
+app/src/main/res/raw/** text eol=lf
+
+# Run by CI and by the quality gates; CRLF breaks them on Linux
+*.sh text eol=lf
+
+# The Windows launcher already lives in the repository with CRLF and Windows needs it
+# that way. Marked as untouched rather than as text-with-CRLF: declaring it text would
+# renormalise the stored blob and rewrite all 93 lines for no behavioural change.
+*.bat -text
