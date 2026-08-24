@@ -116,6 +116,10 @@ object PlaintextDatabaseMigration {
         passphrase: ByteArray,
     ) {
         SqlCipherNative.ensureLoaded()
+        // SQLCipher's ATTACH cannot create a missing file on Android — the VFS
+        // open() fails with ENOENT even when the parent directory exists
+        // (sqlcipher/android-database-sqlcipher#259). Create the empty file first.
+        if (!encryptedFile.exists()) encryptedFile.createNewFile()
         val plaintext =
             SQLiteDatabase.openDatabase(
                 plaintextFile.absolutePath,
