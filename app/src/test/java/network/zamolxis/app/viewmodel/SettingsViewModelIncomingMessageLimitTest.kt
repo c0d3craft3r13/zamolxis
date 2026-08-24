@@ -3,6 +3,7 @@ package network.zamolxis.app.viewmodel
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.map.MapTileSourceManager
 import network.zamolxis.app.repository.InterfaceRepository
 import network.zamolxis.app.repository.SettingsRepository
@@ -277,7 +278,10 @@ class SettingsViewModelIncomingMessageLimitTest {
                 mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
                     coEvery { it.current() } returns null
                 },
-            pqKeyRepository = mockk(relaxed = true),
+            pqKeyRepository =
+                mockk<PqKeyRepository>().also {
+                    coEvery { it.rotateOurKeyPair(any()) } returns null
+                },
         )
 
     // ========== Initial State Tests ==========

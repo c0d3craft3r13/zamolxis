@@ -56,7 +56,7 @@ class BleLoggingTagRule(config: Config = Config.empty) : Rule(config) {
         }
 
         // Skip test files
-        val filePath = file.virtualFilePath
+        val filePath = file.normalizedPath()
         if (filePath.contains("/test/") || filePath.contains("/androidTest/")) {
             return
         }

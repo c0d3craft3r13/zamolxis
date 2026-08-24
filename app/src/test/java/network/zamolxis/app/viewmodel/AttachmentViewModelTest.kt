@@ -4,8 +4,11 @@ import network.zamolxis.app.data.model.ImageCompressionPreset
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.service.ConversationLinkManager
 import network.zamolxis.app.util.FileAttachment
+import io.mockk.Runs
 import io.mockk.clearAllMocks
+import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
@@ -42,9 +45,11 @@ class AttachmentViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        settingsRepository = mockk(relaxed = true)
-        conversationLinkManager = mockk(relaxed = true)
+        settingsRepository = mockk()
+        conversationLinkManager = mockk()
         every { conversationLinkManager.linkStates } returns MutableStateFlow(emptyMap())
+        every { conversationLinkManager.openConversationLink(any()) } just Runs
+        coEvery { settingsRepository.getImageCompressionPreset() } returns ImageCompressionPreset.LOW
         viewModel = AttachmentViewModel(settingsRepository, conversationLinkManager)
     }
 
@@ -139,6 +144,7 @@ class AttachmentViewModelTest {
             viewModel.addFileAttachment(createFileAttachment("test.pdf", 1024), "abcdef")
             testDispatcher.scheduler.advanceUntilIdle()
 
+            assertEquals(1, viewModel.selectedFileAttachments.value.size)
             verify { conversationLinkManager.openConversationLink("abcdef") }
         }
 
@@ -148,6 +154,7 @@ class AttachmentViewModelTest {
             viewModel.addFileAttachment(createFileAttachment("test.pdf", 1024), null)
             testDispatcher.scheduler.advanceUntilIdle()
 
+            assertEquals(1, viewModel.selectedFileAttachments.value.size)
             verify(exactly = 0) { conversationLinkManager.openConversationLink(any()) }
         }
 

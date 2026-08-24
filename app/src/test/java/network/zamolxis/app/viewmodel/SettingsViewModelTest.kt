@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import network.zamolxis.app.data.repository.ContactRepository
 import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.map.MapTileSourceManager
 import network.zamolxis.app.repository.InterfaceRepository
 import network.zamolxis.app.repository.SettingsRepository
@@ -316,7 +317,10 @@ class SettingsViewModelTest {
                 mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
                     coEvery { it.current() } returns null
                 },
-            pqKeyRepository = mockk(relaxed = true),
+            pqKeyRepository =
+                mockk<PqKeyRepository>().also {
+                    coEvery { it.rotateOurKeyPair(any()) } returns null
+                },
         )
 
     @Test
@@ -329,7 +333,13 @@ class SettingsViewModelTest {
             viewModel.sharedInstanceAccessEvents.test {
                 viewModel.copySharedInstanceAccessConfig()
                 assertEquals(SharedInstanceAccessEvent.Copy(secretConfig), awaitItem())
-                assertFalse(viewModel.state.value.toString().contains(secretConfig))
+                assertFalse(
+                    viewModel
+                        .state
+                        .value
+                        .toString()
+                        .contains(secretConfig),
+                )
                 expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
@@ -1675,11 +1685,14 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
-            pqAnnounceFingerprint =
-                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                    coEvery { it.current() } returns null
-                },
-            pqKeyRepository = mockk(relaxed = true),
+                    pqAnnounceFingerprint =
+                        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                            coEvery { it.current() } returns null
+                        },
+                    pqKeyRepository =
+                        mockk<PqKeyRepository>().also {
+                            coEvery { it.rotateOurKeyPair(any()) } returns null
+                        },
                 )
 
             viewModel.state.test {
@@ -1733,11 +1746,14 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
-            pqAnnounceFingerprint =
-                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                    coEvery { it.current() } returns null
-                },
-            pqKeyRepository = mockk(relaxed = true),
+                    pqAnnounceFingerprint =
+                        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                            coEvery { it.current() } returns null
+                        },
+                    pqKeyRepository =
+                        mockk<PqKeyRepository>().also {
+                            coEvery { it.rotateOurKeyPair(any()) } returns null
+                        },
                 )
 
             viewModel.state.test {
@@ -2401,11 +2417,14 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
-            pqAnnounceFingerprint =
-                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                    coEvery { it.current() } returns null
-                },
-            pqKeyRepository = mockk(relaxed = true),
+                    pqAnnounceFingerprint =
+                        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                            coEvery { it.current() } returns null
+                        },
+                    pqKeyRepository =
+                        mockk<PqKeyRepository>().also {
+                            coEvery { it.rotateOurKeyPair(any()) } returns null
+                        },
                 )
 
             // Wait for any potential async operations to settle
@@ -2575,11 +2594,14 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
-            pqAnnounceFingerprint =
-                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                    coEvery { it.current() } returns null
-                },
-            pqKeyRepository = mockk(relaxed = true),
+                    pqAnnounceFingerprint =
+                        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
+                            coEvery { it.current() } returns null
+                        },
+                    pqKeyRepository =
+                        mockk<PqKeyRepository>().also {
+                            coEvery { it.rotateOurKeyPair(any()) } returns null
+                        },
                 )
 
             // The ViewModel should be created successfully with NativeReticulumProtocol

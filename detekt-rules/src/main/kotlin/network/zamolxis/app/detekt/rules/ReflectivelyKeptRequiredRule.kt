@@ -52,7 +52,7 @@ class ReflectivelyKeptRequiredRule(
     override fun visitClassOrObject(classOrObject: KtClassOrObject) {
         super.visitClassOrObject(classOrObject)
 
-        if (!isBridgeModule(classOrObject.containingKtFile.virtualFilePath)) return
+        if (!isBridgeModule(classOrObject.containingKtFile.normalizedPath())) return
         if (!isChaquopyBridgeShape(classOrObject)) return
         if (hasReflectivelyKept(classOrObject)) return
 

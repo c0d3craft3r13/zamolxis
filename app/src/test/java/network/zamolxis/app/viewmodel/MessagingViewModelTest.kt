@@ -5528,6 +5528,7 @@ class MessagingViewModelTest {
             advanceUntilIdle()
 
             // Verify protocol was called with file attachments
+            val capturedFiles = slot<List<Pair<String, ByteArray>>?>()
             coVerify {
                 rnsLxmf.sendLxmfMessageWithMethod(
                     destinationHash = any(),
@@ -5537,11 +5538,12 @@ class MessagingViewModelTest {
                     tryPropagationOnFail = any(),
                     imageData = null,
                     imageFormat = null,
-                    fileAttachments = match { it != null && it.size == 1 },
+                    fileAttachments = captureNullable(capturedFiles),
                     replyToMessageId = null,
                     iconAppearance = null,
                 )
             }
+            assertEquals("doc.pdf", capturedFiles.captured?.single()?.first)
         }
 
     // ========== MY IDENTITY HASH TESTS ==========

@@ -6,6 +6,7 @@ import network.zamolxis.app.data.repository.AnnounceRepository
 import network.zamolxis.app.data.repository.ContactRepository
 import network.zamolxis.app.data.repository.ConversationRepository
 import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.data.repository.Message
 import network.zamolxis.app.notifications.NotificationHelper
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsLxmf
@@ -18,6 +19,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -235,6 +237,7 @@ class MessageCollectorTest {
                     protection = PqProtection.SEALED,
                 )
 
+            val savedMessage = slot<Message>()
             messageCollector.startCollecting()
             kotlinx.coroutines.delay(50)
             messageFlow.emit(sealedMessage)
@@ -245,10 +248,11 @@ class MessageCollectorTest {
                 conversationRepository.saveMessage(
                     peerHash = testSourceHashHex,
                     peerName = any(),
-                    message = match { it.content == "opened at last" },
+                    message = capture(savedMessage),
                     peerPublicKey = any(),
                 )
             }
+            assertEquals("opened at last", savedMessage.captured.content)
         }
 
     @Test

@@ -73,7 +73,7 @@ class NoVerifyOnlyTestsRule(
 
     override fun visitNamedFunction(function: KtNamedFunction) {
         // Only check test files
-        val filePath = function.containingKtFile.virtualFilePath
+        val filePath = function.containingKtFile.normalizedPath()
         if (!filePath.contains("/test/") && !filePath.contains("/androidTest/")) {
             return
         }

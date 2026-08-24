@@ -55,7 +55,7 @@ class NoCallCoordinatorGetInstanceOutsideHostRule(
         super.visitCallExpression(expression)
 
         // Path-based allowlist: legitimate owners can hold the singleton.
-        val filePath = expression.containingKtFile.virtualFilePath
+        val filePath = expression.containingKtFile.normalizedPath()
         if (isAllowedPath(filePath)) return
 
         if (!isCallCoordinatorGetInstance(expression)) return

@@ -49,7 +49,7 @@ class NoRelaxedMocksRule(
         super.visitKtFile(file)
 
         // Only check test files
-        val filePath = file.virtualFilePath
+        val filePath = file.normalizedPath()
         if (!filePath.contains("/test/") && !filePath.contains("/androidTest/")) {
             return
         }
@@ -59,7 +59,7 @@ class NoRelaxedMocksRule(
         super.visitCallExpression(expression)
 
         // Only check in test files
-        val filePath = expression.containingKtFile.virtualFilePath
+        val filePath = expression.containingKtFile.normalizedPath()
         if (!filePath.contains("/test/") && !filePath.contains("/androidTest/")) {
             return
         }
