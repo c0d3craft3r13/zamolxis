@@ -74,7 +74,13 @@ jobs:
         run: ./gradlew ktlintCheck ktlintSourceCheck --continue --stacktrace
 
       - name: detekt + CPD
-        run: ./gradlew detekt cpdCheck --continue --stacktrace
+        # On failure, surface findings as workflow annotations so the red step
+        # names its findings without needing log-download access.
+        run: |
+          ./gradlew detekt cpdCheck --continue --stacktrace || {
+            python3 scripts/gradle-findings-to-annotations.py
+            exit 1
+          }
 
       - name: Android Lint
         # Android `lint` enforces only the checks in `checkOnly` (round 1: NewApi);
