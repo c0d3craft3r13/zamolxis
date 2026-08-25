@@ -50,6 +50,14 @@ Zamolxis — бог даков, связанный с бессмертием. Г
 
 Zamolxis хранит личную переписку и ключи идентичности. Сообщайте об уязвимостях приватно через [GitHub Security Advisories](https://github.com/c0d3craft3r13/zamolxis/security/advisories/new), никогда — в публичных issues. См. [SECURITY.md](./SECURITY.md) для модели угроз, включая то, что пока *не* покрыто.
 
+## Поддержать проект
+
+Zamolxis — свободный проект с открытым кодом. Если он вам полезен, можно поддержать разработку:
+
+- **USDT (TRC-20, сеть Tron):** `TNPzvsfsdNC3XrxJPB2NMVh1nZSPcvZzxC`
+
+<img src="./docs/images/donate-usdt-trc20.png" width="160" alt="QR-код для доната USDT TRC-20" />
+
 ## Лицензия
 
 Zamolxis распространяется под Mozilla Public License 2.0 — см. [LICENSE.md](./LICENSE.md).

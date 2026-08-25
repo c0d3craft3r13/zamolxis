@@ -47,6 +47,14 @@ Zamolxis was the god of the Dacians, associated with immortality. Herodotus tell
 
 Zamolxis carries private messages and identity keys. Report vulnerabilities privately through [GitHub Security Advisories](https://github.com/c0d3craft3r13/zamolxis/security/advisories/new), never as a public issue. See [SECURITY.md](./SECURITY.md) for the threat model, including what is *not* yet covered.
 
+## Donate
+
+Zamolxis is free and open source. If it is useful to you, you can support its development:
+
+- **USDT (TRC-20, Tron network):** `TNPzvsfsdNC3XrxJPB2NMVh1nZSPcvZzxC`
+
+<img src="./docs/images/donate-usdt-trc20.png" width="160" alt="USDT TRC-20 donation QR code" />
+
 ## License
 
 Zamolxis is released under the Mozilla Public License 2.0 — see [LICENSE.md](./LICENSE.md).
