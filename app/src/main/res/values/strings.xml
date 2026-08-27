@@ -984,6 +984,11 @@ TO TALK</string>
     <string name="app_logo_content_description">Zamolxis</string>
     <string name="about_tagline">Native Android messaging app using Bluetooth LE, TCP, or RNode (LoRa) over LXMF and Reticulum</string>
     <string name="about_app_info">App Information</string>
+    <string name="about_developer_hint">Tap the version 7 times to unlock developer mode</string>
+    <string name="about_developer_unlocked">Developer mode is on — tap the version 7 times to turn it off</string>
+    <string name="about_developer_locked">Developer mode disabled</string>
+    <string name="about_developer_countdown">%1$d taps to developer mode</string>
+    <string name="settings_developer_section">Developer</string>
     <string name="about_device_info">Device Information</string>
     <string name="about_protocol_versions">Protocol Versions</string>
     <string name="about_identity">Identity</string>
@@ -2289,4 +2294,38 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., under the MIT licence —
     <string name="battery_profile_max_desc">Best battery life with slower background networking and discovery.</string>
     <string name="battery_profile_balanced_desc">Good battery life with normal responsiveness for most users.</string>
     <string name="battery_profile_performance_desc">Fastest path recovery and networking responsiveness at higher battery cost.</string>
+
+    <!-- Group chat (fan-out). Referenced by the group UI screens. -->
+    <string name="group_new_title">New group</string>
+    <string name="group_new_name_label">Group name</string>
+    <string name="group_new_members_hint">Select members</string>
+    <string name="group_new_create">Create</string>
+    <string name="group_create_failed">Could not create the group</string>
+    <string name="group_picker_empty">No contacts available</string>
+    <string name="group_chat_title_fallback">Group</string>
+    <string name="group_send_failed">Could not send the message</string>
+    <string name="group_action_failed">Action failed</string>
+    <string name="group_details_title">Group details</string>
+    <string name="group_details_members">Members</string>
+    <string name="group_details_add">Add</string>
+    <string name="group_details_add_members">Add members</string>
+    <string name="group_details_rename">Rename group</string>
+    <string name="group_details_remove">Remove</string>
+    <string name="group_details_remove_title">Remove member</string>
+    <string name="group_details_remove_body">Remove %1$s from the group?</string>
+    <string name="group_details_leave">Leave group</string>
+    <string name="group_details_leave_title">Leave group</string>
+    <string name="group_details_leave_body">You will stop receiving messages from this group.</string>
+    <string name="group_delete">Delete group</string>
+    <string name="group_delete_title">Delete group?</string>
+    <string name="group_delete_body">“%1$s” and its message history will be removed from this device. Other members keep their copy.</string>
+    <string name="group_member_left">Left</string>
+    <string name="group_member_you">You</string>
+    <string name="group_role_admin">Admin</string>
+    <string name="group_mark_read">Mark as read</string>
+    <string name="chats_cd_new_group">New group</string>
+    <plurals name="group_member_count">
+        <item quantity="one">%d member</item>
+        <item quantity="other">%d members</item>
+    </plurals>
 </resources>

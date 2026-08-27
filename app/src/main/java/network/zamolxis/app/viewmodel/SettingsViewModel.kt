@@ -92,6 +92,8 @@ data class SettingsState(
     val isLoading: Boolean = true,
     val showSaveSuccess: Boolean = false,
     val autoAnnounceEnabled: Boolean = true,
+    // Developer mode: reveals network-internals UI. Off until unlocked via About.
+    val developerMode: Boolean = false,
     val autoAnnounceIntervalHours: Int = 3,
     val lastAutoAnnounceTime: Long? = null,
     val nextAutoAnnounceTime: Long? = null,
@@ -321,8 +323,9 @@ class SettingsViewModel
                 // gate skips the poll), so the collector is cheap there.
                 viewModelScope.launch {
                     capabilities.collect { caps ->
-                        val wants = caps.performance.sharedInstanceAvailabilityChecks ||
-                            caps.performance.shareInstanceHosting
+                        val wants =
+                            caps.performance.sharedInstanceAvailabilityChecks ||
+                                caps.performance.shareInstanceHosting
                         if (wants && sharedInstanceAvailabilityJob?.isActive != true) {
                             // One-shot prime so the "Change pending" hint
                             // appears immediately when the daemon's running
@@ -425,6 +428,7 @@ class SettingsViewModel
                         settingsRepository.shareInstanceHostingEnabledFlow,
                         settingsRepository.crashReportingConsentFlow,
                         settingsRepository.themeModeFlow,
+                        settingsRepository.developerModeFlow,
                     ) { flows ->
                         @Suppress("UNCHECKED_CAST")
                         val activeIdentity = flows[0] as network.zamolxis.app.data.db.entity.LocalIdentityEntity?
@@ -485,6 +489,9 @@ class SettingsViewModel
                         @Suppress("UNCHECKED_CAST")
                         val themeMode = flows[18] as ThemeMode
 
+                        @Suppress("UNCHECKED_CAST")
+                        val developerMode = flows[19] as Boolean
+
                         val displayName = activeIdentity?.displayName ?: defaultName
                         val resolvedIdentityHash = identityInfo.first ?: activeIdentity?.identityHash ?: _state.value.identityHash
                         val resolvedDestinationHash = identityInfo.second ?: activeIdentity?.destinationHash ?: _state.value.destinationHash
@@ -495,6 +502,7 @@ class SettingsViewModel
                             isLoading = false,
                             showSaveSuccess = _state.value.showSaveSuccess,
                             autoAnnounceEnabled = autoAnnounceEnabled,
+                            developerMode = developerMode,
                             autoAnnounceIntervalHours = intervalHours,
                             lastAutoAnnounceTime = lastAnnounceTime,
                             nextAutoAnnounceTime = nextAnnounceTime,
@@ -1106,10 +1114,11 @@ class SettingsViewModel
                                 // because onServiceReady runs on the IPC thread.
                                 viewModelScope.launch {
                                     val applied = settingsRepository.getShareInstanceHostingEnabled()
-                                    _state.value = _state.value.copy(
-                                        isRestarting = false,
-                                        appliedShareInstanceHosting = applied,
-                                    )
+                                    _state.value =
+                                        _state.value.copy(
+                                            isRestarting = false,
+                                            appliedShareInstanceHosting = applied,
+                                        )
                                 }
                             },
                         ).onSuccess {
@@ -1367,11 +1376,12 @@ class SettingsViewModel
                     isConflict != currentState.isHostingShareInstanceConflict ||
                     newApplied != currentState.appliedShareInstanceHosting
             if (changed) {
-                _state.value = _state.value.copy(
-                    isHostingSharedInstance = isHosting,
-                    isHostingShareInstanceConflict = isConflict,
-                    appliedShareInstanceHosting = newApplied,
-                )
+                _state.value =
+                    _state.value.copy(
+                        isHostingSharedInstance = isHosting,
+                        isHostingShareInstanceConflict = isConflict,
+                        appliedShareInstanceHosting = newApplied,
+                    )
             }
         }
 
@@ -1841,6 +1851,17 @@ class SettingsViewModel
         }
 
         /**
+         * Toggle developer mode — reveals the network-internals settings cards.
+         * Driven by the 7-tap gesture on the version row in the About card.
+         */
+        fun setDeveloperMode(enabled: Boolean) {
+            viewModelScope.launch {
+                settingsRepository.saveDeveloperMode(enabled)
+                Log.d(TAG, "Developer mode ${if (enabled) "enabled" else "disabled"}")
+            }
+        }
+
+        /**
          * Set the anonymous crash reporting opt-in (sentry flavor only).
          * Persists the DataStore source of truth + the synchronous startup mirror, and
          * activates/deactivates reporting immediately (no restart required).
@@ -1911,9 +1932,10 @@ class SettingsViewModel
         /** Fetch the live host secret only on demand and hand it directly to the UI. */
         fun copySharedInstanceAccessConfig() {
             viewModelScope.launch {
-                val configuration = runCatching {
-                    rnsTransportAdmin.getSharedInstanceAccessConfig()
-                }.getOrNull()
+                val configuration =
+                    runCatching {
+                        rnsTransportAdmin.getSharedInstanceAccessConfig()
+                    }.getOrNull()
                 _sharedInstanceAccessEvents.emit(
                     configuration?.let(SharedInstanceAccessEvent::Copy)
                         ?: SharedInstanceAccessEvent.Unavailable,
@@ -2105,9 +2127,6 @@ class SettingsViewModel
 
         // Image compression methods
 
-        /**
-         * Load image compression settings and start monitoring for changes.
-         */
         /** Keeps the post-quantum card in step with the stored preference. */
         private fun loadPostQuantumSettings() {
             viewModelScope.launch {
@@ -2117,6 +2136,9 @@ class SettingsViewModel
             }
         }
 
+        /**
+         * Load image compression settings and start monitoring for changes.
+         */
         private fun loadImageCompressionSettings() {
             viewModelScope.launch {
                 // Load saved preset

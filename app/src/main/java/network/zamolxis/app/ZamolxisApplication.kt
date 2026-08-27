@@ -74,6 +74,9 @@ class ZamolxisApplication : Application() {
     lateinit var messageCollector: MessageCollector
 
     @Inject
+    lateinit var groupChatManager: network.zamolxis.app.service.group.GroupChatManager
+
+    @Inject
     lateinit var conversationRepository: ConversationRepository
 
     @Inject
@@ -320,7 +323,6 @@ class ZamolxisApplication : Application() {
                             // matched, so this is dead-code branch on the current backend.
                             // Phase B's python flavor must re-add a real status check.
                             null
-
                         }
                     android.util.Log.d("ZamolxisApplication", "Service status with config flag set: $status")
 
@@ -395,13 +397,14 @@ class ZamolxisApplication : Application() {
                         )
                         // Identity matches - reconnect collectors and managers
                         messageCollector.startCollecting()
+                        groupChatManager.start()
                         autoAnnounceManager.start()
                         identityResolutionManager.start(applicationScope)
                         propagationNodeManager.start()
                         telemetryCollectorManager.start()
                         android.util.Log.d(
                             "ZamolxisApplication",
-                            "MessageCollector, AutoAnnounceManager, IdentityResolutionManager, PropagationNodeManager, TelemetryCollectorManager started",
+                            "MessageCollector, GroupChatManager, AutoAnnounceManager, IdentityResolutionManager, PropagationNodeManager, TelemetryCollectorManager started",
                         )
                         return@launch
                     }
@@ -573,13 +576,14 @@ class ZamolxisApplication : Application() {
 
                         // Start the message collector service after Reticulum is ready
                         messageCollector.startCollecting()
+                        groupChatManager.start()
                         autoAnnounceManager.start()
                         identityResolutionManager.start(applicationScope)
                         propagationNodeManager.start()
                         telemetryCollectorManager.start()
                         android.util.Log.d(
                             "ZamolxisApplication",
-                            "MessageCollector, AutoAnnounceManager, IdentityResolutionManager, PropagationNodeManager, TelemetryCollectorManager started",
+                            "MessageCollector, GroupChatManager, AutoAnnounceManager, IdentityResolutionManager, PropagationNodeManager, TelemetryCollectorManager started",
                         )
                     }.onFailure { error ->
                         android.util.Log.e("ZamolxisApplication", "Failed to initialize Reticulum: ${error.message}", error)
@@ -916,5 +920,4 @@ class ZamolxisApplication : Application() {
 
         android.util.Log.d("ZamolxisApplication", "✓ Batch restore complete: $totalRestored peer identities restored")
     }
-
 }

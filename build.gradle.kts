@@ -89,9 +89,13 @@ subprojects {
     // apply) would fail configuration.
     tasks.withType(org.gradle.api.tasks.compile.JavaCompile::class.java).configureEach {
         javaCompiler.set(
-            project.extensions.getByType(org.gradle.jvm.toolchain.JavaToolchainService::class.java)
+            project.extensions
+                .getByType(org.gradle.jvm.toolchain.JavaToolchainService::class.java)
                 .compilerFor {
-                    languageVersion.set(org.gradle.jvm.toolchain.JavaLanguageVersion.of(21))
+                    languageVersion.set(
+                        org.gradle.jvm.toolchain.JavaLanguageVersion
+                            .of(21),
+                    )
                 },
         )
     }
@@ -179,6 +183,33 @@ val ktlintSourceCheck by tasks.registering(JavaExec::class) {
     )
 }
 
+// Auto-fix counterpart of `ktlintSourceCheck`. Restrict the blast radius with
+// -Pktlint.paths="glob1,glob2" (default: every Kotlin source, same as the check).
+// The baseline is honored here too, so pre-existing violations are left alone.
+val ktlintSourceFormat by tasks.registering(JavaExec::class) {
+    group = "verification"
+    description = "Runs ktlint --format over Kotlin sources (see ktlintSourceCheck)."
+    classpath = ktlintCli
+    mainClass.set("com.pinterest.ktlint.Main")
+    workingDir = rootDir
+    val paths =
+        (findProperty("ktlint.paths") as? String)
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?: listOf("**/src/**/*.kt")
+    args(
+        paths +
+            listOf(
+                "!**/build/**",
+                "!**/generated/**",
+                "--format",
+                "--baseline=config/ktlint-baseline.xml",
+                "--reporter=plain",
+            ),
+    )
+}
+
 // Android Lint — progressive enforcement, NO baseline by design.
 //
 // Round 1 enforces ONLY `NewApi` — the check that catches API-level/minSdk
@@ -249,7 +280,10 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         }
 
         // Add patterns for class directories and exec data (resolved at execution time)
-        val buildDir = subproject.layout.buildDirectory.get().asFile
+        val buildDir =
+            subproject.layout.buildDirectory
+                .get()
+                .asFile
         // Use ASM-transformed classes which contain all classes including UI/Compose
         // Try both variant paths - noSentryDebug for app, debug for other modules
         classDirectoriesList.add(File("$buildDir/intermediates/classes/noSentryDebug/transformNoSentryDebugClassesWithAsm/dirs"))

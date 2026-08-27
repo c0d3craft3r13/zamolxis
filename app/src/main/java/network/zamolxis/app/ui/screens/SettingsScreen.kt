@@ -320,22 +320,33 @@ fun SettingsScreen(
                     ServiceRestartBanner()
                 }
 
-                NetworkCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.NETWORK.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.NETWORK, it) },
-                    onViewStatus = onNavigateToNetworkStatus,
-                    onManageInterfaces = onNavigateToInterfaces,
-                    onBleConnections = onNavigateToBleConnections,
-                    isSharedInstance = state.isSharedInstance,
-                    sharedInstanceOnline = state.sharedInstanceOnline,
-                )
+                // Developer-only cards: network internals stay hidden until the
+                // user unlocks developer mode from the About card, so the app
+                // reads as a plain messenger by default.
+                if (state.developerMode) {
+                    Text(
+                        text = stringResource(R.string.settings_developer_section),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
 
-                IdentityCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.IDENTITY.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.IDENTITY, it) },
-                    onViewIdentity = onNavigateToIdentity,
-                    onManageIdentities = onNavigateToIdentityManager,
-                )
+                    NetworkCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.NETWORK.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.NETWORK, it) },
+                        onViewStatus = onNavigateToNetworkStatus,
+                        onManageInterfaces = onNavigateToInterfaces,
+                        onBleConnections = onNavigateToBleConnections,
+                        isSharedInstance = state.isSharedInstance,
+                        sharedInstanceOnline = state.sharedInstanceOnline,
+                    )
+
+                    IdentityCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.IDENTITY.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.IDENTITY, it) },
+                        onViewIdentity = onNavigateToIdentity,
+                        onManageIdentities = onNavigateToIdentityManager,
+                    )
+                }
 
                 PrivacyCard(
                     isExpanded = state.cardExpansionStates[SettingsCardId.PRIVACY.name] ?: false,
@@ -370,20 +381,22 @@ fun SettingsScreen(
                     onAllowVoiceCallsChange = { viewModel.setAllowVoiceCalls(it) },
                 )
 
-                AutoAnnounceCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.AUTO_ANNOUNCE.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.AUTO_ANNOUNCE, it) },
-                    enabled = state.autoAnnounceEnabled,
-                    intervalHours = state.autoAnnounceIntervalHours,
-                    lastAnnounceTime = state.lastAutoAnnounceTime,
-                    nextAnnounceTime = state.nextAutoAnnounceTime,
-                    isManualAnnouncing = state.isManualAnnouncing,
-                    showManualAnnounceSuccess = state.showManualAnnounceSuccess,
-                    manualAnnounceError = state.manualAnnounceError,
-                    onToggle = { viewModel.toggleAutoAnnounce(it) },
-                    onIntervalChange = { viewModel.setAnnounceInterval(it) },
-                    onManualAnnounce = { viewModel.triggerManualAnnounce() },
-                )
+                if (state.developerMode) {
+                    AutoAnnounceCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.AUTO_ANNOUNCE.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.AUTO_ANNOUNCE, it) },
+                        enabled = state.autoAnnounceEnabled,
+                        intervalHours = state.autoAnnounceIntervalHours,
+                        lastAnnounceTime = state.lastAutoAnnounceTime,
+                        nextAnnounceTime = state.nextAutoAnnounceTime,
+                        isManualAnnouncing = state.isManualAnnouncing,
+                        showManualAnnounceSuccess = state.showManualAnnounceSuccess,
+                        manualAnnounceError = state.manualAnnounceError,
+                        onToggle = { viewModel.toggleAutoAnnounce(it) },
+                        onIntervalChange = { viewModel.setAnnounceInterval(it) },
+                        onManualAnnounce = { viewModel.triggerManualAnnounce() },
+                    )
+                }
 
                 LocationSharingCard(
                     isExpanded = state.cardExpansionStates[SettingsCardId.LOCATION_SHARING.name] ?: false,
@@ -495,51 +508,53 @@ fun SettingsScreen(
                     hasOfflineMaps = state.hasOfflineMaps,
                 )
 
-                MessageDeliveryRetrievalCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.MESSAGE_DELIVERY.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.MESSAGE_DELIVERY, it) },
-                    defaultMethod = state.defaultDeliveryMethod,
-                    tryPropagationOnFail = state.tryPropagationOnFail,
-                    currentRelayName = state.currentRelayName,
-                    currentRelayHops = state.currentRelayHops,
-                    currentRelayHash = state.currentRelayHash,
-                    isAutoSelect = state.autoSelectPropagationNode,
-                    availableRelays = state.availableRelays,
-                    onMethodChange = { viewModel.setDefaultDeliveryMethod(it) },
-                    onTryPropagationToggle = { viewModel.setTryPropagationOnFail(it) },
-                    onAutoSelectToggle = { viewModel.setAutoSelectPropagationNode(it) },
-                    onAddManualRelay = { hash, nickname ->
-                        viewModel.addManualPropagationNode(hash, nickname)
-                    },
-                    onSelectRelay = { hash, _ ->
-                        viewModel.selectRelay(hash)
-                    },
-                    // Retrieval settings
-                    autoRetrieveEnabled = state.autoRetrieveEnabled,
-                    retrievalIntervalSeconds = state.retrievalIntervalSeconds,
-                    lastSyncTimestamp = state.lastSyncTimestamp,
-                    isSyncing = state.isSyncing,
-                    onAutoRetrieveToggle = { viewModel.setAutoRetrieveEnabled(it) },
-                    onIntervalChange = { viewModel.setRetrievalIntervalSeconds(it) },
-                    onSyncNow = { viewModel.syncNow() },
-                    onViewMoreRelays = { onNavigateToAnnounces("PROPAGATION_NODE") },
-                    // Incoming message size limit
-                    incomingMessageSizeLimitKb = state.incomingMessageSizeLimitKb,
-                    onIncomingMessageSizeLimitChange = { viewModel.setIncomingMessageSizeLimit(it) },
-                    // Message sorting
-                    sortMessagesBySentTime = state.sortMessagesBySentTime,
-                    onSortMessagesBySentTimeToggle = { viewModel.setSortMessagesBySentTime(it) },
-                )
+                if (state.developerMode) {
+                    MessageDeliveryRetrievalCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.MESSAGE_DELIVERY.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.MESSAGE_DELIVERY, it) },
+                        defaultMethod = state.defaultDeliveryMethod,
+                        tryPropagationOnFail = state.tryPropagationOnFail,
+                        currentRelayName = state.currentRelayName,
+                        currentRelayHops = state.currentRelayHops,
+                        currentRelayHash = state.currentRelayHash,
+                        isAutoSelect = state.autoSelectPropagationNode,
+                        availableRelays = state.availableRelays,
+                        onMethodChange = { viewModel.setDefaultDeliveryMethod(it) },
+                        onTryPropagationToggle = { viewModel.setTryPropagationOnFail(it) },
+                        onAutoSelectToggle = { viewModel.setAutoSelectPropagationNode(it) },
+                        onAddManualRelay = { hash, nickname ->
+                            viewModel.addManualPropagationNode(hash, nickname)
+                        },
+                        onSelectRelay = { hash, _ ->
+                            viewModel.selectRelay(hash)
+                        },
+                        // Retrieval settings
+                        autoRetrieveEnabled = state.autoRetrieveEnabled,
+                        retrievalIntervalSeconds = state.retrievalIntervalSeconds,
+                        lastSyncTimestamp = state.lastSyncTimestamp,
+                        isSyncing = state.isSyncing,
+                        onAutoRetrieveToggle = { viewModel.setAutoRetrieveEnabled(it) },
+                        onIntervalChange = { viewModel.setRetrievalIntervalSeconds(it) },
+                        onSyncNow = { viewModel.syncNow() },
+                        onViewMoreRelays = { onNavigateToAnnounces("PROPAGATION_NODE") },
+                        // Incoming message size limit
+                        incomingMessageSizeLimitKb = state.incomingMessageSizeLimitKb,
+                        onIncomingMessageSizeLimitChange = { viewModel.setIncomingMessageSizeLimit(it) },
+                        // Message sorting
+                        sortMessagesBySentTime = state.sortMessagesBySentTime,
+                        onSortMessagesBySentTimeToggle = { viewModel.setSortMessagesBySentTime(it) },
+                    )
 
-                PostQuantumCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.POST_QUANTUM.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.POST_QUANTUM, it) },
-                    selectedMode = state.postQuantumMode,
-                    onModeChange = { viewModel.setPostQuantumMode(it) },
-                    onRotateKey = { viewModel.rotatePostQuantumKey() },
-                    rotationMessage = state.postQuantumRotationMessage,
-                    onRotationMessageShown = { viewModel.clearPostQuantumRotationMessage() },
-                )
+                    PostQuantumCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.POST_QUANTUM.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.POST_QUANTUM, it) },
+                        selectedMode = state.postQuantumMode,
+                        onModeChange = { viewModel.setPostQuantumMode(it) },
+                        onRotateKey = { viewModel.rotatePostQuantumKey() },
+                        rotationMessage = state.postQuantumRotationMessage,
+                        onRotationMessageShown = { viewModel.clearPostQuantumRotationMessage() },
+                    )
+                }
 
                 ImageCompressionCard(
                     isExpanded = state.cardExpansionStates[SettingsCardId.IMAGE_COMPRESSION.name] ?: false,
@@ -570,11 +585,13 @@ fun SettingsScreen(
                     onBatteryProfileChange = { viewModel.setBatteryProfile(it) },
                 )
 
-                DataMigrationCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.DATA_MIGRATION.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.DATA_MIGRATION, it) },
-                    onNavigateToMigration = onNavigateToMigration,
-                )
+                if (state.developerMode) {
+                    DataMigrationCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.DATA_MIGRATION.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.DATA_MIGRATION, it) },
+                        onNavigateToMigration = onNavigateToMigration,
+                    )
+                }
 
                 ShareZamolxisCard(
                     isExpanded = state.cardExpansionStates[SettingsCardId.SHARE_COLUMBA.name] ?: false,
@@ -582,27 +599,29 @@ fun SettingsScreen(
                     onNavigateToApkSharing = onNavigateToApkSharing,
                 )
 
-                RNodeFlasherCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.RNODE_FLASHER.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.RNODE_FLASHER, it) },
-                    onOpenFlasher = onNavigateToFlasher,
-                    onOpenPyxisUpdater = onNavigateToPyxisUpdater,
-                )
+                if (state.developerMode) {
+                    RNodeFlasherCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.RNODE_FLASHER.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.RNODE_FLASHER, it) },
+                        onOpenFlasher = onNavigateToFlasher,
+                        onOpenPyxisUpdater = onNavigateToPyxisUpdater,
+                    )
 
-                AdvancedCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.ADVANCED.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.ADVANCED, it) },
-                    transportNodeEnabled = state.transportNodeEnabled,
-                    onTransportNodeToggle = { viewModel.setTransportNodeEnabled(it) },
-                    shareInstanceHostingEnabled = state.shareInstanceHostingEnabled,
-                    onShareInstanceHostingToggle = { viewModel.setShareInstanceHostingEnabled(it) },
-                    shareInstanceHostingPending =
-                        state.shareInstanceHostingEnabled != state.appliedShareInstanceHosting,
-                    onRestartReticulum = { viewModel.restartService() },
-                    isRestarting = state.isRestarting,
-                    crashReportingEnabled = state.crashReportingEnabled,
-                    onCrashReportingToggle = { viewModel.setCrashReportingEnabled(it) },
-                )
+                    AdvancedCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.ADVANCED.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.ADVANCED, it) },
+                        transportNodeEnabled = state.transportNodeEnabled,
+                        onTransportNodeToggle = { viewModel.setTransportNodeEnabled(it) },
+                        shareInstanceHostingEnabled = state.shareInstanceHostingEnabled,
+                        onShareInstanceHostingToggle = { viewModel.setShareInstanceHostingEnabled(it) },
+                        shareInstanceHostingPending =
+                            state.shareInstanceHostingEnabled != state.appliedShareInstanceHosting,
+                        onRestartReticulum = { viewModel.restartService() },
+                        isRestarting = state.isRestarting,
+                        crashReportingEnabled = state.crashReportingEnabled,
+                        onCrashReportingToggle = { viewModel.setCrashReportingEnabled(it) },
+                    )
+                }
 
                 // About section
                 val systemInfo =
@@ -629,6 +648,8 @@ fun SettingsScreen(
                     systemInfo = systemInfo,
                     updateCheckResult = state.updateCheckResult,
                     includePrereleaseUpdates = state.includePrereleaseUpdates,
+                    developerMode = state.developerMode,
+                    onDeveloperModeChange = { viewModel.setDeveloperMode(it) },
                     onCheckForUpdates = { viewModel.checkForUpdates() },
                     onSetIncludePrereleaseUpdates = { viewModel.setIncludePrereleaseUpdates(it) },
                     onCopySystemInfo = {
@@ -655,11 +676,12 @@ fun SettingsScreen(
                             val opened = safeOpenUrl(context, GITHUB_NEW_ISSUE_URL)
 
                             snackbarHostState.showSnackbar(
-                                message = if (opened) {
-                                    "Bug report copied to clipboard — browser opened"
-                                } else {
-                                    "No browser found — bug report copied to clipboard"
-                                },
+                                message =
+                                    if (opened) {
+                                        "Bug report copied to clipboard — browser opened"
+                                    } else {
+                                        "No browser found — bug report copied to clipboard"
+                                    },
                                 duration = SnackbarDuration.Short,
                             )
                         }
@@ -732,11 +754,12 @@ fun SettingsScreen(
                         pendingCrashReport = null
 
                         snackbarHostState.showSnackbar(
-                            message = if (opened) {
-                                "Bug report copied to clipboard — browser opened"
-                            } else {
-                                "No browser found — bug report copied to clipboard"
-                            },
+                            message =
+                                if (opened) {
+                                    "Bug report copied to clipboard — browser opened"
+                                } else {
+                                    "No browser found — bug report copied to clipboard"
+                                },
                             duration = SnackbarDuration.Short,
                         )
                     }

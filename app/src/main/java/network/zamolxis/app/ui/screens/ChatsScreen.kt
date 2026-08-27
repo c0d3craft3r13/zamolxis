@@ -24,10 +24,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MarkEmailUnread
@@ -81,6 +84,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import network.zamolxis.app.R
+import network.zamolxis.app.data.db.entity.GroupEntity
 import network.zamolxis.app.data.repository.Conversation
 import network.zamolxis.app.service.SyncResult
 import network.zamolxis.app.ui.components.ProfileIcon
@@ -90,6 +94,7 @@ import network.zamolxis.app.ui.components.SyncStatusBottomSheet
 import network.zamolxis.app.ui.components.simpleVerticalScrollbar
 import network.zamolxis.app.viewmodel.ChatsViewModel
 import network.zamolxis.app.viewmodel.ChatsSegment
+import network.zamolxis.app.viewmodel.ChatListItem
 import network.zamolxis.app.viewmodel.ContactToggleResult
 import network.zamolxis.app.viewmodel.SharedImageViewModel
 import network.zamolxis.app.viewmodel.SharedTextViewModel
@@ -111,6 +116,8 @@ fun ChatsScreen(
     onViewPeerDetails: (peerHash: String) -> Unit = {},
     onLocateOnMap: (peerHash: String) -> Unit = {},
     onNavigateToQrScanner: () -> Unit = {},
+    onGroupClick: (groupId: String) -> Unit = {},
+    onNewGroupClick: () -> Unit = {},
     viewModel: ChatsViewModel = hiltViewModel(),
     settingsViewModel: network.zamolxis.app.viewmodel.SettingsViewModel = hiltViewModel(),
     debugViewModel: network.zamolxis.app.viewmodel.DebugViewModel = hiltViewModel(),
@@ -140,6 +147,8 @@ fun ChatsScreen(
 
     // Delete/Block dialog state (context menu state is now per-card)
     var selectedConversation by remember { mutableStateOf<Conversation?>(null) }
+    var groupToLeave by remember { mutableStateOf<GroupEntity?>(null) }
+    var groupToDelete by remember { mutableStateOf<GroupEntity?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showBlockDialog by remember { mutableStateOf(false) }
     var showVoiceActions by remember { mutableStateOf(false) }
@@ -208,87 +217,95 @@ fun ChatsScreen(
         topBar = {
             Column {
                 SearchableTopAppBar(
-                title = stringResource(R.string.chats_title),
-                subtitle = if (selectedSegment == ChatsSegment.TEXT) {
-                    pluralStringResource(
-                        R.plurals.conversation_count,
-                        chatsState.conversations.size,
-                        chatsState.conversations.size,
-                    )
-                } else {
-                    pluralStringResource(
-                        R.plurals.call_count,
-                        voiceHistoryState.records.size,
-                        voiceHistoryState.records.size,
-                    )
-                },
-                isSearching = isSearching,
-                searchQuery = if (selectedSegment == ChatsSegment.TEXT) searchQuery else voiceSearchQuery,
-                onSearchQueryChange = {
-                    if (selectedSegment == ChatsSegment.TEXT) viewModel.searchQuery.value = it else viewModel.voiceSearchQuery.value = it
-                },
-                onSearchToggle = { isSearching = !isSearching },
-                searchPlaceholder =
-                    stringResource(
+                    title = stringResource(R.string.chats_title),
+                    subtitle =
                         if (selectedSegment == ChatsSegment.TEXT) {
-                            R.string.search_conversations_placeholder
+                            pluralStringResource(
+                                R.plurals.conversation_count,
+                                chatsState.items.size,
+                                chatsState.items.size,
+                            )
                         } else {
-                            R.string.search_call_history_placeholder
+                            pluralStringResource(
+                                R.plurals.call_count,
+                                voiceHistoryState.records.size,
+                                voiceHistoryState.records.size,
+                            )
                         },
-                    ),
-                additionalActions = {
-                    if (selectedSegment == ChatsSegment.TEXT) {
-                    // QR Code button
-                    IconButton(onClick = { showQrBottomSheet = true }) {
-                        Icon(
-                            imageVector = Icons.Default.QrCode2,
-                            contentDescription = stringResource(R.string.chats_cd_qr_code),
-                        )
-                    }
-                    // Sync button - shows spinner during sync, tapping opens status sheet
-                    IconButton(
-                        onClick = {
-                            if (isSyncing) {
-                                showSyncStatusSheet = true
+                    isSearching = isSearching,
+                    searchQuery = if (selectedSegment == ChatsSegment.TEXT) searchQuery else voiceSearchQuery,
+                    onSearchQueryChange = {
+                        if (selectedSegment == ChatsSegment.TEXT) viewModel.searchQuery.value = it else viewModel.voiceSearchQuery.value = it
+                    },
+                    onSearchToggle = { isSearching = !isSearching },
+                    searchPlaceholder =
+                        stringResource(
+                            if (selectedSegment == ChatsSegment.TEXT) {
+                                R.string.search_conversations_placeholder
                             } else {
-                                viewModel.syncFromPropagationNode()
+                                R.string.search_call_history_placeholder
+                            },
+                        ),
+                    additionalActions = {
+                        if (selectedSegment == ChatsSegment.TEXT) {
+                            // New group button
+                            IconButton(onClick = onNewGroupClick) {
+                                Icon(
+                                    imageVector = Icons.Default.GroupAdd,
+                                    contentDescription = stringResource(R.string.chats_cd_new_group),
+                                )
                             }
-                        },
-                    ) {
-                        if (isSyncing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = stringResource(R.string.chats_cd_sync_messages),
-                            )
-                        }
-                    }
-                    } else {
-                        IconButton(onClick = { showVoiceActions = true }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = stringResource(R.string.call_history_more_actions),
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showVoiceActions,
-                            onDismissRequest = { showVoiceActions = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.call_history_clear)) },
+                            // QR Code button
+                            IconButton(onClick = { showQrBottomSheet = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.QrCode2,
+                                    contentDescription = stringResource(R.string.chats_cd_qr_code),
+                                )
+                            }
+                            // Sync button - shows spinner during sync, tapping opens status sheet
+                            IconButton(
                                 onClick = {
-                                    showVoiceActions = false
-                                    showClearCallHistoryDialog = true
+                                    if (isSyncing) {
+                                        showSyncStatusSheet = true
+                                    } else {
+                                        viewModel.syncFromPropagationNode()
+                                    }
                                 },
-                            )
+                            ) {
+                                if (isSyncing) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp,
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = stringResource(R.string.chats_cd_sync_messages),
+                                    )
+                                }
+                            }
+                        } else {
+                            IconButton(onClick = { showVoiceActions = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = stringResource(R.string.call_history_more_actions),
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showVoiceActions,
+                                onDismissRequest = { showVoiceActions = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.call_history_clear)) },
+                                    onClick = {
+                                        showVoiceActions = false
+                                        showClearCallHistoryDialog = true
+                                    },
+                                )
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                )
                 ChatsSegmentSelector(
                     selected = selectedSegment,
                     onSelected = {
@@ -308,132 +325,215 @@ fun ChatsScreen(
                 modifier = Modifier.padding(paddingValues).consumeWindowInsets(paddingValues),
             )
         } else {
-        // Only show loading spinner when loading AND list is empty
-        // This prevents flickering when data updates while content is displayed
-        when {
-            chatsState.isLoading && chatsState.conversations.isEmpty() -> {
-                LoadingConversationsState(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                )
-            }
-            !chatsState.isLoading && chatsState.conversations.isEmpty() -> {
-                EmptyChatsState(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                )
-            }
-            else -> {
-                LazyColumn(
-                    state = listState,
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                            .consumeWindowInsets(paddingValues)
-                            .simpleVerticalScrollbar(listState),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(chatsState.conversations, key = { it.peerHash }) { conversation ->
-                        // Per-card state for context menu
-                        val hapticFeedback = LocalHapticFeedback.current
-                        var showMenu by remember { mutableStateOf(false) }
-                        val isSaved by viewModel.isContactSaved(conversation.peerHash).collectAsState()
-                        var contactLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+            // Only show loading spinner when loading AND list is empty
+            // This prevents flickering when data updates while content is displayed
+            when {
+                chatsState.isLoading && chatsState.items.isEmpty() -> {
+                    LoadingConversationsState(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                    )
+                }
+                !chatsState.isLoading && chatsState.items.isEmpty() -> {
+                    EmptyChatsState(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                    )
+                }
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues)
+                                .consumeWindowInsets(paddingValues)
+                                .simpleVerticalScrollbar(listState),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(chatsState.items, key = { it.key }) { item ->
+                            when (item) {
+                                is ChatListItem.Group -> {
+                                    val group = item.group
+                                    var showGroupMenu by remember { mutableStateOf(false) }
+                                    val hapticFeedback = LocalHapticFeedback.current
+                                    Box(modifier = Modifier.fillMaxWidth()) {
+                                        GroupConversationCard(
+                                            group = group,
+                                            onClick = { onGroupClick(group.groupId) },
+                                            onLongPress = {
+                                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                showGroupMenu = true
+                                            },
+                                        )
+                                        GroupContextMenu(
+                                            expanded = showGroupMenu,
+                                            onDismiss = { showGroupMenu = false },
+                                            onMarkAsRead = {
+                                                viewModel.markGroupRead(group.groupId)
+                                                showGroupMenu = false
+                                            },
+                                            onLeaveGroup = {
+                                                showGroupMenu = false
+                                                groupToLeave = group
+                                            },
+                                            onDeleteGroup = {
+                                                showGroupMenu = false
+                                                groupToDelete = group
+                                            },
+                                        )
+                                    }
+                                }
+                                is ChatListItem.Peer -> {
+                                    val conversation = item.conversation
+                                    // Per-card state for context menu
+                                    val hapticFeedback = LocalHapticFeedback.current
+                                    var showMenu by remember { mutableStateOf(false) }
+                                    val isSaved by viewModel.isContactSaved(conversation.peerHash).collectAsState()
+                                    var contactLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
-                        // Fetch contact location when menu opens; clear on close
-                        LaunchedEffect(showMenu) {
-                            if (showMenu) {
-                                contactLocation = viewModel.getContactLocation(conversation.peerHash)
-                            } else {
-                                contactLocation = null
+                                    // Fetch contact location when menu opens; clear on close
+                                    LaunchedEffect(showMenu) {
+                                        if (showMenu) {
+                                            contactLocation = viewModel.getContactLocation(conversation.peerHash)
+                                        } else {
+                                            contactLocation = null
+                                        }
+                                    }
+
+                                    val draftText = draftsMap[conversation.peerHash]
+
+                                    // Wrap card and menu in Box to anchor menu to card
+                                    Box(modifier = Modifier.fillMaxWidth()) {
+                                        ConversationCard(
+                                            conversation = conversation,
+                                            isSaved = isSaved,
+                                            draftText = draftText,
+                                            onClick = {
+                                                if (pendingSharedText != null) {
+                                                    sharedTextViewModel.assignToDestination(conversation.peerHash)
+                                                }
+                                                if (pendingSharedImages != null) {
+                                                    sharedImageViewModel.assignToDestination(conversation.peerHash)
+                                                }
+                                                onChatClick(conversation.peerHash, conversation.displayName)
+                                            },
+                                            onLongPress = {
+                                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                showMenu = true
+                                            },
+                                            onStarClick = {
+                                                if (isSaved) {
+                                                    viewModel.removeFromContacts(conversation.peerHash)
+                                                } else {
+                                                    viewModel.saveToContacts(conversation)
+                                                }
+                                                showMenu = false
+                                            },
+                                        )
+
+                                        // Context menu anchored to this card
+                                        ConversationContextMenu(
+                                            expanded = showMenu,
+                                            onDismiss = { showMenu = false },
+                                            isSaved = isSaved,
+                                            onSaveToContacts = {
+                                                viewModel.saveToContacts(conversation)
+                                                showMenu = false
+                                            },
+                                            onRemoveFromContacts = {
+                                                viewModel.removeFromContacts(conversation.peerHash)
+                                                showMenu = false
+                                            },
+                                            onMarkAsUnread = {
+                                                viewModel.markAsUnread(conversation.peerHash)
+                                                showMenu = false
+                                                Toast.makeText(context, "Marked as unread", Toast.LENGTH_SHORT).show()
+                                            },
+                                            onDeleteConversation = {
+                                                showMenu = false
+                                                selectedConversation = conversation
+                                                showDeleteDialog = true
+                                            },
+                                            onViewDetails = {
+                                                showMenu = false
+                                                onViewPeerDetails(conversation.peerHash)
+                                            },
+                                            hasLocation = contactLocation != null,
+                                            onLocateOnMap = {
+                                                showMenu = false
+                                                onLocateOnMap(conversation.peerHash)
+                                            },
+                                            onBlockUser = {
+                                                showMenu = false
+                                                selectedConversation = conversation
+                                                showBlockDialog = true
+                                            },
+                                        )
+                                    }
+                                }
                             }
                         }
 
-                        val draftText = draftsMap[conversation.peerHash]
-
-                        // Wrap card and menu in Box to anchor menu to card
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            ConversationCard(
-                                conversation = conversation,
-                                isSaved = isSaved,
-                                draftText = draftText,
-                                onClick = {
-                                    if (pendingSharedText != null) {
-                                        sharedTextViewModel.assignToDestination(conversation.peerHash)
-                                    }
-                                    if (pendingSharedImages != null) {
-                                        sharedImageViewModel.assignToDestination(conversation.peerHash)
-                                    }
-                                    onChatClick(conversation.peerHash, conversation.displayName)
-                                },
-                                onLongPress = {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    showMenu = true
-                                },
-                                onStarClick = {
-                                    if (isSaved) {
-                                        viewModel.removeFromContacts(conversation.peerHash)
-                                    } else {
-                                        viewModel.saveToContacts(conversation)
-                                    }
-                                    showMenu = false
-                                },
-                            )
-
-                            // Context menu anchored to this card
-                            ConversationContextMenu(
-                                expanded = showMenu,
-                                onDismiss = { showMenu = false },
-                                isSaved = isSaved,
-                                onSaveToContacts = {
-                                    viewModel.saveToContacts(conversation)
-                                    showMenu = false
-                                },
-                                onRemoveFromContacts = {
-                                    viewModel.removeFromContacts(conversation.peerHash)
-                                    showMenu = false
-                                },
-                                onMarkAsUnread = {
-                                    viewModel.markAsUnread(conversation.peerHash)
-                                    showMenu = false
-                                    Toast.makeText(context, "Marked as unread", Toast.LENGTH_SHORT).show()
-                                },
-                                onDeleteConversation = {
-                                    showMenu = false
-                                    selectedConversation = conversation
-                                    showDeleteDialog = true
-                                },
-                                onViewDetails = {
-                                    showMenu = false
-                                    onViewPeerDetails(conversation.peerHash)
-                                },
-                                hasLocation = contactLocation != null,
-                                onLocateOnMap = {
-                                    showMenu = false
-                                    onLocateOnMap(conversation.peerHash)
-                                },
-                                onBlockUser = {
-                                    showMenu = false
-                                    selectedConversation = conversation
-                                    showBlockDialog = true
-                                },
-                            )
+                        // Bottom spacing for navigation bar (fixed height since M3 NavigationBar consumes the insets)
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
                         }
-                    }
-
-                    // Bottom spacing for navigation bar (fixed height since M3 NavigationBar consumes the insets)
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
                     }
                 }
             }
         }
+
+        // Leave-group confirmation dialog
+        val pendingGroupToLeave = groupToLeave
+        if (pendingGroupToLeave != null) {
+            AlertDialog(
+                onDismissRequest = { groupToLeave = null },
+                title = { Text(stringResource(R.string.group_details_leave_title)) },
+                text = { Text(stringResource(R.string.group_details_leave_body)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.leaveGroup(pendingGroupToLeave.groupId)
+                            groupToLeave = null
+                        },
+                    ) { Text(stringResource(R.string.group_details_leave)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { groupToLeave = null }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+            )
+        }
+
+        // Delete-group confirmation dialog. Deleting is local-only and does not
+        // announce anything, so it stays a separate action from leaving.
+        val pendingGroupToDelete = groupToDelete
+        if (pendingGroupToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { groupToDelete = null },
+                title = { Text(stringResource(R.string.group_delete_title)) },
+                text = { Text(stringResource(R.string.group_delete_body, pendingGroupToDelete.name)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deleteGroup(pendingGroupToDelete.groupId)
+                            groupToDelete = null
+                        },
+                    ) { Text(stringResource(R.string.delete)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { groupToDelete = null }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+            )
         }
 
         if (showClearCallHistoryDialog) {
@@ -1036,5 +1136,111 @@ private fun formatTimestamp(timestamp: Long): String {
         else -> {
             SimpleDateFormat("MMM dd", Locale.getDefault()).format(Date(timestamp))
         }
+    }
+}
+
+/**
+ * Chat-list row for a group conversation: group icon, name, last-message
+ * preview and unread badge. Mirrors [ConversationCard]'s shape so both item
+ * kinds sit in the merged list without visual seams.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun GroupConversationCard(
+    group: GroupEntity,
+    onClick: () -> Unit,
+    onLongPress: () -> Unit,
+) {
+    Card(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .combinedClickable(onClick = onClick, onLongClick = onLongPress),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Groups,
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = group.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                group.lastMessage?.let { preview ->
+                    Text(
+                        text = preview,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            if (group.unreadCount > 0) {
+                Badge { Text(group.unreadCount.toString()) }
+            }
+        }
+    }
+}
+
+/** Long-press menu for a group row in the chat list. */
+@Composable
+private fun GroupContextMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onMarkAsRead: () -> Unit,
+    onLeaveGroup: () -> Unit,
+    onDeleteGroup: () -> Unit,
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(12.dp),
+        tonalElevation = 3.dp,
+        offset = DpOffset(x = 8.dp, y = 0.dp),
+    ) {
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.MarkEmailUnread,
+                    contentDescription = null,
+                )
+            },
+            text = { Text(stringResource(R.string.group_mark_read)) },
+            onClick = onMarkAsRead,
+        )
+        HorizontalDivider()
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            text = { Text(stringResource(R.string.group_details_leave)) },
+            onClick = onLeaveGroup,
+        )
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            text = { Text(stringResource(R.string.group_delete)) },
+            onClick = onDeleteGroup,
+        )
     }
 }

@@ -102,6 +102,10 @@ release/.envrc
 # as an artifact rather than committing it)
 dispatcher-audit-report.txt
 
+# JNA unpacks its native shim into ./tmp when a Robolectric/SQLCipher test runs
+# from the repo root. Machine-local scratch, not something to commit.
+/tmp/
+
 # Auto Claude data directory
 .auto-claude/
 .worktrees/

@@ -22,6 +22,8 @@ import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.model.ReceivedMessage
 import network.zamolxis.app.rns.host.util.PeerNameResolver
+import network.zamolxis.app.service.group.GroupChatManager
+import network.zamolxis.app.service.group.GroupWireCodec
 import network.zamolxis.app.service.pq.PqFieldsJson
 import network.zamolxis.app.service.pq.PqMessageSealer
 import java.util.concurrent.ConcurrentHashMap
@@ -62,6 +64,7 @@ class MessageCollector
         private val peerIconDao: PeerIconDao,
         private val pqMessageSealer: PqMessageSealer,
         private val pqKeyRepository: PqKeyRepository,
+        private val groupChatManager: GroupChatManager,
     ) {
         companion object {
             private const val TAG = "MessageCollector"
@@ -236,6 +239,30 @@ class MessageCollector
                             // fieldsJson, so resolving a key change or restoring a
                             // key pair can make it readable later.
                             Log.e(TAG, "Sealed message from $sourceHash could not be opened; storing as unreadable")
+                        }
+
+                        // Group chat: the envelope rides inside the seal (rebuilt
+                        // into unsealedFields) or, for unsealed sends, in the LXMF
+                        // fields JSON. A group message belongs to the group store
+                        // only — it must not land in the 1:1 conversation with the
+                        // sender, so the normal save/notification path is skipped.
+                        // The LXMF-hash dedup above has already run, so a replayed
+                        // copy never reaches this point.
+                        val groupEnvelope =
+                            GroupWireCodec.extractFromFields(pqIncoming.unsealedFields)
+                                ?: GroupWireCodec.extractFromFieldsJson(receivedMessage.fieldsJson)
+                        if (groupEnvelope != null) {
+                            runCatching {
+                                groupChatManager.handleIncoming(
+                                    envelope = groupEnvelope,
+                                    sourceHash = sourceHash,
+                                    content = pqIncoming.content.ifBlank { receivedMessage.content },
+                                    timestamp = receivedMessage.timestamp,
+                                )
+                            }.onFailure {
+                                Log.e(TAG, "Group message handling failed for ${groupEnvelope.gid}", it)
+                            }
+                            return@collect
                         }
 
                         // Create data message for storage
@@ -540,6 +567,7 @@ class MessageCollector
         /**
          * Get peer name with fallback - uses PeerNameResolver for consistent lookup across the app
          */
+
         /**
          * Run an inbound message through the post-quantum layer.
          *

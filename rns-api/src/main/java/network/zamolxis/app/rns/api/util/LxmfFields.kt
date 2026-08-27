@@ -169,4 +169,19 @@ object LxmfFields {
      * [LocationTelemetry.COLUMBA_META_FIELD_ID].
      */
     const val FIELD_CUSTOM_META = 0xFD
+
+    /**
+     * Key inside the [FIELD_CUSTOM_META] nested map that carries the group-chat
+     * envelope — `fields[0xFD]["zgroup"] = {v, gid, mid, ctl?, body?}`.
+     *
+     * Sharing FIELD_CUSTOM_META with the telemetry extras is deliberate: 0xFD is
+     * upstream's documented app-metadata extension point, and invented field IDs
+     * in the 0x00–0x80 range are forbidden (see [FIELD_REACTION_LEGACY]). The
+     * nested-map shape lets group chat and telemetry coexist in one field
+     * without either parser tripping over the other's keys. Wire details live in
+     * `:app`'s `GroupWireCodec`; only the key is centralised here so the
+     * receive-side visibility filter ([isUserVisibleChatMessage]) can reference
+     * it without depending on `:app`.
+     */
+    const val CUSTOM_META_KEY_GROUP = "zgroup"
 }

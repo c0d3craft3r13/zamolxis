@@ -13,6 +13,8 @@ import org.json.JSONObject
  *   - file attachments (`fields[0x05]` = [LxmfFields.FIELD_FILE_ATTACHMENTS])
  *   - audio          (`fields[0x07]` = [LxmfFields.FIELD_AUDIO])
  *   - hybrid-sealed content (`fields[0x51]` = [LxmfFields.FIELD_SEALED_CONTENT])
+ *   - a group-chat envelope (`fields[0xFD]["zgroup"]` =
+ *     [LxmfFields.FIELD_CUSTOM_META] / [LxmfFields.CUSTOM_META_KEY_GROUP])
  *
  * The sealed-content case is not optional. A post-quantum sealed message puts
  * its text in `fields[0x51]` and leaves the LXMF content slot empty, so without
@@ -20,9 +22,15 @@ import org.json.JSONObject
  * before `MessageCollector` ever gets to open it. The sender still sees its own
  * copy and a delivery proof, so the failure is invisible on both ends.
  *
+ * The group case exists for the same reason: an unsealed group control message
+ * (roster sync, rename, leave) has empty content and only the envelope, and a
+ * dropped MEMBERS_SYNC silently strands a member with a broken group. The check
+ * is on the nested key, not FIELD_CUSTOM_META's mere presence — telemetry
+ * extras share that field and must keep falling through to false.
+ *
  * Returns false otherwise. Side-channel-only frames — telemetry-only
  * location shares (FIELD_TELEMETRY / FIELD_TELEMETRY_STREAM /
- * FIELD_CUSTOM_META), reaction-only events (FIELD_REACTION),
+ * FIELD_CUSTOM_META telemetry extras), reaction-only events (FIELD_REACTION),
  * icon-only chatter from Sideband / MeshChat — all fall through to
  * false and are routed via their dedicated flows
  * (`RnsTelemetry.locationTelemetryFlow`, `_reactionReceivedFlow`,
@@ -46,7 +54,10 @@ fun ReceivedMessage.isUserVisibleChatMessage(): Boolean {
         parsed.has(LxmfFields.FIELD_IMAGE.toString()) ||
             parsed.has(LxmfFields.FIELD_FILE_ATTACHMENTS.toString()) ||
             parsed.has(LxmfFields.FIELD_AUDIO.toString()) ||
-            parsed.has(LxmfFields.FIELD_SEALED_CONTENT.toString())
+            parsed.has(LxmfFields.FIELD_SEALED_CONTENT.toString()) ||
+            parsed
+                .optJSONObject(LxmfFields.FIELD_CUSTOM_META.toString())
+                ?.has(LxmfFields.CUSTOM_META_KEY_GROUP) == true
     } catch (_: Exception) {
         // Malformed fieldsJson with blank content — safer to drop
         // than render an empty bubble. The backend logs the parse

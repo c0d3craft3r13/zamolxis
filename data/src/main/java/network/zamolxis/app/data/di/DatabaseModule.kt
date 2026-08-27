@@ -8,6 +8,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import network.zamolxis.app.data.db.DatabaseTransactionRunner
+import network.zamolxis.app.data.db.RoomTransactionRunner
 import network.zamolxis.app.data.db.ZamolxisDatabase
 import network.zamolxis.app.data.db.ZamolxisDatabaseFactory
 import network.zamolxis.app.data.crypto.IdentityKeyEncryptor
@@ -19,6 +21,10 @@ import network.zamolxis.app.data.db.dao.ContactDao
 import network.zamolxis.app.data.db.dao.ConversationDao
 import network.zamolxis.app.data.db.dao.CustomThemeDao
 import network.zamolxis.app.data.db.dao.DraftDao
+import network.zamolxis.app.data.db.dao.GroupDao
+import network.zamolxis.app.data.db.dao.GroupMemberDao
+import network.zamolxis.app.data.db.dao.GroupMessageDao
+import network.zamolxis.app.data.db.dao.GroupMessageStatusDao
 import network.zamolxis.app.data.db.dao.InterfaceFirstSeenDao
 import network.zamolxis.app.data.db.dao.LocalIdentityDao
 import network.zamolxis.app.data.db.dao.MessageDao
@@ -90,6 +96,26 @@ object DatabaseModule {
 
     @Provides
     fun providePqKeyDao(database: ZamolxisDatabase): PqKeyDao = database.pqKeyDao()
+
+    @Provides
+    fun provideGroupDao(database: ZamolxisDatabase): GroupDao = database.groupDao()
+
+    @Provides
+    fun provideGroupMemberDao(database: ZamolxisDatabase): GroupMemberDao = database.groupMemberDao()
+
+    @Provides
+    fun provideGroupMessageDao(database: ZamolxisDatabase): GroupMessageDao = database.groupMessageDao()
+
+    @Provides
+    fun provideGroupMessageStatusDao(database: ZamolxisDatabase): GroupMessageStatusDao = database.groupMessageStatusDao()
+
+    /**
+     * Multi-write atomicity for repositories. Bound as an interface so tests can
+     * substitute a pass-through runner — see [DatabaseTransactionRunner].
+     */
+    @Provides
+    @Singleton
+    fun provideDatabaseTransactionRunner(database: ZamolxisDatabase): DatabaseTransactionRunner = RoomTransactionRunner(database)
 
     /**
      * The hybrid post-quantum engine.

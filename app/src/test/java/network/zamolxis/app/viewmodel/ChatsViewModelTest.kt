@@ -12,23 +12,22 @@ import network.zamolxis.app.data.repository.CallHistoryRepository
 import network.zamolxis.app.data.repository.ContactRepository
 import network.zamolxis.app.data.repository.Conversation
 import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.GroupRepository
 import network.zamolxis.app.data.repository.ReceivedLocationRepository
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsTelephony
 import network.zamolxis.app.rns.api.model.CallState
-import network.zamolxis.app.rns.api.model.VoiceCallState
 import network.zamolxis.app.service.IdentityResolutionManager
 import network.zamolxis.app.service.PropagationNodeManager
+import network.zamolxis.app.service.group.GroupChatManager
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -55,6 +54,8 @@ class ChatsViewModelTest {
     private lateinit var conversationRepository: ConversationRepository
     private lateinit var callHistoryRepository: CallHistoryRepository
     private lateinit var contactRepository: ContactRepository
+    private lateinit var groupRepository: GroupRepository
+    private lateinit var groupChatManager: GroupChatManager
     private lateinit var receivedLocationRepository: ReceivedLocationRepository
     private lateinit var announceRepository: AnnounceRepository
     private lateinit var blockedPeerRepository: BlockedPeerRepository
@@ -106,6 +107,9 @@ class ChatsViewModelTest {
         conversationRepository = mockk()
         callHistoryRepository = mockk()
         contactRepository = mockk()
+        groupRepository = mockk()
+        groupChatManager = mockk()
+        every { groupRepository.observeGroupOverviews() } returns flowOf(emptyList())
         announceRepository = mockk()
         blockedPeerRepository = mockk()
         reticulumProtocol = mockk()
@@ -137,6 +141,8 @@ class ChatsViewModelTest {
                 conversationRepository,
                 callHistoryRepository,
                 contactRepository,
+                groupRepository,
+                groupChatManager,
                 announceRepository,
                 blockedPeerRepository,
                 reticulumProtocol,
@@ -163,7 +169,6 @@ class ChatsViewModelTest {
             }
         }
 
-
     @Test
     fun `chatsState flow emits repository data`() =
         runTest {
@@ -179,6 +184,8 @@ class ChatsViewModelTest {
                     repository,
                     callHistoryRepository,
                     mockk(),
+                    groupRepository,
+                    groupChatManager,
                     announceRepository,
                     blockedPeerRepository,
                     reticulumProtocol,
@@ -221,6 +228,8 @@ class ChatsViewModelTest {
                     repository,
                     callHistoryRepository,
                     mockk(),
+                    groupRepository,
+                    groupChatManager,
                     announceRepository,
                     blockedPeerRepository,
                     reticulumProtocol,
@@ -302,6 +311,8 @@ class ChatsViewModelTest {
                     repository,
                     callHistoryRepository,
                     mockk(),
+                    groupRepository,
+                    groupChatManager,
                     announceRepository,
                     blockedPeerRepository,
                     reticulumProtocol,
@@ -353,6 +364,8 @@ class ChatsViewModelTest {
                     repository,
                     callHistoryRepository,
                     mockk(),
+                    groupRepository,
+                    groupChatManager,
                     announceRepository,
                     blockedPeerRepository,
                     reticulumProtocol,
@@ -394,6 +407,8 @@ class ChatsViewModelTest {
                     repository,
                     callHistoryRepository,
                     mockk(),
+                    groupRepository,
+                    groupChatManager,
                     announceRepository,
                     blockedPeerRepository,
                     reticulumProtocol,
@@ -435,6 +450,8 @@ class ChatsViewModelTest {
                     repository,
                     callHistoryRepository,
                     mockk(),
+                    groupRepository,
+                    groupChatManager,
                     announceRepository,
                     blockedPeerRepository,
                     reticulumProtocol,
@@ -477,6 +494,8 @@ class ChatsViewModelTest {
                     repository,
                     callHistoryRepository,
                     mockk(),
+                    groupRepository,
+                    groupChatManager,
                     announceRepository,
                     blockedPeerRepository,
                     reticulumProtocol,
@@ -651,5 +670,4 @@ class ChatsViewModelTest {
             // Should not crash
             assertTrue("ViewModel should handle block errors gracefully", true)
         }
-
 }

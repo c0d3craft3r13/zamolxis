@@ -213,6 +213,46 @@ class ChatMessageFilterTest {
     }
 
     @Test
+    fun `group-control-only message surfaces a chat bubble`() {
+        // An unsealed group control frame (roster sync, rename, leave) is
+        // exactly this shape: empty content and only the group envelope under
+        // fields[0xFD]["zgroup"] (decimal 253). It MUST surface, or a dropped
+        // MEMBERS_SYNC silently strands a member with a broken group.
+        assertTrue(
+            received(
+                content = "",
+                fieldsJson =
+                    """{"253": {"zgroup": {"v": 1, "gid": "0123456789abcdef0123456789abcdef",""" +
+                        """ "mid": "3f6f9bda-4b1f-4a2c-9f4a-2b7e6c1d8a90", "ctl": "MEMBERS_SYNC",""" +
+                        """ "body": {"name": "ops", "createdBy": "aabb", "createdAt": 1, "members": []}}}}""",
+            ).isUserVisibleChatMessage(),
+        )
+    }
+
+    @Test
+    fun `custom-meta telemetry extras alone do not surface`() {
+        // Telemetry's cease/expires extras share fields[0xFD] with the group
+        // envelope. Only the nested zgroup key is user-visible; a location
+        // share's metadata must keep falling through to the telemetry flow.
+        assertFalse(
+            received(
+                content = "",
+                fieldsJson = """{"253": {"cease": "aabbcc", "expires": 1756000000}}""",
+            ).isUserVisibleChatMessage(),
+        )
+    }
+
+    @Test
+    fun `a non-object custom-meta value does not surface`() {
+        assertFalse(
+            received(
+                content = "",
+                fieldsJson = """{"253": "deadbeef"}""",
+            ).isUserVisibleChatMessage(),
+        )
+    }
+
+    @Test
     fun `reply with text surfaces (text wins, reply fields are inline metadata)`() {
         // Replies are normal text messages that ALSO carry reply
         // metadata in fields[0x30] / fields[0x31]. They should

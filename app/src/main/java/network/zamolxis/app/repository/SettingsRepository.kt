@@ -76,6 +76,11 @@ class SettingsRepository
             val HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
             val NEEDS_IDENTITY_UNLOCK = booleanPreferencesKey("needs_identity_unlock")
 
+            // Developer mode: reveals network-internals UI (interfaces, announce
+            // stream, propagation tuning). Off by default — the app presents as a
+            // plain messenger until unlocked via the About card.
+            val DEVELOPER_MODE = booleanPreferencesKey("developer_mode")
+
             // Auto-announce preferences
             val AUTO_ANNOUNCE_ENABLED = booleanPreferencesKey("auto_announce_enabled")
             val AUTO_ANNOUNCE_INTERVAL_MINUTES = intPreferencesKey("auto_announce_interval_minutes") // Legacy, for migration
@@ -542,6 +547,26 @@ class SettingsRepository
         }
 
         // Auto-announce preferences
+
+        /**
+         * Flow of the developer mode flag. Defaults to false.
+         */
+        val developerModeFlow: Flow<Boolean> =
+            context.dataStore.data
+                .map { preferences ->
+                    preferences[PreferencesKeys.DEVELOPER_MODE] ?: false
+                }.distinctUntilChanged()
+
+        /**
+         * Save the developer mode flag.
+         *
+         * @param enabled Whether developer mode is enabled
+         */
+        suspend fun saveDeveloperMode(enabled: Boolean) {
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.DEVELOPER_MODE] = enabled
+            }
+        }
 
         /**
          * Flow of the auto-announce enabled state.

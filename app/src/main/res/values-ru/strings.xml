@@ -1012,6 +1012,11 @@
     <string name="app_logo_content_description">Zamolxis</string>
     <string name="about_tagline">Нативный Android-мессенджер на Bluetooth LE, TCP или RNode (LoRa) поверх LXMF и Reticulum</string>
     <string name="about_app_info">Информация о приложении</string>
+    <string name="about_developer_hint">Нажмите на версию 7 раз, чтобы открыть режим разработчика</string>
+    <string name="about_developer_unlocked">Режим разработчика включён — нажмите на версию 7 раз, чтобы выключить</string>
+    <string name="about_developer_locked">Режим разработчика выключен</string>
+    <string name="about_developer_countdown">Осталось нажатий: %1$d</string>
+    <string name="settings_developer_section">Для разработчиков</string>
     <string name="about_device_info">Информация об устройстве</string>
     <string name="about_protocol_versions">Версии протоколов</string>
     <string name="about_identity">Идентичность</string>
@@ -2354,4 +2359,40 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., лицензия MIT — 
     <string name="battery_profile_max_desc">Максимальное время работы при замедленном фоновом сетевом обмене и обнаружении.</string>
     <string name="battery_profile_balanced_desc">Хорошее время работы при обычной отзывчивости для большинства пользователей.</string>
     <string name="battery_profile_performance_desc">Быстрейшее восстановление путей и отзывчивость ценой большего расхода батареи.</string>
+
+    <!-- Group chats -->
+    <string name="group_new_title">Новая группа</string>
+    <string name="group_new_name_label">Название группы</string>
+    <string name="group_new_members_hint">Выберите участников</string>
+    <string name="group_new_create">Создать</string>
+    <string name="group_create_failed">Не удалось создать группу</string>
+    <string name="group_picker_empty">Нет доступных контактов</string>
+    <string name="group_chat_title_fallback">Группа</string>
+    <string name="group_send_failed">Не удалось отправить сообщение</string>
+    <string name="group_action_failed">Действие не удалось</string>
+    <string name="group_details_title">О группе</string>
+    <string name="group_details_members">Участники</string>
+    <string name="group_details_add">Добавить</string>
+    <string name="group_details_add_members">Добавить участников</string>
+    <string name="group_details_rename">Переименовать группу</string>
+    <string name="group_details_remove">Удалить</string>
+    <string name="group_details_remove_title">Удалить участника</string>
+    <string name="group_details_remove_body">Удалить %1$s из группы?</string>
+    <string name="group_details_leave">Покинуть группу</string>
+    <string name="group_details_leave_title">Покинуть группу</string>
+    <string name="group_details_leave_body">Вы перестанете получать сообщения из этой группы.</string>
+    <string name="group_delete">Удалить группу</string>
+    <string name="group_delete_title">Удалить группу?</string>
+    <string name="group_delete_body">«%1$s» и вся её переписка будут удалены с этого устройства. У остальных участников копия останется.</string>
+    <string name="group_member_left">Вышел из группы</string>
+    <string name="group_member_you">Вы</string>
+    <string name="group_role_admin">Админ</string>
+    <string name="group_mark_read">Отметить прочитанным</string>
+    <string name="chats_cd_new_group">Новая группа</string>
+    <plurals name="group_member_count">
+        <item quantity="one">%d участник</item>
+        <item quantity="few">%d участника</item>
+        <item quantity="many">%d участников</item>
+        <item quantity="other">%d участника</item>
+    </plurals>
 </resources>

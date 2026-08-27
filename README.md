@@ -17,6 +17,7 @@ It is built for people who cannot assume the network is neutral — reporters, f
 - **Message without infrastructure** — Send messages even when the internet is down, throttled, or shut off
 - **Connect multiple ways** — Bluetooth LE for people near you, Wi-Fi at home, LoRa radio via [RNode](https://github.com/markqvist/RNode_Firmware) for distance, or TCP to reach any Reticulum node worldwide
 - **Stay private** — End-to-end encryption with no accounts, no tracking, and no central servers
+- **Chat in groups** — Group conversations with a shared member list, admin controls, and delivery status per recipient
 - **Share location** — Share your position securely with chosen contacts, viewable on a dedicated map
 - **Download maps for offline use** — Vector and raster maps in MBTiles format
 - **Browse NomadNetwork** — Access nomadnet pages over Reticulum

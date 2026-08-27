@@ -24,6 +24,7 @@ import network.zamolxis.app.data.repository.BlockedPeerRepository
 import network.zamolxis.app.data.repository.CallHistoryRepository
 import network.zamolxis.app.data.repository.ContactRepository
 import network.zamolxis.app.data.repository.ConversationRepository
+import network.zamolxis.app.data.repository.GroupRepository
 import network.zamolxis.app.data.repository.ReceivedLocationRepository
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsTelephony
@@ -32,6 +33,7 @@ import network.zamolxis.app.rns.api.model.VoiceCallState
 import network.zamolxis.app.service.IdentityResolutionManager
 import network.zamolxis.app.service.PropagationNodeManager
 import network.zamolxis.app.service.SyncProgress
+import network.zamolxis.app.service.group.GroupChatManager
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -48,6 +50,8 @@ class ChatsVoiceHistoryViewModelTest {
     private lateinit var conversationRepository: ConversationRepository
     private lateinit var callHistoryRepository: CallHistoryRepository
     private lateinit var contactRepository: ContactRepository
+    private lateinit var groupRepository: GroupRepository
+    private lateinit var groupChatManager: GroupChatManager
     private lateinit var receivedLocationRepository: ReceivedLocationRepository
     private lateinit var announceRepository: AnnounceRepository
     private lateinit var blockedPeerRepository: BlockedPeerRepository
@@ -64,6 +68,9 @@ class ChatsVoiceHistoryViewModelTest {
         conversationRepository = mockk()
         callHistoryRepository = mockk()
         contactRepository = mockk()
+        groupRepository = mockk()
+        groupChatManager = mockk()
+        every { groupRepository.observeGroupOverviews() } returns flowOf(emptyList())
         receivedLocationRepository = mockk()
         announceRepository = mockk()
         blockedPeerRepository = mockk()
@@ -83,18 +90,21 @@ class ChatsVoiceHistoryViewModelTest {
         every { propagationNodeManager.manualSyncResult } returns MutableSharedFlow()
         every { propagationNodeManager.syncProgress } returns MutableStateFlow(SyncProgress.Idle)
         coEvery { reticulumProtocol.isTransportEnabled() } returns false
-        viewModel = ChatsViewModel(
-            conversationRepository,
-            callHistoryRepository,
-            contactRepository,
-            announceRepository,
-            blockedPeerRepository,
-            reticulumProtocol,
-            rnsTelephony,
-            propagationNodeManager,
-            receivedLocationRepository,
-            identityResolutionManager,
-        )
+        viewModel =
+            ChatsViewModel(
+                conversationRepository,
+                callHistoryRepository,
+                contactRepository,
+                groupRepository,
+                groupChatManager,
+                announceRepository,
+                blockedPeerRepository,
+                reticulumProtocol,
+                rnsTelephony,
+                propagationNodeManager,
+                receivedLocationRepository,
+                identityResolutionManager,
+            )
     }
 
     @After
@@ -242,6 +252,8 @@ class ChatsVoiceHistoryViewModelTest {
                     conversationRepository,
                     callHistoryRepository,
                     contactRepository,
+                    groupRepository,
+                    groupChatManager,
                     announceRepository,
                     blockedPeerRepository,
                     reticulumProtocol,

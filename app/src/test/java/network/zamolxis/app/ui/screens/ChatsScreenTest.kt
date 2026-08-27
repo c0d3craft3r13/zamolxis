@@ -1007,6 +1007,11 @@ class ChatsScreenTest {
             MutableStateFlow(
                 network.zamolxis.app.viewmodel.ChatsState(
                     conversations = conversations,
+                    items =
+                        conversations.map {
+                            network.zamolxis.app.viewmodel.ChatListItem
+                                .Peer(it)
+                        },
                     isLoading = isLoading,
                 ),
             )
@@ -1014,7 +1019,10 @@ class ChatsScreenTest {
         every { mockViewModel.voiceSearchQuery } returns MutableStateFlow("")
         every { mockViewModel.selectedSegment } returns MutableStateFlow(network.zamolxis.app.viewmodel.ChatsSegment.TEXT)
         every { mockViewModel.voiceHistoryState } returns
-            MutableStateFlow(network.zamolxis.app.viewmodel.VoiceHistoryState())
+            MutableStateFlow(
+                network.zamolxis.app.viewmodel
+                    .VoiceHistoryState(),
+            )
         every { mockViewModel.callHistoryNavigation } returns
             MutableSharedFlow<network.zamolxis.app.viewmodel.CallHistoryNavigation>()
         every { mockViewModel.isSyncing } returns MutableStateFlow(isSyncing)

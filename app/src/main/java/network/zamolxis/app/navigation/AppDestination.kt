@@ -131,6 +131,9 @@ enum class AppDestination(
         "voice_call/0123456789abcdef?autoAnswer=false&profileCode=-1",
     ),
     INCOMING_CALL("incoming_call/{identityHash}", "incoming_call/0123456789abcdef"),
+    GROUP_NEW("group_new"),
+    GROUP_CHAT("group_chat/{groupId}", "group_chat/0123456789abcdef0123456789abcdef"),
+    GROUP_DETAILS("group_details/{groupId}", "group_details/0123456789abcdef0123456789abcdef"),
 }
 
 enum class BackContract {

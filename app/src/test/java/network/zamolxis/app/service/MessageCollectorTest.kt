@@ -11,6 +11,7 @@ import network.zamolxis.app.notifications.NotificationHelper
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.service.group.GroupChatManager
 import network.zamolxis.app.service.pq.PqMessageSealer
 import io.mockk.Runs
 import io.mockk.clearAllMocks
@@ -47,6 +48,7 @@ class MessageCollectorTest {
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var peerIconDao: PeerIconDao
     private lateinit var pqMessageSealer: PqMessageSealer
+    private lateinit var groupChatManager: GroupChatManager
     private lateinit var messageCollector: MessageCollector
 
     // Use extraBufferCapacity to ensure emissions aren't dropped before collector is ready
@@ -67,6 +69,10 @@ class MessageCollectorTest {
         notificationHelper = mockk()
         peerIconDao = mockk()
         pqMessageSealer = mockk()
+        // Group routing is covered by GroupChatManagerTest; here the manager is
+        // a pass-through so the existing message-path expectations stay unchanged.
+        groupChatManager = mockk()
+        coEvery { groupChatManager.handleIncoming(any(), any(), any(), any()) } just Runs
         // Stubbed to the behaviour these tests already assumed: messages arrive with
         // their content unchanged and nothing is sealed, so the existing expectations
         // still describe what is being tested. arg(3) is fallbackContent — the
@@ -132,6 +138,7 @@ class MessageCollectorTest {
                     mockk<network.zamolxis.app.data.repository.PqKeyRepository>().also {
                         coEvery { it.recordAnnouncedFingerprint(any(), any()) } just Runs
                     },
+                groupChatManager = groupChatManager,
             )
     }
 

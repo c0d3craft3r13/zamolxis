@@ -181,6 +181,7 @@ class SettingsViewModelIncomingMessageLimitTest {
         every { settingsRepository.retrievalIntervalSecondsFlow } returns retrievalIntervalSecondsFlow
         every { settingsRepository.transportNodeEnabledFlow } returns transportNodeEnabledFlow
         every { settingsRepository.crashReportingConsentFlow } returns kotlinx.coroutines.flow.MutableStateFlow(false)
+        every { settingsRepository.developerModeFlow } returns kotlinx.coroutines.flow.MutableStateFlow(false)
         every { settingsRepository.hasCompletedOnboardingFlow } returns kotlinx.coroutines.flow.MutableStateFlow(true)
         every { settingsRepository.hasSeenCrashReportingPromptFlow } returns kotlinx.coroutines.flow.MutableStateFlow(true)
         every { settingsRepository.defaultDeliveryMethodFlow } returns defaultDeliveryMethodFlow

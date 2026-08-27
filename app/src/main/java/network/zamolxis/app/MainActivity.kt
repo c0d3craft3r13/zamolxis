@@ -98,6 +98,7 @@ import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.host.ble.util.BlePermissionManager
 import network.zamolxis.app.rns.api.RnsTransportAdmin
 import network.zamolxis.app.rns.host.ReticulumService
+import network.zamolxis.app.service.group.GroupChatManager
 import network.zamolxis.app.ui.components.BlePermissionBottomSheet
 import network.zamolxis.app.ui.components.LocalCapabilities
 import network.zamolxis.app.ui.components.LocalWindowSize
@@ -110,6 +111,8 @@ import network.zamolxis.app.ui.screens.BlockedUsersScreen
 import network.zamolxis.app.ui.screens.ChatsScreen
 import network.zamolxis.app.ui.screens.ContactsScreen
 import network.zamolxis.app.ui.screens.DiscoveredInterfacesScreen
+import network.zamolxis.app.ui.screens.GroupChatScreen
+import network.zamolxis.app.ui.screens.GroupDetailsScreen
 import network.zamolxis.app.ui.screens.IdentityManagerScreen
 import network.zamolxis.app.ui.screens.IdentityScreen
 import network.zamolxis.app.ui.screens.IncomingCallScreen
@@ -119,6 +122,7 @@ import network.zamolxis.app.ui.screens.MessageDetailScreen
 import network.zamolxis.app.ui.screens.MessagingScreen
 import network.zamolxis.app.ui.screens.MigrationScreen
 import network.zamolxis.app.ui.screens.MyIdentityScreen
+import network.zamolxis.app.ui.screens.NewGroupScreen
 import network.zamolxis.app.ui.screens.NomadNetBrowserScreen
 import network.zamolxis.app.ui.screens.NotificationSettingsScreen
 import network.zamolxis.app.ui.screens.QrScannerScreen
@@ -136,7 +140,6 @@ import network.zamolxis.app.ui.screens.AppLockScreen
 import network.zamolxis.app.ui.screens.onboarding.OnboardingPagerScreen
 import network.zamolxis.app.ui.screens.tcpclient.TcpClientWizardScreen
 import network.zamolxis.app.ui.theme.ZamolxisTheme
-import network.zamolxis.app.ui.theme.ThemeMode
 import network.zamolxis.app.ui.util.LifecycleGuard
 import network.zamolxis.app.util.CrashReportManager
 import network.zamolxis.app.util.InterfaceReconnectSignal
@@ -189,7 +192,8 @@ class MainActivity : ComponentActivity() {
     // Build-time-swappable crash reporter (no-op in the noSentry flavor). Breadcrumbs are
     // recorded against the global reporting hub initialized by ZamolxisApplication.
     private val crashReporter: network.zamolxis.app.telemetry.CrashReporter =
-        network.zamolxis.app.telemetry.CrashReporterProvider.create()
+        network.zamolxis.app.telemetry.CrashReporterProvider
+            .create()
 
     // JankStats for performance monitoring (Phase 1 Plan 01-03)
     private lateinit var jankStats: androidx.metrics.performance.JankStats
@@ -354,6 +358,7 @@ class MainActivity : ComponentActivity() {
             // prop-drilling (Phase D). settingsViewModel is the Activity-scoped
             // instance, so this is the same StateFlow the gated screens read.
             val capabilities by settingsViewModel.capabilities.collectAsState()
+
             // WindowSizeClass exposes width/height buckets (Compact/Medium/Expanded)
             // so screens can collapse chrome on landscape phones (compact-height)
             // and eventually adopt list-detail layouts on tablets/foldables
@@ -361,7 +366,8 @@ class MainActivity : ComponentActivity() {
             // via LocalWindowSize.
             @OptIn(androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi::class)
             val windowSizeClass =
-                androidx.compose.material3.windowsizeclass.calculateWindowSizeClass(this)
+                androidx.compose.material3.windowsizeclass
+                    .calculateWindowSizeClass(this)
             CompositionLocalProvider(
                 LocalCapabilities provides capabilities,
                 LocalWindowSize provides windowSizeClass,
@@ -455,16 +461,17 @@ class MainActivity : ComponentActivity() {
             usbDevice.productId,
         )
 
-    private suspend fun detectConnectedPyxis(
-        usbDevice: UsbDevice,
-    ): network.zamolxis.app.rns.host.flasher.PyxisDeviceIdentity? {
+    private suspend fun detectConnectedPyxis(usbDevice: UsbDevice): network.zamolxis.app.rns.host.flasher.PyxisDeviceIdentity? {
         if (!isEsp32S3Candidate(usbDevice)) return null
-        return network.zamolxis.app.rns.host.flasher.RNodeFlasher(this)
+        return network.zamolxis.app.rns.host.flasher
+            .RNodeFlasher(this)
             .detectPyxisDevice(usbDevice.deviceId)
     }
 
     private suspend fun detectConnectedRNode(usbDevice: UsbDevice): Boolean {
-        val flasher = network.zamolxis.app.rns.host.flasher.RNodeFlasher(this)
+        val flasher =
+            network.zamolxis.app.rns.host.flasher
+                .RNodeFlasher(this)
         if (!flasher.hasPermission(usbDevice.deviceId)) return false
         return flasher.isRNodeDevice(usbDevice.deviceId)
     }
@@ -493,8 +500,7 @@ class MainActivity : ComponentActivity() {
         return UsbAttachmentClassification(pyxisIdentity, configuredRNode)
     }
 
-    private fun isUsbDeviceAttached(deviceId: Int): Boolean =
-        getSystemService(UsbManager::class.java).deviceList.values.any { it.deviceId == deviceId }
+    private fun isUsbDeviceAttached(deviceId: Int): Boolean = getSystemService(UsbManager::class.java).deviceList.values.any { it.deviceId == deviceId }
 
     private fun shouldIgnoreDuplicateUsbEvent(
         deviceId: Int,
@@ -538,82 +544,83 @@ class MainActivity : ComponentActivity() {
         }
 
         val previousClassificationJob = beginUsbClassification(usbDevice.deviceId, now)
-        usbClassificationJob = lifecycleScope.launch {
-            try {
-                previousClassificationJob?.cancelAndJoin()
-                Log.d(
-                    TAG,
-                    "🔌 Looking up USB device: VID=${usbDevice.vendorId} (0x${usbDevice.vendorId.toString(
-                        16,
-                    )}), PID=${usbDevice.productId} (0x${usbDevice.productId.toString(16)})",
-                )
-                val classification = classifyAttachedUsbDevice(usbDevice)
-                val pyxisIdentity = classification.pyxisIdentity
-                val existingInterface = classification.configuredRNode
-                Log.d(
-                    TAG,
-                    "🔌 USB classification: pyxis=${pyxisIdentity?.version ?: "no"}, " +
-                        "configuredRNode=${existingInterface?.name ?: "no"}",
-                )
+        usbClassificationJob =
+            lifecycleScope.launch {
+                try {
+                    previousClassificationJob?.cancelAndJoin()
+                    Log.d(
+                        TAG,
+                        "🔌 Looking up USB device: VID=${usbDevice.vendorId} (0x${usbDevice.vendorId.toString(
+                            16,
+                        )}), PID=${usbDevice.productId} (0x${usbDevice.productId.toString(16)})",
+                    )
+                    val classification = classifyAttachedUsbDevice(usbDevice)
+                    val pyxisIdentity = classification.pyxisIdentity
+                    val existingInterface = classification.configuredRNode
+                    Log.d(
+                        TAG,
+                        "🔌 USB classification: pyxis=${pyxisIdentity?.version ?: "no"}, " +
+                            "configuredRNode=${existingInterface?.name ?: "no"}",
+                    )
 
-                if (!isUsbDeviceAttached(usbDevice.deviceId)) {
-                    Log.d(TAG, "🔌 Device detached during classification; skipping navigation")
-                    return@launch
-                }
-
-                if (existingInterface != null) {
-                    // Device is already configured - trigger reconnect and navigate to stats screen
-                    Log.d(TAG, "🔌 USB device is configured interface: ${existingInterface.name} (id=${existingInterface.id})")
-
-                    // Signal that a reconnection is starting (ViewModel will show connecting spinner)
-                    InterfaceReconnectSignal.triggerReconnect()
-
-                    // Navigate to stats screen immediately
-                    pendingNavigation.value = PendingNavigation.InterfaceStats(existingInterface.id)
-
-                    // Check if we have USB permission before attempting reconnect
-                    val usbManager = getSystemService(UsbManager::class.java)
-                    if (usbManager.hasPermission(usbDevice)) {
-                        // We have permission - reconnect immediately
-                        Log.d(TAG, "🔌 USB permission already granted, triggering reconnect")
-                        lastUsbReconnectAttempted = true
-                        try {
-                            transportAdmin.reconnectRNodeInterface()
-                        } catch (e: Exception) {
-                            Log.e(TAG, "🔌 Error triggering RNode reconnect", e)
-                        }
-                    } else {
-                        // No permission yet - the Activity intent (via processIntent) will handle
-                        // reconnection after Android grants permission through UsbResolverActivity
-                        Log.d(TAG, "🔌 No USB permission yet, skipping reconnect (will retry via Activity intent)")
-                        // lastUsbReconnectAttempted stays false, allowing retry after permission granted
+                    if (!isUsbDeviceAttached(usbDevice.deviceId)) {
+                        Log.d(TAG, "🔌 Device detached during classification; skipping navigation")
+                        return@launch
                     }
-                    Log.d(TAG, "🔌 pendingNavigation set to InterfaceStats(${existingInterface.id})")
-                } else {
-                    // Device is not configured - navigate to action screen to choose flash or configure
-                    Log.d(TAG, "🔌 USB device is not configured - launching action screen")
-                    pendingNavigation.value =
-                        PendingNavigation.UsbDeviceAction(
-                            usbDeviceId = usbDevice.deviceId,
-                            vendorId = usbDevice.vendorId,
-                            productId = usbDevice.productId,
-                            deviceName = usbDevice.deviceName,
-                            pyxisVersion = pyxisIdentity?.version,
-                        )
-                    Log.d(TAG, "🔌 pendingNavigation set to UsbDeviceAction")
-                }
-                Log.d(TAG, "🔌 pendingNavigation.value is now: ${pendingNavigation.value}")
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.e(TAG, "🔌 Error handling USB device attachment", e)
-            } finally {
-                if (usbClassificationDeviceId == usbDevice.deviceId) {
-                    usbClassificationJob = null
-                    usbClassificationDeviceId = -1
+
+                    if (existingInterface != null) {
+                        // Device is already configured - trigger reconnect and navigate to stats screen
+                        Log.d(TAG, "🔌 USB device is configured interface: ${existingInterface.name} (id=${existingInterface.id})")
+
+                        // Signal that a reconnection is starting (ViewModel will show connecting spinner)
+                        InterfaceReconnectSignal.triggerReconnect()
+
+                        // Navigate to stats screen immediately
+                        pendingNavigation.value = PendingNavigation.InterfaceStats(existingInterface.id)
+
+                        // Check if we have USB permission before attempting reconnect
+                        val usbManager = getSystemService(UsbManager::class.java)
+                        if (usbManager.hasPermission(usbDevice)) {
+                            // We have permission - reconnect immediately
+                            Log.d(TAG, "🔌 USB permission already granted, triggering reconnect")
+                            lastUsbReconnectAttempted = true
+                            try {
+                                transportAdmin.reconnectRNodeInterface()
+                            } catch (e: Exception) {
+                                Log.e(TAG, "🔌 Error triggering RNode reconnect", e)
+                            }
+                        } else {
+                            // No permission yet - the Activity intent (via processIntent) will handle
+                            // reconnection after Android grants permission through UsbResolverActivity
+                            Log.d(TAG, "🔌 No USB permission yet, skipping reconnect (will retry via Activity intent)")
+                            // lastUsbReconnectAttempted stays false, allowing retry after permission granted
+                        }
+                        Log.d(TAG, "🔌 pendingNavigation set to InterfaceStats(${existingInterface.id})")
+                    } else {
+                        // Device is not configured - navigate to action screen to choose flash or configure
+                        Log.d(TAG, "🔌 USB device is not configured - launching action screen")
+                        pendingNavigation.value =
+                            PendingNavigation.UsbDeviceAction(
+                                usbDeviceId = usbDevice.deviceId,
+                                vendorId = usbDevice.vendorId,
+                                productId = usbDevice.productId,
+                                deviceName = usbDevice.deviceName,
+                                pyxisVersion = pyxisIdentity?.version,
+                            )
+                        Log.d(TAG, "🔌 pendingNavigation set to UsbDeviceAction")
+                    }
+                    Log.d(TAG, "🔌 pendingNavigation.value is now: ${pendingNavigation.value}")
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(TAG, "🔌 Error handling USB device attachment", e)
+                } finally {
+                    if (usbClassificationDeviceId == usbDevice.deviceId) {
+                        usbClassificationJob = null
+                        usbClassificationDeviceId = -1
+                    }
                 }
             }
-        }
     }
 }
 
@@ -913,27 +920,50 @@ fun ZamolxisNavigation(
                         Log.d("ZamolxisNavigation", "Navigated to announce detail: ${navigation.destinationHash}")
                     }
                     is PendingNavigation.Conversation -> {
+                        // Group message notifications carry a synthetic
+                        // "group:<groupId>" key (see GroupChatManager) — route them
+                        // to the group chat instead of a 1:1 conversation.
+                        if (navigation.destinationHash.startsWith(GroupChatManager.GROUP_NOTIFICATION_KEY_PREFIX)) {
+                            val groupId =
+                                navigation.destinationHash.removePrefix(
+                                    GroupChatManager.GROUP_NOTIFICATION_KEY_PREFIX,
+                                )
+                            val currentRoute = navController.currentBackStackEntry?.destination?.route
+                            val currentGroupId =
+                                navController.currentBackStackEntry?.arguments?.getString("groupId")
+                            if (currentRoute == AppDestination.GROUP_CHAT.routePattern && currentGroupId == groupId) {
+                                Log.d("ZamolxisNavigation", "Already viewing group $groupId — skipping duplicate navigation")
+                            } else {
+                                navController.navigate("group_chat/$groupId")
+                                Log.d("ZamolxisNavigation", "Navigated to group chat from notification: $groupId")
+                            }
+                            return@let
+                        }
                         // Idempotency: skip navigation if the user is already viewing this
                         // conversation. Without this check, clicking a notification for the
                         // current conversation pushes a duplicate back-stack entry, so one
                         // Back press reveals the same conversation again (visible flash).
                         val backStackRoute = navController.currentBackStackEntry?.destination?.route
-                        val backStackHash = navController.currentBackStackEntry?.arguments
-                            ?.getString("destinationHash")
-                        val navigationAction = ConversationNavigation.actionFor(
-                            currentRoute = backStackRoute,
-                            currentDestinationHash = backStackHash,
-                            targetDestinationHash = navigation.destinationHash,
-                            fromNotification = navigation.fromNotification,
-                        )
+                        val backStackHash =
+                            navController.currentBackStackEntry
+                                ?.arguments
+                                ?.getString("destinationHash")
+                        val navigationAction =
+                            ConversationNavigation.actionFor(
+                                currentRoute = backStackRoute,
+                                currentDestinationHash = backStackHash,
+                                targetDestinationHash = navigation.destinationHash,
+                                fromNotification = navigation.fromNotification,
+                            )
                         val encodedHash = Uri.encode(navigation.destinationHash)
                         val encodedName = Uri.encode(navigation.peerName)
-                        val conversationRoute = ConversationNavigation.routeFor(
-                            encodedDestinationHash = encodedHash,
-                            encodedPeerName = encodedName,
-                            fromNotification = navigation.fromNotification,
-                            notificationEventId = navigation.notificationEventId,
-                        )
+                        val conversationRoute =
+                            ConversationNavigation.routeFor(
+                                encodedDestinationHash = encodedHash,
+                                encodedPeerName = encodedName,
+                                fromNotification = navigation.fromNotification,
+                                notificationEventId = navigation.notificationEventId,
+                            )
 
                         if (navigationAction == ConversationNavigation.Action.REUSE_CURRENT) {
                             // Reuse the current conversation entry so notification provenance
@@ -1222,11 +1252,12 @@ fun ZamolxisNavigation(
     // reached through Hilt's RnsTelephonyEntryPoint. Replaces the A.9-era
     // CallCoordinatorEntryPoint now that the call observable surface lives on
     // RnsTelephony and survives the AIDL boundary.
-    val telephony = remember(context) {
-        EntryPointAccessors
-            .fromApplication(context.applicationContext, RnsTelephonyEntryPoint::class.java)
-            .telephony()
-    }
+    val telephony =
+        remember(context) {
+            EntryPointAccessors
+                .fromApplication(context.applicationContext, RnsTelephonyEntryPoint::class.java)
+                .telephony()
+        }
     val callState by telephony.callState.collectAsState()
 
     LaunchedEffect(callState) {
@@ -1282,6 +1313,9 @@ fun ZamolxisNavigation(
             "incoming_call/",
             "interface_stats/",
             "nomadnet_browser/",
+            "group_chat/",
+            "group_new",
+            "group_details/",
         )
     val shouldShowBottomNav =
         currentRoute != null &&
@@ -1459,6 +1493,12 @@ fun ZamolxisNavigation(
                                     },
                                     onNavigateToQrScanner = {
                                         navController.navigate("qr_scanner")
+                                    },
+                                    onGroupClick = { groupId ->
+                                        navController.navigate("group_chat/${Uri.encode(groupId)}")
+                                    },
+                                    onNewGroupClick = {
+                                        navController.navigate("group_new")
                                     },
                                     settingsViewModel = settingsViewModel,
                                 )
@@ -2392,6 +2432,53 @@ fun ZamolxisNavigation(
                                 MessageDetailScreen(
                                     messageId = messageId,
                                     onBackClick = { navController.popBackStack() },
+                                )
+                            }
+
+                            appComposable(AppDestination.GROUP_NEW) {
+                                NewGroupScreen(
+                                    onBackClick = { navController.popBackStack() },
+                                    onGroupCreated = { groupId ->
+                                        navController.navigate("group_chat/${Uri.encode(groupId)}") {
+                                            popUpTo("group_new") { inclusive = true }
+                                        }
+                                    },
+                                )
+                            }
+
+                            appComposable(
+                                AppDestination.GROUP_CHAT,
+                                arguments =
+                                    listOf(
+                                        navArgument("groupId") { type = NavType.StringType },
+                                    ),
+                            ) { backStackEntry ->
+                                val groupId = backStackEntry.arguments?.getString("groupId").orEmpty()
+
+                                GroupChatScreen(
+                                    groupId = groupId,
+                                    onBackClick = { navController.popBackStack() },
+                                    onGroupDetailsClick = { gid ->
+                                        navController.navigate("group_details/${Uri.encode(gid)}")
+                                    },
+                                )
+                            }
+
+                            appComposable(
+                                AppDestination.GROUP_DETAILS,
+                                arguments =
+                                    listOf(
+                                        navArgument("groupId") { type = NavType.StringType },
+                                    ),
+                            ) { backStackEntry ->
+                                val groupId = backStackEntry.arguments?.getString("groupId").orEmpty()
+
+                                GroupDetailsScreen(
+                                    groupId = groupId,
+                                    onBackClick = { navController.popBackStack() },
+                                    onLeftGroup = {
+                                        navController.popBackStack("chats", inclusive = false)
+                                    },
                                 )
                             }
 

@@ -188,6 +188,7 @@ class SettingsViewModelTest {
         every { settingsRepository.retrievalIntervalSecondsFlow } returns retrievalIntervalSecondsFlow
         every { settingsRepository.transportNodeEnabledFlow } returns transportNodeEnabledFlow
         every { settingsRepository.crashReportingConsentFlow } returns kotlinx.coroutines.flow.MutableStateFlow(false)
+        every { settingsRepository.developerModeFlow } returns kotlinx.coroutines.flow.MutableStateFlow(false)
         every { settingsRepository.hasCompletedOnboardingFlow } returns kotlinx.coroutines.flow.MutableStateFlow(true)
         every { settingsRepository.hasSeenCrashReportingPromptFlow } returns kotlinx.coroutines.flow.MutableStateFlow(true)
         every { settingsRepository.batteryProfileFlow } returns batteryProfileFlow
@@ -356,6 +357,35 @@ class SettingsViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    // region developerMode Tests
+
+    @Test
+    fun `setDeveloperMode persists flag and updates state`() =
+        runTest {
+            val developerModeFlow = MutableStateFlow(false)
+            every { settingsRepository.developerModeFlow } returns developerModeFlow
+            coEvery { settingsRepository.saveDeveloperMode(any()) } coAnswers {
+                developerModeFlow.value = firstArg()
+            }
+            viewModel = createViewModel()
+
+            assertFalse(viewModel.state.value.developerMode)
+
+            viewModel.setDeveloperMode(true)
+            advanceUntilIdle()
+
+            coVerify { settingsRepository.saveDeveloperMode(true) }
+            assertTrue(viewModel.state.value.developerMode)
+
+            viewModel.setDeveloperMode(false)
+            advanceUntilIdle()
+
+            coVerify { settingsRepository.saveDeveloperMode(false) }
+            assertFalse(viewModel.state.value.developerMode)
+        }
+
+    // endregion
 
     // region parseRpcKey Tests
 

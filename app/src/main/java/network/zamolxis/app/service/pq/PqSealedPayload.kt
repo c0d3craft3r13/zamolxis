@@ -20,6 +20,10 @@ import org.msgpack.core.MessagePackException
  *   LXMF [LxmfFields.FIELD_REPLY_QUOTE]. Sealed with the rest because it is the
  *   *content* of an earlier message; leaving it outside would publish in the
  *   clear the very text the original send took care to seal.
+ * @property group the group-chat envelope (`GroupWireCodec.toMap` output), or
+ *   null for direct messages. Carried under [LxmfFields.FIELD_CUSTOM_META] — an
+ *   arbitrary nested map with String/Number/Boolean/List/Map leaves. Group
+ *   membership is as confidential as the text, so it seals with the rest.
  */
 class SealedPayload(
     val content: String,
@@ -27,6 +31,7 @@ class SealedPayload(
     val files: List<FileAttachment> = emptyList(),
     val audio: Audio? = null,
     val replyQuote: String? = null,
+    val group: Map<String, Any>? = null,
 ) {
     /** An image attachment: LXMF format tag plus the encoded bytes. */
     class Image(
@@ -74,6 +79,7 @@ class SealedPayload(
             }
             audio?.let { put(LxmfFields.FIELD_AUDIO, listOf(it.mode, it.bytes)) }
             replyQuote?.let { put(LxmfFields.FIELD_REPLY_QUOTE, it.toByteArray(Charsets.UTF_8)) }
+            group?.let { put(LxmfFields.FIELD_CUSTOM_META, mapOf(LxmfFields.CUSTOM_META_KEY_GROUP to it)) }
         }
 }
 
@@ -107,13 +113,28 @@ object PqSealedPayloadCodec {
     /** Sanity ceiling on the number of file attachments in one message. */
     private const val MAX_FILES = 64
 
+    /**
+     * Bounds for the generic nested-map codec used for the group envelope.
+     *
+     * Unlike the fixed-shape attachment fields, this value's structure is not
+     * pinned here — the group codec owns it — so the decoder applies its own
+     * ceilings in the spirit of [MAX_ELEMENT_BYTES]: a malformed nesting can
+     * exhaust neither the stack nor the heap. 1 MiB leaves generous room for a
+     * roster sync while staying far below anything an LXMF message should carry.
+     */
+    private const val MAX_META_DEPTH = 8
+    private const val MAX_META_ELEMENTS = 4096
+    private const val MAX_META_ELEMENT_BYTES = 1024 * 1024
+
     fun encode(payload: SealedPayload): ByteArray {
         val packer = MessagePack.newDefaultBufferPacker()
-        val entries = 1 +
-            (if (payload.image != null) 1 else 0) +
-            (if (payload.files.isNotEmpty()) 1 else 0) +
-            (if (payload.audio != null) 1 else 0) +
-            (if (payload.replyQuote != null) 1 else 0)
+        val entries =
+            1 +
+                (if (payload.image != null) 1 else 0) +
+                (if (payload.files.isNotEmpty()) 1 else 0) +
+                (if (payload.audio != null) 1 else 0) +
+                (if (payload.replyQuote != null) 1 else 0) +
+                (if (payload.group != null) 1 else 0)
 
         packer.packMapHeader(entries)
 
@@ -152,6 +173,11 @@ object PqSealedPayloadCodec {
             packer.packString(quote)
         }
 
+        payload.group?.let { group ->
+            packer.packInt(LxmfFields.FIELD_CUSTOM_META)
+            packer.packMetaValue(group, 0)
+        }
+
         return packer.toByteArray()
     }
 
@@ -182,6 +208,7 @@ object PqSealedPayloadCodec {
         var files: List<SealedPayload.FileAttachment> = emptyList()
         var audio: SealedPayload.Audio? = null
         var replyQuote: String? = null
+        var group: Map<String, Any>? = null
 
         repeat(entries) {
             when (unpacker.unpackInt()) {
@@ -190,6 +217,7 @@ object PqSealedPayloadCodec {
                 LxmfFields.FIELD_FILE_ATTACHMENTS -> files = unpacker.readFiles()
                 LxmfFields.FIELD_AUDIO -> audio = unpacker.readAudio()
                 LxmfFields.FIELD_REPLY_QUOTE -> replyQuote = unpacker.unpackString()
+                LxmfFields.FIELD_CUSTOM_META -> group = unpacker.readMetaMap(0)
                 // Unknown key: skip the value and carry on, so a newer sender can
                 // seal something this build has never heard of without the message
                 // becoming unreadable.
@@ -203,6 +231,7 @@ object PqSealedPayloadCodec {
             files = files,
             audio = audio,
             replyQuote = replyQuote,
+            group = group,
         )
     }
 
@@ -232,5 +261,95 @@ object PqSealedPayloadCodec {
         val length = unpackBinaryHeader()
         require(length in 0..MAX_ELEMENT_BYTES) { "Implausible attachment length" }
         return readPayload(length)
+    }
+
+    /**
+     * Pack an arbitrary nested metadata value (the group envelope). Leaves are
+     * String / Number / Boolean / ByteArray, containers are List and Map with
+     * string keys — anything else is a caller bug and rejected loudly rather
+     * than silently coerced into a shape the other side cannot parse back.
+     */
+    private fun org.msgpack.core.MessagePacker.packMetaValue(
+        value: Any?,
+        depth: Int,
+    ) {
+        require(depth <= MAX_META_DEPTH) { "Meta value nested too deep" }
+        when (value) {
+            null -> packNil()
+            is String -> packString(value)
+            is Boolean -> packBoolean(value)
+            is Int -> packInt(value)
+            is Long -> packLong(value)
+            is ByteArray -> {
+                packBinaryHeader(value.size)
+                writePayload(value)
+            }
+            is List<*> -> {
+                packArrayHeader(value.size)
+                value.forEach { packMetaValue(it, depth + 1) }
+            }
+            is Map<*, *> -> {
+                packMapHeader(value.size)
+                value.forEach { (k, v) ->
+                    packString(k.toString())
+                    packMetaValue(v, depth + 1)
+                }
+            }
+            else -> throw IllegalArgumentException("Unsupported meta value type: ${value.javaClass}")
+        }
+    }
+
+    /**
+     * Read what [packMetaValue] wrote, bounded against [MAX_META_DEPTH],
+     * [MAX_META_ELEMENTS] and [MAX_META_ELEMENT_BYTES] before any allocation.
+     * Integers come back as Long — msgpack's wire type does not distinguish
+     * the widths — so consumers (e.g. `GroupWireCodec.fromMap`) must accept
+     * Number rather than a concrete width.
+     */
+    private fun org.msgpack.core.MessageUnpacker.readMetaValue(depth: Int): Any? {
+        require(depth <= MAX_META_DEPTH) { "Meta value nested too deep" }
+        return when (nextFormat.valueType) {
+            org.msgpack.value.ValueType.NIL -> {
+                unpackNil()
+                null
+            }
+            org.msgpack.value.ValueType.BOOLEAN -> unpackBoolean()
+            org.msgpack.value.ValueType.INTEGER -> unpackLong()
+            org.msgpack.value.ValueType.STRING -> {
+                val length = unpackRawStringHeader()
+                require(length in 0..MAX_META_ELEMENT_BYTES) { "Implausible meta string length" }
+                String(readPayload(length), Charsets.UTF_8)
+            }
+            org.msgpack.value.ValueType.BINARY -> {
+                val length = unpackBinaryHeader()
+                require(length in 0..MAX_META_ELEMENT_BYTES) { "Implausible meta blob length" }
+                readPayload(length)
+            }
+            org.msgpack.value.ValueType.ARRAY -> {
+                val count = unpackArrayHeader()
+                require(count in 0..MAX_META_ELEMENTS) { "Implausible meta array length" }
+                List(count) { readMetaValue(depth + 1) }
+            }
+            org.msgpack.value.ValueType.MAP -> readMetaMap(depth)
+            else -> throw IllegalArgumentException("Unsupported meta value in sealed payload")
+        }
+    }
+
+    private fun org.msgpack.core.MessageUnpacker.readMetaMap(depth: Int): Map<String, Any> {
+        require(depth <= MAX_META_DEPTH) { "Meta value nested too deep" }
+        val count = unpackMapHeader()
+        require(count in 0..MAX_META_ELEMENTS) { "Implausible meta map length" }
+        val map = LinkedHashMap<String, Any>()
+        repeat(count) {
+            val keyLength = unpackRawStringHeader()
+            require(keyLength in 0..MAX_META_ELEMENT_BYTES) { "Implausible meta key length" }
+            val key = String(readPayload(keyLength), Charsets.UTF_8)
+            // A nil leaf is dropped rather than stored as null: SealedPayload.group
+            // is declared Map<String, Any>, and every consumer treats an absent key
+            // and a null one the same way (both fail the `as?` check and reject the
+            // shape). Keeping the map honestly non-null beats casting the lie away.
+            readMetaValue(depth + 1)?.let { map[key] = it }
+        }
+        return map
     }
 }

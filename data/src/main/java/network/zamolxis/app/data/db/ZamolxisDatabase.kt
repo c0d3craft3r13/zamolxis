@@ -11,6 +11,10 @@ import network.zamolxis.app.data.db.dao.ContactDao
 import network.zamolxis.app.data.db.dao.ConversationDao
 import network.zamolxis.app.data.db.dao.CustomThemeDao
 import network.zamolxis.app.data.db.dao.DraftDao
+import network.zamolxis.app.data.db.dao.GroupDao
+import network.zamolxis.app.data.db.dao.GroupMemberDao
+import network.zamolxis.app.data.db.dao.GroupMessageDao
+import network.zamolxis.app.data.db.dao.GroupMessageStatusDao
 import network.zamolxis.app.data.db.dao.InterfaceFirstSeenDao
 import network.zamolxis.app.data.db.dao.LocalIdentityDao
 import network.zamolxis.app.data.db.dao.MessageDao
@@ -32,6 +36,10 @@ import network.zamolxis.app.data.db.entity.ContactEntity
 import network.zamolxis.app.data.db.entity.ConversationEntity
 import network.zamolxis.app.data.db.entity.CustomThemeEntity
 import network.zamolxis.app.data.db.entity.DraftEntity
+import network.zamolxis.app.data.db.entity.GroupEntity
+import network.zamolxis.app.data.db.entity.GroupMemberEntity
+import network.zamolxis.app.data.db.entity.GroupMessageEntity
+import network.zamolxis.app.data.db.entity.GroupMessageStatusEntity
 import network.zamolxis.app.data.db.entity.InterfaceFirstSeenEntity
 import network.zamolxis.app.data.db.entity.LocalIdentityEntity
 import network.zamolxis.app.data.db.entity.MessageEntity
@@ -70,10 +78,17 @@ import network.zamolxis.app.data.db.entity.RmspServerEntity
         LocalPqKeyEntity::class,
         PeerPqKeyEntity::class,
         PqKeyDeliveryEntity::class,
+        GroupEntity::class,
+        GroupMemberEntity::class,
+        GroupMessageEntity::class,
+        GroupMessageStatusEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
+// TooManyFunctions: a Room database class accretes one DAO accessor per table;
+// the count tracks the schema, not a design smell.
+@Suppress("TooManyFunctions")
 abstract class ZamolxisDatabase : RoomDatabase() {
     companion object {
         /**
@@ -103,28 +118,29 @@ abstract class ZamolxisDatabase : RoomDatabase() {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     db.execSQL("ALTER TABLE messages ADD COLUMN reactionsJson TEXT")
 
-                    db.query(
-                        "SELECT id, identityHash, fieldsJson FROM messages " +
-                            "WHERE fieldsJson IS NOT NULL AND fieldsJson LIKE '%reactions%'",
-                    ).use { cursor ->
-                        val idCol = cursor.getColumnIndexOrThrow("id")
-                        val identityCol = cursor.getColumnIndexOrThrow("identityHash")
-                        val fieldsCol = cursor.getColumnIndexOrThrow("fieldsJson")
-                        while (cursor.moveToNext()) {
-                            val id = cursor.getString(idCol)
-                            val identityHash = cursor.getString(identityCol)
-                            val fieldsJson = cursor.getString(fieldsCol) ?: continue
+                    db
+                        .query(
+                            "SELECT id, identityHash, fieldsJson FROM messages " +
+                                "WHERE fieldsJson IS NOT NULL AND fieldsJson LIKE '%reactions%'",
+                        ).use { cursor ->
+                            val idCol = cursor.getColumnIndexOrThrow("id")
+                            val identityCol = cursor.getColumnIndexOrThrow("identityHash")
+                            val fieldsCol = cursor.getColumnIndexOrThrow("fieldsJson")
+                            while (cursor.moveToNext()) {
+                                val id = cursor.getString(idCol)
+                                val identityHash = cursor.getString(identityCol)
+                                val fieldsJson = cursor.getString(fieldsCol) ?: continue
 
-                            val (newFieldsJson, reactionsJson) =
-                                splitReactionsOutOfFieldsJson(fieldsJson) ?: continue
+                                val (newFieldsJson, reactionsJson) =
+                                    splitReactionsOutOfFieldsJson(fieldsJson) ?: continue
 
-                            db.execSQL(
-                                "UPDATE messages SET fieldsJson = ?, reactionsJson = ? " +
-                                    "WHERE id = ? AND identityHash = ?",
-                                arrayOf<Any?>(newFieldsJson, reactionsJson, id, identityHash),
-                            )
+                                db.execSQL(
+                                    "UPDATE messages SET fieldsJson = ?, reactionsJson = ? " +
+                                        "WHERE id = ? AND identityHash = ?",
+                                    arrayOf<Any?>(newFieldsJson, reactionsJson, id, identityHash),
+                                )
+                            }
                         }
-                    }
                 }
             }
 
@@ -327,7 +343,6 @@ abstract class ZamolxisDatabase : RoomDatabase() {
                 }
             }
 
-
         /** Add identity-scoped blocking aspect to blocked_peers. */
         val MIGRATION_5_6: Migration =
             object : Migration(5, 6) {
@@ -383,6 +398,106 @@ abstract class ZamolxisDatabase : RoomDatabase() {
                     // and nothing else. Storing it is what lets the UI tell the one
                     // person who can check the key out of band.
                     db.execSQL("ALTER TABLE peer_pq_keys ADD COLUMN fingerprintMismatchTimestamp INTEGER")
+                }
+            }
+
+        /**
+         * v9 → v10: group chat storage.
+         *
+         * Purely additive — four new tables (`groups`, `group_members`,
+         * `group_messages`, `group_message_status`) and their indices, with no
+         * ALTER and no data movement, so an upgrade cannot touch existing
+         * history. `groups` is keyed by `groupId` alone: group IDs are 16
+         * random bytes, so a collision across identities is not a concern and
+         * the composite key conversations use would buy nothing. Membership
+         * soft-deletes via `group_members.leftAt`; per-recipient delivery state
+         * lives in `group_message_status` and is matched back from LXMF
+         * receipts through the `lxmfHash` index.
+         */
+        val MIGRATION_9_10: Migration =
+            object : Migration(9, 10) {
+                // LongMethod: the migration is four declarative CREATE TABLE
+                // blocks; splitting them up would scatter one logical step.
+                @Suppress("LongMethod")
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `groups` (
+                            `groupId` TEXT NOT NULL,
+                            `identityHash` TEXT NOT NULL,
+                            `name` TEXT NOT NULL,
+                            `avatarBytes` BLOB,
+                            `createdBy` TEXT NOT NULL,
+                            `createdAt` INTEGER NOT NULL,
+                            `lastMessage` TEXT,
+                            `lastMessageTimestamp` INTEGER,
+                            `unreadCount` INTEGER NOT NULL DEFAULT 0,
+                            PRIMARY KEY(`groupId`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `group_members` (
+                            `groupId` TEXT NOT NULL,
+                            `memberHash` TEXT NOT NULL,
+                            `role` TEXT NOT NULL,
+                            `addedAt` INTEGER NOT NULL,
+                            `leftAt` INTEGER,
+                            PRIMARY KEY(`groupId`, `memberHash`),
+                            FOREIGN KEY(`groupId`) REFERENCES `groups`(`groupId`)
+                                ON UPDATE NO ACTION ON DELETE CASCADE
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `group_messages` (
+                            `groupId` TEXT NOT NULL,
+                            `msgId` TEXT NOT NULL,
+                            `senderHash` TEXT NOT NULL,
+                            `content` TEXT NOT NULL,
+                            `timestamp` INTEGER NOT NULL,
+                            `receivedAt` INTEGER NOT NULL,
+                            `isFromMe` INTEGER NOT NULL,
+                            PRIMARY KEY(`groupId`, `msgId`),
+                            FOREIGN KEY(`groupId`) REFERENCES `groups`(`groupId`)
+                                ON UPDATE NO ACTION ON DELETE CASCADE
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `group_message_status` (
+                            `msgId` TEXT NOT NULL,
+                            `memberHash` TEXT NOT NULL,
+                            `status` TEXT NOT NULL,
+                            `lxmfHash` TEXT,
+                            `errorMessage` TEXT,
+                            PRIMARY KEY(`msgId`, `memberHash`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS `index_groups_identityHash` " +
+                            "ON `groups` (`identityHash`)",
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS `index_group_members_groupId` " +
+                            "ON `group_members` (`groupId`)",
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS `index_group_messages_groupId_timestamp` " +
+                            "ON `group_messages` (`groupId`, `timestamp`)",
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS `index_group_message_status_lxmfHash` " +
+                            "ON `group_message_status` (`lxmfHash`)",
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS `index_group_message_status_msgId` " +
+                            "ON `group_message_status` (`msgId`)",
+                    )
                 }
             }
 
@@ -486,4 +601,12 @@ abstract class ZamolxisDatabase : RoomDatabase() {
     abstract fun callHistoryDeletionDao(): CallHistoryDeletionDao
 
     abstract fun pqKeyDao(): PqKeyDao
+
+    abstract fun groupDao(): GroupDao
+
+    abstract fun groupMemberDao(): GroupMemberDao
+
+    abstract fun groupMessageDao(): GroupMessageDao
+
+    abstract fun groupMessageStatusDao(): GroupMessageStatusDao
 }

@@ -132,27 +132,10 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/MainActivity.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="139" column="1" source="standard:no-unused-imports" />
-        <error line="192" column="61" source="standard:chain-method-continuation" />
-        <error line="357" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="364" column="59" source="standard:chain-method-continuation" />
-        <error line="459" column="9" source="standard:function-signature" />
-        <error line="459" column="30" source="standard:function-signature" />
-        <error line="462" column="53" source="standard:chain-method-continuation" />
-        <error line="467" column="60" source="standard:chain-method-continuation" />
-        <error line="496" column="62" source="standard:function-signature" />
-        <error line="541" column="32" source="standard:multiline-expression-wrapping" />
-        <error line="921" column="45" source="standard:multiline-expression-wrapping" />
-        <error line="921" column="80" source="standard:chain-method-continuation" />
-        <error line="923" column="48" source="standard:multiline-expression-wrapping" />
-        <error line="931" column="49" source="standard:multiline-expression-wrapping" />
-        <error line="1225" column="21" source="standard:multiline-expression-wrapping" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ZamolxisApplication.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="32" column="1" source="standard:no-unused-imports" />
-        <error line="323" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="919" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/audio/AndroidPcmWaveformReader.kt">
         <error line="17" column="22" source="standard:function-signature" />
@@ -478,9 +461,8 @@
         <error line="575" column="34" source="standard:multiline-expression-wrapping" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/service/MessageCollector.kt">
-        <error line="46" column="1" source="standard:no-consecutive-comments" />
-        <error line="543" column="9" source="standard:blank-line-before-declaration" />
-        <error line="543" column="9" source="standard:no-consecutive-comments" />
+        <error line="48" column="1" source="standard:no-consecutive-comments" />
+        <error line="571" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/service/PropagationNodeManager.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -511,9 +493,6 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/service/pq/PqMessageSealer.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-    </file>
-    <file name="app/src/main/java/network/zamolxis/app/service/pq/PqSealedPayload.kt">
-        <error line="112" column="23" source="standard:multiline-expression-wrapping" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/startup/StartupConfigLoader.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -711,209 +690,10 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/ChatsScreen.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="211" column="1" source="standard:indent" />
-        <error line="212" column="1" source="standard:indent" />
-        <error line="212" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="213" column="1" source="standard:indent" />
-        <error line="214" column="1" source="standard:indent" />
-        <error line="215" column="1" source="standard:indent" />
-        <error line="216" column="1" source="standard:indent" />
-        <error line="217" column="1" source="standard:indent" />
         <error line="218" column="1" source="standard:indent" />
         <error line="219" column="1" source="standard:indent" />
-        <error line="220" column="1" source="standard:indent" />
-        <error line="221" column="1" source="standard:indent" />
-        <error line="222" column="1" source="standard:indent" />
-        <error line="223" column="1" source="standard:indent" />
-        <error line="224" column="1" source="standard:indent" />
-        <error line="225" column="1" source="standard:indent" />
-        <error line="226" column="1" source="standard:indent" />
-        <error line="227" column="1" source="standard:indent" />
-        <error line="228" column="1" source="standard:indent" />
-        <error line="229" column="1" source="standard:indent" />
-        <error line="230" column="1" source="standard:indent" />
-        <error line="231" column="1" source="standard:indent" />
-        <error line="232" column="1" source="standard:indent" />
-        <error line="233" column="1" source="standard:indent" />
-        <error line="234" column="1" source="standard:indent" />
-        <error line="235" column="1" source="standard:indent" />
-        <error line="236" column="1" source="standard:indent" />
-        <error line="237" column="1" source="standard:indent" />
-        <error line="238" column="1" source="standard:indent" />
-        <error line="239" column="1" source="standard:indent" />
-        <error line="240" column="1" source="standard:indent" />
-        <error line="241" column="1" source="standard:indent" />
-        <error line="242" column="1" source="standard:indent" />
-        <error line="243" column="1" source="standard:indent" />
-        <error line="244" column="1" source="standard:indent" />
-        <error line="245" column="1" source="standard:indent" />
-        <error line="246" column="1" source="standard:indent" />
-        <error line="247" column="1" source="standard:indent" />
-        <error line="248" column="1" source="standard:indent" />
-        <error line="249" column="1" source="standard:indent" />
-        <error line="250" column="1" source="standard:indent" />
-        <error line="251" column="1" source="standard:indent" />
         <error line="252" column="1" source="standard:indent" />
-        <error line="253" column="1" source="standard:indent" />
-        <error line="254" column="1" source="standard:indent" />
-        <error line="255" column="1" source="standard:indent" />
-        <error line="256" column="1" source="standard:indent" />
-        <error line="257" column="1" source="standard:indent" />
-        <error line="258" column="1" source="standard:indent" />
-        <error line="259" column="1" source="standard:indent" />
-        <error line="260" column="1" source="standard:indent" />
-        <error line="261" column="1" source="standard:indent" />
-        <error line="262" column="1" source="standard:indent" />
-        <error line="263" column="1" source="standard:indent" />
-        <error line="264" column="1" source="standard:indent" />
-        <error line="265" column="1" source="standard:indent" />
-        <error line="266" column="1" source="standard:indent" />
-        <error line="267" column="1" source="standard:indent" />
-        <error line="268" column="1" source="standard:indent" />
-        <error line="269" column="1" source="standard:indent" />
-        <error line="270" column="1" source="standard:indent" />
-        <error line="271" column="1" source="standard:indent" />
-        <error line="272" column="1" source="standard:indent" />
-        <error line="273" column="1" source="standard:indent" />
-        <error line="274" column="1" source="standard:indent" />
-        <error line="275" column="1" source="standard:indent" />
-        <error line="276" column="1" source="standard:indent" />
-        <error line="277" column="1" source="standard:indent" />
-        <error line="278" column="1" source="standard:indent" />
-        <error line="279" column="1" source="standard:indent" />
-        <error line="280" column="1" source="standard:indent" />
-        <error line="281" column="1" source="standard:indent" />
-        <error line="282" column="1" source="standard:indent" />
-        <error line="283" column="1" source="standard:indent" />
-        <error line="284" column="1" source="standard:indent" />
-        <error line="285" column="1" source="standard:indent" />
-        <error line="286" column="1" source="standard:indent" />
-        <error line="287" column="1" source="standard:indent" />
-        <error line="288" column="1" source="standard:indent" />
-        <error line="289" column="1" source="standard:indent" />
-        <error line="290" column="1" source="standard:indent" />
-        <error line="291" column="1" source="standard:indent" />
-        <error line="311" column="1" source="standard:indent" />
-        <error line="312" column="1" source="standard:indent" />
-        <error line="313" column="1" source="standard:indent" />
-        <error line="314" column="1" source="standard:indent" />
-        <error line="315" column="1" source="standard:indent" />
-        <error line="316" column="1" source="standard:indent" />
-        <error line="317" column="1" source="standard:indent" />
-        <error line="318" column="1" source="standard:indent" />
-        <error line="319" column="1" source="standard:indent" />
-        <error line="320" column="1" source="standard:indent" />
-        <error line="321" column="1" source="standard:indent" />
-        <error line="322" column="1" source="standard:indent" />
-        <error line="323" column="1" source="standard:indent" />
-        <error line="324" column="1" source="standard:indent" />
-        <error line="325" column="1" source="standard:indent" />
-        <error line="326" column="1" source="standard:indent" />
-        <error line="327" column="1" source="standard:indent" />
-        <error line="328" column="1" source="standard:indent" />
-        <error line="329" column="1" source="standard:indent" />
-        <error line="330" column="1" source="standard:indent" />
-        <error line="331" column="1" source="standard:indent" />
-        <error line="332" column="1" source="standard:indent" />
-        <error line="333" column="1" source="standard:indent" />
-        <error line="334" column="1" source="standard:indent" />
-        <error line="335" column="1" source="standard:indent" />
-        <error line="336" column="1" source="standard:indent" />
-        <error line="337" column="1" source="standard:indent" />
-        <error line="338" column="1" source="standard:indent" />
-        <error line="339" column="1" source="standard:indent" />
-        <error line="340" column="1" source="standard:indent" />
-        <error line="341" column="1" source="standard:indent" />
-        <error line="342" column="1" source="standard:indent" />
-        <error line="343" column="1" source="standard:indent" />
-        <error line="344" column="1" source="standard:indent" />
-        <error line="345" column="1" source="standard:indent" />
-        <error line="346" column="1" source="standard:indent" />
-        <error line="347" column="1" source="standard:indent" />
-        <error line="349" column="1" source="standard:indent" />
-        <error line="350" column="1" source="standard:indent" />
-        <error line="351" column="1" source="standard:indent" />
-        <error line="352" column="1" source="standard:indent" />
-        <error line="353" column="1" source="standard:indent" />
-        <error line="354" column="1" source="standard:indent" />
         <error line="355" column="1" source="standard:indent" />
-        <error line="356" column="1" source="standard:indent" />
-        <error line="358" column="1" source="standard:indent" />
-        <error line="360" column="1" source="standard:indent" />
-        <error line="361" column="1" source="standard:indent" />
-        <error line="362" column="1" source="standard:indent" />
-        <error line="363" column="1" source="standard:indent" />
-        <error line="364" column="1" source="standard:indent" />
-        <error line="365" column="1" source="standard:indent" />
-        <error line="366" column="1" source="standard:indent" />
-        <error line="367" column="1" source="standard:indent" />
-        <error line="368" column="1" source="standard:indent" />
-        <error line="369" column="1" source="standard:indent" />
-        <error line="370" column="1" source="standard:indent" />
-        <error line="371" column="1" source="standard:indent" />
-        <error line="372" column="1" source="standard:indent" />
-        <error line="373" column="1" source="standard:indent" />
-        <error line="374" column="1" source="standard:indent" />
-        <error line="375" column="1" source="standard:indent" />
-        <error line="376" column="1" source="standard:indent" />
-        <error line="377" column="1" source="standard:indent" />
-        <error line="378" column="1" source="standard:indent" />
-        <error line="379" column="1" source="standard:indent" />
-        <error line="380" column="1" source="standard:indent" />
-        <error line="381" column="1" source="standard:indent" />
-        <error line="382" column="1" source="standard:indent" />
-        <error line="383" column="1" source="standard:indent" />
-        <error line="384" column="1" source="standard:indent" />
-        <error line="385" column="1" source="standard:indent" />
-        <error line="386" column="1" source="standard:indent" />
-        <error line="387" column="1" source="standard:indent" />
-        <error line="389" column="1" source="standard:indent" />
-        <error line="390" column="1" source="standard:indent" />
-        <error line="391" column="1" source="standard:indent" />
-        <error line="392" column="1" source="standard:indent" />
-        <error line="393" column="1" source="standard:indent" />
-        <error line="394" column="1" source="standard:indent" />
-        <error line="395" column="1" source="standard:indent" />
-        <error line="396" column="1" source="standard:indent" />
-        <error line="397" column="1" source="standard:indent" />
-        <error line="398" column="1" source="standard:indent" />
-        <error line="399" column="1" source="standard:indent" />
-        <error line="400" column="1" source="standard:indent" />
-        <error line="401" column="1" source="standard:indent" />
-        <error line="402" column="1" source="standard:indent" />
-        <error line="403" column="1" source="standard:indent" />
-        <error line="404" column="1" source="standard:indent" />
-        <error line="405" column="1" source="standard:indent" />
-        <error line="406" column="1" source="standard:indent" />
-        <error line="407" column="1" source="standard:indent" />
-        <error line="408" column="1" source="standard:indent" />
-        <error line="409" column="1" source="standard:indent" />
-        <error line="410" column="1" source="standard:indent" />
-        <error line="411" column="1" source="standard:indent" />
-        <error line="412" column="1" source="standard:indent" />
-        <error line="413" column="1" source="standard:indent" />
-        <error line="414" column="1" source="standard:indent" />
-        <error line="415" column="1" source="standard:indent" />
-        <error line="416" column="1" source="standard:indent" />
-        <error line="417" column="1" source="standard:indent" />
-        <error line="418" column="1" source="standard:indent" />
-        <error line="419" column="1" source="standard:indent" />
-        <error line="420" column="1" source="standard:indent" />
-        <error line="421" column="1" source="standard:indent" />
-        <error line="422" column="1" source="standard:indent" />
-        <error line="423" column="1" source="standard:indent" />
-        <error line="424" column="1" source="standard:indent" />
-        <error line="425" column="1" source="standard:indent" />
-        <error line="426" column="1" source="standard:indent" />
-        <error line="427" column="1" source="standard:indent" />
-        <error line="428" column="1" source="standard:indent" />
-        <error line="430" column="1" source="standard:indent" />
-        <error line="431" column="1" source="standard:indent" />
-        <error line="432" column="1" source="standard:indent" />
-        <error line="433" column="1" source="standard:indent" />
-        <error line="434" column="1" source="standard:indent" />
-        <error line="435" column="1" source="standard:indent" />
-        <error line="436" column="1" source="standard:indent" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/ContactsScreen.kt">
         <error line="97" column="1" source="standard:no-unused-imports" />
@@ -1682,49 +1462,6 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/ChatsViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="82" column="24" source="standard:class-signature" />
-        <error line="82" column="49" source="standard:class-signature" />
-        <error line="193" column="33" source="standard:chain-method-continuation" />
-        <error line="263" column="29" source="standard:chain-method-continuation" />
-        <error line="265" column="1" source="standard:indent" />
-        <error line="266" column="1" source="standard:indent" />
-        <error line="267" column="1" source="standard:indent" />
-        <error line="268" column="1" source="standard:indent" />
-        <error line="269" column="1" source="standard:indent" />
-        <error line="270" column="1" source="standard:indent" />
-        <error line="271" column="1" source="standard:indent" />
-        <error line="272" column="1" source="standard:indent" />
-        <error line="273" column="1" source="standard:indent" />
-        <error line="274" column="1" source="standard:indent" />
-        <error line="275" column="1" source="standard:indent" />
-        <error line="276" column="1" source="standard:indent" />
-        <error line="277" column="1" source="standard:indent" />
-        <error line="278" column="1" source="standard:indent" />
-        <error line="279" column="1" source="standard:indent" />
-        <error line="280" column="1" source="standard:indent" />
-        <error line="281" column="1" source="standard:indent" />
-        <error line="282" column="1" source="standard:indent" />
-        <error line="283" column="1" source="standard:indent" />
-        <error line="284" column="1" source="standard:indent" />
-        <error line="285" column="1" source="standard:indent" />
-        <error line="286" column="1" source="standard:indent" />
-        <error line="287" column="1" source="standard:indent" />
-        <error line="288" column="1" source="standard:indent" />
-        <error line="289" column="1" source="standard:indent" />
-        <error line="290" column="1" source="standard:indent" />
-        <error line="291" column="1" source="standard:indent" />
-        <error line="292" column="1" source="standard:indent" />
-        <error line="293" column="1" source="standard:indent" />
-        <error line="294" column="1" source="standard:indent" />
-        <error line="295" column="1" source="standard:indent" />
-        <error line="296" column="1" source="standard:indent" />
-        <error line="297" column="1" source="standard:indent" />
-        <error line="298" column="1" source="standard:indent" />
-        <error line="299" column="1" source="standard:indent" />
-        <error line="300" column="1" source="standard:indent" />
-        <error line="301" column="1" source="standard:indent" />
-        <error line="302" column="1" source="standard:indent" />
-        <error line="304" column="17" source="standard:chain-method-continuation" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/ContactsViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2331,7 +2068,6 @@
     </file>
     <file name="app/src/test/java/network/zamolxis/app/ui/screens/ChatsScreenTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="1017" column="60" source="standard:chain-method-continuation" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/ui/screens/ContactsScreenTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2700,16 +2436,10 @@
         <error line="5" column="1" source="standard:import-ordering" />
         <error line="6" column="1" source="standard:no-unused-imports" />
         <error line="8" column="1" source="standard:no-unused-imports" />
-        <error line="19" column="1" source="standard:no-unused-imports" />
-        <error line="22" column="1" source="standard:no-wildcard-imports" />
-        <error line="27" column="1" source="standard:no-unused-imports" />
-        <error line="31" column="1" source="standard:no-unused-imports" />
-        <error line="166" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="654" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="23" column="1" source="standard:no-wildcard-imports" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/viewmodel/ChatsVoiceHistoryViewModelTest.kt">
         <error line="8" column="1" source="standard:no-wildcard-imports" />
-        <error line="86" column="21" source="standard:multiline-expression-wrapping" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/viewmodel/ContactsViewModelTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2909,28 +2639,6 @@
     </file>
     <file name="app/src/test/java/network/zamolxis/app/viewmodel/SettingsViewModelTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="332" column="50" source="standard:chain-method-continuation" />
-        <error line="332" column="61" source="standard:chain-method-continuation" />
-        <error line="1678" column="1" source="standard:indent" />
-        <error line="1679" column="1" source="standard:indent" />
-        <error line="1680" column="1" source="standard:indent" />
-        <error line="1681" column="1" source="standard:indent" />
-        <error line="1682" column="1" source="standard:indent" />
-        <error line="1736" column="1" source="standard:indent" />
-        <error line="1737" column="1" source="standard:indent" />
-        <error line="1738" column="1" source="standard:indent" />
-        <error line="1739" column="1" source="standard:indent" />
-        <error line="1740" column="1" source="standard:indent" />
-        <error line="2404" column="1" source="standard:indent" />
-        <error line="2405" column="1" source="standard:indent" />
-        <error line="2406" column="1" source="standard:indent" />
-        <error line="2407" column="1" source="standard:indent" />
-        <error line="2408" column="1" source="standard:indent" />
-        <error line="2578" column="1" source="standard:indent" />
-        <error line="2579" column="1" source="standard:indent" />
-        <error line="2580" column="1" source="standard:indent" />
-        <error line="2581" column="1" source="standard:indent" />
-        <error line="2582" column="1" source="standard:indent" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/viewmodel/TcpClientWizardViewModelTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2973,13 +2681,8 @@
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/db/ZamolxisDatabase.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="106" column="23" source="standard:chain-method-continuation" />
-        <error line="283" column="9" source="standard:no-consecutive-comments" />
-        <error line="330" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="353" column="9" source="standard:no-consecutive-comments" />
-    </file>
-    <file name="data/src/main/java/network/zamolxis/app/data/db/ZamolxisDatabaseFactory.kt">
-        <error line="144" column="55" source="standard:function-signature" />
+        <error line="299" column="9" source="standard:no-consecutive-comments" />
+        <error line="368" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/db/dao/AnnounceDao.kt">
         <error line="3" column="1" source="standard:import-ordering" />

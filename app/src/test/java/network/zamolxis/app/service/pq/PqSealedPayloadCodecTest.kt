@@ -102,6 +102,78 @@ class PqSealedPayloadCodecTest {
     }
 
     @Test
+    fun `a group envelope survives with its nested structure`() {
+        val group =
+            mapOf<String, Any>(
+                "v" to 1L,
+                "gid" to "0123456789abcdef0123456789abcdef",
+                "mid" to "3f6f9bda-4b1f-4a2c-9f4a-2b7e6c1d8a90",
+                "ctl" to "MEMBERS_SYNC",
+                "body" to
+                    mapOf<String, Any>(
+                        "name" to "Ridge relay ops",
+                        "createdBy" to "aabbccddeeff00112233445566778899",
+                        "createdAt" to 1_756_000_000_000L,
+                        "members" to
+                            listOf(
+                                mapOf("h" to "aabbccddeeff00112233445566778899", "role" to "ADMIN"),
+                                mapOf("h" to "00112233445566778899aabbccddeeff", "role" to "MEMBER"),
+                            ),
+                    ),
+            )
+
+        val decoded = roundTrip(SealedPayload("welcome", group = group))
+
+        assertEquals(group, decoded.group)
+        // The envelope inside the seal must parse back through the group codec —
+        // that is the whole point of carrying it as a plain nested map.
+        assertEquals(
+            "0123456789abcdef0123456789abcdef",
+            network.zamolxis.app.service.group.GroupWireCodec
+                .fromMap(checkNotNull(decoded.group))
+                ?.gid,
+        )
+    }
+
+    @Test
+    fun `a payload without a group envelope decodes with a null group`() {
+        // Backward compatibility: blobs sealed before group chat existed carry
+        // no 0xFD key and must still open.
+        assertNull(roundTrip(SealedPayload(content = "before groups")).group)
+    }
+
+    @Test
+    fun `an unknown key is skipped even alongside a group envelope`() {
+        // Forward compatibility in the other direction: a newer build seals
+        // something past the group envelope, and this build must still open
+        // the message with its group intact. Hand-packed because the public
+        // encoder cannot emit an unknown key; the 0xFD value mirrors what
+        // encode() writes — the envelope map itself, unwrapped.
+        val group = mapOf<String, Any>("v" to 1L, "gid" to "ab", "mid" to "cd")
+        val packer = MessagePack.newDefaultBufferPacker()
+        packer.packMapHeader(3)
+        packer.packInt(0)
+        packer.packString("still readable")
+        packer.packInt(LxmfFields.FIELD_CUSTOM_META)
+        packer.packMapHeader(group.size)
+        group.forEach { (k, v) ->
+            packer.packString(k)
+            when (v) {
+                is String -> packer.packString(v)
+                is Long -> packer.packLong(v)
+                else -> error("test fixture only")
+            }
+        }
+        packer.packInt(0x7E)
+        packer.packString("something even newer")
+
+        val decoded = PqSealedPayloadCodec.decode(packer.toByteArray())
+
+        assertEquals("still readable", decoded.content)
+        assertEquals(group, decoded.group)
+    }
+
+    @Test
     fun `everything at once survives`() {
         val payload =
             SealedPayload(
@@ -155,6 +227,22 @@ class PqSealedPayloadCodecTest {
 
         // The quote is UTF-8 bytes on the wire, hex once serialized.
         assertEquals("6869", json.getString(LxmfFields.FIELD_REPLY_QUOTE.toString()))
+    }
+
+    @Test
+    fun `a group envelope rebuilds the custom-meta field`() {
+        // The rebuilt shape must be exactly what an unsealed group message
+        // carries — fields[0xFD] = {"zgroup": <envelope>} — so the receiver's
+        // group codec cannot tell sealed and unsealed apart.
+        val group = mapOf<String, Any>("v" to 1L, "gid" to "ab", "mid" to "cd")
+        val payload = SealedPayload(content = "hi group", group = group)
+
+        val json = JSONObject(checkNotNull(AppDataParser.serializeFieldsToJson(payload.toLxmfFields())))
+
+        val meta = json.getJSONObject(LxmfFields.FIELD_CUSTOM_META.toString())
+        val zgroup = meta.getJSONObject(LxmfFields.CUSTOM_META_KEY_GROUP)
+        assertEquals(1, zgroup.getInt("v"))
+        assertEquals("ab", zgroup.getString("gid"))
     }
 
     @Test

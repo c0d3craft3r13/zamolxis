@@ -3,6 +3,7 @@ package network.zamolxis.app.ui.screens.settings.cards
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -25,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,9 +57,12 @@ fun AboutCard(
     includePrereleaseUpdates: Boolean = false,
     onCheckForUpdates: () -> Unit = {},
     onSetIncludePrereleaseUpdates: (Boolean) -> Unit = {},
+    developerMode: Boolean = false,
+    onDeveloperModeChange: (Boolean) -> Unit = {},
 ) {
     val context = LocalContext.current
     var showLicenses by remember { mutableStateOf(false) }
+    var versionTaps by remember { mutableIntStateOf(0) }
 
     if (showLicenses) {
         LicensesDialog(onDismiss = { showLicenses = false })
@@ -98,11 +103,47 @@ fun AboutCard(
 
             // Version Information
             InfoSection(title = stringResource(R.string.about_app_info)) {
-                InfoRow("Version", systemInfo.appVersion)
+                // The version row doubles as the developer-mode unlock gesture:
+                // 7 taps toggle it, with a countdown toast from the 3rd tap on —
+                // the same affordance Android uses for its own developer options.
+                InfoRow(
+                    "Version",
+                    systemInfo.appVersion,
+                    onClick = {
+                        versionTaps += 1
+                        if (versionTaps >= 7) {
+                            versionTaps = 0
+                            onDeveloperModeChange(!developerMode)
+                            Toast
+                                .makeText(
+                                    context,
+                                    if (developerMode) R.string.about_developer_locked else R.string.about_developer_unlocked,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                        } else if (versionTaps >= 3) {
+                            Toast
+                                .makeText(
+                                    context,
+                                    context.getString(R.string.about_developer_countdown, 7 - versionTaps),
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                        }
+                    },
+                )
                 InfoRow("Build Number", systemInfo.appBuildCode.toString())
                 InfoRow("Build Type", systemInfo.buildType.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() })
                 InfoRow("Git Commit", systemInfo.gitCommitHash)
                 InfoRow("Build Date", systemInfo.buildDate)
+                Text(
+                    text =
+                        stringResource(
+                            if (developerMode) R.string.about_developer_unlocked else R.string.about_developer_hint,
+                        ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
 
             HorizontalDivider()
@@ -324,6 +365,7 @@ private fun InfoSection(
 private fun InfoRow(
     label: String,
     value: String,
+    onClick: (() -> Unit)? = null,
 ) {
     // The label keeps its natural width; the value takes the remaining space and
     // is right-aligned. Without the weight, a long value (e.g. the Python
@@ -331,7 +373,10 @@ private fun InfoRow(
     // their full intrinsic width and crowd/overlap under SpaceBetween — instead
     // a long value now wraps within its column.
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .let { if (onClick != null) it.clickable(onClick = onClick) else it },
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.Top,
     ) {

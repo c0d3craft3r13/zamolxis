@@ -41,6 +41,7 @@ object ZamolxisDatabaseFactory {
             ZamolxisDatabase.MIGRATION_6_7,
             ZamolxisDatabase.MIGRATION_7_8,
             ZamolxisDatabase.MIGRATION_8_9,
+            ZamolxisDatabase.MIGRATION_9_10,
         )
 
     /**
@@ -141,6 +142,5 @@ object ZamolxisDatabaseFactory {
     }
 
     /** The passphrase store for this app, keyed by the Keystore-backed encryptor. */
-    fun keyStore(context: Context): DatabaseKeyStore =
-        DatabaseKeyStore(context.applicationContext.filesDir, IdentityKeyEncryptor())
+    fun keyStore(context: Context): DatabaseKeyStore = DatabaseKeyStore(context.applicationContext.filesDir, IdentityKeyEncryptor())
 }
