@@ -49,13 +49,16 @@ class Codec2AudioTest {
 
     @Test
     fun `codec2 recorder writes raw concatenated frames and reports duration`() {
+        // Latch on encode calls, not on PCM reads: a read buffer still has to
+        // survive the running-check in readFrame before it is encoded, so
+        // stopping right after the 2nd read races and can drop the frame.
         val capturedFrames = CountDownLatch(2)
-        val capture = FakePcmCapture(capturedFrames)
+        val capture = FakePcmCapture(CountDownLatch(2))
         val backend =
             Codec2VoiceRecorderBackend(
                 mode = Codec2.CODEC2_3200,
                 captureFactory = { capture },
-                sessionFactory = { FakeCodec2Session() },
+                sessionFactory = { FakeCodec2Session(capturedFrames) },
             )
         val output = File(context.cacheDir, "codec2-recorder-test-${System.nanoTime()}.c2")
 
@@ -123,20 +126,29 @@ class Codec2AudioTest {
         backend.close()
     }
 
-    private class FakeCodec2Session : Codec2Session {
+    private class FakeCodec2Session(
+        private val encodedLatch: CountDownLatch? = null,
+    ) : Codec2Session {
         override val samplesPerFrame: Int = 160
         override val bytesPerFrame: Int = 2
         private var encodedFrame = 0
         val closed = AtomicBoolean(false)
 
-        override fun encode(pcm: ShortArray, output: ByteArray): Int {
+        override fun encode(
+            pcm: ShortArray,
+            output: ByteArray,
+        ): Int {
             encodedFrame += 1
             output[0] = encodedFrame.toByte()
             output[1] = (encodedFrame + 1).toByte()
+            encodedLatch?.countDown()
             return output.size
         }
 
-        override fun decode(encoded: ByteArray, output: ShortArray): Int {
+        override fun decode(
+            encoded: ByteArray,
+            output: ShortArray,
+        ): Int {
             output.fill(encoded[0].toShort())
             return output.size
         }
@@ -157,7 +169,11 @@ class Codec2AudioTest {
             active.set(true)
         }
 
-        override fun read(buffer: ShortArray, offset: Int, size: Int): Int {
+        override fun read(
+            buffer: ShortArray,
+            offset: Int,
+            size: Int,
+        ): Int {
             if (!active.get()) return 0
             if (frames.count == 0L) {
                 Thread.sleep(5)
@@ -189,7 +205,11 @@ class Codec2AudioTest {
             active.set(true)
         }
 
-        override fun read(buffer: ShortArray, offset: Int, size: Int): Int {
+        override fun read(
+            buffer: ShortArray,
+            offset: Int,
+            size: Int,
+        ): Int {
             if (!active.get()) return 0
             repeat(size) { buffer[offset + it] = 1 }
             return size
@@ -215,7 +235,10 @@ class Codec2AudioTest {
         private val releaseFailure = CountDownLatch(1)
         private var encodes = 0
 
-        override fun encode(pcm: ShortArray, output: ByteArray): Int {
+        override fun encode(
+            pcm: ShortArray,
+            output: ByteArray,
+        ): Int {
             encodes += 1
             if (encodes == 1) {
                 output.fill(1)
@@ -230,7 +253,10 @@ class Codec2AudioTest {
             releaseFailure.countDown()
         }
 
-        override fun decode(encoded: ByteArray, output: ShortArray): Int = output.size
+        override fun decode(
+            encoded: ByteArray,
+            output: ShortArray,
+        ): Int = output.size
 
         override fun close() {
             closed.set(true)
@@ -248,7 +274,11 @@ class Codec2AudioTest {
             active.set(true)
         }
 
-        override fun read(buffer: ShortArray, offset: Int, size: Int): Int {
+        override fun read(
+            buffer: ShortArray,
+            offset: Int,
+            size: Int,
+        ): Int {
             readCalled.countDown()
             return -3
         }
