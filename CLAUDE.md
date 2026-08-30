@@ -23,11 +23,14 @@ in this repo.
 
 The Reticulum/LXMF/LXST stack is **not a dependency coordinate** — its sources live in
 `vendor/` and build as Gradle modules (`:vendor:reticulum-kt:rns-core`,
-`:vendor:lxmf-kt:lxmf-core`, `:vendor:lxst-kt:lxst`, …). There is no JitPack repository
-and no version-catalog alias for them; do not add either back. `vendor/PROVENANCE.md`
-records upstream versions, the local patches carried on top, the source audit, and how
-to re-sync. Vendored modules are held out of detekt/ktlint/CPD and `audit-dispatchers.sh`
-on purpose: reformatting them would destroy the diffability vendoring exists for.
+`:vendor:lxmf-kt:lxmf-core`, `:vendor:lxst-kt:lxst`, …). The Python flavor's RNS, LXMF and
+ble-reticulum are vendored the same way under `vendor/python/` and pip-installed from
+there, not from `git+https://…`. There is no JitPack repository, no version-catalog alias
+and no git URL for any of them; do not add one back. `vendor/PROVENANCE.md` records
+upstream versions and commits, the local patches carried on top, the source audit, and
+how to re-sync. Vendored code is held out of detekt/ktlint/CPD and
+`audit-dispatchers.sh` on purpose: reformatting it would destroy the diffability
+vendoring exists for.
 
 Two processes: UI, and the `:reticulum` foreground service. **Python/Chaquopy must
 never load in the UI process.** Backend choice is a Gradle product flavor

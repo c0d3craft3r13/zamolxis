@@ -99,25 +99,22 @@ chaquopy {
         version = "3.11"
 
         pip {
-            // Upstream RNS 1.4.2 — torlando-tech fork pinned to commit SHA. The
-            // fork retains socket cleanup, PHY-stats RPC backoff, ratchet
-            // file-handle fixes, and deterministic AutoInterface teardown. The
-            // old known-destinations recombine patch is
-            // obsolete because 1.4.2 ignores recombine and migrates on load. The
-            // v0.10.x `patches/RNS/` tree is
-            // intentionally NOT restored (its runtime patch-deployer lived in
-            // the deleted reticulum_wrapper.py — see PINNED_VERSIONS.md).
-            install("git+https://github.com/torlando-tech/Reticulum@5b3a6ee4f25e2925cf84d4a2b108e6a708fbd395")
-
-            // Upstream LXMF 1.1.0 — torlando-tech fork (external stamp generator
-            // plus validated/cancellable native stamping and opportunistic
-            // receiving-interface and hop capture). Pinned to
-            // the versioned successor branch's commit SHA for reproducibility.
-            install("git+https://github.com/torlando-tech/LXMF@8912186e48b482a76bf04e2ac4b6c8940991aecc")
-
-            // ble-reticulum — RNS.Interface subclass for the Android BLE bridge.
-            // Pinned to the commit SHA at the tip of main for reproducibility.
-            install("git+https://github.com/torlando-tech/ble-reticulum.git@07d941304c9a1dc3a8e58087b3b974ff3d229e56")
+            // RNS / LXMF / ble-reticulum are built from sources checked into
+            // vendor/python/ instead of being fetched from GitHub on every build.
+            //
+            // They used to be three `git+https://github.com/torlando-tech/...@<sha>`
+            // installs. The commit pins were sound — a git SHA cannot be moved — but the
+            // build reached a repository this project does not control every time it ran,
+            // pip is not covered by gradle/verification-metadata.xml, and nobody could
+            // review a change without cloning. The forks were diffed against upstream
+            // markqvist and audited before being vendored; see vendor/PROVENANCE.md for
+            // what the deltas contain and what the audit found.
+            //
+            // Absolute paths: pip resolves relative paths against its own working
+            // directory, which is not this module.
+            install(rootProject.file("vendor/python/Reticulum").absolutePath)
+            install(rootProject.file("vendor/python/LXMF").absolutePath)
+            install(rootProject.file("vendor/python/ble-reticulum").absolutePath)
 
             install("cryptography>=42.0.0")
 

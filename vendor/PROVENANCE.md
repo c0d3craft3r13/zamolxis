@@ -147,10 +147,109 @@ The extra symbols in the old binaries are themselves evidence for the provenance
 `opus_decode24` does not exist in opus 1.5.2, so whatever produced that file was not the
 version the script claims.
 
-## Audit
+## The Python stack (`vendor/python/`)
 
-The sources were read before being vendored, looking for what would make depending on
-someone else's repository dangerous. Findings, in full:
+The `pythonBackend` flavor runs upstream Python RNS/LXMF through Chaquopy. Those three
+packages used to be pip-installed straight from GitHub on every build:
+
+```
+git+https://github.com/torlando-tech/Reticulum@5b3a6ee4...
+git+https://github.com/torlando-tech/LXMF@8912186e...
+git+https://github.com/torlando-tech/ble-reticulum.git@07d94130...
+```
+
+The commit pins were sound — a git SHA is content-addressed and cannot be moved — so this
+was never exposed to an upstream author rewriting history. What it *was* exposed to: a
+build that reached a repository this project does not control every single time it ran,
+pip installs that `gradle/verification-metadata.xml` does not cover at all, and code that
+nobody could review without cloning it themselves. Their sources are now checked in here
+and pip builds them locally.
+
+| Directory | Upstream | Version | Commit | License |
+|---|---|---|---|---|
+| `python/Reticulum` | [torlando-tech/Reticulum](https://github.com/torlando-tech/Reticulum) | RNS 1.4.2 fork | `5b3a6ee4f25e2925cf84d4a2b108e6a708fbd395` | Reticulum License |
+| `python/LXMF` | [torlando-tech/LXMF](https://github.com/torlando-tech/LXMF) | LXMF 1.1.0 fork | `8912186e48b482a76bf04e2ac4b6c8940991aecc` | Reticulum License |
+| `python/ble-reticulum` | [torlando-tech/ble-reticulum](https://github.com/torlando-tech/ble-reticulum) | 0.2.2 | `07d941304c9a1dc3a8e58087b3b974ff3d229e56` | MIT |
+
+The Reticulum License is MIT with one added condition — the software may not be used in a
+system whose functions include purposefully harming human beings. Each `LICENSE` sits
+beside its sources unmodified.
+
+Only what pip needs to build is vendored: the package directory, `setup.py` /
+`pyproject.toml`, `README.md` (both `setup.py` files read it for the long description),
+`LICENSE`, and LXMF's `requirements.txt`. Upstream's docs, tests and examples were not —
+RNS's `docs/` alone is 23 MB. pip builds these trees in place, so `build/` and
+`*.egg-info` appear inside them during a build; `.gitignore` excludes those.
+
+**The result was verified against what the git installs produced.** A hash manifest of the
+installed payload was taken before the switch and compared after: all 116 `.py` files
+byte-identical, no file added or removed, and the same `.dist-info` versions
+(`rns-1.4.2`, `lxmf-1.1.0`, `ble_reticulum-0.2.2`). That comparison earned its keep — the
+first attempt vendored the forks' branch tips instead of the pinned commits, and the
+diff is what caught it.
+
+`cryptography` (`>=42.0.0`, currently resolving to 42.0.8) and `u-msgpack-python` still
+come from PyPI through Chaquopy. They are not this author's code, and
+`rns-backend-py/PINNED_VERSIONS.md` records a deliberate decision to leave the range
+open. They are now the only dependencies in the Python flavor whose exact bytes this
+repository does not fix.
+
+### What the fork diffs contain
+
+Both forks were diffed against upstream `markqvist` before being vendored — this is a far
+smaller read than auditing RNS whole, and it answers the only question that matters: what
+did the fork author add?
+
+**Reticulum — 6 commits on upstream tag `1.4.2`, 265 lines of non-test code.** Close a
+socket on failed connection in `TCPInterface` and `BackboneInterface` (fd leak); ratchet
+file I/O moved onto context managers in `Destination.py`, with the signature validation
+untouched; the shared-instance PHY-stats RPC wrapped in try/except with a 30 s backoff so
+an unavailable instance stops producing exception storms; and a lifecycle rewrite of
+`AutoInterface` — stop events, socket receive timeouts, thread tracking, rollback of
+partially started discovery workers, deterministic teardown. That last one is what an
+embedded runtime that gets started and stopped repeatedly needs. The peering
+authentication hash is preserved verbatim. No new network destinations, no crypto changes.
+
+**LXMF — 8 commits on upstream tag `1.1.0`, 231 lines of non-test code.** `LXMRouter`
+records the receiving interface and hop count on opportunistic messages so delivery
+callbacks can see them before the path table fills in — local metadata, nothing goes on
+the wire. `LXStamper` gains a hook for an external stamp generator, which is how Android
+does proof-of-work without Python multiprocessing. The part worth checking: the external
+generator's result is validated with the **same `stamp_valid(stamp, stamp_cost,
+workblock)`** as any other stamp, plus type, length and 64-bit range checks on the work
+counter. The hook cannot be used to forge a stamp; the implementation is stricter than a
+naive one would be.
+
+**ble-reticulum has no upstream to diff against** — it is the fork author's own project,
+6736 lines under `src/`. Read directly instead: no HTTP client, no `eval`, no `pickle`, no
+network egress of any kind. The two things that look alarming — an auto-accepting BLE
+pairing agent (`BLEAgent.py`) and a `subprocess` call — both live in
+`linux_bluetooth_driver.py`, the BlueZ/D-Bus implementation. **Neither runs on Android:**
+that import is wrapped in `try/except ImportError`, and `bleak` and `dbus_fast` are not
+installed into the APK, so `HAS_LINUX_DRIVER` is false. The phone uses this project's own
+`ble_modules/android_ble_driver.py`, which bridges to Kotlin.
+
+### What is inherent to upstream RNS
+
+Not introduced by the fork, and not remotely reachable, but worth knowing about the code
+running in the service process:
+
+- `RNS/Reticulum.py:1072` **`exec()`s a Python file** from the RNS configuration
+  directory when the config names an interface type it does not recognise. This is
+  upstream's documented custom-interface mechanism.
+- `RNS/Discovery.py` runs an executable whose path comes from an interface's
+  `discovery_location` config value, and `RNS/Interfaces/PipeInterface.py` spawns a
+  configured command by design.
+
+All three are arbitrary code execution for anyone who can write into the app's
+configuration directory — a real consideration for the threat model, and one that no
+amount of dependency pinning addresses.
+
+## Audit — the Kotlin stack
+
+The Kotlin/C++ sources were read before being vendored, looking for what would make
+depending on someone else's repository dangerous. (The Python stack has its own audit
+under **The Python stack** above.) Findings, in full:
 
 **Nothing malicious was found.** Specifically:
 

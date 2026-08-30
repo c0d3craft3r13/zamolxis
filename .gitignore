@@ -139,3 +139,11 @@ signing.properties
 # lives here at all; it is built from source under vendor/.
 !libs/**/*.jar
 !libs/**/*.aar
+
+# pip builds the vendored Python packages (vendor/python/) in place, leaving build/
+# and *.egg-info inside the source trees. Those are build output, not vendored source
+# — the trees themselves are tracked and must stay byte-identical to the upstream
+# commits recorded in vendor/PROVENANCE.md.
+vendor/python/*/build/
+vendor/python/*/*.egg-info/
+vendor/python/*/src/*.egg-info/
