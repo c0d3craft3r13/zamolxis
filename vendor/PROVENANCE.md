@@ -319,6 +319,37 @@ Things worth knowing that are not attacks:
   message, reporting the payload size and whether a private key is present. No key
   material leaks, but it writes to stdout/logcat unconditionally.
 
+## Verified on hardware
+
+Static checks — symbol tables, ELF architectures, file hashes — say a library links and
+that bytes match. They do not say a codec still encodes, or that a vendored Python stack
+still talks to the network. Both were checked on a real device (Motorola edge 60 pro,
+Android 16).
+
+**The rebuilt codecs: 52 instrumented tests, 0 failures.** Upstream's `codec/` test suite
+is vendored under `lxst-kt/lxst/src/androidTest/` for exactly this reason and runs with:
+
+```bash
+./gradlew :vendor:lxst-kt:lxst:connectedDebugAndroidTest
+```
+
+It covers round-trip fidelity through the rebuilt libcodec2 at modes 2400, 3200 and 700C,
+round-trip fidelity and bitrate ceilings through the rebuilt libopus across every profile,
+correct mode header bytes for all seven codec2 modes the app can select, decode at native
+48 kHz, and sustained decoding over 100 frames without corruption. Only the `codec/` tests
+were vendored — the `audio/`, `recording/` and `telephone/` suites exercise Oboe against
+real hardware, which is not what the rebuild touched.
+
+**The vendored Python stack: running live.** The pythonBackend APK was installed and
+launched, and within a minute the `:reticulum` process was receiving and persisting real
+announces from remote nodes — destination and identity hashes off the actual mesh, not a
+fixture. `ble_reticulum`, vendored from the fork, was driving a live BLE link: connected to
+a peer, 209 bytes received, duplicate-identity rejection firing on an Android MAC rotation.
+No `ImportError`, no `ModuleNotFoundError`, no traceback, no native link failure.
+
+Still not exercised: a voice call end-to-end between two phones. The codecs are proven by
+round-trip tests rather than by a call, because only one device was attached.
+
 ## Re-syncing with upstream
 
 There is no automation, on purpose — the review is the point.

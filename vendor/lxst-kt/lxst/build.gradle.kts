@@ -23,6 +23,7 @@ android {
     defaultConfig {
         minSdk = 24
         consumerProguardFiles("consumer-rules.pro")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // Only these two: src/main/jniLibs carries prebuilt libopus/libcodec2 for
             // arm64-v8a and armeabi-v7a only, and CMakeLists imports them by path — an
@@ -72,4 +73,16 @@ dependencies {
 
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
+
+    // Upstream's codec instrumented tests, vendored because libopus and libcodec2 are
+    // built from source in this repository (see vendor/PROVENANCE.md) and a symbol table
+    // check does not prove a codec still encodes and decodes. These run on a device:
+    //
+    //     ./gradlew :vendor:lxst-kt:lxst:connectedDebugAndroidTest
+    //
+    // Only the codec/ tests were taken. The audio/, recording/ and telephone/ suites
+    // exercise Oboe against real hardware, which is not what the rebuild touched.
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.junit.android)
+    androidTestImplementation(libs.test.runner)
 }
