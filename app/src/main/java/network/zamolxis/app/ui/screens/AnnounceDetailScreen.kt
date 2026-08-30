@@ -65,6 +65,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import network.zamolxis.app.R
@@ -190,11 +191,34 @@ fun AnnounceDetailScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    // A saved contact with no announce is the normal state after a
+                    // QR scan, not an error: we hold its key, we simply have not
+                    // heard it on the air. Say that, and let the user write to it —
+                    // "node not found" reads as "this contact is broken".
                     Text(
-                        text = stringResource(R.string.announcedetail_node_not_found),
+                        text =
+                            stringResource(
+                                if (isContact) {
+                                    R.string.announcedetail_never_announced_title
+                                } else {
+                                    R.string.announcedetail_node_not_found
+                                },
+                            ),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (isContact) {
+                        Text(
+                            text = stringResource(R.string.announcedetail_never_announced_body),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 32.dp),
+                        )
+                        Button(onClick = { onStartChat(destinationHash, destinationHash.take(16)) }) {
+                            Text(stringResource(R.string.announcedetail_start_chat))
+                        }
+                    }
                     Button(onClick = onBackClick) {
                         Text(stringResource(R.string.announcedetail_go_back))
                     }

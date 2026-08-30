@@ -575,6 +575,8 @@ TO TALK</string>
     <string name="announcedetail_node_details">Node Details</string>
     <string name="announcedetail_node_not_found">Node not found</string>
     <string name="announcedetail_go_back">Go Back</string>
+    <string name="announcedetail_never_announced_title">This contact has not announced yet</string>
+    <string name="announcedetail_never_announced_body">Added from a QR code or address, so there is nothing heard from the network yet. Hops, signal and interface details appear after the first announce reaches you. You can message them now.</string>
     <string name="announcedetail_start_chat">Start Chat</string>
     <string name="announcedetail_view_messaging_dest">View messaging destination</string>
     <string name="announcedetail_view_telephony_dest">View telephony destination</string>

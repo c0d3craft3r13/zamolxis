@@ -54,6 +54,7 @@ class InterfaceConfigManager
         private val identityRepository: IdentityRepository,
         private val identityKeyProvider: network.zamolxis.app.data.crypto.IdentityKeyProvider,
         private val conversationRepository: ConversationRepository,
+        private val contactRepository: network.zamolxis.app.data.repository.ContactRepository,
         private val messageCollector: MessageCollector,
         private val database: ZamolxisDatabase,
         private val settingsRepository: SettingsRepository,
@@ -411,6 +412,15 @@ class InterfaceConfigManager
                     // Not fatal - continue
                 }
 
+                // Step 10a: Contacts carry keys that never came from a message —
+                // see restoreContactIdentities.
+                try {
+                    restoreContactIdentities()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error restoring contact identities", e)
+                    // Not fatal - continue
+                }
+
                 // Step 10b: Restore announce identities (uses batched loading to prevent OOM)
                 Log.d(TAG, "Step 10b: Batch restoring announce identities...")
                 try {
@@ -559,6 +569,30 @@ class InterfaceConfigManager
                 fetchBatch = { limit, offset -> conversationRepository.getPeerIdentitiesBatch(limit, offset) },
                 processBatch = { batch -> rnsCore.restorePeerIdentities(batch) },
             )
+        }
+
+        /**
+         * Seed the identity store from saved contacts as well.
+         *
+         * `peer_identities` only ever learns a key from a received message, so a
+         * contact the user added by QR or by pasting an `lxma://` string — and
+         * never heard from — is not in it. Restarting the stack (this class's job)
+         * would otherwise leave exactly those contacts unresolvable, which reads
+         * to the user as "the contact is right there but I cannot message it".
+         *
+         * Not batched: contacts are a hand-curated list, not the unbounded
+         * announce history the other restores have to page through.
+         */
+        private suspend fun restoreContactIdentities() {
+            val contacts = contactRepository.getRestorableContactIdentitiesForActiveIdentity()
+            if (contacts.isEmpty()) {
+                Log.d(TAG, "No restorable contact identities")
+                return
+            }
+            rnsCore
+                .restorePeerIdentities(contacts)
+                .onSuccess { Log.d(TAG, "✓ Restored $it/${contacts.size} contact identities") }
+                .onFailure { Log.w(TAG, "Failed to restore contact identities", it) }
         }
 
         private suspend fun restoreAnnounceIdentitiesInBatches() {

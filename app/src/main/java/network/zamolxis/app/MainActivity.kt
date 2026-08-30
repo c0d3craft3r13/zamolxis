@@ -1536,9 +1536,19 @@ fun ZamolxisNavigation(
                                 DoubleBackToExitHandler(Screen.Contacts.route)
                                 val contactsViewModel: ContactsViewModel = hiltViewModel()
                                 ContactsScreen(
+                                    // Tapping a contact opens the conversation. It used to
+                                    // open the announce detail, which is a dead end for any
+                                    // contact that has never announced — a QR scan or a
+                                    // pasted lxma:// address — because that screen has
+                                    // nothing to render and says "node not found". Network
+                                    // details stay reachable from the row's "details" menu.
                                     onContactClick = { destinationHash, displayName ->
                                         val encodedHash = Uri.encode(destinationHash)
-                                        navController.navigate("announce_detail/$encodedHash")
+                                        // An empty name segment would not match the
+                                        // messaging route at all, and the tap would
+                                        // silently do nothing.
+                                        val encodedName = Uri.encode(displayName.ifBlank { destinationHash })
+                                        navController.navigate("messaging/$encodedHash/$encodedName")
                                     },
                                     onViewPeerDetails = { destinationHash ->
                                         val encodedHash = Uri.encode(destinationHash)

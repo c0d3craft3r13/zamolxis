@@ -3,10 +3,11 @@ package network.zamolxis.app.data.repository
 import network.zamolxis.app.data.db.dao.AnnounceDao
 import network.zamolxis.app.data.db.dao.ContactDao
 import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.dao.PeerIdentityDao
 import network.zamolxis.app.data.db.entity.ContactEntity
 import network.zamolxis.app.data.db.entity.ContactStatus
+import network.zamolxis.app.data.db.entity.PeerIdentityEntity
 import network.zamolxis.app.data.model.EnrichedContact
-import network.zamolxis.app.data.util.HashUtils.computeIdentityHash
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -31,7 +32,38 @@ class ContactRepository
         private val contactDao: ContactDao,
         private val localIdentityDao: LocalIdentityDao,
         private val announceDao: AnnounceDao,
+        private val peerIdentityDao: PeerIdentityDao,
     ) {
+        /**
+         * Mirror a public key we were handed out-of-band (QR code, pasted
+         * `lxma://` string) into `peer_identities`.
+         *
+         * That table — not `contacts` — is what re-seeds the Reticulum identity
+         * store at startup, and until an announce arrives it is the only record
+         * the stack can resolve the destination from. Without this a scanned
+         * contact shows up in the UI but every message to it fails with
+         * "recipient not found", because the key never left the contacts table.
+         *
+         * Best-effort: the contact row is the user-visible result and must not
+         * be lost if this mirror fails.
+         */
+        private suspend fun rememberPeerIdentity(
+            destinationHash: String,
+            publicKey: ByteArray,
+        ) {
+            try {
+                peerIdentityDao.insertPeerIdentity(
+                    PeerIdentityEntity(
+                        peerHash = destinationHash,
+                        publicKey = publicKey,
+                        lastSeenTimestamp = System.currentTimeMillis(),
+                    ),
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("ContactRepository", "Could not store peer identity for $destinationHash", e)
+            }
+        }
+
         /**
          * Get enriched contacts with data from announces and conversations for the active identity.
          * Combines contact data with network status and conversation info.
@@ -174,6 +206,7 @@ class ContactRepository
                         isPinned = false,
                     )
                 contactDao.insertContact(contact)
+                rememberPeerIdentity(normalizedHash, publicKey)
                 Result.success(Unit)
             } catch (e: Exception) {
                 Result.failure(e)
@@ -213,6 +246,7 @@ class ContactRepository
                         isPinned = false,
                     )
                 contactDao.insertContact(contact)
+                rememberPeerIdentity(normalizedHash, publicKey)
                 Result.success(Unit)
             } catch (e: Exception) {
                 Result.failure(e)
@@ -326,13 +360,23 @@ class ContactRepository
             return contactDao.getContactCount(activeIdentity.identityHash)
         }
 
+        /**
+         * Every contact whose public key we hold, as `(destinationHash,
+         * publicKey)` — the shape the Reticulum identity store is seeded with.
+         *
+         * Keyed by the **destination** hash, because that is what the send path
+         * looks up (`Identity.recall(destinationHash)`). It used to return
+         * `computeIdentityHash(publicKey)` instead, which no lookup on that path
+         * ever asks for — so even once this was wired up, a contact added by QR
+         * stayed unresolvable.
+         */
         suspend fun getRestorableContactIdentitiesForActiveIdentity(): List<Pair<String, ByteArray>> {
             val activeIdentity = localIdentityDao.getActiveIdentitySync() ?: return emptyList()
             return contactDao
                 .getRestorableContactsForIdentity(activeIdentity.identityHash, ContactStatus.ACTIVE.name)
                 .mapNotNull { contact ->
                     val publicKey = contact.publicKey ?: return@mapNotNull null
-                    computeIdentityHash(publicKey) to publicKey
+                    contact.destinationHash.lowercase() to publicKey
                 }
         }
 
@@ -386,18 +430,6 @@ class ContactRepository
         // ========== PENDING IDENTITY RESOLUTION ==========
 
         /**
-         * Add a pending contact with only a destination hash (no public key).
-         * Used when importing contacts from Sideband using only the destination hash.
-         *
-         * The contact will be created with PENDING_IDENTITY status and null public key.
-         * Background workers will attempt to resolve the identity from the network.
-         *
-         * @param destinationHash The 32-character hex destination hash
-         * @param nickname Optional display name for the contact
-         * @return Result indicating success or failure
-         */
-
-        /**
          * Sealed class to represent the result of adding a pending contact.
          * Used to communicate whether the contact was resolved immediately or is still pending.
          */
@@ -409,6 +441,17 @@ class ContactRepository
             object AddedAsPending : AddPendingResult()
         }
 
+        /**
+         * Add a pending contact with only a destination hash (no public key).
+         * Used when importing contacts from Sideband using only the destination hash.
+         *
+         * The contact will be created with PENDING_IDENTITY status and null public key.
+         * Background workers will attempt to resolve the identity from the network.
+         *
+         * @param destinationHash The 32-character hex destination hash
+         * @param nickname Optional display name for the contact
+         * @return Result indicating success or failure
+         */
         suspend fun addPendingContact(
             destinationHash: String,
             nickname: String? = null,

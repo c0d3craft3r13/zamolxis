@@ -593,6 +593,8 @@
     <string name="announcedetail_node_details">Детали узла</string>
     <string name="announcedetail_node_not_found">Узел не найден</string>
     <string name="announcedetail_go_back">Назад</string>
+    <string name="announcedetail_never_announced_title">Контакт ещё не анонсировался</string>
+    <string name="announcedetail_never_announced_body">Добавлен по QR-коду или адресу, поэтому из сети о нём пока ничего не слышно. Хопы, сигнал и интерфейс появятся после первого анонса. Написать ему можно уже сейчас.</string>
     <string name="announcedetail_start_chat">Начать чат</string>
     <string name="announcedetail_view_messaging_dest">Показать адрес сообщений</string>
     <string name="announcedetail_view_telephony_dest">Показать адрес телефонии</string>

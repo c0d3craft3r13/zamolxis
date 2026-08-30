@@ -27,6 +27,7 @@ import kotlinx.coroutines.test.setMain
 import network.zamolxis.app.data.db.ZamolxisDatabase
 import network.zamolxis.app.data.db.dao.AnnounceDao
 import network.zamolxis.app.data.db.entity.AnnounceEntity
+import network.zamolxis.app.data.repository.ContactRepository
 import network.zamolxis.app.data.repository.ConversationRepository
 import network.zamolxis.app.data.repository.IdentityRepository
 import network.zamolxis.app.repository.InterfaceRepository
@@ -59,6 +60,7 @@ class InterfaceConfigManagerTest {
     private lateinit var identityRepository: IdentityRepository
     private lateinit var identityKeyProvider: network.zamolxis.app.data.crypto.IdentityKeyProvider
     private lateinit var conversationRepository: ConversationRepository
+    private lateinit var contactRepository: ContactRepository
     private lateinit var messageCollector: MessageCollector
     private lateinit var database: ZamolxisDatabase
     private lateinit var settingsRepository: SettingsRepository
@@ -87,6 +89,7 @@ class InterfaceConfigManagerTest {
         identityRepository = mockk()
         identityKeyProvider = mockk()
         conversationRepository = mockk()
+        contactRepository = mockk()
         messageCollector = mockk()
         database = mockk()
         settingsRepository = mockk()
@@ -142,6 +145,7 @@ class InterfaceConfigManagerTest {
 
         // Setup conversation repository mock
         coEvery { conversationRepository.getPeerIdentitiesBatch(any(), any()) } returns emptyList()
+        coEvery { contactRepository.getRestorableContactIdentitiesForActiveIdentity() } returns emptyList()
 
         // Setup protocol mock
         coEvery { rnsCore.shutdown() } returns Result.success(Unit)
@@ -176,6 +180,7 @@ class InterfaceConfigManagerTest {
                 identityRepository = identityRepository,
                 identityKeyProvider = identityKeyProvider,
                 conversationRepository = conversationRepository,
+                contactRepository = contactRepository,
                 messageCollector = messageCollector,
                 database = database,
                 settingsRepository = settingsRepository,
@@ -496,6 +501,7 @@ class InterfaceConfigManagerTest {
                     identityRepository = identityRepository,
                     identityKeyProvider = identityKeyProvider,
                     conversationRepository = conversationRepository,
+                    contactRepository = contactRepository,
                     messageCollector = messageCollector,
                     database = database,
                     settingsRepository = settingsRepository,
@@ -563,6 +569,7 @@ class InterfaceConfigManagerTest {
                     identityRepository = identityRepository,
                     identityKeyProvider = identityKeyProvider,
                     conversationRepository = conversationRepository,
+                    contactRepository = contactRepository,
                     messageCollector = messageCollector,
                     database = database,
                     settingsRepository = settingsRepository,
@@ -609,6 +616,7 @@ class InterfaceConfigManagerTest {
                     identityRepository = identityRepository,
                     identityKeyProvider = identityKeyProvider,
                     conversationRepository = conversationRepository,
+                    contactRepository = contactRepository,
                     messageCollector = messageCollector,
                     database = database,
                     settingsRepository = settingsRepository,
@@ -649,6 +657,7 @@ class InterfaceConfigManagerTest {
                     identityRepository = identityRepository,
                     identityKeyProvider = identityKeyProvider,
                     conversationRepository = conversationRepository,
+                    contactRepository = contactRepository,
                     messageCollector = messageCollector,
                     database = database,
                     settingsRepository = settingsRepository,
@@ -690,6 +699,7 @@ class InterfaceConfigManagerTest {
                     identityRepository = identityRepository,
                     identityKeyProvider = identityKeyProvider,
                     conversationRepository = conversationRepository,
+                    contactRepository = contactRepository,
                     messageCollector = messageCollector,
                     database = database,
                     settingsRepository = settingsRepository,
@@ -748,6 +758,7 @@ class InterfaceConfigManagerTest {
                     identityRepository = identityRepository,
                     identityKeyProvider = identityKeyProvider,
                     conversationRepository = conversationRepository,
+                    contactRepository = contactRepository,
                     messageCollector = messageCollector,
                     database = database,
                     settingsRepository = settingsRepository,

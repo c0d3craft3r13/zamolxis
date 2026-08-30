@@ -217,6 +217,10 @@ class ContactsViewModel
                             publicKey = decoded.publicKey,
                             nickname = nickname,
                         )
+                        // The scan is the only place this key exists on the
+                        // network stack's side of the app — seed it now, or the
+                        // first message fails with "recipient not found".
+                        identityResolutionManager.registerKnownPeer(hashHex, decoded.publicKey)
                         Log.d(TAG, "Added contact from QR code: $hashHex")
                     } else {
                         Log.e(TAG, "Failed to decode QR code data")
@@ -242,6 +246,7 @@ class ContactsViewModel
                         publicKey = publicKey,
                         nickname = nickname,
                     )
+                    identityResolutionManager.registerKnownPeer(destinationHash, publicKey)
                     Log.d(TAG, "Added contact manually: $destinationHash")
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to add contact manually: $destinationHash", e)

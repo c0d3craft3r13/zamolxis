@@ -395,7 +395,14 @@ class ZamolxisApplication : Application() {
                             "ZamolxisApplication",
                             "Identity verified (${verificationResult.dbIdentityHash?.take(8) ?: "none"}...) - reconnecting",
                         )
-                        // Identity matches - reconnect collectors and managers
+                        // Identity matches - reconnect collectors and managers.
+                        // Re-seed identities here too: this branch reattaches to a
+                        // service process the UI did not start, and if Android
+                        // recreated that service its identity store came back with
+                        // only what it had persisted. Seeding is idempotent, so the
+                        // common case (service still warm) just overwrites equal
+                        // entries.
+                        restorePeerIdentities(rnsCore)
                         messageCollector.startCollecting()
                         groupChatManager.start()
                         autoAnnounceManager.start()

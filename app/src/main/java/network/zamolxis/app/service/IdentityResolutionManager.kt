@@ -236,6 +236,37 @@ class IdentityResolutionManager
         }
 
         /**
+         * Hand the running stack a public key the app already holds, then start
+         * looking for a route to it.
+         *
+         * Used the moment a contact is added out-of-band (QR scan, pasted
+         * `lxma://`). Storing the key only in the database is not enough: the
+         * identity store is re-seeded at startup, so without this the contact
+         * would be unreachable until the app is restarted — or forever, if the
+         * peer never announces within earshot.
+         */
+        suspend fun registerKnownPeer(
+            destinationHash: String,
+            publicKey: ByteArray,
+        ) {
+            val normalized = destinationHash.lowercase()
+            try {
+                rnsCore
+                    .restorePeerIdentities(listOf(normalized to publicKey))
+                    .onFailure { Log.w(TAG, "Could not seed identity for ${normalized.take(8)}...", it) }
+
+                val destHashBytes =
+                    normalized
+                        .chunked(2)
+                        .map { it.toInt(16).toByte() }
+                        .toByteArray()
+                requestPathIfNeeded(destHashBytes, normalized)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error registering known peer ${normalized.take(8)}...", e)
+            }
+        }
+
+        /**
          * Central path request method — checks hasPath before requesting.
          * All path requests in this class must go through here.
          */
