@@ -30,20 +30,42 @@ coil = "2.7.0"
 markdownRenderer = "0.41.0" # held: both 0.42.0 and 0.43.0 require compileSdk 37
 desugarJdkLibs = "2.1.5"
 
-# JitPack-published libraries (formerly git submodules)
-reticulumKt = "v0.0.22"
-lxmfKt = "v0.0.14"
-lxstKt = "v0.0.8"
+# Upstream versions the vendored Reticulum stack was taken from. Nothing resolves
+# against these any more — vendor/ holds the sources — but they record what a
+# future re-sync would diff against. See vendor/PROVENANCE.md.
+vendoredReticulumKt = "v0.0.22"
+vendoredLxmfKt = "v0.0.14"
+vendoredLxstKt = "v0.0.8"
+
+# Dependencies reached only by the vendored stack.
+commonsCompress = "1.26.0"
+kotlinLogging = "3.0.5"
+oboe = "1.9.0"
+workManager = "2.9.0"
 
 [libraries]
-# JitPack-published Reticulum/LXMF/LXST stack (migrated from git submodules)
-# Note: lxmfKt and lxstKt use JitPack's single-module root-coord collapse
-# (coord = repo name, not repo/module path), while reticulum-kt has 3 modules.
-rns-core = { module = "com.github.torlando-tech.reticulum-kt:rns-core", version.ref = "reticulumKt" }
-rns-interfaces = { module = "com.github.torlando-tech.reticulum-kt:rns-interfaces", version.ref = "reticulumKt" }
-rns-android = { module = "com.github.torlando-tech.reticulum-kt:rns-android", version.ref = "reticulumKt" }
-lxmf-kt = { module = "com.github.torlando-tech:LXMF-kt", version.ref = "lxmfKt" }
-lxst-kt = { module = "com.github.torlando-tech:LXST-kt", version.ref = "lxstKt" }
+# The Reticulum/LXMF/LXST stack is NOT a coordinate any more. Its sources live in
+# vendor/ and are consumed as Gradle projects:
+#   project(":vendor:reticulum-kt:rns-core")
+#   project(":vendor:reticulum-kt:rns-interfaces")
+#   project(":vendor:reticulum-kt:rns-android")
+#   project(":vendor:lxmf-kt:lxmf-core")
+#   project(":vendor:lxst-kt:lxst")
+# Adding an alias back here would reopen the JitPack resolution path this repo
+# deliberately closed — build from vendor/ or not at all.
+
+# Third-party dependencies reached only by the vendored stack. Kept here rather
+# than hardcoded in vendor/**/build.gradle.kts so every version in the build is
+# visible from one file.
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commonsCompress" }
+kotlin-logging = { module = "io.github.microutils:kotlin-logging-jvm", version.ref = "kotlinLogging" }
+oboe = { module = "com.google.oboe:oboe", version.ref = "oboe" }
+work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+# lifecycle-service must move in lockstep with the rest of the lifecycle stack;
+# upstream rns-android pinned 2.7.0 while this app runs 2.10.0, which left the
+# two halves of AndroidX lifecycle mismatched on the same classpath.
+lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "lifecycle" }
 
 # Compose
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }

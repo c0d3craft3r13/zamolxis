@@ -22,50 +22,30 @@ plugins {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        // Vendored Reticulum stack (reticulum-kt / LXMF-kt / LXST-kt), checked into
-        // libs/ as a plain Maven layout. Listed FIRST so a fresh clone builds with no
-        // network and never depends on JitPack still being willing to serve those
-        // repos. Refresh with scripts/vendor-libs.sh after bumping a version.
+        // libs/ is a plain Maven layout holding artifacts that are not published to
+        // Maven Central. It used to hold the Reticulum stack as prebuilt jars/aars;
+        // that stack is now built from source under vendor/, and the only thing left
+        // here is usb-serial-for-android, which its author publishes through JitPack
+        // alone. The .aar is byte-identical to the sha256 pinned in
+        // gradle/verification-metadata.xml.
         maven { url = uri("$rootDir/libs") }
         google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") } // usb-serial-for-android; fallback for the vendored stack
+        // No JitPack. It builds artifacts on demand out of repositories this project
+        // does not control, so a tag moving — or an upstream author adding something
+        // hostile — would land in a build here without anyone reviewing a diff.
+        // Everything that came from it is now either vendored source (vendor/) or a
+        // checksum-pinned local artifact (libs/).
     }
 }
 
 rootProject.name = "zamolxis"
 
-// Opt-in composite-build override: point reticulum-kt/LXMF-kt/LXST-kt
-// at a local checkout for a tight edit-build-install loop. Enable with
-// e.g. `LOCAL_RETICULUM_KT=../reticulum-kt ./gradlew :app:installDebug`.
-// Not committed as always-on to avoid masking the published artifact from
-// CI / other developers.
-System.getenv("LOCAL_RETICULUM_KT")?.let { includeBuild(it) }
-// LXMF-kt + LXST-kt are published on JitPack with its single-module
-// root-coord collapse: the Maven coord is `<user>:<repo>`, but the
-// actual Gradle module is a subproject (lxmf-core / lxst-core). A
-// plain `includeBuild` won't auto-substitute because the project
-// group (`com.github.torlando-tech.LXMF-kt`) and artifact
-// (`lxmf-core`) don't match the consumer-side coord
-// (`com.github.torlando-tech:LXMF-kt`). We add an explicit
-// dependencySubstitution to map the collapsed coord to the real
-// subproject.
-System.getenv("LOCAL_LXMF_KT")?.let {
-    includeBuild(it) {
-        dependencySubstitution {
-            substitute(module("com.github.torlando-tech:LXMF-kt"))
-                .using(project(":lxmf-core"))
-        }
-    }
-}
-System.getenv("LOCAL_LXST_KT")?.let {
-    includeBuild(it) {
-        dependencySubstitution {
-            substitute(module("com.github.torlando-tech:LXST-kt"))
-                .using(project(":lxst"))
-        }
-    }
-}
+// The Reticulum/LXMF/LXST stack is built from source in vendor/. The
+// LOCAL_RETICULUM_KT / LOCAL_LXMF_KT / LOCAL_LXST_KT composite-build overrides that
+// used to sit here are gone with it: they existed to point the build at an external
+// checkout, which is exactly the door this repo closed. Edit vendor/ directly and
+// record the change in vendor/PROVENANCE.md.
 
 include(":app")
 include(":data")
@@ -79,3 +59,12 @@ include(":rns-backend-py")
 include(":rns-stats")
 include(":detekt-rules")
 include(":screenshot-tests")
+
+// Vendored third-party sources — see vendor/PROVENANCE.md for upstream, version and
+// the local patches carried on top. Kept under a `:vendor:` path prefix so every
+// dependency edge onto them reads as what it is.
+include(":vendor:reticulum-kt:rns-core")
+include(":vendor:reticulum-kt:rns-interfaces")
+include(":vendor:reticulum-kt:rns-android")
+include(":vendor:lxmf-kt:lxmf-core")
+include(":vendor:lxst-kt:lxst")

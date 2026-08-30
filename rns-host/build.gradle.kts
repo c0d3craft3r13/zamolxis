@@ -129,14 +129,14 @@ dependencies {
     implementation(libs.coroutines.android)
 
     // LXST voice runtime (Telephone, PacketRouter, AudioDevice, CallCoordinator).
-    api(libs.lxst.kt)
+    api(project(":vendor:lxst-kt:lxst"))
 
     // Reticulum-kt + LXMF-kt — peripherals (RNode, BLE) reach into RNS internals
     // and `NativeRnsBackend` (A.8) will sit alongside.
-    api(libs.rns.core)
-    api(libs.rns.interfaces)
-    api(libs.rns.android)
-    api(libs.lxmf.kt)
+    api(project(":vendor:reticulum-kt:rns-core"))
+    api(project(":vendor:reticulum-kt:rns-interfaces"))
+    api(project(":vendor:reticulum-kt:rns-android"))
+    api(project(":vendor:lxmf-kt:lxmf-core"))
 
     // USB serial — KotlinUSBBridge wraps mik3y's lib for RNode-over-USB.
     api("com.github.mik3y:usb-serial-for-android:3.7.0")

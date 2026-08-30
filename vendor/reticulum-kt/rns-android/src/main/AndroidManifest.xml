@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- BLE permissions (Android 12+ / API 31+) -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+
+    <!-- BLE permissions (Android 11 and below / API 30-) -->
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <!--
+        BLE scanning on API <= 30 requires ACCESS_FINE_LOCATION, but this
+        library intentionally does NOT declare it. ACCESS_FINE_LOCATION is a
+        dangerous, app-scoped permission; declaring it here with an
+        android:maxSdkVersion cap merges that cap onto the consuming app's own
+        FINE permission and silently strips precise location on newer API
+        levels (no "Use precise location" toggle, GPS unavailable). Consumers
+        that need legacy (API <= 30) BLE scanning must declare and request
+        ACCESS_FINE_LOCATION themselves — BleScanner.hasScanPermission() only
+        checks it at runtime; a library cannot request it.
+    -->
+
+    <!-- BLE hardware feature (not required; graceful degradation if unavailable) -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
+    <!--
+        Upstream declared ACCESS_WIFI_STATE, CHANGE_WIFI_STATE and NEARBY_WIFI_DEVICES
+        here for the Nearby Connections transport. That transport was removed with
+        AndroidNearbyDriver.kt (see build.gradle.kts), so a library that no longer
+        touches WiFi state has no business asking the consuming app for it. The app
+        declares all three itself for LocalHotspotManager, so nothing changes in the
+        merged manifest — this only stops the library from being a second, invisible
+        source of them.
+    -->
+
+    <!-- Network permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Service permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <!-- Notification permission (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Battery optimization -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Boot completed for auto-start -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application>
+        <!-- Reticulum foreground service -->
+        <service
+            android:name=".ReticulumService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Runs the Reticulum network stack for mesh networking communication" />
+        </service>
+
+        <!-- Boot receiver for auto-start and app update recovery (optional, disabled by default) -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="false"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Notification quick action receiver (Pause/Resume/Reconnect buttons) -->
+        <receiver
+            android:name=".NotificationActionReceiver"
+            android:exported="false" />
+    </application>
+
+</manifest>

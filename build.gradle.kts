@@ -35,45 +35,59 @@ subprojects {
     // Skip detekt-rules module - it's a pure JVM module for detekt custom rules
     if (name == "detekt-rules") return@subprojects
 
+    // Vendored third-party sources under vendor/ (see vendor/PROVENANCE.md) are held
+    // out of the style gates. detekt runs at maxIssues 0 against this project's own
+    // conventions, and ktlint's baseline is line-number-addressed — pointing either at
+    // ~50k lines somebody else wrote would produce a wall of findings nobody can act on
+    // without diverging from upstream, which is the one thing that keeps a future
+    // re-sync readable. What that code IS reviewed against is the audit recorded in
+    // vendor/PROVENANCE.md. The JDK 21 javac pin at the end of this block still applies
+    // to them.
+    val isVendored = path == ":vendor" || path.startsWith(":vendor:")
+
     apply(plugin = "jacoco")
-    apply(plugin = "org.jlleitschuh.gradle.ktlint")
-    apply(plugin = "io.gitlab.arturbosch.detekt")
+    if (!isVendored) {
+        apply(plugin = "org.jlleitschuh.gradle.ktlint")
+        apply(plugin = "io.gitlab.arturbosch.detekt")
+    }
 
     configure<JacocoPluginExtension> {
         toolVersion = "0.8.14"
     }
 
-    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-        // 1.5.x relaxes `discouraged-comment-location` so end-of-line trailing comments
-        // on value arguments no longer trip the rule (see issue #923). 1.0.1 flagged ~550
-        // such lines; they were only ever hidden by android.set(true) below, so external
-        // linters (Codacy) still surfaced them. Bumping the engine fixes both.
-        version.set("1.5.0")
-        android.set(true)
-        outputColorName.set("RED")
-        // This plugin only ever gets to lint `.kts` build scripts — see the comment on
-        // `ktlintSourceCheck` below for why. Kept advisory because that is what it has
-        // always been; the real gate on Kotlin sources is `ktlintSourceCheck`, which is
-        // not advisory.
-        ignoreFailures.set(true)
-        filter {
-            exclude("**/generated/**")
-            exclude("**/build/**")
+    if (!isVendored) {
+        configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+            // 1.5.x relaxes `discouraged-comment-location` so end-of-line trailing comments
+            // on value arguments no longer trip the rule (see issue #923). 1.0.1 flagged ~550
+            // such lines; they were only ever hidden by android.set(true) below, so external
+            // linters (Codacy) still surfaced them. Bumping the engine fixes both.
+            version.set("1.5.0")
+            android.set(true)
+            outputColorName.set("RED")
+            // This plugin only ever gets to lint `.kts` build scripts — see the comment on
+            // `ktlintSourceCheck` below for why. Kept advisory because that is what it has
+            // always been; the real gate on Kotlin sources is `ktlintSourceCheck`, which is
+            // not advisory.
+            ignoreFailures.set(true)
+            filter {
+                exclude("**/generated/**")
+                exclude("**/build/**")
+            }
         }
-    }
 
-    configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
-        buildUponDefaultConfig = true
-        allRules = false
-        config.setFrom(files("${rootProject.projectDir}/detekt-config.yml"))
-        // Baseline captures pre-existing issues. New code must pass all checks.
-        // Run `./gradlew detektBaseline` to update after intentional changes.
-        baseline = file("$projectDir/detekt-baseline.xml")
-    }
+        configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+            buildUponDefaultConfig = true
+            allRules = false
+            config.setFrom(files("${rootProject.projectDir}/detekt-config.yml"))
+            // Baseline captures pre-existing issues. New code must pass all checks.
+            // Run `./gradlew detektBaseline` to update after intentional changes.
+            baseline = file("$projectDir/detekt-baseline.xml")
+        }
 
-    // Add custom Zamolxis detekt rules
-    dependencies {
-        "detektPlugins"(project(":detekt-rules"))
+        // Add custom Zamolxis detekt rules
+        dependencies {
+            "detektPlugins"(project(":detekt-rules"))
+        }
     }
 
     // Pin the javac runner to JDK 21 for every module. The pythonBackend flavor's
@@ -178,6 +192,8 @@ val ktlintSourceCheck by tasks.registering(JavaExec::class) {
         "**/src/**/*.kt",
         "!**/build/**",
         "!**/generated/**",
+        // Vendored third-party sources — see the note in the `subprojects` block.
+        "!vendor/**",
         "--baseline=config/ktlint-baseline.xml",
         "--reporter=plain",
     )

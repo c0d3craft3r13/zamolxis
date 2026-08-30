@@ -1,0 +1,385 @@
+package network.reticulum.packet
+
+import network.reticulum.common.DestinationType
+import network.reticulum.common.RnsConstants
+import network.reticulum.common.toHexString
+import network.reticulum.destination.Destination
+import network.reticulum.identity.Identity
+import network.reticulum.link.Link
+import network.reticulum.link.LinkConstants
+import network.reticulum.transport.Transport
+import network.reticulum.transport.TransportConstants
+
+/**
+ * Callbacks for packet receipt events.
+ */
+class PacketReceiptCallbacks {
+    var delivery: ((PacketReceipt) -> Unit)? = null
+    var timeout: ((PacketReceipt) -> Unit)? = null
+}
+
+/**
+ * A PacketReceipt is used to track delivery confirmation for sent packets.
+ *
+ * Instances are created automatically when sending packets with create_receipt=true.
+ * The receipt provides:
+ * - Status tracking (SENT, DELIVERED, FAILED, CULLED)
+ * - Delivery callbacks
+ * - Timeout handling
+ * - RTT measurement
+ * - Proof validation
+ */
+class PacketReceipt internal constructor(
+    private val packet: Packet
+) {
+    companion object {
+        // Receipt status constants
+        const val FAILED: Int = 0x00
+        const val SENT: Int = 0x01
+        const val DELIVERED: Int = 0x02
+        const val CULLED: Int = 0xFF
+
+        // Proof lengths
+        val EXPL_LENGTH = RnsConstants.FULL_HASH_BYTES + RnsConstants.SIGNATURE_SIZE
+        val IMPL_LENGTH = RnsConstants.SIGNATURE_SIZE
+
+        /**
+         * Conformance test seam: construct a PacketReceipt over an already-packed
+         * packet (the constructor is internal, so the separate-module bridge can't
+         * call it). Mirrors the reference's `RNS.PacketReceipt(base_packet)` for
+         * the proof-injection commands (wire_inject_crafted_proof / _link_proof),
+         * which need a receipt with a genuine packet hash to validate proofs
+         * against. No port logic.
+         */
+        fun forPacketForTest(packet: Packet): PacketReceipt = PacketReceipt(packet)
+    }
+
+    /** The full hash of the packet. */
+    val hash: ByteArray = packet.packetHash
+
+    /** The truncated hash of the packet. */
+    val truncatedHash: ByteArray = packet.truncatedHash
+
+    /** Whether the packet has been sent. */
+    var sent: Boolean = true
+        private set
+
+    /** The timestamp when the packet was sent (in milliseconds). */
+    var sentAt: Long = System.currentTimeMillis()
+        private set
+
+    /** Whether the delivery has been proven. */
+    var proved: Boolean = false
+        private set
+
+    /** The current status of the receipt. */
+    var status: Int = SENT
+        private set
+
+    /** The destination this packet was sent to. */
+    private val destination: Destination? = packet.destination
+
+    /** The link this packet was sent over (if applicable). */
+    private var link: Link? = packet.link
+
+    /** Callbacks for delivery and timeout events. */
+    val callbacks = PacketReceiptCallbacks()
+
+    /** The timestamp when the receipt was concluded (delivered or failed). */
+    var concludedAt: Long? = null
+        private set
+
+    /** The proof packet that delivered this receipt (if any). */
+    var proofPacket: Packet? = null
+        private set
+
+    /** The timeout for this receipt in seconds. */
+    var timeout: Double = calculateTimeout()
+        private set
+
+    /** Number of retries attempted. */
+    var retries: Int = 0
+        private set
+
+    /**
+     * Calculate the timeout based on destination type and hops.
+     */
+    private fun calculateTimeout(): Double {
+        // For link destinations, use link RTT * traffic timeout factor
+        // Python: max(packet.destination.rtt * packet.destination.traffic_timeout_factor, Link.TRAFFIC_TIMEOUT_MIN_MS/1000)
+        if (destination?.type == DestinationType.LINK) {
+            val linkRef = link
+            if (linkRef != null) {
+                val rttSeconds = (linkRef.rtt ?: 0L) / 1000.0
+                return maxOf(
+                    rttSeconds * LinkConstants.TRAFFIC_TIMEOUT_FACTOR,
+                    LinkConstants.TRAFFIC_TIMEOUT_MIN_MS / 1000.0
+                )
+            }
+            // Fallback if no link reference
+            return TransportConstants.DEFAULT_PER_HOP_TIMEOUT / 1000.0
+        }
+
+        // For other destinations: get_first_hop_timeout(dest) + TIMEOUT_PER_HOP *
+        // hops_to(dest) (python Packet.py:432-433). hops_to returns PATHFINDER_M
+        // when the path is unknown (python Transport.hops_to, Transport.py:2641-2648),
+        // so a fresh path-less destination yields DEFAULT_PER_HOP_TIMEOUT(6) +
+        // TIMEOUT_PER_HOP(6) * PATHFINDER_M(128) == 774s, not the per-hop=1 floor.
+        val destHash = destination?.hash ?: packet.destinationHash
+        val firstHopTimeout = Transport.firstHopTimeout(destHash)
+        val hops = Transport.hopsTo(destHash) ?: TransportConstants.PATHFINDER_M
+        val perHopTimeout = TransportConstants.DEFAULT_PER_HOP_TIMEOUT / 1000.0
+
+        return (firstHopTimeout / 1000.0) + (perHopTimeout * hops)
+    }
+
+    /**
+     * Get the round-trip time in seconds.
+     *
+     * @return RTT in seconds, or null if not yet delivered
+     */
+    fun getRtt(): Double? {
+        return if (proved && concludedAt != null) {
+            (concludedAt!! - sentAt) / 1000.0
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Check if the receipt has timed out.
+     *
+     * @return true if the receipt has timed out
+     */
+    fun isTimedOut(): Boolean {
+        return (sentAt + (timeout * 1000).toLong()) < System.currentTimeMillis()
+    }
+
+    /**
+     * Check and handle timeout.
+     * Updates status and fires timeout callback if timed out.
+     *
+     * @return true if timed out, false otherwise
+     */
+    fun checkTimeout(): Boolean {
+        if (status == SENT && isTimedOut()) {
+            // python check_timeout (Packet.py:561-565): the timeout==-1 sentinel
+            // concludes the receipt CULLED, every finite timeout concludes it
+            // FAILED. (Keyed on the timeout value, not on retries.)
+            status = if (timeout == -1.0) {
+                CULLED
+            } else {
+                FAILED
+            }
+
+            concludedAt = System.currentTimeMillis()
+
+            callbacks.timeout?.let { callback ->
+                submitCallback("timeout", callback)
+            }
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Set a custom timeout.
+     *
+     * @param timeout The timeout in seconds
+     */
+    fun setTimeout(timeout: Double) {
+        this.timeout = timeout
+    }
+
+    /**
+     * Conformance seam: back-date [sentAt] (epoch millis) so isTimedOut() is true
+     * for any finite/sentinel timeout, isolating the CULLED-vs-FAILED branch of
+     * checkTimeout from any real wall-clock wait. The reference back-dates
+     * receipt.sent_at directly (wire_tcp.py:3776) — python's sent_at is a plain
+     * mutable attribute. No port logic.
+     */
+    fun setSentAtForTest(epochMillis: Long) {
+        sentAt = epochMillis
+    }
+
+    /**
+     * Set a callback to be called when delivery is confirmed.
+     *
+     * @param callback A function that takes this PacketReceipt as parameter
+     */
+    fun setDeliveryCallback(callback: (PacketReceipt) -> Unit) {
+        callbacks.delivery = callback
+    }
+
+    /**
+     * Set a callback to be called when the receipt times out.
+     *
+     * @param callback A function that takes this PacketReceipt as parameter
+     */
+    fun setTimeoutCallback(callback: (PacketReceipt) -> Unit) {
+        callbacks.timeout = callback
+    }
+
+    /**
+     * Set the link associated with this receipt.
+     * Called internally by Link class.
+     */
+    internal fun setLink(link: Link) {
+        this.link = link
+    }
+
+    private fun submitCallback(
+        callbackType: String,
+        callback: (PacketReceipt) -> Unit,
+    ) {
+        Transport.submitReceiptCallback {
+            try {
+                callback(this)
+            } catch (e: Exception) {
+                System.err.println("[PacketReceipt] Error in $callbackType callback for ${hash.toHexString()}: ${e.message}")
+            }
+        }
+    }
+
+    private fun fireDeliveryCallbackAsync() {
+        callbacks.delivery?.let { callback ->
+            submitCallback("delivery", callback)
+        }
+    }
+
+    /**
+     * Validate a proof packet.
+     *
+     * @param proofPacket The proof packet to validate
+     * @return true if the proof is valid
+     */
+    fun validateProofPacket(proofPacket: Packet): Boolean {
+        // Check if this is a link proof
+        val packetLink = link
+        return if (packetLink != null) {
+            validateLinkProof(proofPacket.data, packetLink, proofPacket)
+        } else {
+            validateProof(proofPacket.data, proofPacket)
+        }
+    }
+
+    /**
+     * Validate a raw proof for a link.
+     *
+     * @param proof The raw proof data
+     * @param link The link to validate against
+     * @param proofPacket Optional proof packet for reference
+     * @return true if the proof is valid
+     */
+    fun validateLinkProof(proof: ByteArray, link: Link, proofPacket: Packet? = null): Boolean {
+        // Conformance test seam (wire_channel_send drop_acks): when the link is
+        // flagged, the proof never validates — mirrors the reference neutering
+        // packet.receipt.validate_proof so the Channel retransmits to exhaustion.
+        if (link.failProofValidationForTest) return false
+
+        // For now, only handle explicit proofs
+        if (proof.size == EXPL_LENGTH) {
+            // Extract proof components
+            val proofHash = proof.copyOfRange(0, RnsConstants.FULL_HASH_BYTES)
+            val signature = proof.copyOfRange(
+                RnsConstants.FULL_HASH_BYTES,
+                RnsConstants.FULL_HASH_BYTES + RnsConstants.SIGNATURE_SIZE
+            )
+
+            // Verify hash matches
+            if (!proofHash.contentEquals(hash)) {
+                return false
+            }
+
+            // Validate signature with link
+            val proofValid = link.validate(signature, hash)
+
+            if (proofValid) {
+                status = DELIVERED
+                proved = true
+                concludedAt = System.currentTimeMillis()
+                this.proofPacket = proofPacket
+                fireDeliveryCallbackAsync()
+            }
+
+            return proofValid
+        }
+
+        // Implicit proofs not yet supported
+        return false
+    }
+
+    /**
+     * Validate a raw proof.
+     *
+     * @param proof The raw proof data
+     * @param proofPacket Optional proof packet for reference
+     * @return true if the proof is valid
+     */
+    fun validateProof(proof: ByteArray, proofPacket: Packet? = null): Boolean {
+        // Conformance test seam (wire_channel_send drop_acks): see validateLinkProof.
+        if (link?.failProofValidationForTest == true) return false
+
+        when (proof.size) {
+            EXPL_LENGTH -> {
+                // Explicit proof
+                val proofHash = proof.copyOfRange(0, RnsConstants.FULL_HASH_BYTES)
+                val signature = proof.copyOfRange(
+                    RnsConstants.FULL_HASH_BYTES,
+                    RnsConstants.FULL_HASH_BYTES + RnsConstants.SIGNATURE_SIZE
+                )
+
+                // Verify hash matches and destination has identity
+                if (!proofHash.contentEquals(hash)) {
+                    return false
+                }
+
+                val destIdentity = destination?.identity ?: return false
+
+                // Validate signature
+                val proofValid = destIdentity.validate(signature, hash)
+
+                if (proofValid) {
+                    status = DELIVERED
+                    proved = true
+                    concludedAt = System.currentTimeMillis()
+                    this.proofPacket = proofPacket
+                    fireDeliveryCallbackAsync()
+                }
+
+                return proofValid
+            }
+
+            IMPL_LENGTH -> {
+                // Implicit proof
+                val destIdentity = destination?.identity ?: return false
+
+                val signature = proof.copyOfRange(0, RnsConstants.SIGNATURE_SIZE)
+                val proofValid = destIdentity.validate(signature, hash)
+
+                if (proofValid) {
+                    status = DELIVERED
+                    proved = true
+                    concludedAt = System.currentTimeMillis()
+                    this.proofPacket = proofPacket
+                    fireDeliveryCallbackAsync()
+                }
+
+                return proofValid
+            }
+
+            else -> return false
+        }
+    }
+
+    override fun toString(): String {
+        val statusStr = when (status) {
+            SENT -> "SENT"
+            DELIVERED -> "DELIVERED"
+            FAILED -> "FAILED"
+            CULLED -> "CULLED"
+            else -> "UNKNOWN"
+        }
+        return "PacketReceipt(hash=${hash.toHexString()}, status=$statusStr, rtt=${getRtt()})"
+    }
+}

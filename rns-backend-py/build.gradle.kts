@@ -160,7 +160,7 @@ dependencies {
     // CallCoordinator instance is constructed in :rns-host and passed in
     // (this module is NOT on the NoCallCoordinatorGetInstanceOutsideHost
     // allowlist — it must never call getInstance() itself).
-    api(libs.lxst.kt)
+    api(project(":vendor:lxst-kt:lxst"))
 
     // Serialization — flat-dict JSON marshalling for event-bridge payloads.
     implementation(libs.serialization.json)

@@ -516,7 +516,7 @@ dependencies {
     // 24, where it would quietly fall back to SHA-1. Already in the APK via
     // :crypto-pq, so declaring it here costs nothing.
     implementation(libs.bouncycastle)
-    implementation(libs.lxst.kt)
+    implementation(project(":vendor:lxst-kt:lxst"))
     // :rns-api — the backend-seam contract (value types, sub-interfaces, AIDL).
     // Was reaching :app transitively through :reticulum until A.12 deleted that
     // module; declared directly now since :app imports network.zamolxis.app.rns.api.*

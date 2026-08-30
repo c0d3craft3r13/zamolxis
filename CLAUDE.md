@@ -19,6 +19,15 @@ in this repo.
 | `:micron` | Micron markup parser/renderer for NomadNet. |
 | `:rns-stats` | Interface statistics. |
 | `:detekt-rules` | Project-specific detekt rules (see below). |
+| `:vendor:*` | Third-party sources built from this repo — see `vendor/PROVENANCE.md`. |
+
+The Reticulum/LXMF/LXST stack is **not a dependency coordinate** — its sources live in
+`vendor/` and build as Gradle modules (`:vendor:reticulum-kt:rns-core`,
+`:vendor:lxmf-kt:lxmf-core`, `:vendor:lxst-kt:lxst`, …). There is no JitPack repository
+and no version-catalog alias for them; do not add either back. `vendor/PROVENANCE.md`
+records upstream versions, the local patches carried on top, the source audit, and how
+to re-sync. Vendored modules are held out of detekt/ktlint/CPD and `audit-dispatchers.sh`
+on purpose: reformatting them would destroy the diffability vendoring exists for.
 
 Two processes: UI, and the `:reticulum` foreground service. **Python/Chaquopy must
 never load in the UI process.** Backend choice is a Gradle product flavor
@@ -31,6 +40,10 @@ never load in the UI process.** Backend choice is a Gradle product flavor
 ./gradlew :app:testNoSentryKotlinBackendDebugUnitTest
 ./gradlew detekt ktlintCheck cpdCheck
 ```
+
+Anything touching `:vendor:lxst-kt:lxst` needs the **Android NDK** (`ndkVersion` is
+pinned in that module's `build.gradle.kts`) and CMake ≥ 3.22 — its JNI layer is compiled
+from C/C++ on every build, where it used to arrive as a prebuilt `.aar`.
 
 Anything touching `:rns-backend-py` needs **Python 3.11 on PATH** — Chaquopy 17
 accepts no other minor version, and `installDebugPythonRequirements` fails the

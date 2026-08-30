@@ -1,0 +1,831 @@
+package network.reticulum.android
+
+import android.app.Notification
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Binder
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import android.util.Log
+import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import network.reticulum.Reticulum
+import network.reticulum.android.lifecycle.StoreLifecycle
+import network.reticulum.interfaces.local.LocalServerInterface
+import java.io.File
+
+/**
+ * Android foreground service for running Reticulum.
+ *
+ * This service manages the Reticulum instance lifecycle, handles Android-specific
+ * concerns like Doze mode, and provides a foreground notification for reliable
+ * background operation.
+ *
+ * Usage:
+ * ```kotlin
+ * // Start with default config
+ * ReticulumService.start(context)
+ *
+ * // Start with custom config
+ * ReticulumService.start(context, ReticulumConfig.ROUTING)
+ *
+ * // Stop
+ * ReticulumService.stop(context)
+ * ```
+ */
+class ReticulumService : LifecycleService() {
+
+    private var reticulum: Reticulum? = null
+    private var config: ReticulumConfig = ReticulumConfig.DEFAULT
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    // Lifecycle-aware observers for Android system state
+    private lateinit var dozeObserver: DozeStateObserver
+    private lateinit var networkObserver: NetworkStateObserver
+    private lateinit var batteryChecker: BatteryOptimizationChecker
+
+    // Connection policy provider for throttling based on Doze, network, and battery state
+    private lateinit var batteryMonitor: BatteryMonitor
+    private lateinit var policyProvider: ConnectionPolicyProvider
+
+    // Battery statistics and service event tracking
+    private lateinit var batteryStatsTracker: BatteryStatsTracker
+    private lateinit var eventTracker: ServiceEventTracker
+
+    // Room database for persistent storage
+    private var database: network.reticulum.android.db.ReticulumDatabase? = null
+    private var dbWriteExecutor: java.util.concurrent.ExecutorService? = null
+
+    // Pause/resume state tracking
+    private var _isPaused = false
+
+    /** Whether the service is currently paused by the user. */
+    val isPaused: Boolean get() = _isPaused
+
+    // Session start time for uptime tracking in notifications
+    private var sessionStartTime: Long = 0L
+
+    /** System.currentTimeMillis() when the service session started. */
+    val sessionStartTimeMs: Long get() = sessionStartTime
+
+    // Rich notification builder and debounce state
+    private lateinit var notificationBuilder: NotificationContentBuilder
+    private var lastNotificationUpdate = 0L
+    private var pendingNotificationUpdate = false
+    private val notificationHandler = Handler(Looper.getMainLooper())
+
+    /** Minimum interval between notification updates to avoid flickering during handoffs. */
+    private val NOTIFICATION_DEBOUNCE_MS = 500L
+
+    /**
+     * Called when pause state changes. Triggers notification update.
+     */
+    var onPauseStateChanged: (() -> Unit)? = null
+
+    /**
+     * Called when reconnect is requested. Sample app ViewModel sets this.
+     */
+    var onReconnectRequested: (() -> Unit)? = null
+
+    private val binder = LocalBinder()
+
+    inner class LocalBinder : Binder() {
+        fun getService(): ReticulumService = this@ReticulumService
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        createNotificationChannel()
+
+        // Initialize service event tracker and record start (detects system kills)
+        eventTracker = ServiceEventTracker(this)
+        eventTracker.recordServiceStart()
+
+        // Initialize rich notification builder
+        notificationBuilder = NotificationContentBuilder(this)
+
+        // Wire pause state change to trigger notification update
+        onPauseStateChanged = { updateNotificationDebounced() }
+
+        // Start periodic notification update loop
+        lifecycleScope.launch {
+            delay(3000) // Wait for initialization
+            while (isActive) {
+                updateNotificationDebounced()
+                delay(5000) // Update every 5 seconds
+            }
+        }
+
+        // Initialize lifecycle-aware observers
+        dozeObserver = DozeStateObserver(this)
+        networkObserver = NetworkStateObserver(this)
+        batteryChecker = BatteryOptimizationChecker(this)
+
+        // Start observers
+        dozeObserver.start()
+        networkObserver.start()
+        batteryChecker.start()
+
+        // Create BatteryMonitor for policy provider
+        batteryMonitor = BatteryMonitor(this)
+        batteryMonitor.start()
+
+        // Start battery statistics tracker for drain rate and chart data
+        batteryStatsTracker = BatteryStatsTracker(this)
+        batteryStatsTracker.start(lifecycleScope)
+
+        // Create connection policy provider
+        policyProvider = ConnectionPolicyProvider(
+            dozeObserver = dozeObserver,
+            networkObserver = networkObserver,
+            batteryMonitor = batteryMonitor,
+            scope = lifecycleScope
+        )
+        policyProvider.start()
+
+        // Log initial states
+        Log.i(TAG, "Doze state: ${dozeObserver.state.value}")
+        Log.i(TAG, "Network state: ${networkObserver.state.value}")
+        Log.i(TAG, "Battery optimization: ${batteryChecker.status.value}")
+        Log.i(TAG, "Connection policy: ${policyProvider.currentPolicy}")
+
+        // Collect policy changes to throttle Transport job interval
+        lifecycleScope.launch {
+            policyProvider.policy.collect { policy ->
+                // Base interval from Python: 250ms (Transport.JOB_INTERVAL)
+                val baseIntervalMs = network.reticulum.transport.TransportConstants.JOB_INTERVAL
+                val throttledIntervalMs = (baseIntervalMs * policy.throttleMultiplier).toLong()
+
+                network.reticulum.transport.Transport.customJobIntervalMs = throttledIntervalMs
+
+                Log.i(TAG, "Transport job interval: ${throttledIntervalMs}ms (${policy.reason})")
+
+                if (!policy.networkAvailable) {
+                    Log.w(TAG, "Network unavailable - connections may pause")
+                }
+            }
+        }
+
+        // Log state changes for debugging (policy provider handles throttling)
+        lifecycleScope.launch {
+            dozeObserver.state.collect { state ->
+                Log.d(TAG, "Doze state changed: $state")
+            }
+        }
+
+        lifecycleScope.launch {
+            networkObserver.state.collect { state ->
+                Log.d(TAG, "Network state changed: $state")
+            }
+        }
+
+        lifecycleScope.launch {
+            batteryChecker.status.collect { status ->
+                Log.i(TAG, "Battery optimization status: $status")
+                // Phase 15 will implement guidance flow
+            }
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+
+        // Extract config from intent if provided
+        intent?.getParcelableExtra<ReticulumConfig>(EXTRA_CONFIG)?.let {
+            config = it
+        }
+
+        // Track session start time for uptime display
+        sessionStartTime = System.currentTimeMillis()
+
+        // Start as foreground service
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                createNotification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification())
+        }
+
+        // Initialize Reticulum
+        lifecycleScope.launch {
+            initializeReticulum()
+        }
+
+        return START_STICKY
+    }
+
+    override fun onBind(intent: Intent): IBinder {
+        super.onBind(intent)
+        return binder
+    }
+
+    override fun onDestroy() {
+        instance = null
+
+        // Remove any pending notification updates
+        notificationHandler.removeCallbacksAndMessages(null)
+
+        // Stop policy provider first (depends on observers)
+        policyProvider.stop()
+        batteryStatsTracker.stop()
+        batteryMonitor.stop()
+
+        // Stop observers before other cleanup
+        dozeObserver.stop()
+        networkObserver.stop()
+        batteryChecker.stop()
+
+        serviceScope.cancel()
+        shutdownReticulum()
+
+        // Null out store references BEFORE draining + closing — once nulled,
+        // no new RoomPathStore/RoomPacketHashStore/etc. saveAll(...) calls
+        // can post fresh work onto the executor. We then drain whatever's
+        // already queued before closing the database.
+        network.reticulum.transport.Transport.pathStore = null
+        network.reticulum.transport.Transport.packetHashStore = null
+        network.reticulum.transport.Transport.tunnelStore = null
+        network.reticulum.transport.Transport.announceStore = null
+        network.reticulum.transport.Transport.discoveryStore = null
+        network.reticulum.transport.Transport.destinationRatchetStore = null
+        network.reticulum.identity.Identity.identityStore = null
+
+        // Drain the Room write executor BEFORE closing the database. If
+        // we close while a queued task is still pending, the task hits
+        // a closed connection pool and throws IllegalStateException
+        // ("Cannot perform this operation because the connection pool
+        // has been closed" or "attempt to re-open an already-closed
+        // object: SQLiteDatabase"). See StoreLifecycle for the full
+        // rationale and the Sentry references (COLUMBA-8R, COLUMBA-8X).
+        //
+        // Timeouts: onDestroy runs on the Android main thread; the
+        // Service ANR window for foreground service teardown is ~20s.
+        // StoreLifecycle's defaults of 15s + 5s sit right at that
+        // cliff. Cap the drain budget at 4s + 1s = 5s total so we
+        // stay comfortably under the ANR threshold even on a slow
+        // device. Any writes that don't drain in 4s get shutdownNow'd
+        // and may be lost — acceptable trade vs. ANRing the user out.
+        dbWriteExecutor?.let { executor ->
+            val outcome =
+                StoreLifecycle(
+                    gracefulMillis = 4_000,
+                    forceMillis = 1_000,
+                    log = { msg -> Log.w(TAG, msg) },
+                ).drain(executor)
+            Log.i(TAG, "Reticulum DB executor drained on shutdown: $outcome")
+        }
+        dbWriteExecutor = null
+
+        database?.close()
+        database = null
+
+        super.onDestroy()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        when (level) {
+            TRIM_MEMORY_RUNNING_CRITICAL,
+            TRIM_MEMORY_COMPLETE -> {
+                // Aggressive memory cleanup
+                trimMemory(aggressive = true)
+            }
+            TRIM_MEMORY_RUNNING_LOW,
+            TRIM_MEMORY_MODERATE -> {
+                // Moderate cleanup
+                trimMemory(aggressive = false)
+            }
+        }
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        // System is critically low on memory - aggressive cleanup
+        trimMemory(aggressive = true)
+    }
+
+    private suspend fun initializeReticulum() {
+        try {
+            val configDir = config.configDir ?: File(filesDir, "reticulum").absolutePath
+
+            // Ensure config directory exists
+            File(configDir).mkdirs()
+
+            // Initialize Room database and inject persistent stores
+            val db = androidx.room.Room.databaseBuilder(
+                applicationContext,
+                network.reticulum.android.db.ReticulumDatabase::class.java,
+                "reticulum.db"
+            ).addMigrations(
+                network.reticulum.android.db.ReticulumDatabase.MIGRATION_1_2,
+                network.reticulum.android.db.ReticulumDatabase.MIGRATION_2_3,
+            ).build()
+            database = db
+
+            val executor = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
+                Thread(r, "ReticulumDB-write").apply { isDaemon = true }
+            }
+            dbWriteExecutor = executor
+
+            network.reticulum.transport.Transport.pathStore =
+                network.reticulum.android.db.store.RoomPathStore(db.pathDao(), executor)
+            network.reticulum.transport.Transport.packetHashStore =
+                network.reticulum.android.db.store.RoomPacketHashStore(db.packetHashDao(), executor)
+            network.reticulum.transport.Transport.tunnelStore =
+                network.reticulum.android.db.store.RoomTunnelStore(db.tunnelDao(), db.tunnelPathDao(), executor)
+            network.reticulum.transport.Transport.announceStore =
+                network.reticulum.android.db.store.RoomAnnounceStore(db.announceCacheDao(), executor)
+            network.reticulum.transport.Transport.discoveryStore =
+                network.reticulum.android.db.store.RoomDiscoveryStore(db.discoveredInterfaceDao(), executor)
+            network.reticulum.identity.Identity.identityStore =
+                network.reticulum.android.db.store.RoomIdentityStore(db.knownDestinationDao(), db.identityRatchetDao(), executor)
+            network.reticulum.transport.Transport.destinationRatchetStore =
+                network.reticulum.android.db.store.RoomDestinationRatchetStore(db.destinationRatchetDao(), executor)
+
+            Log.i(TAG, "Room database initialized with persistent stores")
+
+            // Run migration and Reticulum startup on IO thread to avoid
+            // Room's main-thread query check during initial DB reads.
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                // Migrate existing file-based data to Room (one-time, idempotent)
+                network.reticulum.android.db.FileMigrator(
+                    db = db,
+                    storagePath = "$configDir/storage",
+                    cachePath = "$configDir/cache",
+                    lxmfRatchetsPath = "$configDir/lxmf/ratchets",
+                ).migrateIfNeeded()
+
+                // Configure Transport for coroutine-based job loop on Android
+                // Use 250ms loop (matches Python) with battery-adjusted intervals for expensive operations
+                network.reticulum.transport.Transport.configureCoroutineJobLoop(
+                    scope = serviceScope,
+                    intervalMs = network.reticulum.transport.TransportConstants.JOB_INTERVAL, // 250ms
+                    tablesCullIntervalMs = config.getEffectiveTablesCullInterval(),
+                    announcesCheckIntervalMs = config.getEffectiveAnnouncesCheckInterval()
+                )
+
+                // Check if another shared instance is already running
+                val sharedInstanceExists = Reticulum.isSharedInstanceRunning(config.sharedInstancePort)
+
+                // Wire the LocalClientInterface factory before Reticulum.start
+                // so its connect-to-shared-instance path has something to call.
+                // Without this, `Reticulum.tryConnectToSharedInstance` logs
+                // "LocalClientInterface factory not set, cannot connect to
+                // shared instance" and silently falls back to standalone
+                // — even when sharedInstanceExists=true. The factory is
+                // applied via the companion's pending-factory mechanism,
+                // which Reticulum.start() picks up between Reticulum(...)
+                // construction and rns.initialize().
+                Reticulum.setLocalClientFactory { port, host ->
+                    network.reticulum.interfaces.local.LocalClientInterface(
+                        name = "SharedInstanceClient",
+                        tcpPort = port,
+                        tcpHost = host,
+                    )
+                }
+
+                // Wire the interface registrar so Transport can send/receive
+                // packets through the shared-instance connection. Without
+                // this, tryConnectToSharedInstance logs "No interface
+                // registrar set, packets will not be processed" — the TCP
+                // socket connects, but every packet arriving from the daemon
+                // is silently dropped (onPacketReceived is never wired) and
+                // Transport never routes outbound packets to the shared
+                // instance. Matches the python ref's behavior at
+                // RNS/Reticulum.py:414 — `RNS.Transport.interfaces.append(interface)`.
+                // The cast to network.reticulum.interfaces.Interface is safe
+                // since the factory above only produces LocalClientInterface,
+                // which extends Interface; the `Any` return type on the
+                // factory exists to keep rns-core decoupled from rns-interfaces.
+                Reticulum.setInterfaceRegistrar { iface ->
+                    if (iface is network.reticulum.interfaces.Interface) {
+                        val ref = network.reticulum.interfaces.InterfaceAdapter.getOrCreate(iface)
+                        network.reticulum.transport.Transport.registerInterface(ref)
+                    }
+                }
+
+                reticulum = Reticulum.start(
+                    configDir = configDir,
+                    enableTransport = config.enableTransport,
+                    shareInstance = config.shareInstance && !sharedInstanceExists,
+                    sharedInstancePort = config.sharedInstancePort,
+                    connectToSharedInstance = sharedInstanceExists
+                )
+
+                // If shareInstance is enabled but server hasn't started yet,
+                // set up factories and start the local server now
+                reticulum?.let { rns ->
+                    if (config.shareInstance && !sharedInstanceExists && !rns.isSharedInstance) {
+                        startLocalServer(rns, config.sharedInstancePort)
+                    }
+                }
+            }
+
+            // Schedule WorkManager for periodic recovery (interface health, service restart)
+            // Runs in all modes — recovery applies to client mode too, not just transport
+            // This survives Doze mode and app backgrounding via KEEP policy
+            ReticulumWorker.schedule(this@ReticulumService, intervalMinutes = 15)
+            Log.i(TAG, "WorkManager recovery worker scheduled (15-minute interval)")
+
+            // Trigger immediate rich notification update with real interface state
+            updateNotificationDebounced()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize Reticulum: ${e.message}")
+            // Update notification to show error state (disconnected with no interfaces)
+            updateNotificationDebounced()
+        }
+    }
+
+    private fun startLocalServer(rns: Reticulum, port: Int) {
+        try {
+            val server = LocalServerInterface(name = "SharedInstance", tcpPort = port)
+
+            // Set up packet callback to forward to Transport
+            server.onPacketReceived = { data, fromInterface ->
+                network.reticulum.transport.Transport.inbound(
+                    data,
+                    network.reticulum.interfaces.InterfaceAdapter.getOrCreate(fromInterface)
+                )
+            }
+
+            server.start()
+            network.reticulum.transport.Transport.registerInterface(
+                network.reticulum.interfaces.InterfaceAdapter.getOrCreate(server)
+            )
+
+            // Monitor and register spawned client interfaces
+            serviceScope.launch {
+                val registeredClients = mutableSetOf<network.reticulum.interfaces.Interface>()
+                while (this.isActive) {
+                    val spawned = server.spawnedInterfaces ?: emptyList()
+                    for (client in spawned) {
+                        if (!registeredClients.contains(client)) {
+                            network.reticulum.transport.Transport.registerInterface(
+                                network.reticulum.interfaces.InterfaceAdapter.getOrCreate(client)
+                            )
+                            registeredClients.add(client)
+                            android.util.Log.i("ReticulumService", "Registered spawned client interface: ${client.name}")
+                        }
+                    }
+                    // Remove disconnected clients
+                    registeredClients.retainAll(spawned.toSet())
+                    kotlinx.coroutines.delay(1000) // Check every second
+                }
+            }
+
+            // Update the Reticulum instance state via reflection (since isSharedInstance is private set)
+            try {
+                val isSharedField = rns::class.java.getDeclaredField("isSharedInstance")
+                isSharedField.isAccessible = true
+                isSharedField.setBoolean(rns, true)
+
+                // Also set sharedInterface so getSharedInstanceClientCount() works
+                val sharedInterfaceField = rns::class.java.getDeclaredField("sharedInterface")
+                sharedInterfaceField.isAccessible = true
+                sharedInterfaceField.set(rns, server)
+            } catch (e: Exception) {
+                // Ignore if reflection fails
+            }
+
+            android.util.Log.i("ReticulumService", "Started shared instance server on port $port")
+        } catch (e: Exception) {
+            android.util.Log.e("ReticulumService", "Failed to start shared instance server: ${e.message}")
+        }
+    }
+
+    private fun shutdownReticulum() {
+        try {
+            // Cancel WorkManager recovery worker before stopping Reticulum
+            // This ensures "stop means stop" — no background activity after user-initiated stop
+            ReticulumWorker.cancel(this)
+            Log.i(TAG, "WorkManager recovery worker cancelled")
+
+            Reticulum.stop()
+            reticulum = null
+            Log.i(TAG, "Reticulum stopped")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during Reticulum shutdown: ${e.message}")
+        }
+    }
+
+    private fun trimMemory(aggressive: Boolean = true) {
+        try {
+            if (aggressive) {
+                // Critical memory situation - aggressive cleanup
+                network.reticulum.transport.Transport.aggressiveTrimMemory()
+            } else {
+                // Moderate memory pressure - normal trim
+                network.reticulum.transport.Transport.trimMemory()
+            }
+        } catch (e: Exception) {
+            // Don't crash on memory trim errors
+        }
+    }
+
+    /**
+     * Get current memory statistics.
+     * Useful for monitoring and debugging memory usage.
+     */
+    fun getMemoryStats(): network.reticulum.transport.Transport.MemoryStats? {
+        return try {
+            network.reticulum.transport.Transport.getMemoryStats()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun createNotificationChannel() {
+        NotificationChannels.createChannels(this)
+    }
+
+    /**
+     * Create the initial foreground notification in CONNECTING state.
+     * Used only for the initial startForeground() call before Reticulum is ready.
+     */
+    private fun createNotification(): Notification {
+        val snapshot = ConnectionSnapshot(
+            state = ServiceConnectionState.CONNECTING,
+            interfaces = emptyList(),
+            sessionStartTime = System.currentTimeMillis(),
+            enableTransport = config.enableTransport,
+            isPaused = false
+        )
+        return notificationBuilder.buildNotification(snapshot, buildContentIntent(), emptyList())
+    }
+
+    /**
+     * Build a snapshot of current connection state from Transport-registered interfaces.
+     */
+    private fun buildConnectionSnapshot(): ConnectionSnapshot {
+        val transportInterfaces = try {
+            network.reticulum.transport.Transport.getInterfaces()
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        val snapshots = transportInterfaces.map { ref ->
+            InterfaceSnapshot(
+                name = ref.name,
+                typeName = categorizeInterface(ref),
+                isOnline = ref.online,
+                detail = ""
+            )
+        }
+
+        return ConnectionSnapshot(
+            state = computeConnectionState(snapshots, _isPaused),
+            interfaces = snapshots,
+            sessionStartTime = sessionStartTime,
+            enableTransport = config.enableTransport,
+            isPaused = _isPaused
+        )
+    }
+
+    /**
+     * Categorize an interface by examining its name.
+     *
+     * Since [InterfaceRef] wraps the real interface type and doesn't expose the class,
+     * we use a name-based heuristic. A [interfaceTypeProvider] callback can override this.
+     */
+    private fun categorizeInterface(ref: network.reticulum.transport.InterfaceRef): String {
+        interfaceTypeProvider?.let { provider ->
+            return provider(ref.name)
+        }
+
+        // Name-based heuristic fallback
+        if (ref.isLocalSharedInstance || ref.parentInterface?.isLocalSharedInstance == true) {
+            return "Local"
+        }
+
+        val nameLower = ref.name.lowercase()
+        return when {
+            nameLower.contains("tcp") -> "TCP"
+            nameLower.contains("udp") -> "UDP"
+            nameLower.contains("auto") -> "Auto"
+            nameLower.contains("ble") || nameLower.contains("bluetooth") -> "BLE"
+            nameLower.contains("rnode") -> "RNode"
+            else -> "Interface"
+        }
+    }
+
+    /**
+     * Optional callback to provide interface type names from the ViewModel/InterfaceManager.
+     * If set, overrides the name-based heuristic in [categorizeInterface].
+     */
+    var interfaceTypeProvider: ((String) -> String)? = null
+
+    /**
+     * Update the notification, debounced to avoid flickering during rapid state changes.
+     *
+     * If less than [NOTIFICATION_DEBOUNCE_MS] has elapsed since the last update,
+     * the update is deferred and coalesced with subsequent requests.
+     */
+    private fun updateNotificationDebounced() {
+        val now = System.currentTimeMillis()
+        val elapsed = now - lastNotificationUpdate
+
+        if (elapsed >= NOTIFICATION_DEBOUNCE_MS) {
+            postNotificationUpdate()
+        } else if (!pendingNotificationUpdate) {
+            pendingNotificationUpdate = true
+            notificationHandler.postDelayed(
+                { postNotificationUpdate() },
+                NOTIFICATION_DEBOUNCE_MS - elapsed
+            )
+        }
+    }
+
+    /**
+     * Perform the actual notification update: build snapshot, build notification, post it.
+     */
+    private fun postNotificationUpdate() {
+        try {
+            val snapshot = buildConnectionSnapshot()
+            val contentIntent = buildContentIntent()
+            val actions = NotificationActionReceiver.buildActions(this, _isPaused)
+            val notification = notificationBuilder.buildNotification(snapshot, contentIntent, actions)
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.notify(NOTIFICATION_ID, notification)
+            lastNotificationUpdate = System.currentTimeMillis()
+            pendingNotificationUpdate = false
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to update notification: ${e.message}")
+        }
+    }
+
+    /**
+     * Build a PendingIntent that opens the app when the notification is tapped.
+     * Uses the package manager's launch intent to find the main activity.
+     */
+    private fun buildContentIntent(): PendingIntent? {
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        return launchIntent?.let {
+            PendingIntent.getActivity(
+                this, 0, it,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
+    }
+
+    /**
+     * Get the current Reticulum instance.
+     * Returns null if not yet initialized.
+     */
+    fun getReticulum(): Reticulum? = reticulum
+
+    /**
+     * Get the current configuration.
+     */
+    fun getConfig(): ReticulumConfig = config
+
+    /**
+     * Check if Reticulum is running.
+     */
+    fun isRunning(): Boolean = reticulum != null
+
+    /**
+     * Get the Doze state observer.
+     * Downstream phases use this to react to Doze mode changes.
+     */
+    fun getDozeObserver(): DozeStateObserver = dozeObserver
+
+    /**
+     * Get the network state observer.
+     * Downstream phases use this to react to network transitions.
+     */
+    fun getNetworkObserver(): NetworkStateObserver = networkObserver
+
+    /**
+     * Get the battery optimization checker.
+     * Downstream phases use this for exemption flow and status display.
+     */
+    fun getBatteryChecker(): BatteryOptimizationChecker = batteryChecker
+
+    /**
+     * Get the connection policy provider.
+     * Downstream phases use this to apply throttling to reconnection logic.
+     */
+    fun getPolicyProvider(): ConnectionPolicyProvider = policyProvider
+
+    /**
+     * Get the service event tracker.
+     * Tracks system kills, provides kill count for battery optimization warnings.
+     */
+    fun getEventTracker(): ServiceEventTracker = eventTracker
+
+    /**
+     * Get the battery statistics tracker.
+     * Provides drain rate and sample history for battery impact display.
+     */
+    fun getBatteryStatsTracker(): BatteryStatsTracker = batteryStatsTracker
+
+    /**
+     * Pause the service: freeze Transport job loop and cancel WorkManager.
+     *
+     * The service stays alive as a foreground service but stops all network activity.
+     * The notification updates to show "Paused" state via [onPauseStateChanged] callback.
+     */
+    fun pause() {
+        _isPaused = true
+        // Pause Transport: drops inbound/outbound packets, skips job work
+        network.reticulum.transport.Transport.paused.set(true)
+        // Cancel WorkManager periodic recovery
+        ReticulumWorker.cancel(this)
+        Log.i(TAG, "Service paused by user")
+        onPauseStateChanged?.invoke()
+    }
+
+    /**
+     * Resume the service: restore Transport job interval and re-schedule WorkManager.
+     *
+     * Restores the policy-based throttle interval, re-schedules WorkManager,
+     * and triggers immediate reconnection on all interfaces.
+     */
+    fun resume() {
+        _isPaused = false
+        // Unpause Transport: resumes inbound/outbound processing and job work
+        network.reticulum.transport.Transport.paused.set(false)
+        // Re-schedule WorkManager periodic recovery
+        ReticulumWorker.schedule(this, intervalMinutes = 15)
+        // Trigger immediate reconnection on all interfaces
+        reconnectInterfaces()
+        Log.i(TAG, "Service resumed by user")
+        onPauseStateChanged?.invoke()
+    }
+
+    /**
+     * Trigger reconnection attempt on all Transport-registered interfaces.
+     *
+     * Invokes the [onReconnectRequested] callback which the ViewModel can use
+     * to call onNetworkChanged() on the InterfaceManager for immediate reconnection.
+     */
+    fun reconnectInterfaces() {
+        val interfaces = network.reticulum.transport.Transport.getInterfaces()
+        Log.i(TAG, "Triggering reconnection on ${interfaces.size} interfaces")
+        onReconnectRequested?.invoke()
+    }
+
+    companion object {
+        private const val TAG = "ReticulumService"
+        private const val NOTIFICATION_ID = 1001
+        private const val EXTRA_CONFIG = "config"
+
+        // Notification quick action intent actions
+        const val ACTION_PAUSE = "network.reticulum.android.ACTION_PAUSE"
+        const val ACTION_RESUME = "network.reticulum.android.ACTION_RESUME"
+        const val ACTION_RECONNECT = "network.reticulum.android.ACTION_RECONNECT"
+
+        // Static instance for BroadcastReceiver access
+        private var instance: ReticulumService? = null
+
+        /**
+         * Get the currently running service instance, or null if not running.
+         * Used by [NotificationActionReceiver] to dispatch quick actions.
+         */
+        fun getInstance(): ReticulumService? = instance
+
+        /**
+         * Start the Reticulum service with default client-only configuration.
+         */
+        fun start(context: Context) {
+            start(context, ReticulumConfig.DEFAULT)
+        }
+
+        /**
+         * Start the Reticulum service with the specified configuration.
+         */
+        fun start(context: Context, config: ReticulumConfig) {
+            val intent = Intent(context, ReticulumService::class.java).apply {
+                putExtra(EXTRA_CONFIG, config)
+            }
+            context.startForegroundService(intent)
+        }
+
+        /**
+         * Stop the Reticulum service.
+         *
+         * Records a user-initiated stop so the event tracker does NOT count
+         * the next service start as a system kill.
+         */
+        fun stop(context: Context) {
+            instance?.getEventTracker()?.recordUserStop()
+            context.stopService(Intent(context, ReticulumService::class.java))
+        }
+    }
+}

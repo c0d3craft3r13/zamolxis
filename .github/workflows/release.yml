@@ -204,7 +204,15 @@ jobs:
 
           NOTES=""
           # libdef format: "<libs.versions.toml var>:<github repo>"
-          for libdef in "reticulumKt:reticulum-kt" "lxmfKt:LXMF-kt" "lxstKt:LXST-kt"; do
+          #
+          # These libraries are no longer resolved as coordinates — their sources are
+          # vendored under vendor/ (see vendor/PROVENANCE.md) and the catalog keys were
+          # renamed to `vendored*` to say so. The keys are still worth reading here:
+          # they record which upstream revision the vendored source was taken from, so a
+          # release that follows a re-sync still gets the upstream changelog in its
+          # notes. Renaming the keys without renaming them here would have left this
+          # loop matching nothing and reporting "no pin" forever, quietly.
+          for libdef in "vendoredReticulumKt:reticulum-kt" "vendoredLxmfKt:LXMF-kt" "vendoredLxstKt:LXST-kt"; do
             var="${libdef%%:*}"
             repo="${libdef##*:}"
             old=""

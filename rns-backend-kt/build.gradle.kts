@@ -31,12 +31,15 @@ android {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
         }
 
-        // Expose the pinned library versions to Kotlin source so NativeCapabilities
-        // can report them via the RnsBackend.capabilities StateFlow without hardcoding.
-        // Sourced from libs.versions.toml — same fields :reticulum exposes today.
-        buildConfigField("String", "RNS_KT_VERSION", "\"${libs.versions.reticulumKt.get().removePrefix("v")}\"")
-        buildConfigField("String", "LXMF_KT_VERSION", "\"${libs.versions.lxmfKt.get().removePrefix("v")}\"")
-        buildConfigField("String", "LXST_KT_VERSION", "\"${libs.versions.lxstKt.get().removePrefix("v")}\"")
+        // Expose the vendored stack's upstream versions to Kotlin source so
+        // NativeCapabilities can report them via the RnsBackend.capabilities StateFlow
+        // without hardcoding. These are no longer resolution pins — the sources live in
+        // vendor/ — but they still answer "which upstream revision is this built from",
+        // which is what the capability string means. Keep them moving with
+        // vendor/PROVENANCE.md.
+        buildConfigField("String", "RNS_KT_VERSION", "\"${libs.versions.vendoredReticulumKt.get().removePrefix("v")}\"")
+        buildConfigField("String", "LXMF_KT_VERSION", "\"${libs.versions.vendoredLxmfKt.get().removePrefix("v")}\"")
+        buildConfigField("String", "LXST_KT_VERSION", "\"${libs.versions.vendoredLxstKt.get().removePrefix("v")}\"")
     }
 
     compileOptions {
@@ -84,11 +87,11 @@ dependencies {
     implementation(libs.coroutines.android)
 
     // Native Reticulum/LXMF/LXST Kotlin stack — the actual protocol impl.
-    api(libs.rns.core)
-    api(libs.rns.interfaces)
-    api(libs.rns.android)
-    api(libs.lxmf.kt)
-    api(libs.lxst.kt)
+    api(project(":vendor:reticulum-kt:rns-core"))
+    api(project(":vendor:reticulum-kt:rns-interfaces"))
+    api(project(":vendor:reticulum-kt:rns-android"))
+    api(project(":vendor:lxmf-kt:lxmf-core"))
+    api(project(":vendor:lxst-kt:lxst"))
 
     // MessagePack — LXMF field encoding + RNode KISS frames.
     implementation(libs.msgpack)
