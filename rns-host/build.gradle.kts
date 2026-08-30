@@ -44,9 +44,16 @@ android {
         create("kotlinBackend") {
             dimension = "rnsImpl"
             isDefault = true
+            // reticulum-kt takes a multicast lock per running AutoInterface
+            // (MulticastLockHelper) and drops it when the last one stops, so the
+            // service must not hold one for the whole process lifetime.
+            buildConfigField("boolean", "RNS_BACKEND_MANAGES_MULTICAST_LOCK", "true")
         }
         create("pythonBackend") {
             dimension = "rnsImpl"
+            // Upstream Python RNS has no such hook — without a process-held lock
+            // Android filters inbound multicast and AutoInterface never sees a peer.
+            buildConfigField("boolean", "RNS_BACKEND_MANAGES_MULTICAST_LOCK", "false")
         }
     }
 

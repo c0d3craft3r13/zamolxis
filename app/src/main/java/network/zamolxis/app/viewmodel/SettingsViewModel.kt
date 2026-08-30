@@ -244,7 +244,14 @@ class SettingsViewModel
         private val crashReportManager: network.zamolxis.app.util.CrashReportManager,
         private val pqAnnounceFingerprint: PqAnnounceFingerprint,
         private val pqKeyRepository: PqKeyRepository,
+        private val vpnStatusMonitor: network.zamolxis.app.service.manager.VpnStatusMonitor,
     ) : ViewModel() {
+        /**
+         * Whether a VPN tunnel is up. Surfaced so the UI can explain why
+         * local-network peers vanish — see VpnLocalNetworkBanner.
+         */
+        val vpnActive = vpnStatusMonitor.vpnActive
+
         companion object {
             private const val TAG = "SettingsViewModel"
             private const val INIT_DELAY_MS = 500L // Allow Reticulum service to initialize
@@ -289,6 +296,7 @@ class SettingsViewModel
         private var sharedInstanceAvailabilityJob: Job? = null
 
         init {
+            vpnStatusMonitor.start()
             loadSettings()
             // Always load location sharing settings (not dependent on monitors)
             loadLocationSharingSettings()

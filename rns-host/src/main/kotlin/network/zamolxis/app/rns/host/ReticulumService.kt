@@ -79,6 +79,12 @@ class ReticulumService : Service() {
     // Managers container (initialized in onCreate)
     private lateinit var managers: ServiceModule.ServiceManagers
 
+    /** Keeps the mesh on the real local network when a VPN owns the default route. */
+    private val localNetworkBinder by lazy {
+        network.zamolxis.app.rns.host.manager
+            .LocalNetworkBinder(this)
+    }
+
     // Local binder returned from onBind() — liveness handle only, no protocol calls.
     // Retained internally so existing managers (BleCoordinator, NetworkChangeManager
     // callbacks below) can call binder.restartAutoInterface() / announceLxmfDestination() /
@@ -188,7 +194,10 @@ class ReticulumService : Service() {
         // RNode plugged in at a time on a phone in practice.
         KotlinRNodeBridge.getInstance(this).addOnlineStatusListener(
             object : RNodeOnlineStatusListener {
-                override fun onRNodeOnlineStatusChanged(isOnline: Boolean, interfaceName: String) {
+                override fun onRNodeOnlineStatusChanged(
+                    isOnline: Boolean,
+                    interfaceName: String,
+                ) {
                     Log.d(TAG, "RNode online status changed: [$interfaceName] online=$isOnline")
                     managers.notificationManager.updateRNodeStatus(isOnline, interfaceName)
                 }
@@ -249,10 +258,25 @@ class ReticulumService : Service() {
         managers.notificationManager.startForeground(this)
         Log.d(TAG, "Foreground service started in onCreate")
 
-        // CRITICAL: Acquire wake lock early to prevent CPU sleep during initialization
-        // Native stack manages multicast lock per-AutoInterface for battery savings.
-        managers.lockManager.skipMulticastLock = true
+        // CRITICAL: Acquire wake lock early to prevent CPU sleep during initialization.
+        //
+        // The multicast lock is skipped only where something else takes it: the
+        // Kotlin backend acquires one per AutoInterface (MulticastLockHelper, via
+        // NativeInterfaceFactory) and releases it when the last one stops, which
+        // saves battery while no AutoInterface is running. Nothing does that on
+        // the Python backend, and without the lock Android's Wi-Fi driver drops
+        // multicast that is not addressed to this device — AutoInterface then
+        // logs "No multicast echoes received on wlan0" forever and never finds a
+        // peer on the local network. Observed on a Motorola Edge 60 Pro: 24 such
+        // errors in one capture, zero AutoInterface peers.
+        managers.lockManager.skipMulticastLock = BuildConfig.RNS_BACKEND_MANAGES_MULTICAST_LOCK
         managers.lockManager.acquireAll()
+
+        // With a VPN up, every socket this process opens defaults into the
+        // tunnel and AutoInterface stops hearing its own multicast echoes — see
+        // LocalNetworkBinder. Pin to the real local network before the stack
+        // brings its interfaces up.
+        localNetworkBinder.bindIfVpnActive()
         Log.d(TAG, "Wake locks acquired in onCreate")
 
         // Clean up stale announces (>30 days old) on each service lifecycle

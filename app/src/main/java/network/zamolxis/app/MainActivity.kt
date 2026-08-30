@@ -103,6 +103,7 @@ import network.zamolxis.app.ui.components.BlePermissionBottomSheet
 import network.zamolxis.app.ui.components.LocalCapabilities
 import network.zamolxis.app.ui.components.LocalWindowSize
 import network.zamolxis.app.ui.components.OfflineModeBanner
+import network.zamolxis.app.ui.components.VpnLocalNetworkBanner
 import network.zamolxis.app.ui.screens.AnnounceDetailScreen
 import network.zamolxis.app.ui.screens.AnnounceStreamScreen
 import network.zamolxis.app.ui.screens.ApkSharingScreen
@@ -1413,6 +1414,19 @@ fun ZamolxisNavigation(
                         isRestarting = settingsState.isRestarting,
                         onReconnect = { settingsViewModel.restartService() },
                         hasCompletedOnboarding = onboardingState.hasCompletedOnboarding,
+                    )
+                    val vpnActive by settingsViewModel.vpnActive.collectAsState()
+                    VpnLocalNetworkBanner(
+                        vpnActive = vpnActive,
+                        // Mirrors OfflineModeBanner's own visibility so only one of
+                        // the two reserves the status-bar inset.
+                        insetConsumedAbove =
+                            network.zamolxis.app.ui.components
+                                .shouldShowOfflineBanner(
+                                    settingsState.networkStatus,
+                                    onboardingState.hasCompletedOnboarding,
+                                ) ||
+                                settingsState.isRestarting,
                     )
                     val resolvedStartDestination = startDestination
                     if (resolvedStartDestination == null) {

@@ -192,6 +192,7 @@
 
     <!-- Баннер офлайн-режима -->
     <string name="offline_banner_shutdown">Zamolxis не в сети</string>
+    <string name="vpn_local_network_banner">VPN включён — узлы в локальной сети могут не находиться. Добавьте Zamolxis в исключения VPN, чтобы их видеть.</string>
     <string name="offline_banner_error">Ошибка соединения</string>
     <string name="offline_banner_reconnecting">Повторное подключение\u2026</string>
     <string name="offline_banner_reconnect">Переподключиться</string>
