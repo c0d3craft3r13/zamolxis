@@ -347,8 +347,24 @@ fixture. `ble_reticulum`, vendored from the fork, was driving a live BLE link: c
 a peer, 209 bytes received, duplicate-identity rejection firing on an Android MAC rotation.
 No `ImportError`, no `ModuleNotFoundError`, no traceback, no native link failure.
 
-Still not exercised: a voice call end-to-end between two phones. The codecs are proven by
-round-trip tests rather than by a call, because only one device was attached.
+**Both rebuilt codecs carry a live call.** With two phones attached (Motorola edge 60 pro
+and edge 50 fusion, both running this build), two voice calls were placed between them
+over Reticulum — one hop, ~700 kbps link:
+
+| Profile | Codec | Packets | Decoded per packet | Loss concealment | Underruns |
+|---|---|---|---|---|---|
+| LBW | codec2 3200 | 300 RX / 300 TX | 1600 samples (200 ms @ 8 kHz) | 0 | 0 |
+| MQ | Opus | 450 RX / 400 TX | 2880 samples (60 ms @ 48 kHz) | 0 | 0 |
+
+Audio flowed in both directions for the whole of each call (the first ran 1:22), with one
+silence frame at codec2 setup and none after. Packet sizes were fixed at 82 bytes for
+codec2 and variable (15–33 bytes) for Opus, which is what VBR should look like. Both
+calls ended cleanly. Nothing in the logs but a cosmetic Android `attributionTag` warning.
+
+The `native=true` flag on every received packet means the decode happened in
+`liblxst_playback_engine` against the rebuilt libcodec2 and libopus — not in a Kotlin
+fallback path. This is the check the instrumented tests cannot make: real packets, off a
+real link, decoded by the libraries this repository built.
 
 ## Re-syncing with upstream
 
