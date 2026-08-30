@@ -448,6 +448,7 @@ TO TALK</string>
     <string name="messaging_cd_image">Image attachment</string>
     <string name="messaging_cd_image_unavailable">Image unavailable</string>
     <string name="messaging_image_unavailable_title">Image Not Available</string>
+    <string name="messaging_relay_limit_exceeded">Too large for your relay (%1$s, limit %2$s). Send it over a direct link, pick a relay with a higher limit, or reduce the image quality.</string>
     <string name="messaging_reply">Reply</string>
     <string name="messaging_view_details">View Details</string>
     <string name="messaging_cd_selected_animated">Selected animated image</string>

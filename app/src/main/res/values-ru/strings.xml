@@ -460,6 +460,7 @@
     <string name="messaging_cd_image">Изображение</string>
     <string name="messaging_cd_image_unavailable">Изображение недоступно</string>
     <string name="messaging_image_unavailable_title">Изображение недоступно</string>
+    <string name="messaging_relay_limit_exceeded">Слишком большой для вашего ретранслятора (%1$s, лимит %2$s). Отправьте по прямой связи, выберите ретранслятор с большим лимитом или уменьшите качество изображения.</string>
     <string name="messaging_reply">Ответить</string>
     <string name="messaging_view_details">Подробнее</string>
     <string name="messaging_cd_selected_animated">Выбранное анимированное изображение</string>
