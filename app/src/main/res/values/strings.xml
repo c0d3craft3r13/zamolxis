@@ -2333,4 +2333,11 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., under the MIT licence —
         <item quantity="one">%d member</item>
         <item quantity="other">%d members</item>
     </plurals>
+    <string name="mesh_status_via">Connected via %1$s</string>
+    <string name="mesh_status_searching">Looking for the network…</string>
+    <string name="mesh_status_offline">No connection</string>
+    <string name="mesh_link_bluetooth">Bluetooth</string>
+    <string name="mesh_link_local">Wi-Fi</string>
+    <string name="mesh_link_internet">the internet</string>
+    <string name="mesh_link_radio">radio</string>
 </resources>

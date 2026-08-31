@@ -1,9 +1,14 @@
 package network.zamolxis.app.service
 
+import android.os.SystemClock
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import network.zamolxis.app.data.model.TcpCommunityServer
 import network.zamolxis.app.data.model.TcpCommunityServers
@@ -47,21 +52,55 @@ class BootstrapHubHealth
         /** Interface names an announce has arrived on since this process started. */
         private val interfacesHeardFrom = ConcurrentHashMap.newKeySet<String>()
 
+        /** Interface name to its stored `type`, kept current from the database. */
+        private val interfaceTypesByName = ConcurrentHashMap<String, String>()
+
+        private val _reachability = MutableStateFlow(MeshReachability())
+
+        /**
+         * How the device is actually reaching the mesh, for the UI to put in words.
+         *
+         * Free of extra machinery: the announce stream is already collected here to
+         * judge hubs, and this is the same evidence read for a second purpose. Nothing
+         * polls, and nothing crosses into the Python backend to produce it.
+         */
+        val reachability: StateFlow<MeshReachability> = _reachability.asStateFlow()
+
         /**
          * Start listening, and schedule the one check this process performs.
          *
-         * @param scope the application scope; both jobs live as long as the process
+         * @param scope the application scope; the jobs live as long as the process
          */
         fun start(scope: CoroutineScope) {
+            _reachability.value = MeshReachability(startedAtMs = SystemClock.elapsedRealtime())
+            scope.launch {
+                interfaceRepository.allInterfaceEntities.collect { entities ->
+                    interfaceTypesByName.clear()
+                    entities.forEach { interfaceTypesByName[it.name] = it.type }
+                }
+            }
             scope.launch {
                 rnsCore.observeAnnounces().collect { announce ->
-                    announce.receivingInterface?.let(interfacesHeardFrom::add)
+                    announce.receivingInterface?.let(::recordAnnounce)
                 }
             }
             scope.launch {
                 delay(SILENCE_GRACE_SECONDS.seconds)
                 runCatching { evaluateOnce() }
                     .onFailure { Log.e(TAG, "Bootstrap hub health check failed", it) }
+            }
+        }
+
+        private fun recordAnnounce(interfaceName: String) {
+            interfacesHeardFrom.add(interfaceName)
+            val kind =
+                interfaceTypesByName[interfaceName]
+                    ?.let(MeshLinkKind::ofInterfaceType)
+                    ?: return
+            _reachability.update { current ->
+                current.copy(
+                    lastHeardAtByKind = current.lastHeardAtByKind + (kind to SystemClock.elapsedRealtime()),
+                )
             }
         }
 

@@ -2400,4 +2400,11 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., лицензия MIT — 
         <item quantity="many">%d участников</item>
         <item quantity="other">%d участника</item>
     </plurals>
+    <string name="mesh_status_via">Связь: %1$s</string>
+    <string name="mesh_status_searching">Ищем сеть…</string>
+    <string name="mesh_status_offline">Нет связи</string>
+    <string name="mesh_link_bluetooth">Bluetooth</string>
+    <string name="mesh_link_local">Wi-Fi</string>
+    <string name="mesh_link_internet">интернет</string>
+    <string name="mesh_link_radio">радио</string>
 </resources>

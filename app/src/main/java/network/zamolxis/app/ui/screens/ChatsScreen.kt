@@ -1,5 +1,6 @@
 package network.zamolxis.app.ui.screens
 
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -83,15 +84,21 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import network.zamolxis.app.R
 import network.zamolxis.app.data.db.entity.GroupEntity
 import network.zamolxis.app.data.repository.Conversation
+import network.zamolxis.app.service.MeshReachability
 import network.zamolxis.app.service.SyncResult
 import network.zamolxis.app.ui.components.ProfileIcon
 import network.zamolxis.app.ui.components.SearchableTopAppBar
 import network.zamolxis.app.ui.components.StarToggleButton
 import network.zamolxis.app.ui.components.SyncStatusBottomSheet
+import network.zamolxis.app.ui.components.meshStatusText
 import network.zamolxis.app.ui.components.simpleVerticalScrollbar
+import network.zamolxis.app.ui.screens.settings.AudienceProfile
+import network.zamolxis.app.ui.util.rememberLifecycleTickerMillis
 import network.zamolxis.app.viewmodel.ChatsViewModel
 import network.zamolxis.app.viewmodel.ChatsSegment
 import network.zamolxis.app.viewmodel.ChatListItem
@@ -101,6 +108,13 @@ import network.zamolxis.app.viewmodel.SharedTextViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+/**
+ * How often the connection line re-evaluates while the screen is on. The freshness
+ * window is five minutes, so this only has to be fine enough that the wording does
+ * not visibly lag.
+ */
+private const val MESH_STATUS_TICK_MS = 15_000L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,7 +135,28 @@ fun ChatsScreen(
     viewModel: ChatsViewModel = hiltViewModel(),
     settingsViewModel: network.zamolxis.app.viewmodel.SettingsViewModel = hiltViewModel(),
     debugViewModel: network.zamolxis.app.viewmodel.DebugViewModel = hiltViewModel(),
+    // Data, not a view model. A `hiltViewModel()` default is evaluated whether or not the
+    // build shows the status line, which needs a Hilt-aware Activity that the Compose
+    // tests do not have. The composition root supplies the real flow; the default keeps
+    // this screen constructible from a plain test host.
+    meshReachability: StateFlow<MeshReachability> = MutableStateFlow(MeshReachability()),
 ) {
+    val reachability by meshReachability.collectAsState()
+
+    // The status line goes stale on its own rather than on a background timer: this
+    // ticks only while the screen is on, and only in the build that shows the line.
+    //
+    // The ticker is used as a recomposition pulse, not as the clock. It reports
+    // System.currentTimeMillis(), and MeshReachability timestamps are
+    // SystemClock.elapsedRealtime() — comparing the two would be meaningless, and a
+    // wall-clock jump (NTP, the user changing the time) would age the line by decades.
+    val meshStatusPulse =
+        rememberLifecycleTickerMillis(
+            periodMs = MESH_STATUS_TICK_MS,
+            enabled = AudienceProfile.isSimpleUi,
+        )
+    val meshStatusTickMs = remember(meshStatusPulse) { SystemClock.elapsedRealtime() }
+
     val chatsState by viewModel.chatsState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val voiceSearchQuery by viewModel.voiceSearchQuery.collectAsState()
@@ -218,8 +253,15 @@ fun ChatsScreen(
             Column {
                 SearchableTopAppBar(
                     title = stringResource(R.string.chats_title),
+                    // Маяк spends this line on whether anything is getting through.
+                    // "Why isn't my message sending" is the first question a new user
+                    // has, and the honest answer lived in the interface statistics —
+                    // a screen Маяк does not show. A conversation count they can see by
+                    // looking at the list underneath.
                     subtitle =
-                        if (selectedSegment == ChatsSegment.TEXT) {
+                        if (AudienceProfile.isSimpleUi) {
+                            meshStatusText(reachability, nowMs = meshStatusTickMs)
+                        } else if (selectedSegment == ChatsSegment.TEXT) {
                             pluralStringResource(
                                 R.plurals.conversation_count,
                                 chatsState.items.size,

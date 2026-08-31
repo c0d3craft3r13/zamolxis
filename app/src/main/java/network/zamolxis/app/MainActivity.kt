@@ -1478,6 +1478,10 @@ fun ZamolxisNavigation(
                             appComposable(AppDestination.CHATS) {
                                 DoubleBackToExitHandler(Screen.Chats.route)
                                 ChatsScreen(
+                                    meshReachability =
+                                        androidx.hilt.navigation.compose
+                                            .hiltViewModel<network.zamolxis.app.viewmodel.MeshStatusViewModel>()
+                                            .reachability,
                                     onChatClick = { destinationHash, peerName ->
                                         val encodedHash = Uri.encode(destinationHash)
                                         val encodedName = Uri.encode(peerName)
