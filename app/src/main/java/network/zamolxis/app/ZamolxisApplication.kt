@@ -86,6 +86,9 @@ class ZamolxisApplication : Application() {
     lateinit var interfaceRepository: InterfaceRepository
 
     @Inject
+    lateinit var bootstrapResilience: network.zamolxis.app.service.BootstrapResilience
+
+    @Inject
     lateinit var autoAnnounceManager: network.zamolxis.app.service.AutoAnnounceManager
 
     @Inject
@@ -426,6 +429,24 @@ class ZamolxisApplication : Application() {
 
                 // Service is SHUTDOWN or ERROR - need to initialize
                 android.util.Log.d("ZamolxisApplication", "Service needs initialization (status: $currentStatus)")
+
+                // Top up bootstrap hubs and raise the discovery default before the
+                // config is read — otherwise the repair would not take effect until the
+                // launch after next, which for an install whose only hub is dead means
+                // one more session with no network and no explanation.
+                try {
+                    val outcome = bootstrapResilience.applyOnce()
+                    if (!outcome.alreadyApplied) {
+                        android.util.Log.i(
+                            "ZamolxisApplication",
+                            "Bootstrap resilience: added=${outcome.hubsAdded} discovery=${outcome.discoveryEnabled}",
+                        )
+                    }
+                } catch (e: Exception) {
+                    // Never let this block startup: without it the app still runs with
+                    // whatever interfaces it already has.
+                    android.util.Log.e("ZamolxisApplication", "Bootstrap resilience repair failed", e)
+                }
 
                 // Load all configuration from database in parallel for faster startup
                 android.util.Log.d("ZamolxisApplication", "Loading configuration from database (parallel)...")

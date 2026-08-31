@@ -334,8 +334,17 @@ class InterfaceConfigManager
                     // Load discovery settings
                     val discoverInterfaces = settingsRepository.getDiscoverInterfacesEnabled()
                     val savedAutoconnect = settingsRepository.getAutoconnectDiscoveredCount()
-                    // Coerce -1 (never configured sentinel) to 0
-                    val autoconnectDiscoveredCount = if (savedAutoconnect >= 0) savedAutoconnect else 0
+                    // -1 is the never-configured sentinel. It used to become 0, which
+                    // left auto-connect off out of the box: the seeded bootstrap hubs
+                    // could never be replaced by hubs learned from the network, so an
+                    // install whose seeds went bad had no way back. An explicit 0 from
+                    // the user is still honoured — only "never chose" changes here.
+                    val autoconnectDiscoveredCount =
+                        if (savedAutoconnect >= 0) {
+                            savedAutoconnect
+                        } else {
+                            BootstrapResilience.DEFAULT_AUTOCONNECT_DISCOVERED
+                        }
                     val autoconnectIfacOnly = settingsRepository.getAutoconnectIfacOnly()
                     val shareInstanceHosting = settingsRepository.getShareInstanceHostingEnabled()
                     Log.d(
