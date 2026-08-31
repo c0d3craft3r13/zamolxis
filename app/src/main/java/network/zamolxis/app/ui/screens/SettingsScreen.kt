@@ -59,6 +59,7 @@ import network.zamolxis.app.R
 import network.zamolxis.app.ui.components.BackgroundLocationPermissionBottomSheet
 import network.zamolxis.app.ui.components.LocationPermissionBottomSheet
 import network.zamolxis.app.ui.components.ServiceRestartBanner
+import network.zamolxis.app.ui.screens.settings.AudienceProfile
 import network.zamolxis.app.ui.screens.settings.cards.AboutCard
 import network.zamolxis.app.ui.screens.settings.cards.AdvancedCard
 import network.zamolxis.app.ui.screens.settings.cards.AutoAnnounceCard
@@ -223,9 +224,10 @@ fun SettingsScreen(
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("Shared instance access configuration", event.configuration)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        clip.description.extras = PersistableBundle().apply {
-                            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
-                        }
+                        clip.description.extras =
+                            PersistableBundle().apply {
+                                putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+                            }
                     }
                     clipboard.setPrimaryClip(clip)
                     snackbarHostState.showSnackbar(
@@ -233,10 +235,11 @@ fun SettingsScreen(
                         duration = SnackbarDuration.Short,
                     )
                 }
-                SharedInstanceAccessEvent.Unavailable -> snackbarHostState.showSnackbar(
-                    message = "Host access configuration is unavailable",
-                    duration = SnackbarDuration.Short,
-                )
+                SharedInstanceAccessEvent.Unavailable ->
+                    snackbarHostState.showSnackbar(
+                        message = "Host access configuration is unavailable",
+                        duration = SnackbarDuration.Short,
+                    )
             }
         }
     }
@@ -300,7 +303,9 @@ fun SettingsScreen(
                         isHostingSharedInstance = state.isHostingSharedInstance,
                         isHostingShareInstanceConflict = state.isHostingShareInstanceConflict,
                     )
-                if (showSharedInstanceBanner) {
+                if (showSharedInstanceBanner &&
+                    AudienceProfile.isVisible(SettingsCardId.SHARED_INSTANCE_BANNER, state.developerMode)
+                ) {
                     SharedInstanceBannerCard(
                         isExpanded = state.isSharedInstanceBannerExpanded,
                         isUsingSharedInstance = state.isSharedInstance,
@@ -374,12 +379,14 @@ fun SettingsScreen(
                     onManageClick = onNavigateToNotifications,
                 )
 
-                VoiceCallPermissionsCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.VOICE_CALL_PERMISSIONS.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.VOICE_CALL_PERMISSIONS, it) },
-                    allowVoiceCalls = state.allowVoiceCalls,
-                    onAllowVoiceCallsChange = { viewModel.setAllowVoiceCalls(it) },
-                )
+                if (AudienceProfile.isVisible(SettingsCardId.VOICE_CALL_PERMISSIONS, state.developerMode)) {
+                    VoiceCallPermissionsCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.VOICE_CALL_PERMISSIONS.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.VOICE_CALL_PERMISSIONS, it) },
+                        allowVoiceCalls = state.allowVoiceCalls,
+                        onAllowVoiceCallsChange = { viewModel.setAllowVoiceCalls(it) },
+                    )
+                }
 
                 if (state.developerMode) {
                     AutoAnnounceCard(
@@ -495,18 +502,20 @@ fun SettingsScreen(
                     },
                 )
 
-                MapSourcesCard(
-                    isExpanded = state.cardExpansionStates[SettingsCardId.MAP_SOURCES.name] ?: false,
-                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.MAP_SOURCES, it) },
-                    httpEnabled = state.mapSourceHttpEnabled,
-                    onHttpEnabledChange = { viewModel.setMapSourceHttpEnabled(it) },
-                    rmspEnabled = state.mapSourceRmspEnabled,
-                    onRmspEnabledChange = { viewModel.setMapSourceRmspEnabled(it) },
-                    markerDeclutterEnabled = state.mapMarkerDeclutterEnabled,
-                    onMarkerDeclutterEnabledChange = { viewModel.setMapMarkerDeclutterEnabled(it) },
-                    rmspServerCount = state.rmspServerCount,
-                    hasOfflineMaps = state.hasOfflineMaps,
-                )
+                if (AudienceProfile.isVisible(SettingsCardId.MAP_SOURCES, state.developerMode)) {
+                    MapSourcesCard(
+                        isExpanded = state.cardExpansionStates[SettingsCardId.MAP_SOURCES.name] ?: false,
+                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.MAP_SOURCES, it) },
+                        httpEnabled = state.mapSourceHttpEnabled,
+                        onHttpEnabledChange = { viewModel.setMapSourceHttpEnabled(it) },
+                        rmspEnabled = state.mapSourceRmspEnabled,
+                        onRmspEnabledChange = { viewModel.setMapSourceRmspEnabled(it) },
+                        markerDeclutterEnabled = state.mapMarkerDeclutterEnabled,
+                        onMarkerDeclutterEnabledChange = { viewModel.setMapMarkerDeclutterEnabled(it) },
+                        rmspServerCount = state.rmspServerCount,
+                        hasOfflineMaps = state.hasOfflineMaps,
+                    )
+                }
 
                 if (state.developerMode) {
                     MessageDeliveryRetrievalCard(

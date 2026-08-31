@@ -59,10 +59,10 @@ jobs:
           # Python backend first, then Kotlin backend; each in sentry / noSentry
           # telemetry variants. Four flavor combos × ABI splits + universal.
           ./gradlew \
-            :app:assembleSentryPythonBackendRelease \
-            :app:assembleNoSentryPythonBackendRelease \
-            :app:assembleSentryKotlinBackendRelease \
-            :app:assembleNoSentryKotlinBackendRelease \
+            :app:assembleExpertSentryPythonBackendRelease \
+            :app:assembleExpertNoSentryPythonBackendRelease \
+            :app:assembleExpertSentryKotlinBackendRelease \
+            :app:assembleExpertNoSentryKotlinBackendRelease \
             --no-daemon --stacktrace
           echo "✓ Release APKs built successfully"
 
@@ -82,7 +82,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
         run: |
-          ./gradlew :app:bundleSentryPythonBackendRelease --no-daemon --stacktrace
+          ./gradlew :app:bundleExpertSentryPythonBackendRelease --no-daemon --stacktrace
           echo "✓ Release AAB built successfully"
 
       - name: Extract signing certificate fingerprints
@@ -109,7 +109,7 @@ jobs:
         run: |
           # Two flavor dimensions (telemetry × rnsImpl) mean Gradle writes to
           # app/build/outputs/apk/<telemetry><Backend>/release/, e.g.
-          # sentryPythonBackend/release/. Output filenames:
+          # expertSentryPythonBackend/release/. Output filenames:
           #   zamolxis-{version}-{backend}-{abi}[-no-sentry].apk
           # Backend is python first, then kotlin.
           APK_DIR="app/build/outputs/apk"
@@ -148,7 +148,7 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          cp app/build/outputs/bundle/sentryPythonBackendRelease/app-sentry-pythonBackend-release.aab \
+          cp app/build/outputs/bundle/expertSentryPythonBackendRelease/app-expert-sentry-pythonBackend-release.aab \
             "zamolxis-${VERSION}-official-rns-py.aab"
           sha256sum "zamolxis-${VERSION}-official-rns-py.aab" > "zamolxis-${VERSION}-official-rns-py.aab.sha256"
           echo "✓ Renamed AAB"
