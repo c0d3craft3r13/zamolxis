@@ -1,5 +1,7 @@
 package network.zamolxis.app.service
 
+import network.zamolxis.app.data.model.InterfaceType
+
 /**
  * The kind of link an announce arrived over, in the terms a person would use.
  *
@@ -16,16 +18,26 @@ enum class MeshLinkKind {
 
     companion object {
         /**
-         * Map a stored interface `type` to a link kind, or null for types that do not
-         * describe how the device reaches other people.
+         * Classify the interface an announce arrived on.
+         *
+         * The label is what RNS reports, not what the interface is called in the
+         * database: `"TCPInterface[g00n.cloud Hub/dfw.us.g00n.cloud:6969]"`,
+         * `"AutoInterface[Local]"`, `"BLEPeerInterface[BLE-56:31:F5]"`. Matching those
+         * against configured names never works, which is what
+         * [network.zamolxis.app.data.model.InterfaceType.fromName] already exists to
+         * handle — it is the same classifier the announce table is stored with.
+         *
+         * @return null for anything that is not a way of reaching another person —
+         *   including the shared-instance loopback, which only reaches another app on
+         *   this device.
          */
-        fun ofInterfaceType(type: String): MeshLinkKind? =
-            when (type) {
-                "AndroidBLE" -> BLUETOOTH
-                "AutoInterface" -> LOCAL_NETWORK
-                "TCPClient", "TCPServer", "BackboneInterface", "I2PInterface" -> INTERNET
-                "RNode", "Serial", "KISSInterface" -> RADIO
-                else -> null
+        fun of(interfaceLabel: String): MeshLinkKind? =
+            when (InterfaceType.fromName(interfaceLabel)) {
+                InterfaceType.BLE -> BLUETOOTH
+                InterfaceType.AUTO -> LOCAL_NETWORK
+                InterfaceType.TCP_CLIENT, InterfaceType.TCP_SERVER -> INTERNET
+                InterfaceType.RNODE -> RADIO
+                InterfaceType.SHARED_INSTANCE, InterfaceType.UNKNOWN -> null
             }
     }
 }

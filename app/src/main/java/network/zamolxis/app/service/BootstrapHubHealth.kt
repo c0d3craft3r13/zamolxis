@@ -52,9 +52,6 @@ class BootstrapHubHealth
         /** Interface names an announce has arrived on since this process started. */
         private val interfacesHeardFrom = ConcurrentHashMap.newKeySet<String>()
 
-        /** Interface name to its stored `type`, kept current from the database. */
-        private val interfaceTypesByName = ConcurrentHashMap<String, String>()
-
         private val _reachability = MutableStateFlow(MeshReachability())
 
         /**
@@ -74,12 +71,6 @@ class BootstrapHubHealth
         fun start(scope: CoroutineScope) {
             _reachability.value = MeshReachability(startedAtMs = SystemClock.elapsedRealtime())
             scope.launch {
-                interfaceRepository.allInterfaceEntities.collect { entities ->
-                    interfaceTypesByName.clear()
-                    entities.forEach { interfaceTypesByName[it.name] = it.type }
-                }
-            }
-            scope.launch {
                 rnsCore.observeAnnounces().collect { announce ->
                     announce.receivingInterface?.let(::recordAnnounce)
                 }
@@ -93,10 +84,7 @@ class BootstrapHubHealth
 
         private fun recordAnnounce(interfaceName: String) {
             interfacesHeardFrom.add(interfaceName)
-            val kind =
-                interfaceTypesByName[interfaceName]
-                    ?.let(MeshLinkKind::ofInterfaceType)
-                    ?: return
+            val kind = MeshLinkKind.of(interfaceName) ?: return
             _reachability.update { current ->
                 current.copy(
                     lastHeardAtByKind = current.lastHeardAtByKind + (kind to SystemClock.elapsedRealtime()),

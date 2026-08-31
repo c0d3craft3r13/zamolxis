@@ -15,22 +15,27 @@ class MeshReachabilityTest {
     private fun heard(vararg pairs: Pair<MeshLinkKind, Long>) = MeshReachability(mapOf(*pairs), startedAtMs = start)
 
     @Test
-    fun `every interface type the app seeds maps to a link kind`() {
-        assertEquals(MeshLinkKind.BLUETOOTH, MeshLinkKind.ofInterfaceType("AndroidBLE"))
-        assertEquals(MeshLinkKind.LOCAL_NETWORK, MeshLinkKind.ofInterfaceType("AutoInterface"))
-        assertEquals(MeshLinkKind.INTERNET, MeshLinkKind.ofInterfaceType("TCPClient"))
+    fun `the labels RNS actually reports are classified, not the configured names`() {
+        // These are the shapes seen on announces.receivingInterface in the field. An
+        // earlier version compared them against the interface names in the database
+        // ("g00n.cloud Hub") and so matched nothing at all, leaving the status stuck on
+        // "no connection" on a phone that was plainly online.
+        assertEquals(MeshLinkKind.INTERNET, MeshLinkKind.of("TCPInterface[g00n.cloud Hub/dfw.us.g00n.cloud:6969]"))
+        assertEquals(MeshLinkKind.LOCAL_NETWORK, MeshLinkKind.of("AutoInterface[Local]"))
+        assertEquals(MeshLinkKind.BLUETOOTH, MeshLinkKind.of("BLEPeerInterface[BLE-56:31:F5]"))
+        assertEquals(MeshLinkKind.RADIO, MeshLinkKind.of("RNodeInterface[My Radio]"))
     }
 
     @Test
-    fun `radio interfaces are one kind, whatever they are plugged into`() {
-        listOf("RNode", "Serial", "KISSInterface").forEach {
-            assertEquals(it, MeshLinkKind.RADIO, MeshLinkKind.ofInterfaceType(it))
-        }
+    fun `the shared-instance loopback is not a way of reaching anyone`() {
+        // It reaches another app on this same device, which says nothing about whether
+        // the user can be contacted.
+        assertNull(MeshLinkKind.of("Shared Instance (host)"))
     }
 
     @Test
-    fun `an unknown interface type is not guessed at`() {
-        assertNull(MeshLinkKind.ofInterfaceType("SomethingAddedLater"))
+    fun `an unrecognised interface is not guessed at`() {
+        assertNull(MeshLinkKind.of("SomethingAddedLater"))
     }
 
     @Test
