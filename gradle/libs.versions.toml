@@ -11,7 +11,7 @@
 # as a stable SDK platform yet — cmdline-tools 17.0 lists android-36.1 as the newest.
 # Those versions are built against a preview SDK. Raise these together once android-37
 # ships stable and AGP supports it (AGP 9.1.0 caps its recommendation at 36).
-composeBom = "2026.06.01"
+composeBom = "2026.08.00"
 hilt = "2.60.1"
 room = "2.8.4"
 coroutines = "1.11.0"
