@@ -219,6 +219,14 @@ val ktlintSourceFormat by tasks.registering(JavaExec::class) {
             listOf(
                 "!**/build/**",
                 "!**/generated/**",
+                // Vendored third-party sources, same as `ktlintSourceCheck`. This
+                // exclusion matters more here than there: `--format` REWRITES files, and
+                // a single run against the default glob reformatted 137 files under
+                // vendor/, breaking the byte-for-byte match with upstream that
+                // vendor/PROVENANCE.md documents and that makes a re-sync diffable.
+                // Note that `-Pktlint.paths` does not save you — the exclusions are what
+                // hold.
+                "!vendor/**",
                 "--format",
                 "--baseline=config/ktlint-baseline.xml",
                 "--reporter=plain",

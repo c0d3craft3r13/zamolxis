@@ -509,6 +509,7 @@ TO TALK</string>
     <string name="contacts_loading">Loading contacts...</string>
     <string name="contacts_empty_title">No contacts yet</string>
     <string name="contacts_empty_body">Star peers in the Announce Stream\nor add contacts via QR code</string>
+    <string name="contacts_empty_body_simple">Nobody here yet.\nShow a friend your QR code, or scan theirs — that is all it takes.</string>
     <string name="contacts_scan_qr_subtitle">Scan a contact\'s QR code to add them</string>
     <string name="contacts_manual_entry">Manual Entry</string>
     <string name="contacts_manual_entry_subtitle">Paste RNS identity string</string>

@@ -75,4 +75,13 @@ class AudienceProfileTest {
     fun `the extra hiding is a short list, not a second product`() {
         assertEquals(3, AudienceProfile.SIMPLE_UI_GATED.size)
     }
+
+    @Test
+    fun `the raw announce tab is offered exactly when the machine room is`() {
+        // The Contacts "Network" tab and the empty-state copy that sends the reader to
+        // the Announce Stream are driven by the same flag on purpose. A build that hid
+        // the tab but kept the copy would point a first-time user at a screen that is
+        // not there.
+        assertEquals(AudienceProfile.isSimpleUi, !AudienceProfile.showsNetworkTab)
+    }
 }

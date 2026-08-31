@@ -20,6 +20,16 @@ object AudienceProfile {
     val isSimpleUi: Boolean = BuildConfig.SIMPLE_UI
 
     /**
+     * Whether the Contacts screen offers the "Network" tab.
+     *
+     * That tab is the raw announce list — every node the mesh has mentioned, by hash.
+     * For an operator it is the map of the network; to a first-time user it is a wall of
+     * hex for people they have never met and cannot message. Маяк leaves the two ways
+     * that actually connect two humans: a QR code and an `lxma://` link.
+     */
+    val showsNetworkTab: Boolean = !isSimpleUi
+
+    /**
      * Cards Маяк folds behind the developer gate on top of what is already hidden.
      *
      * - [SettingsCardId.SHARED_INSTANCE_BANNER] reports on a shared RNS instance. That is

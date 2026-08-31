@@ -525,6 +525,7 @@
     <string name="contacts_loading">Загрузка контактов…</string>
     <string name="contacts_empty_title">Контактов пока нет</string>
     <string name="contacts_empty_body">Отметьте пиров звёздочкой в ленте анонсов\nили добавьте контакты по QR-коду</string>
+    <string name="contacts_empty_body_simple">Пока никого нет.\nПокажите другу свой QR-код или отсканируйте его — этого достаточно.</string>
     <string name="contacts_scan_qr_subtitle">Сканируйте QR-код контакта, чтобы добавить его</string>
     <string name="contacts_manual_entry">Ручной ввод</string>
     <string name="contacts_manual_entry_subtitle">Вставьте строку идентичности RNS</string>
