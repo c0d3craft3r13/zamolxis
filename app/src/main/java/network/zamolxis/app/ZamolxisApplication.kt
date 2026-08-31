@@ -89,6 +89,9 @@ class ZamolxisApplication : Application() {
     lateinit var bootstrapResilience: network.zamolxis.app.service.BootstrapResilience
 
     @Inject
+    lateinit var bootstrapHubHealth: network.zamolxis.app.service.BootstrapHubHealth
+
+    @Inject
     lateinit var autoAnnounceManager: network.zamolxis.app.service.AutoAnnounceManager
 
     @Inject
@@ -194,6 +197,12 @@ class ZamolxisApplication : Application() {
             network.zamolxis.app.util.FileUtils
                 .cleanupAllTempFiles(this@ZamolxisApplication)
         }
+
+        // Watch whether the seeded bootstrap hubs actually deliver announces, and swap
+        // them out if they do not. Started unconditionally: it schedules its own delay,
+        // and the paths below that return early (service already running, identity
+        // locked) are exactly the ones where a silent hub would otherwise go unnoticed.
+        bootstrapHubHealth.start(applicationScope)
 
         // Migrate unencrypted identity keys to encrypted storage (one-time, idempotent),
         // then scrub any stale plaintext identity_<hash> files. The migration reads those
