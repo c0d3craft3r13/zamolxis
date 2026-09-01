@@ -3,6 +3,8 @@ package network.zamolxis.app.service
 import network.zamolxis.app.data.model.TcpCommunityServer
 import network.zamolxis.app.rns.host.manager.CurrentTransport
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -150,5 +152,95 @@ class BootstrapRotationPolicyTest {
 
     private companion object {
         const val PORT = 4242
+    }
+
+    // --- what "heard" actually has to match ------------------------------------------
+
+    @Test
+    fun `an RNS label is matched by the endpoint it carries`() {
+        val label = "TCPInterface[g00n.cloud Hub/dfw.us.g00n.cloud:6969]"
+
+        assertTrue(BootstrapRotationPolicy.labelServes(label, "dfw.us.g00n.cloud:6969"))
+    }
+
+    @Test
+    fun `the label is never equal to the configured name, which is why membership failed`() {
+        val label = "TCPInterface[g00n.cloud Hub/dfw.us.g00n.cloud:6969]"
+
+        assertNotEquals(
+            "the broken version asked whether this label set contained the configured name",
+            "g00n.cloud Hub",
+            label,
+        )
+    }
+
+    @Test
+    fun `a port that is a prefix of another port does not match`() {
+        val label = "TCPInterface[Alpha/alpha.example:4242]"
+
+        assertTrue(BootstrapRotationPolicy.labelServes(label, "alpha.example:4242"))
+        assertFalse(
+            "a bare substring test would call this a match",
+            BootstrapRotationPolicy.labelServes(label, "alpha.example:42"),
+        )
+    }
+
+    @Test
+    fun `matching an RNS label ignores case in the host`() {
+        assertTrue(
+            BootstrapRotationPolicy.labelServes(
+                "TCPInterface[Jon's Node/RNS.JLAMOTHE.NET:4242]",
+                "rns.jlamothe.net:4242",
+            ),
+        )
+    }
+
+    @Test
+    fun `a different port on the same host is a different hub`() {
+        val label = "TCPInterface[noDNS2/193.26.158.230:4965]"
+
+        assertTrue(BootstrapRotationPolicy.labelServes(label, "193.26.158.230:4965"))
+        assertFalse(BootstrapRotationPolicy.labelServes(label, "193.26.158.230:4242"))
+    }
+
+    @Test
+    fun `labels from the other interface kinds never match a hub`() {
+        listOf("AutoInterface[Local]", "BLEPeerInterface[BLE-56:31:F5]").forEach { label ->
+            assertFalse(label, BootstrapRotationPolicy.labelServes(label, "dfw.us.g00n.cloud:6969"))
+        }
+    }
+
+    // --- Tor is a choice, not a rescue ------------------------------------------------
+
+    @Test
+    fun `a Tor-only replacement is never offered automatically`() {
+        val onion =
+            TcpCommunityServer(
+                "interloper node (Tor)",
+                "intrcxv4fa72e5ovler5dpfwsiyuo34tkcwfy5snzstxkhec75okowqd.onion",
+                4242,
+            )
+        val reachable = TcpCommunityServer("Quortal TCP Node", "reticulum.qortal.link", 4242)
+
+        val decision =
+            BootstrapRotationPolicy.decide(
+                hubs = listOf(hub(1L, "Silent", "silent.example", heard = false)),
+                knownServers = listOf(onion, reachable),
+                presentEndpoints = setOf(BootstrapRotationPolicy.endpointOf("silent.example", PORT)),
+                transport = CurrentTransport.WIFI_LIKE,
+                rotationsUsed = 0,
+            )
+
+        assertEquals(listOf(reachable.name), decision.add.map { it.name })
+    }
+
+    @Test
+    fun `an onion host is recognised whatever its case`() {
+        assertTrue(BootstrapRotationPolicy.requiresTor("ABC.ONION"))
+        assertFalse(BootstrapRotationPolicy.requiresTor("reticulum.qortal.link"))
+        assertFalse(
+            "a host that merely contains the word is not Tor",
+            BootstrapRotationPolicy.requiresTor("onion.example.com"),
+        )
     }
 }

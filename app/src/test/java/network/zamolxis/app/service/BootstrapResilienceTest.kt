@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import network.zamolxis.app.data.database.entity.InterfaceEntity
 import network.zamolxis.app.data.model.TcpCommunityServers
 import network.zamolxis.app.repository.InterfaceRepository
 import network.zamolxis.app.repository.SettingsRepository
@@ -24,20 +25,56 @@ class BootstrapResilienceTest {
     private val inserted = mutableListOf<InterfaceConfig>()
     private val savedVersions = mutableListOf<Int>()
     private val savedDiscovery = mutableListOf<Boolean>()
+    private val toggledIds = mutableListOf<Long>()
+    private val toggledStates = mutableListOf<Boolean>()
+    private val savedRotations = mutableListOf<Int>()
 
     private fun resilience(
         existing: List<InterfaceConfig> = emptyList(),
         appliedVersion: Int = 0,
         hasDiscoveryPreference: Boolean = false,
+        rotationsUsed: Int = 0,
     ): BootstrapResilience {
         every { interfaceRepository.allInterfaces } returns flowOf(existing)
+        every { interfaceRepository.allInterfaceEntities } returns flowOf(entitiesFor(existing))
         coEvery { interfaceRepository.insertInterface(capture(inserted)) } returns 1L
+        coEvery {
+            interfaceRepository.toggleInterfaceEnabled(capture(toggledIds), capture(toggledStates))
+        } answers {}
         coEvery { settingsRepository.getBootstrapResilienceVersion() } returns appliedVersion
         coEvery { settingsRepository.saveBootstrapResilienceVersion(capture(savedVersions)) } answers {}
         coEvery { settingsRepository.hasDiscoverInterfacesPreference() } returns hasDiscoveryPreference
         coEvery { settingsRepository.saveDiscoverInterfacesEnabled(capture(savedDiscovery)) } answers {}
+        coEvery { settingsRepository.getBootstrapRotationsUsed() } returns rotationsUsed
+        coEvery { settingsRepository.saveBootstrapRotationsUsed(capture(savedRotations)) } answers {}
         return BootstrapResilience(interfaceRepository, settingsRepository)
     }
+
+    /** Rows carrying the ids the repair looks names up by. */
+    private fun entitiesFor(configs: List<InterfaceConfig>): List<InterfaceEntity> =
+        configs.mapIndexed { index, config ->
+            InterfaceEntity(
+                id = (index + 1).toLong(),
+                name = config.name,
+                type = "TCPClient",
+                enabled = config.enabled,
+                configJson = "{}",
+            )
+        }
+
+    /** A hub as the seeding and the rotation both create them. */
+    private fun bootstrapHub(
+        name: String,
+        host: String,
+        port: Int,
+        enabled: Boolean,
+    ) = InterfaceConfig.TCPClient(
+        name = name,
+        enabled = enabled,
+        targetHost = host,
+        targetPort = port,
+        bootstrapOnly = true,
+    )
 
     private fun tcpClient(
         host: String,
@@ -144,4 +181,83 @@ class BootstrapResilienceTest {
             BootstrapResilience.DEFAULT_AUTOCONNECT_DISCOVERED > 1,
         )
     }
+
+    // --- v2: undoing what the hub rotation did ---------------------------------------
+
+    @Test
+    fun `an install that never rotated is left exactly as it was`() =
+        runTest {
+            val seed = TcpCommunityServers.bootstrapServers.first()
+            resilience(
+                existing = listOf(bootstrapHub(seed.name, seed.host, seed.port, enabled = false)),
+                rotationsUsed = 0,
+            ).applyOnce()
+
+            assertTrue("a hub the user switched off is theirs to switch off", toggledIds.isEmpty())
+            assertTrue("nothing to give back", savedRotations.isEmpty())
+        }
+
+    @Test
+    fun `the seeds a rotation switched off are switched back on`() =
+        runTest {
+            val seeds = TcpCommunityServers.bootstrapServers
+            val outcome =
+                resilience(
+                    existing = seeds.map { bootstrapHub(it.name, it.host, it.port, enabled = false) },
+                    rotationsUsed = 3,
+                ).applyOnce()
+
+            assertEquals(seeds.map { it.name }, outcome.seedsRestored)
+            assertTrue("every toggle here turns something on", toggledStates.all { it })
+            assertEquals(seeds.size, toggledIds.size)
+        }
+
+    @Test
+    fun `a hub no longer on the community list is switched off`() =
+        runTest {
+            val outcome =
+                resilience(
+                    existing = listOf(bootstrapHub("FireZen", "firezen.com", 4242, enabled = true)),
+                    rotationsUsed = 2,
+                ).applyOnce()
+
+            assertEquals(listOf("FireZen"), outcome.deadHubsRetired)
+            assertEquals(listOf(false), toggledStates)
+        }
+
+    @Test
+    fun `a hub still on the list is left enabled`() =
+        runTest {
+            val alive = TcpCommunityServers.servers.first { !it.isBootstrap && !it.host.endsWith(".onion") }
+            val outcome =
+                resilience(
+                    existing = listOf(bootstrapHub(alive.name, alive.host, alive.port, enabled = true)),
+                    rotationsUsed = 1,
+                ).applyOnce()
+
+            assertTrue("it answers, so it stays", outcome.deadHubsRetired.isEmpty())
+            assertTrue(toggledIds.isEmpty())
+        }
+
+    @Test
+    fun `an interface the user added themselves is never touched`() =
+        runTest {
+            val outcome =
+                resilience(
+                    existing = listOf(tcpClient("my.own.hub", 4242)),
+                    rotationsUsed = 3,
+                ).applyOnce()
+
+            assertTrue("not bootstrap_only, so not ours to retire", outcome.deadHubsRetired.isEmpty())
+            assertTrue(toggledIds.isEmpty())
+        }
+
+    @Test
+    fun `the rotation budget is returned so a genuinely bad hub can still be replaced`() =
+        runTest {
+            val outcome = resilience(rotationsUsed = 3).applyOnce()
+
+            assertTrue(outcome.rotationBudgetReset)
+            assertEquals(listOf(0), savedRotations)
+        }
 }

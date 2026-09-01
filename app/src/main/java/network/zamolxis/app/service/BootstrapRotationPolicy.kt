@@ -60,6 +60,46 @@ object BootstrapRotationPolicy {
         port: Int,
     ): String = "${host.lowercase()}:$port"
 
+    /**
+     * Whether an RNS interface label refers to the interface serving [endpoint].
+     *
+     * The endpoint is the only part of a hub that appears in both worlds. RNS names its
+     * interfaces `"TCPInterface[g00n.cloud Hub/dfw.us.g00n.cloud:6969]"`, while the app
+     * knows the hub by the name the user can rename and the host/port it dials. Testing
+     * the configured name for membership in the set of RNS labels — which is what this
+     * replaces — is an equality test that is never true, so every hub read as silent
+     * whether or not it was carrying traffic, and installs rotated until they hit
+     * [MAX_ROTATIONS]. Measured on a phone: three seed hubs, all three answering,
+     * retired in favour of three that answered nothing, with no budget left to return.
+     */
+    fun labelServes(
+        label: String,
+        endpoint: String,
+    ): Boolean {
+        var from = 0
+        while (from <= label.length - endpoint.length) {
+            val at = label.indexOf(endpoint, from, ignoreCase = true)
+            if (at < 0) return false
+            // A bare substring test would let `host:42` match `host:4242`, so the port
+            // has to end where the endpoint does.
+            val after = at + endpoint.length
+            if (after >= label.length || !label[after].isDigit()) return true
+            from = at + 1
+        }
+        return false
+    }
+
+    /**
+     * Whether [host] can only be reached through Tor.
+     *
+     * A `.onion` address needs a SOCKS proxy that the user has to install and run
+     * themselves (Orbot). Choosing it is a deliberate act; handing it to someone as an
+     * emergency replacement is not, and the interface this policy builds carries
+     * `socksProxyEnabled = false`, so the address does not even resolve. One was rotated
+     * onto a phone that way and could never have connected.
+     */
+    fun requiresTor(host: String): Boolean = host.endsWith(".onion", ignoreCase = true)
+
     @Suppress("ReturnCount")
     fun decide(
         hubs: List<HubState>,
@@ -90,6 +130,7 @@ object BootstrapRotationPolicy {
         val replacements =
             knownServers
                 .filterNot { endpointOf(it.host, it.port) in presentEndpoints }
+                .filterNot { requiresTor(it.host) }
                 .take(silent.size)
 
         if (replacements.isEmpty()) {

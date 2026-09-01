@@ -44,7 +44,13 @@ class BootstrapHubHealth
         private val transportObserver: InterfaceTransportObserver,
         private val interfaceConfigManager: InterfaceConfigManager,
     ) {
-        /** Interface names an announce has arrived on since this process started. */
+        /**
+         * Interface labels an announce has arrived on since this process started.
+         *
+         * These are RNS's own labels, not configured names —
+         * `"TCPInterface[g00n.cloud Hub/dfw.us.g00n.cloud:6969]"`. Match against them
+         * with [heardAnnounceOn], never with `in`.
+         */
         private val interfacesHeardFrom = ConcurrentHashMap.newKeySet<String>()
 
         /**
@@ -90,7 +96,10 @@ class BootstrapHubHealth
                             id = id,
                             name = config.name,
                             endpoint = BootstrapRotationPolicy.endpointOf(config.targetHost, config.targetPort),
-                            heardAnnounce = config.name in interfacesHeardFrom,
+                            heardAnnounce =
+                                heardAnnounceOn(
+                                    BootstrapRotationPolicy.endpointOf(config.targetHost, config.targetPort),
+                                ),
                         )
                     }
 
@@ -109,6 +118,14 @@ class BootstrapHubHealth
             applyRotation(decision)
             return decision
         }
+
+        /**
+         * Whether any announce arrived on the interface serving [endpoint].
+         *
+         * The matching itself is [BootstrapRotationPolicy.labelServes], which carries
+         * the explanation and the tests.
+         */
+        private fun heardAnnounceOn(endpoint: String): Boolean = interfacesHeardFrom.any { BootstrapRotationPolicy.labelServes(it, endpoint) }
 
         private suspend fun applyRotation(decision: BootstrapRotationPolicy.Decision) {
             decision.retire.forEach { interfaceRepository.toggleInterfaceEnabled(it, false) }

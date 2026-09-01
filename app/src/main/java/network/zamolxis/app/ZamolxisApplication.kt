@@ -448,7 +448,11 @@ class ZamolxisApplication : Application() {
                     if (!outcome.alreadyApplied) {
                         android.util.Log.i(
                             "ZamolxisApplication",
-                            "Bootstrap resilience: added=${outcome.hubsAdded} discovery=${outcome.discoveryEnabled}",
+                            "Bootstrap resilience: added=${outcome.hubsAdded} " +
+                                "discovery=${outcome.discoveryEnabled} " +
+                                "seedsRestored=${outcome.seedsRestored} " +
+                                "deadHubsRetired=${outcome.deadHubsRetired} " +
+                                "rotationBudgetReset=${outcome.rotationBudgetReset}",
                         )
                     }
                 } catch (e: Exception) {
