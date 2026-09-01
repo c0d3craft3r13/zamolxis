@@ -82,8 +82,7 @@ dependencies {
     testImplementation("org.json:json:20240303") // Real JSON implementation for unit tests
     androidTestImplementation(libs.junit.android)
     androidTestImplementation(libs.test.core)
-    androidTestImplementation("androidx.test:runner:1.5.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.coroutines.test)
     androidTestImplementation(libs.turbine)
     androidTestImplementation(libs.room)
