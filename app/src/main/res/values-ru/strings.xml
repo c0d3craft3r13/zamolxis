@@ -515,6 +515,10 @@
     <string name="contacts_my_relay">МОЙ РЕТРАНСЛЯТОР</string>
     <string name="contacts_my_relay_cd">Мой ретранслятор</string>
     <string name="contacts_auto">(авто)</string>
+    <!-- Stands in for the destination hash on the relay card in Маяк, where the
+         propagation node was picked automatically and never announced a name.
+         See RelayLabel. -->
+    <string name="contacts_relay_unnamed">Ретранслятор сети</string>
     <string name="contacts_pinned">ЗАКРЕПЛЁН</string>
     <string name="contacts_all">ВСЕ КОНТАКТЫ</string>
     <string name="contacts_unset_relay_title">Убрать назначение ретранслятором?</string>

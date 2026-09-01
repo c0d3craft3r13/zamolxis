@@ -497,6 +497,10 @@ TO TALK</string>
     <string name="contacts_my_relay">MY RELAY</string>
     <string name="contacts_my_relay_cd">My Relay</string>
     <string name="contacts_auto">(auto)</string>
+    <!-- Stands in for the destination hash on the relay card in Маяк, where the
+         propagation node was picked automatically and never announced a name.
+         See RelayLabel. -->
+    <string name="contacts_relay_unnamed">Network relay</string>
     <string name="contacts_pinned">PINNED</string>
     <string name="contacts_all">ALL CONTACTS</string>
     <string name="contacts_unset_relay_title">Unset as Your Relay?</string>

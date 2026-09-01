@@ -119,6 +119,7 @@ import network.zamolxis.app.ui.components.ProfileIcon
 import network.zamolxis.app.ui.components.simpleVerticalScrollbar
 import network.zamolxis.app.ui.model.ContactSearch
 import network.zamolxis.app.ui.model.ContactSearchState
+import network.zamolxis.app.ui.model.RelayLabel
 import network.zamolxis.app.ui.screens.settings.AudienceProfile
 import network.zamolxis.app.ui.util.rememberLifecycleTickerMillis
 import network.zamolxis.app.util.formatTimeSince
@@ -511,6 +512,25 @@ fun ContactsScreen(
                         )
                     }
                     else -> {
+                        // A relay that never announced a name arrives here with its hash
+                        // as the display name. Resolve the stand-in now: the LazyColumn
+                        // builder below is not a composable scope, so `stringResource`
+                        // cannot be called from inside `item { }`.
+                        val rawRelay = contactsState.groupedContacts.relay
+                        val relaySubstitutesName =
+                            rawRelay != null &&
+                                RelayLabel.substitutesName(
+                                    displayName = rawRelay.displayName,
+                                    destinationHash = rawRelay.destinationHash,
+                                    simpleUi = AudienceProfile.isSimpleUi,
+                                )
+                        val relayName = stringResource(R.string.contacts_relay_unnamed)
+                        val namedRelay =
+                            if (relaySubstitutesName) {
+                                rawRelay?.copy(displayName = relayName)
+                            } else {
+                                rawRelay
+                            }
                         LazyColumn(
                             state = contactsListState,
                             modifier =
@@ -523,7 +543,7 @@ fun ContactsScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             // My Relay section (shown at top, separate from pinned)
-                            contactsState.groupedContacts.relay?.let { relay ->
+                            namedRelay?.let { relay ->
                                 item {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -556,6 +576,7 @@ fun ContactsScreen(
                                     ContactListItemWithMenu(
                                         contact = relay,
                                         nowMillis = timestampTick,
+                                        showsDestinationHash = !relaySubstitutesName,
                                         onClick = {
                                             if (relay.status == ContactStatus.PENDING_IDENTITY ||
                                                 relay.status == ContactStatus.UNRESOLVED
@@ -960,6 +981,10 @@ fun ContactsScreen(
 /**
  * Contact list item with integrated context menu.
  * Extracted to reduce duplication between pinned and all contacts sections.
+ *
+ * @param showsDestinationHash false to drop the monospace hash beneath the name. Set
+ *   only where the name already is the hash and would otherwise be printed twice — see
+ *   [network.zamolxis.app.ui.model.RelayLabel].
  */
 @Composable
 private fun ContactListItemWithMenu(
@@ -972,6 +997,7 @@ private fun ContactListItemWithMenu(
     onRemove: () -> Unit,
     onLocateOnMap: () -> Unit = {},
     getContactLocation: suspend (String) -> Pair<Double, Double>? = { null },
+    showsDestinationHash: Boolean = true,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     var showMenu by remember { mutableStateOf(false) }
@@ -992,6 +1018,7 @@ private fun ContactListItemWithMenu(
             nowMillis = nowMillis,
             onClick = onClick,
             onPinClick = onPinToggle,
+            showsDestinationHash = showsDestinationHash,
             onLongPress = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 showMenu = true
@@ -1038,6 +1065,7 @@ fun ContactListItem(
     onClick: () -> Unit,
     onPinClick: () -> Unit,
     onLongPress: () -> Unit = {},
+    showsDestinationHash: Boolean = true,
 ) {
     // Determine if contact is pending or unresolved
     val isPending = contact.status == ContactStatus.PENDING_IDENTITY
@@ -1157,12 +1185,14 @@ fun ContactListItem(
                 )
 
                 // Destination hash
-                Text(
-                    text = contact.destinationHash,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = textAlpha),
-                )
+                if (showsDestinationHash) {
+                    Text(
+                        text = contact.destinationHash,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = textAlpha),
+                    )
+                }
 
                 // Status line - varies based on contact status
                 Row(
