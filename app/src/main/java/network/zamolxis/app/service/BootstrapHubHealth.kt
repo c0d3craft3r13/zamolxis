@@ -11,6 +11,7 @@ import network.zamolxis.app.repository.InterfaceRepository
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.model.InterfaceConfig
+import network.zamolxis.app.rns.api.model.NetworkStatus
 import network.zamolxis.app.service.manager.InterfaceTransportObserver
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -30,7 +31,8 @@ import kotlin.time.Duration.Companion.seconds
  * [SILENCE_GRACE_SECONDS] of a live stack, hubs that have delivered nothing are handed to
  * [BootstrapRotationPolicy], which decides whether to retire them and what to try next.
  *
- * Deliberately conservative: it checks once per app start, never rotates while the device
+ * Deliberately conservative: the grace period only starts once the stack reaches
+ * [NetworkStatus.READY], it checks once per app start, never rotates while the device
  * has no network at all, and stops after [BootstrapRotationPolicy.MAX_ROTATIONS] attempts
  * across the install's lifetime.
  */
@@ -65,6 +67,15 @@ class BootstrapHubHealth
                 }
             }
             scope.launch {
+                // The grace period is only meaningful against a stack that is up.
+                // Counting it from process start meant a first-time user reading five
+                // pages of onboarding spent the whole window with nothing listening —
+                // no announce could arrive, every hub looked silent, and three working
+                // seeds could be retired before the app had ever been on the network.
+                // Waiting for READY costs nothing when the stack is already up, and if
+                // it never comes up the check never runs, which is right: silence is
+                // not the hub's fault when nobody was listening for it.
+                rnsCore.networkStatus.first { it is NetworkStatus.READY }
                 delay(SILENCE_GRACE_SECONDS.seconds)
                 runCatching { evaluateOnce() }
                     .onFailure { Log.e(TAG, "Bootstrap hub health check failed", it) }
