@@ -174,7 +174,7 @@ dependencies {
 
     androidTestImplementation(libs.junit.android)
     androidTestImplementation(libs.test.core)
-    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.coroutines.test)
 }
 
