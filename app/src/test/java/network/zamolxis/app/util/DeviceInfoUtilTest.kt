@@ -21,6 +21,7 @@ class DeviceInfoUtilTest {
             DeviceInfoUtil.getSystemInfo(
                 context = context,
                 identityHash = "a1b2c3d4e5f6",
+                destinationHash = "289ac84118f8134bb0873708cf102e56",
                 reticulumVersion = "0.8.5",
                 lxmfVersion = "0.5.4",
                 bleReticulumVersion = "0.2.2",
@@ -47,6 +48,7 @@ class DeviceInfoUtilTest {
             DeviceInfoUtil.getSystemInfo(
                 context = context,
                 identityHash = null,
+                destinationHash = null,
                 reticulumVersion = null,
                 lxmfVersion = null,
                 bleReticulumVersion = null,
@@ -186,6 +188,7 @@ class DeviceInfoUtilTest {
             DeviceInfoUtil.getSystemInfo(
                 context = context,
                 identityHash = null,
+                destinationHash = null,
                 reticulumVersion = null,
                 lxmfVersion = null,
                 bleReticulumVersion = null,

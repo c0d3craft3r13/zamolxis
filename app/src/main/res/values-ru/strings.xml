@@ -693,6 +693,13 @@
     <string name="identityqr_share">Поделиться идентичностью</string>
     <string name="identityqr_identity_hash">Хеш идентичности</string>
     <string name="identityqr_dest_hash">Хеш назначения (LXMF)</string>
+    <!-- The address a person shares to be reachable. Deliberately not called a
+         hash: it is the one string a user has to hand to someone else, and the
+         identity hash sitting next to it in Advanced is not it. -->
+    <string name="myidentity_your_address">Ваш адрес</string>
+    <string name="myidentity_your_address_hint">Передайте его тому, кто должен вам написать.</string>
+    <string name="myidentity_address_copied">Адрес скопирован</string>
+    <string name="myidentity_copy_address">Скопировать адрес</string>
     <!-- Batch 5c: MyIdentityScreen -->
     <string name="myidentity_title">Моя идентичность</string>
     <string name="myidentity_section">Отображаемое имя и идентичность</string>

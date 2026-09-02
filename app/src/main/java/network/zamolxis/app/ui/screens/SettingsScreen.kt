@@ -339,14 +339,19 @@ fun SettingsScreen(
                         isSharedInstance = state.isSharedInstance,
                         sharedInstanceOnline = state.sharedInstanceOnline,
                     )
-
-                    IdentityCard(
-                        isExpanded = state.cardExpansionStates[SettingsCardId.IDENTITY.name] ?: false,
-                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.IDENTITY, it) },
-                        onViewIdentity = onNavigateToIdentity,
-                        onManageIdentities = onNavigateToIdentityManager,
-                    )
                 }
+
+                // Not developer-only: this is where a person finds the address they
+                // have to hand to someone else in order to be written to. Behind the
+                // seven-tap gate it may as well not exist, and the address shown on
+                // the About screen instead was the identity hash, which cannot be
+                // written to.
+                IdentityCard(
+                    isExpanded = state.cardExpansionStates[SettingsCardId.IDENTITY.name] ?: false,
+                    onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.IDENTITY, it) },
+                    onViewIdentity = onNavigateToIdentity,
+                    onManageIdentities = onNavigateToIdentityManager,
+                )
 
                 PrivacyCard(
                     isExpanded = state.cardExpansionStates[SettingsCardId.PRIVACY.name] ?: false,
@@ -631,10 +636,12 @@ fun SettingsScreen(
                         state.lxmfVersion,
                         state.bleReticulumVersion,
                         state.lxstVersion,
+                        state.destinationHash,
                     ) {
                         DeviceInfoUtil.getSystemInfo(
                             context = context,
                             identityHash = state.identityHash,
+                            destinationHash = state.destinationHash,
                             reticulumVersion = state.reticulumVersion,
                             lxmfVersion = state.lxmfVersion,
                             bleReticulumVersion = state.bleReticulumVersion,
@@ -735,6 +742,7 @@ fun SettingsScreen(
                         DeviceInfoUtil.getSystemInfo(
                             context = context,
                             identityHash = state.identityHash,
+                            destinationHash = state.destinationHash,
                             reticulumVersion = state.reticulumVersion,
                             lxmfVersion = state.lxmfVersion,
                             bleReticulumVersion = state.bleReticulumVersion,

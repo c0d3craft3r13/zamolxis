@@ -23,6 +23,13 @@ data class SystemInfo(
     val lxmfVersion: String?,
     val bleReticulumVersion: String?,
     val lxstVersion: String? = null,
+    /**
+     * The LXMF destination — the address a person shares in order to be written to.
+     *
+     * Defaulted so test fixtures stay terse; [DeviceInfoUtil.getSystemInfo] takes it
+     * without a default, so no production call site can quietly omit it.
+     */
+    val destinationHash: String? = null,
 )
 
 object DeviceInfoUtil {
@@ -30,6 +37,7 @@ object DeviceInfoUtil {
     fun getSystemInfo(
         context: Context,
         identityHash: String?,
+        destinationHash: String?,
         reticulumVersion: String?,
         lxmfVersion: String?,
         bleReticulumVersion: String?,
@@ -55,6 +63,7 @@ object DeviceInfoUtil {
             deviceModel = Build.MODEL,
             manufacturer = Build.MANUFACTURER,
             identityHash = identityHash,
+            destinationHash = destinationHash,
             reticulumVersion = reticulumVersion,
             lxmfVersion = lxmfVersion,
             bleReticulumVersion = bleReticulumVersion,

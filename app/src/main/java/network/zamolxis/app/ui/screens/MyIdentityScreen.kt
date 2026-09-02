@@ -2,6 +2,7 @@ package network.zamolxis.app.ui.screens
 
 import android.content.Intent
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -174,7 +175,7 @@ fun MyIdentityScreen(
                 defaultDisplayName = settingsState.defaultDisplayName,
                 currentDisplayName = settingsState.displayName,
                 showSaveSuccess = showSaveSuccess,
-                identityHash = identityHash,
+                destinationHash = destinationHash,
                 onViewQrCode = { showQrDialog = true },
             )
 
@@ -252,7 +253,15 @@ private fun DisplayNameIdentityCard(
     defaultDisplayName: String,
     currentDisplayName: String,
     showSaveSuccess: Boolean,
-    identityHash: String?,
+    /**
+     * The LXMF destination — the one string a person hands to someone else.
+     *
+     * Deliberately not the identity hash. Both are 32 hex characters and only one
+     * of them can be written to; the identity hash used to sit here, where anyone
+     * asked for "your address" would copy it, and a contact added from it waits
+     * for a reply forever. The identity hash is still under Advanced below.
+     */
+    destinationHash: String?,
     onViewQrCode: () -> Unit,
 ) {
     Card(
@@ -393,21 +402,46 @@ private fun DisplayNameIdentityCard(
                 }
             }
 
-            // Identity hash preview
-            if (identityHash != null) {
+            // The address, where the identity hash used to be
+            if (destinationHash != null) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                Text(
-                    text = stringResource(R.string.identityqr_identity_hash),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = identityHash,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                val clipboardManager = LocalClipboardManager.current
+                val copiedMessage = stringResource(R.string.myidentity_address_copied)
+                val context = LocalContext.current
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.myidentity_your_address),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = destinationHash,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = stringResource(R.string.myidentity_your_address_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(destinationHash))
+                            Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = stringResource(R.string.myidentity_copy_address),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
             }
         }
     }
@@ -492,11 +526,11 @@ internal fun ProfileIconCard(
                 ) {
                     Text(
                         text =
-                    if (iconName != null) {
-                        stringResource(R.string.myidentity_custom_icon, iconName)
-                    } else {
-                        stringResource(R.string.myidentity_using_identicon)
-                    },
+                            if (iconName != null) {
+                                stringResource(R.string.myidentity_custom_icon, iconName)
+                            } else {
+                                stringResource(R.string.myidentity_using_identicon)
+                            },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                     )

@@ -58,6 +58,7 @@ class AboutCardTest {
             reticulumVersion = "1.0.4",
             lxmfVersion = "0.9.2",
             bleReticulumVersion = "0.2.2",
+            destinationHash = "289ac84118f8134bb0873708cf102e56",
         )
 
     private val minimalSystemInfo =
@@ -125,9 +126,10 @@ class AboutCardTest {
             }
         }
 
-        composeTestRule.onNodeWithText(
-            "Native Android messaging app using Bluetooth LE, TCP, or RNode (LoRa) over LXMF and Reticulum",
-        ).assertExists()
+        composeTestRule
+            .onNodeWithText(
+                "Native Android messaging app using Bluetooth LE, TCP, or RNode (LoRa) over LXMF and Reticulum",
+            ).assertExists()
     }
 
     @Test
@@ -452,7 +454,7 @@ class AboutCardTest {
     }
 
     @Test
-    fun `card contains identity section when hash is present`() {
+    fun `card shows the address, not the identity hash`() {
         composeTestRule.setContent {
             ZamolxisTheme {
                 AboutCard(
@@ -466,11 +468,14 @@ class AboutCardTest {
         }
 
         composeTestRule.onNodeWithText("Identity").assertExists()
-        composeTestRule.onNodeWithText("a1b2c3d4e5f6").assertExists()
+        composeTestRule.onNodeWithText("289ac84118f8134bb0873708cf102e56").assertExists()
+        // The identity hash is not an address: anyone who copies it from here and
+        // hands it over gets a contact that waits for a reply forever.
+        composeTestRule.onNodeWithText("a1b2c3d4e5f6").assertDoesNotExist()
     }
 
     @Test
-    fun `card omits identity section when hash is null`() {
+    fun `card omits identity section when there is no address`() {
         composeTestRule.setContent {
             ZamolxisTheme {
                 AboutCard(
@@ -484,7 +489,7 @@ class AboutCardTest {
         }
 
         // Identity section should not exist
-        composeTestRule.onNodeWithText("Identity Hash").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Your address").assertDoesNotExist()
     }
 
     @Test

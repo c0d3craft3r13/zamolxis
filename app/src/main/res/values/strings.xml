@@ -671,6 +671,13 @@ TO TALK</string>
     <string name="identityqr_share">Share Identity</string>
     <string name="identityqr_identity_hash">Identity Hash</string>
     <string name="identityqr_dest_hash">Destination Hash (LXMF)</string>
+    <!-- The address a person shares to be reachable. Deliberately not called a
+         hash: it is the one string a user has to hand to someone else, and the
+         identity hash sitting next to it in Advanced is not it. -->
+    <string name="myidentity_your_address">Your address</string>
+    <string name="myidentity_your_address_hint">Give this to someone so they can write to you.</string>
+    <string name="myidentity_address_copied">Address copied</string>
+    <string name="myidentity_copy_address">Copy address</string>
     <!-- Batch 5c: MyIdentityScreen -->
     <string name="myidentity_title">My Identity</string>
     <string name="myidentity_section">Display Name &amp; Identity</string>
