@@ -516,6 +516,11 @@
     <string name="contacts_identity_not_found_cd">Идентичность не найдена</string>
     <string name="contacts_searching_identity">Поиск идентичности…</string>
     <string name="contacts_identity_not_found_retry">Идентичность не найдена — нажмите для повтора</string>
+    <!-- Shown once the first minutes of searching have passed. Says what is
+         actually true — still looking — and names the two likely reasons, the
+         second of which is the easiest mistake to make. See ContactSearch. -->
+    <string name="contacts_not_found_yet">Пока не нашли</string>
+    <string name="contacts_not_found_yet_why">Возможно, собеседник не в сети. Если он так и не появится — сверьте адрес: нужен тот, что под «Ваш адрес», а не хеш идентичности.</string>
     <string name="contacts_never_seen">Не видели ни разу</string>
     <string name="contacts_sharing_location">Делится с вами геолокацией</string>
     <string name="contacts_relay_badge">РЕЛЕЙ</string>
@@ -700,6 +705,7 @@
     <string name="myidentity_your_address_hint">Передайте его тому, кто должен вам написать.</string>
     <string name="myidentity_address_copied">Адрес скопирован</string>
     <string name="myidentity_copy_address">Скопировать адрес</string>
+    <string name="myidentity_address_pending">Адрес появится, когда приложение доберётся до сети.</string>
     <!-- Batch 5c: MyIdentityScreen -->
     <string name="myidentity_title">Моя идентичность</string>
     <string name="myidentity_section">Отображаемое имя и идентичность</string>

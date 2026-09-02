@@ -114,7 +114,8 @@ import network.zamolxis.app.ui.components.AddContactConfirmationDialog
 import network.zamolxis.app.ui.components.LocalWindowSize
 import network.zamolxis.app.ui.components.ProfileIcon
 import network.zamolxis.app.ui.components.simpleVerticalScrollbar
-import network.zamolxis.app.ui.theme.MeshConnected
+import network.zamolxis.app.ui.model.ContactSearch
+import network.zamolxis.app.ui.model.ContactSearchState
 import network.zamolxis.app.ui.util.rememberLifecycleTickerMillis
 import network.zamolxis.app.util.formatTimeSince
 import network.zamolxis.app.util.validation.InputValidator
@@ -1010,6 +1011,7 @@ fun ContactListItem(
     val isPending = contact.status == ContactStatus.PENDING_IDENTITY
     val isUnresolved = contact.status == ContactStatus.UNRESOLVED
     val isActive = contact.status == ContactStatus.ACTIVE
+    val searchState = ContactSearch.stateFor(addedAtMs = contact.addedTimestamp, nowMs = nowMillis)
 
     // Dim colors for non-active contacts
     val textAlpha = if (isActive) 1f else 0.6f
@@ -1138,7 +1140,12 @@ fun ContactListItem(
                     when {
                         isPending -> {
                             Text(
-                                text = stringResource(R.string.contacts_searching_identity),
+                                text =
+                                    if (searchState == ContactSearchState.LOOKING) {
+                                        stringResource(R.string.contacts_searching_identity)
+                                    } else {
+                                        stringResource(R.string.contacts_not_found_yet)
+                                    },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -1178,6 +1185,16 @@ fun ContactListItem(
                             }
                         }
                     }
+                }
+
+                // Why it may be taking this long. Only after the quiet window, so a
+                // contact added a moment ago is not greeted with troubleshooting.
+                if (isPending && searchState == ContactSearchState.NOT_FOUND_YET) {
+                    Text(
+                        text = stringResource(R.string.contacts_not_found_yet_why),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
 

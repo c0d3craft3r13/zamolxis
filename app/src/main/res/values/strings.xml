@@ -500,6 +500,11 @@ TO TALK</string>
     <string name="contacts_identity_not_found_cd">Identity not found</string>
     <string name="contacts_searching_identity">Searching for identity...</string>
     <string name="contacts_identity_not_found_retry">Identity not found - tap to retry</string>
+    <!-- Shown once the first minutes of searching have passed. Says what is
+         actually true — still looking — and names the two likely reasons, the
+         second of which is the easiest mistake to make. See ContactSearch. -->
+    <string name="contacts_not_found_yet">Not found yet</string>
+    <string name="contacts_not_found_yet_why">They may be offline. If they never appear, check the address — it must be the one under "Your address", not the identity hash.</string>
     <string name="contacts_never_seen">Never seen</string>
     <string name="contacts_sharing_location">Sharing location with you</string>
     <string name="contacts_relay_badge">RELAY</string>
@@ -678,6 +683,7 @@ TO TALK</string>
     <string name="myidentity_your_address_hint">Give this to someone so they can write to you.</string>
     <string name="myidentity_address_copied">Address copied</string>
     <string name="myidentity_copy_address">Copy address</string>
+    <string name="myidentity_address_pending">Your address appears once the app reaches the network.</string>
     <!-- Batch 5c: MyIdentityScreen -->
     <string name="myidentity_title">My Identity</string>
     <string name="myidentity_section">Display Name &amp; Identity</string>

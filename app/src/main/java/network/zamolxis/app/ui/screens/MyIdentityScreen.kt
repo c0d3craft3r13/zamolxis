@@ -402,10 +402,25 @@ private fun DisplayNameIdentityCard(
                 }
             }
 
-            // The address, where the identity hash used to be
-            if (destinationHash != null) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
+            // The address, where the identity hash used to be.
+            //
+            // On a fresh install it does not exist for the first minutes while the
+            // stack comes up. Showing nothing at all there reads as broken — I took
+            // it for a failed identity myself and went looking in the database, where
+            // the identity was present and fine. So the empty case says so.
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            if (destinationHash == null) {
+                Text(
+                    text = stringResource(R.string.myidentity_your_address),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.myidentity_address_pending),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
                 val clipboardManager = LocalClipboardManager.current
                 val copiedMessage = stringResource(R.string.myidentity_address_copied)
                 val context = LocalContext.current
