@@ -219,6 +219,11 @@ val ktlintSourceFormat by tasks.registering(JavaExec::class) {
             listOf(
                 "!**/build/**",
                 "!**/generated/**",
+                // --format REWRITES files, so the vendor exclusion matters more here than
+                // in the check. Without it one run reformatted 137 vendored files and
+                // broke the byte-for-byte match with upstream that vendor/PROVENANCE.md
+                // documents and that makes a re-sync diffable at all.
+                "!vendor/**",
                 "--format",
                 "--baseline=config/ktlint-baseline.xml",
                 "--reporter=plain",
