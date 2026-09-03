@@ -1099,6 +1099,19 @@ class KotlinBLEBridge(
                 return true
             }
 
+            // Android 6+ hands ordinary apps a fixed placeholder, not the real
+            // adapter MAC. Comparing that against the peer's rotating random address
+            // can tell BOTH devices to wait, so neither ever becomes central and the
+            // link never forms. Attempt the connection and let dedup sort it out.
+            if (localAddress.equals(BleConstants.PLACEHOLDER_ADAPTER_MAC, ignoreCase = true)) {
+                Log.w(
+                    TAG,
+                    "Local MAC is the Android placeholder ($localAddress); MAC tie-break is not " +
+                        "meaningful, attempting connection to $peerAddress and relying on dedup",
+                )
+                return true
+            }
+
             // Strip colons and convert to lowercase for comparison
             val localMacStripped = localAddress.replace(":", "").lowercase()
             val peerMacStripped = peerAddress.replace(":", "").lowercase()

@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import io.mockk.*
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -147,25 +146,33 @@ class KotlinBLEBridgeMacSortingTest {
     }
 
     /**
-     * Test: Fallback when local MAC is invalid format.
+     * Test: the Android placeholder MAC must not drive the tie-break.
      *
-     * Scenario: BluetoothAdapter.address returns malformed MAC (e.g., "02:00:00:00:00:00")
-     * Expected: shouldConnect returns true (fallback)
+     * On Android 6+ `BluetoothAdapter.getAddress()` returns "02:00:00:00:00:00" to
+     * ordinary apps. A peer's current random address can sort either side of that
+     * placeholder, so a numeric comparison would tell this device to *wait* for the
+     * lower-sorting peers — and if both devices did that about each other, neither
+     * would ever become central. Both directions must therefore return true so the
+     * connection is attempted and dedup resolves any collision.
+     *
+     * This pins the fix for the observed "0 central connections / peers stuck as
+     * Unknown at 20-byte MTU" state.
      */
     @Test
-    fun shouldConnect_whenLocalMacInvalid_returnsTrue() {
+    fun shouldConnect_whenLocalMacIsAndroidPlaceholder_returnsTrueForAnyPeer() {
         // Arrange
-        val invalidMac = "02:00:00:00:00:00" // Placeholder/invalid MAC
-        val peerMac = "AA:BB:CC:DD:EE:FF"
-        every { bluetoothAdapter.address } returns invalidMac
+        every { bluetoothAdapter.address } returns "02:00:00:00:00:00"
         val bridge = KotlinBLEBridge.getInstance(context)
 
-        // Act
-        val result = bridge.shouldConnect(peerMac)
-
-        // Assert - implementation should handle gracefully
-        // Either true (fallback) or correct comparison
-        assertNotNull(result)
+        // Assert: true regardless of whether the peer sorts above or below the placeholder
+        assertTrue(
+            "Placeholder local MAC must attempt a peer that sorts ABOVE it",
+            bridge.shouldConnect("AA:BB:CC:DD:EE:FF"),
+        )
+        assertTrue(
+            "Placeholder local MAC must attempt a peer that sorts BELOW it (the case that stranded Fusion)",
+            bridge.shouldConnect("00:11:22:33:44:55"),
+        )
     }
 
     /**

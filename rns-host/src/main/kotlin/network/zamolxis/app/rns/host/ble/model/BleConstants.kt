@@ -77,6 +77,18 @@ object BleConstants {
     const val ATT_HEADER_SIZE = 3
 
     /**
+     * The placeholder MAC that `BluetoothAdapter.getAddress()` returns to ordinary
+     * apps on Android 6+. The real adapter address is withheld for privacy, so a
+     * role tie-break that compares this against a peer's (random, privacy-rotated)
+     * address is meaningless — and worse than useless: for a peer whose current
+     * random address sorts below `02:00:…`, the comparison tells this device to
+     * *wait*, and if both devices reason that way about each other neither ever
+     * connects. Detect it and fall back to "attempt the connection", letting the
+     * existing dedup resolve the collision once real identities are exchanged.
+     */
+    const val PLACEHOLDER_ADAPTER_MAC = "02:00:00:00:00:00"
+
+    /**
      * Minimum characteristic payload available when no MTU callback occurs.
      * CoreBluetooth centrals do not expose Android's explicit requestMtu API,
      * so Android GATT-server links must use this fallback for interoperability.

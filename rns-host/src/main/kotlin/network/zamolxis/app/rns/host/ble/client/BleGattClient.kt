@@ -398,6 +398,13 @@ class BleGattClient(
         try {
             val localAddress = bluetoothAdapter.address ?: return true // Fallback: always connect if we can't get local MAC
 
+            // Android 6+ returns a fixed placeholder here, not the real MAC, so the
+            // comparison below is meaningless and can wrongly make this side wait.
+            // See BleConstants.PLACEHOLDER_ADAPTER_MAC.
+            if (localAddress.equals(BleConstants.PLACEHOLDER_ADAPTER_MAC, ignoreCase = true)) {
+                return true
+            }
+
             // Convert MAC addresses to integers for comparison
             // Remove colons and parse as hex
             val localMacInt = localAddress.replace(":", "").toLong(16)
