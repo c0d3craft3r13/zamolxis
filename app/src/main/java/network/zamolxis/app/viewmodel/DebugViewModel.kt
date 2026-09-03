@@ -10,7 +10,7 @@ import network.zamolxis.app.service.pq.PqAnnounceFingerprint
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.RnsTransportAdmin
 import network.zamolxis.app.util.IdentityQrCodeUtils
-import network.zamolxis.app.util.generateDefaultDisplayName
+import network.zamolxis.app.util.generatedDisplayNameFor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -365,7 +365,7 @@ class DebugViewModel
                         } catch (e: Exception) {
                             Log.w(TAG, "Failed to get display name from active identity, using default: ${e.message}")
                             null
-                        } ?: generateDefaultDisplayName(identity.hash)
+                        } ?: generatedDisplayNameFor(identity.hash)
 
                     Log.d(TAG, "Using display name for announce")
 
