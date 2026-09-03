@@ -20,15 +20,25 @@
   - Files under files/: BACKED UP apart from the database passphrase
   - Cache: EXCLUDED (Android default)
 
-  The files/reticulum/ exclusion that earlier versions needed is gone:
+  files/reticulum/ is EXCLUDED again. The claim that "nothing there contains
+  secrets anymore" held only for the kotlinBackend flavor, whose reticulum-kt
+  moved routing state to Room. The SHIPPED release is pythonBackend, and upstream
+  Python RNS writes its own storage tree to files/reticulum/reticulum/storage/ —
+  including transport_identity (the node's transport Identity, i.e. a PRIVATE key)
+  and ratchets/ (per-destination forward-secrecy private state). With
+  `<include domain="file" path="."/>` those were being swept into cloud backup and
+  device-transfer, i.e. a private key leaving the device into Google's cloud — the
+  exact thing the SQLCipher/Keystore policy above exists to prevent. The routing
+  caches next to them (destination_table, known_destinations) are re-derivable, so
+  excluding the whole subtree costs nothing and closes the leak. Harmless for
+  kotlinBackend, where the tree is effectively empty.
+
+  Historical note on why the exclusion had been removed:
   - the in-memory-identity refactor (PR #785) stopped writing delivery
     identity files,
   - reticulum-kt v0.0.5 moved RNS routing state to Room,
-  - reticulum-kt v0.0.6 moved LXMF delivery-destination ratchets to Room,
-  - the createIdentityWithName / importIdentityFile / recoverIdentityFile
-    refactor eliminated the last plaintext-file writers.
-
-  Nothing in files/reticulum/ contains user secrets anymore.
+  - reticulum-kt v0.0.6 moved LXMF delivery-destination ratchets to Room.
+  All kotlinBackend-only — none of it applies to the Python stack that ships.
 -->
 <data-extraction-rules>
     <cloud-backup>
@@ -40,6 +50,8 @@
         <exclude domain="database" path="zamolxis_database-wal" />
         <exclude domain="database" path="zamolxis_database-shm" />
         <exclude domain="file" path="zamolxis_database.key" />
+        <!-- Python RNS private key + forward-secrecy ratchets; never to the cloud. -->
+        <exclude domain="file" path="reticulum" />
     </cloud-backup>
 
     <device-transfer>
@@ -51,5 +63,7 @@
         <exclude domain="database" path="zamolxis_database-wal" />
         <exclude domain="database" path="zamolxis_database-shm" />
         <exclude domain="file" path="zamolxis_database.key" />
+        <!-- Python RNS private key + forward-secrecy ratchets; never off the device. -->
+        <exclude domain="file" path="reticulum" />
     </device-transfer>
 </data-extraction-rules>

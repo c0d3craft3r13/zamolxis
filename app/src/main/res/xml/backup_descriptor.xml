@@ -15,4 +15,7 @@
     <exclude domain="database" path="zamolxis_database-wal" />
     <exclude domain="database" path="zamolxis_database-shm" />
     <exclude domain="file" path="zamolxis_database.key" />
+    <!-- Python RNS transport_identity (private key) + ratchets; keep off backups.
+         See backup_rules.xml for the full rationale. -->
+    <exclude domain="file" path="reticulum" />
 </full-backup-content>
