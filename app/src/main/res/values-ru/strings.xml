@@ -296,6 +296,12 @@
     <string name="call_ptt_talking">ГОВОРЮ</string>
     <string name="call_ptt_hold">УДЕРЖИВАЙ
 ДЛЯ РАЗГОВОРА</string>
+    <string name="call_mute">Без звука</string>
+    <string name="call_unmute">Включить звук</string>
+    <string name="call_ptt">Рация</string>
+    <string name="call_ptt_on">Рация вкл.</string>
+    <string name="call_speaker">Громкая связь</string>
+    <string name="call_earpiece">Динамик у уха</string>
 
     <!-- Карточка разрешений на звонки -->
     <string name="voiceperm_title">Разрешения для звонков</string>

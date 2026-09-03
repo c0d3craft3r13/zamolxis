@@ -288,6 +288,12 @@
     <string name="call_ptt_talking">TALKING</string>
     <string name="call_ptt_hold">HOLD
 TO TALK</string>
+    <string name="call_mute">Mute</string>
+    <string name="call_unmute">Unmute</string>
+    <string name="call_ptt">PTT</string>
+    <string name="call_ptt_on">PTT On</string>
+    <string name="call_speaker">Speaker</string>
+    <string name="call_earpiece">Earpiece</string>
 
     <!-- Voice call permissions card -->
     <string name="voiceperm_title">Voice Call Permissions</string>

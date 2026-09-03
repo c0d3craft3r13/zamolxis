@@ -295,7 +295,7 @@ fun VoiceCallScreen(
                     // Mute button (disabled in PTT mode since PTT controls transmit)
                     CallControlButton(
                         icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                        label = if (isMuted) "Unmute" else "Mute",
+                        label = stringResource(if (isMuted) R.string.call_unmute else R.string.call_mute),
                         isActive = isMuted,
                         onClick = { viewModel.toggleMute() },
                         enabled = callState is CallState.Active && !isPttMode,
@@ -305,7 +305,7 @@ fun VoiceCallScreen(
                     // PTT mode toggle
                     CallControlButton(
                         icon = Icons.Default.Mic,
-                        label = if (isPttMode) "PTT On" else "PTT",
+                        label = stringResource(if (isPttMode) R.string.call_ptt_on else R.string.call_ptt),
                         isActive = isPttMode,
                         onClick = { viewModel.togglePttMode() },
                         enabled = callState is CallState.Active,
@@ -315,7 +315,7 @@ fun VoiceCallScreen(
                     // Speaker button
                     CallControlButton(
                         icon = if (isSpeakerOn) Icons.Default.VolumeUp else Icons.Default.VolumeDown,
-                        label = if (isSpeakerOn) "Earpiece" else "Speaker",
+                        label = stringResource(if (isSpeakerOn) R.string.call_earpiece else R.string.call_speaker),
                         isActive = isSpeakerOn,
                         onClick = { viewModel.toggleSpeaker() },
                         enabled = callState is CallState.Active,
