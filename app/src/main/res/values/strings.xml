@@ -2262,10 +2262,21 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., under the MIT licence —
     <!-- Polish P2: status words in when-branches + QR errors -->
     <string name="qr_failed">Failed to generate QR code</string>
     <string name="qr_no_data">No data to encode</string>
-    <string name="quality_probing">Probing link...</string>
+    <string name="quality_probing">Checking the connection…</string>
     <string name="quality_conn_failed">Connection failed</string>
-    <string name="quality_no_link">No active link</string>
-    <string name="quality_mtu">%1$sB MTU</string>
+    <string name="quality_no_link">Not connected yet</string>
+    <!-- The call dialog used to read "1 hop · 40.0 kbps · 500B MTU". These say the
+         same two useful things in words: how far away the person is, and whether
+         the link is any good. MTU is gone; it told the reader nothing. -->
+    <string name="quality_link_direct">direct</string>
+    <plurals name="quality_link_via">
+        <item quantity="one">via %1$d node</item>
+        <item quantity="other">via %1$d nodes</item>
+    </plurals>
+    <string name="quality_link_poor">very weak connection</string>
+    <string name="quality_link_weak">weak connection</string>
+    <string name="quality_link_good">good connection</string>
+    <string name="quality_link_excellent">excellent connection</string>
     <string name="messaging_cd_link_active">Online — link active</string>
     <string name="messaging_cd_seen_recently">Last seen recently</string>
     <string name="messaging_offline">Offline</string>

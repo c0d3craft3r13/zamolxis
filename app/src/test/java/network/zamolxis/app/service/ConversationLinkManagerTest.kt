@@ -532,4 +532,35 @@ class ConversationLinkManagerTest {
             )
         assertEquals(120_000L, state.bestRateBps)
     }
+
+    // --- what the call dialog says instead of "1 hop / 40.0 kbps / 500 B MTU" ---------
+
+    @Test
+    fun `a BLE link reads as weak, not as something to send a photo over`() {
+        assertEquals(
+            LinkQuality.WEAK,
+            ConversationLinkManager.qualityFor(ConversationLinkManager.BLE_MEASURED_BITRATE_BPS),
+        )
+    }
+
+    @Test
+    fun `the words and the recommended preset never disagree`() {
+        // Both read the same thresholds, so every rate must land on a matching pair.
+        val pairs =
+            mapOf(
+                1_000L to Pair(LinkQuality.POOR, ImageCompressionPreset.LOW),
+                20_000L to Pair(LinkQuality.WEAK, ImageCompressionPreset.MEDIUM),
+                200_000L to Pair(LinkQuality.GOOD, ImageCompressionPreset.HIGH),
+                5_000_000L to Pair(LinkQuality.EXCELLENT, ImageCompressionPreset.ORIGINAL),
+            )
+        pairs.forEach { (bps, expected) ->
+            assertEquals("quality at $bps", expected.first, ConversationLinkManager.qualityFor(bps))
+            assertEquals("preset at $bps", expected.second, ConversationLinkManager.presetFromBitrate(bps))
+        }
+    }
+
+    @Test
+    fun `a dead link is not described as merely weak`() {
+        assertEquals(LinkQuality.POOR, ConversationLinkManager.qualityFor(0))
+    }
 }

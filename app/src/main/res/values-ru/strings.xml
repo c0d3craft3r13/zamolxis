@@ -269,11 +269,11 @@
     <string name="transfer_sending">Отправка</string>
     <string name="transfer_sending_directly">Прямая отправка</string>
     <string name="transfer_retrying_direct">Повтор прямой отправки (%1$d/%2$d)</string>
-    <string name="transfer_sending_to_relay">Отправка через сеть релеев</string>
+    <string name="transfer_sending_to_relay">Отправка через сеть ретрансляторов</string>
     <string name="transfer_transferring_resource">Передача ресурса</string>
-    <string name="message_status_sending_to_relay">Отправка через сеть релеев</string>
-    <string name="message_status_stored_on_relay">Сохранено в сети релеев</string>
-    <string name="transfer_receiving_via_relay">Получение сообщений через релей</string>
+    <string name="message_status_sending_to_relay">Отправка через сеть ретрансляторов</string>
+    <string name="message_status_stored_on_relay">Сохранено в сети ретрансляторов</string>
+    <string name="transfer_receiving_via_relay">Получение сообщений через ретранслятор</string>
     <plurals name="transfer_receiving_directly">
         <item quantity="one">Прямое получение сообщения</item>
         <item quantity="few">Прямое получение %1$d сообщений</item>
@@ -427,8 +427,8 @@
     <string name="msgdetail_method_opportunistic_sub">Доставка одним пакетом для малых сообщений, линк не требуется</string>
     <string name="msgdetail_method_direct">Прямая</string>
     <string name="msgdetail_method_direct_sub">Доставка по линку с повторами, поддерживает большие сообщения</string>
-    <string name="msgdetail_method_propagated">Через релей</string>
-    <string name="msgdetail_method_propagated_sub">Доставлено через узел-релей для офлайн-получателей</string>
+    <string name="msgdetail_method_propagated">Через ретранслятор</string>
+    <string name="msgdetail_method_propagated_sub">Доставлено через ретранслятор для офлайн-получателей</string>
     <string name="msgdetail_method_unknown_sub">Неизвестный способ доставки</string>
     <string name="msgdetail_hops_unavailable_sub">Число хопов недоступно</string>
     <string name="msgdetail_received_direct_sub">Сообщение получено напрямую от отправителя</string>
@@ -439,10 +439,10 @@
         <item quantity="other">%1$d хопа</item>
     </plurals>
     <plurals name="msgdetail_relays_sub">
-        <item quantity="one">Сообщение прошло через %1$d релей</item>
-        <item quantity="few">Сообщение прошло через %1$d релея</item>
-        <item quantity="many">Сообщение прошло через %1$d релеев</item>
-        <item quantity="other">Сообщение прошло через %1$d релея</item>
+        <item quantity="one">Сообщение прошло через %1$d ретранслятор</item>
+        <item quantity="few">Сообщение прошло через %1$d ретранслятора</item>
+        <item quantity="many">Сообщение прошло через %1$d ретрансляторов</item>
+        <item quantity="other">Сообщение прошло через %1$d ретранслятора</item>
     </plurals>
 
     <!-- Экран переписки -->
@@ -504,12 +504,12 @@
     <string name="contacts_add_contact">Добавить контакт</string>
     <string name="contacts_announce_now">Анонсировать сейчас</string>
     <string name="contacts_clear_announces">Очистить все анонсы</string>
-    <string name="contacts_my_relay">МОЙ РЕЛЕЙ</string>
-    <string name="contacts_my_relay_cd">Мой релей</string>
+    <string name="contacts_my_relay">МОЙ РЕТРАНСЛЯТОР</string>
+    <string name="contacts_my_relay_cd">Мой ретранслятор</string>
     <string name="contacts_auto">(авто)</string>
     <string name="contacts_pinned">ЗАКРЕПЛЁН</string>
     <string name="contacts_all">ВСЕ КОНТАКТЫ</string>
-    <string name="contacts_unset_relay_title">Убрать назначение релеем?</string>
+    <string name="contacts_unset_relay_title">Убрать назначение ретранслятором?</string>
     <string name="contacts_unset_relay_body">«%1$s» будет удалён из контактов.</string>
     <string name="contacts_relay_remove_auto">Удалить и выбрать новый</string>
     <string name="contacts_relay_remove_only">Только удалить</string>
@@ -523,7 +523,7 @@
     <string name="contacts_not_found_yet_why">Возможно, собеседник не в сети. Если он так и не появится — сверьте адрес: нужен тот, что под «Ваш адрес», а не хеш идентичности.</string>
     <string name="contacts_never_seen">Не видели ни разу</string>
     <string name="contacts_sharing_location">Делится с вами геолокацией</string>
-    <string name="contacts_relay_badge">РЕЛЕЙ</string>
+    <string name="contacts_relay_badge">РЕТРАНСЛЯТОР</string>
     <string name="contacts_added_via">Добавлен через %1$s</string>
     <string name="contacts_retry_search">Повторить поиск</string>
     <string name="contacts_edit_nickname">Изменить имя</string>
@@ -2327,10 +2327,23 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., лицензия MIT — 
     <!-- Полировка P2: статусы в when-ветках + ошибки QR -->
     <string name="qr_failed">Не удалось сгенерировать QR-код</string>
     <string name="qr_no_data">Нет данных для кодирования</string>
-    <string name="quality_probing">Проверка линка...</string>
+    <string name="quality_probing">Проверяем связь…</string>
     <string name="quality_conn_failed">Сбой подключения</string>
-    <string name="quality_no_link">Нет активного линка</string>
-    <string name="quality_mtu">%1$s Б MTU</string>
+    <string name="quality_no_link">Связь ещё не установлена</string>
+    <!-- The call dialog used to read "1 хоп · 40.0 kbps · 500 Б MTU". These say the
+         same two useful things in words: how far away the person is, and whether
+         the link is any good. MTU is gone; it told the reader nothing. -->
+    <string name="quality_link_direct">напрямую</string>
+    <plurals name="quality_link_via">
+        <item quantity="one">через %1$d узел</item>
+        <item quantity="few">через %1$d узла</item>
+        <item quantity="many">через %1$d узлов</item>
+        <item quantity="other">через %1$d узла</item>
+    </plurals>
+    <string name="quality_link_poor">связь очень слабая</string>
+    <string name="quality_link_weak">связь слабая</string>
+    <string name="quality_link_good">связь хорошая</string>
+    <string name="quality_link_excellent">связь отличная</string>
     <string name="messaging_cd_link_active">В сети — линк активен</string>
     <string name="messaging_cd_seen_recently">Недавняя активность</string>
     <string name="messaging_offline">Не в сети</string>

@@ -48,7 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import network.zamolxis.app.R
 import network.zamolxis.app.service.ConversationLinkManager
-import java.util.Locale
+import network.zamolxis.app.service.LinkQuality
 
 /**
  * Data class representing an option in a quality selection dialog.
@@ -205,21 +205,29 @@ fun PathInfoSection(
             linkState == null -> null
             linkState.isEstablishing -> stringResource(R.string.messaging_connecting)
             linkState.isActive -> {
-                val hopsText = linkState.hops?.let { pluralStringResource(R.plurals.msgdetail_hops, it, it) }
-                val mtuText = linkState.linkMtu?.let { stringResource(R.string.quality_mtu, it) }
-                buildString {
-                    hopsText?.let { append(it) }
-
+                // Two things a person can act on: how far away the other end is, and
+                // whether the link is any good. The MTU that used to sit here is a
+                // protocol detail with nothing in it for the reader.
+                val distanceText =
+                    linkState.hops?.let { hops ->
+                        if (hops <= 1) {
+                            stringResource(R.string.quality_link_direct)
+                        } else {
+                            pluralStringResource(R.plurals.quality_link_via, hops, hops)
+                        }
+                    }
+                val qualityText =
                     linkState.bestRateBps?.let { rate ->
-                        if (isNotEmpty()) append(" • ")
-                        append(formatBitrate(rate))
+                        stringResource(
+                            when (ConversationLinkManager.qualityFor(rate)) {
+                                LinkQuality.POOR -> R.string.quality_link_poor
+                                LinkQuality.WEAK -> R.string.quality_link_weak
+                                LinkQuality.GOOD -> R.string.quality_link_good
+                                LinkQuality.EXCELLENT -> R.string.quality_link_excellent
+                            },
+                        )
                     }
-
-                    mtuText?.let {
-                        if (isNotEmpty()) append(" • ")
-                        append(it)
-                    }
-                }.ifEmpty { null }
+                listOfNotNull(distanceText, qualityText).joinToString(" • ").ifEmpty { null }
             }
             linkState.error != null -> stringResource(R.string.quality_conn_failed)
             else -> stringResource(R.string.quality_no_link)
@@ -441,13 +449,3 @@ fun ScrollableOptionsContainer(
         }
     }
 }
-
-/**
- * Format bitrate in bits per second to human-readable string.
- */
-fun formatBitrate(bps: Long): String =
-    when {
-        bps >= 1_000_000 -> String.format(Locale.US, "%.1f Mbps", bps / 1_000_000.0)
-        bps >= 1_000 -> String.format(Locale.US, "%.1f kbps", bps / 1_000.0)
-        else -> "$bps bps"
-    }

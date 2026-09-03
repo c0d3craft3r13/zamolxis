@@ -22,6 +22,21 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
+ * What to say about a link to someone who is about to place a call.
+ *
+ * The dialog used to show "1 hop · 40.0 kbps · 500 B MTU". Hops and bitrate are at
+ * least about the link; MTU is a protocol detail with nothing in it for the person
+ * reading. None of the three tells them the thing they actually want to know, which
+ * is whether this call will be any good.
+ */
+enum class LinkQuality {
+    POOR,
+    WEAK,
+    GOOD,
+    EXCELLENT,
+}
+
+/**
  * Manages conversation links for real-time connectivity status and speed probing.
  *
  * When an image is attached, establishes a link to the peer. The link provides:
@@ -30,6 +45,7 @@ import javax.inject.Singleton
  *
  * Links are left open and naturally close via Reticulum's stale timeout (~12 minutes).
  */
+
 @Singleton
 class ConversationLinkManager
     @Inject
@@ -89,6 +105,21 @@ class ConversationLinkManager
                 val reported = reportedBps?.takeIf { it > 0 } ?: BLE_MEASURED_BITRATE_BPS
                 return minOf(reported, BLE_MEASURED_BITRATE_BPS)
             }
+
+            /**
+             * How good the link is, in the terms a person picking a codec needs.
+             *
+             * Shares [presetFromBitrate]'s thresholds on purpose: the word shown and
+             * the preset recommended below it come from the same number, so they can
+             * never contradict each other on screen.
+             */
+            fun qualityFor(bps: Long): LinkQuality =
+                when {
+                    bps < THRESHOLD_LOW_BPS -> LinkQuality.POOR
+                    bps < THRESHOLD_MEDIUM_BPS -> LinkQuality.WEAK
+                    bps < THRESHOLD_HIGH_BPS -> LinkQuality.GOOD
+                    else -> LinkQuality.EXCELLENT
+                }
 
             /**
              * Convert a bitrate to a compression preset based on thresholds.
