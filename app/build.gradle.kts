@@ -146,9 +146,37 @@ android {
         }
     }
 
-    flavorDimensions += listOf("telemetry", "rnsImpl")
+    // `audience` is listed FIRST on purpose: dimension order is flavor priority, and
+    // Маяк has to be able to override the `app_name` that the rnsImpl flavors set.
+    // It also means variant names read `mayakNoSentryPythonBackendDebug`.
+    flavorDimensions += listOf("audience", "telemetry", "rnsImpl")
 
     productFlavors {
+        // Who the build is for. Same code, same protocol — what differs is how much of
+        // the machine room is on screen.
+        create("expert") {
+            dimension = "audience"
+            isDefault = true
+            // Keeps the base applicationId and the existing labels: this is the build
+            // that already exists on the maintainers' phones, and renaming its package
+            // would break their upgrade path and lose the identity stored under it.
+            buildConfigField("boolean", "SIMPLE_UI", "false")
+        }
+        create("mayak") {
+            dimension = "audience"
+            // Маяк — a beacon works when everything else has gone dark, which is the
+            // promise, and it survives being said once across a room and typed later.
+            // That matters more than it sounds: this app travels by being handed to the
+            // person next to you over Bluetooth, not by being searched for in a store.
+            applicationIdSuffix = ".mayak"
+            versionNameSuffix = "-mayak"
+            resValue("string", "app_name", "Маяк")
+            // Everything an operator needs and a first-time user does not is folded
+            // behind the existing developer gate (seven taps on the version). See
+            // AudienceProfile.
+            buildConfigField("boolean", "SIMPLE_UI", "true")
+        }
+
         create("sentry") {
             dimension = "telemetry"
             isDefault = true

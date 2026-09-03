@@ -89,7 +89,7 @@ jobs:
         # cover the flavor source the default misses (app/src/noSentry,
         # rns-host/src/pythonBackend) so NewApi is enforced across all variants.
         run: >-
-          ./gradlew lint :app:lintNoSentryKotlinBackendDebug
+          ./gradlew lint :app:lintExpertNoSentryKotlinBackendDebug
           :rns-host:lintPythonBackendDebug
           --continue --stacktrace
 
@@ -270,7 +270,7 @@ jobs:
         run: |
           for attempt in 1 2 3; do
             echo "Dependency resolution attempt $attempt/3..."
-            if ./gradlew :app:dependencies --configuration noSentryKotlinBackendDebugUnitTestRuntimeClasspath -q 2>/dev/null; then
+            if ./gradlew :app:dependencies --configuration expertNoSentryKotlinBackendDebugUnitTestRuntimeClasspath -q 2>/dev/null; then
               echo "Dependencies resolved successfully."
               break
             fi
@@ -287,7 +287,19 @@ jobs:
         # AIDL and JaCoCo caching issues are handled by clean steps above
         # NOTE: For app module, only run noSentry variant (sentry/noSentry share the same test code,
         # differing only in SENTRY_DSN buildConfigField which tests don't exercise).
-        run: ./gradlew :app:testNoSentryKotlinBackendDebugUnitTest -PtestShard=${{ matrix.shard }} -PtestShardTotal=4 --stacktrace --max-workers=4
+        run: ./gradlew :app:testExpertNoSentryKotlinBackendDebugUnitTest -PtestShard=${{ matrix.shard }} -PtestShardTotal=4 --stacktrace --max-workers=4
+
+      - name: Run app unit tests for the Маяк audience
+        # The audience flavor changes what the UI shows, and only `expert` runs above,
+        # so without this the divergence is untested. It is not hypothetical: three
+        # ContactsScreenTest cases failed under `mayak` the first time anyone ran them,
+        # because hiding the tab row also hid the contact count it carried.
+        #
+        # Unsharded and pinned to one shard: a second product costs one extra suite,
+        # not four. Running the whole thing rather than a hand-picked subset keeps the
+        # rule from going stale as more of the UI learns about the audience.
+        if: matrix.shard == 1
+        run: ./gradlew :app:testMayakNoSentryKotlinBackendDebugUnitTest --stacktrace --max-workers=4
 
       - name: Upload unit test results
         if: always()
@@ -459,12 +471,12 @@ jobs:
         # noSentry + no SENTRY_AUTH_TOKEN keeps the Sentry mapping-upload path out;
         # unsigned is fine — minification (and mapping.txt) happens regardless.
         timeout-minutes: 40
-        run: ./gradlew :app:assembleNoSentryPythonBackendRelease --stacktrace --max-workers=2
+        run: ./gradlew :app:assembleExpertNoSentryPythonBackendRelease --stacktrace --max-workers=2
 
       - name: Assert bridge classes/methods survived R8
         run: |
           python scripts/assert_bridges_kept.py \
-            app/build/outputs/mapping/noSentryPythonBackendRelease/mapping.txt
+            app/build/outputs/mapping/expertNoSentryPythonBackendRelease/mapping.txt
 
       - name: Upload R8 mapping file
         # Only on failure — the mapping (~130 MB for the python flavor) is only
@@ -474,7 +486,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: r8-mapping-pythonBackend
-          path: app/build/outputs/mapping/noSentryPythonBackendRelease/mapping.txt
+          path: app/build/outputs/mapping/expertNoSentryPythonBackendRelease/mapping.txt
           retention-days: 14
 
       - name: Cleanup emulator
@@ -533,9 +545,9 @@ jobs:
       - name: Pre-build test APKs
         run: |
           echo "Building APKs before starting emulator..."
-          ./gradlew :app:assembleNoSentryKotlinBackendDebugAndroidTest --stacktrace --max-workers=2
-          ./gradlew :app:assembleNoSentryKotlinBackendDebug --stacktrace --max-workers=2
-          ./gradlew :app:assembleNoSentryPythonBackendDebugAndroidTest :app:assembleNoSentryPythonBackendDebug --stacktrace --max-workers=2
+          ./gradlew :app:assembleExpertNoSentryKotlinBackendDebugAndroidTest --stacktrace --max-workers=2
+          ./gradlew :app:assembleExpertNoSentryKotlinBackendDebug --stacktrace --max-workers=2
+          ./gradlew :app:assembleExpertNoSentryPythonBackendDebugAndroidTest :app:assembleExpertNoSentryPythonBackendDebug --stacktrace --max-workers=2
           ./gradlew :rns-backend-py:assembleDebugAndroidTest :rns-backend-py:assembleDebug --stacktrace --max-workers=2
           echo "APKs built successfully"
 
@@ -583,8 +595,8 @@ jobs:
             adb shell pm list packages | head -5;
             echo "Emulator is responsive, starting tests...";
             status=0;
-            ./gradlew :app:connectedNoSentryKotlinBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.smoke.SmokeTest,network.zamolxis.app.integration.MessageDataFlowTest,network.zamolxis.app.integration.ConversationCreationFlowTest,network.zamolxis.app.ui.components.MicronTrueColorRenderingTest,network.zamolxis.app.integration.DatabaseEncryptionMigrationInstrumentedTest,network.zamolxis.app.integration.EncryptedDatabaseOpenInstrumentedTest --stacktrace || status=1;
-            ./gradlew :app:connectedNoSentryPythonBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.integration.IdentityRecoveryIpcInstrumentedTest,network.zamolxis.app.integration.IdentityRecoveryPersistenceInstrumentedTest --stacktrace || status=1;
+            ./gradlew :app:connectedExpertNoSentryKotlinBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.smoke.SmokeTest,network.zamolxis.app.integration.MessageDataFlowTest,network.zamolxis.app.integration.ConversationCreationFlowTest,network.zamolxis.app.ui.components.MicronTrueColorRenderingTest,network.zamolxis.app.integration.DatabaseEncryptionMigrationInstrumentedTest,network.zamolxis.app.integration.EncryptedDatabaseOpenInstrumentedTest --stacktrace || status=1;
+            ./gradlew :app:connectedExpertNoSentryPythonBackendDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.integration.IdentityRecoveryIpcInstrumentedTest,network.zamolxis.app.integration.IdentityRecoveryPersistenceInstrumentedTest --stacktrace || status=1;
             ./gradlew :rns-backend-py:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=network.zamolxis.app.rns.backend.py.PythonRnsCoreIdentityRecoveryInstrumentedTest --stacktrace || status=1;
             exit "$status"
 
@@ -669,7 +681,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Python-backend E2E APK
-        run: ./gradlew :app:assembleNoSentryPythonBackendDebug --stacktrace --max-workers=2
+        run: ./gradlew :app:assembleExpertNoSentryPythonBackendDebug --stacktrace --max-workers=2
 
       - name: Enable KVM
         run: |
@@ -689,7 +701,7 @@ jobs:
           emulator-boot-timeout: 600
           script: >-
             COLUMBA_EMULATOR_SERIAL=emulator-5554
-            COLUMBA_E2E_APK=app/build/outputs/apk/noSentryPythonBackend/debug/app-noSentry-pythonBackend-x86_64-debug.apk
+            COLUMBA_E2E_APK=app/build/outputs/apk/expertNoSentryPythonBackend/debug/app-expert-noSentry-pythonBackend-x86_64-debug.apk
             COLUMBA_E2E_ARTIFACT_DIR=artifacts/transfer-progress-e2e
             python -m pytest -v tests/transfer_progress_e2e/test_transfer_progress_e2e.py
             --junit-xml=artifacts/transfer-progress-e2e/results.xml;

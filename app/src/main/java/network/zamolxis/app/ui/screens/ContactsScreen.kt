@@ -99,6 +99,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -118,6 +119,7 @@ import network.zamolxis.app.ui.components.ProfileIcon
 import network.zamolxis.app.ui.components.simpleVerticalScrollbar
 import network.zamolxis.app.ui.model.ContactSearch
 import network.zamolxis.app.ui.model.ContactSearchState
+import network.zamolxis.app.ui.screens.settings.AudienceProfile
 import network.zamolxis.app.ui.util.rememberLifecycleTickerMillis
 import network.zamolxis.app.util.formatTimeSince
 import network.zamolxis.app.util.validation.InputValidator
@@ -165,6 +167,17 @@ fun ContactsScreen(
     // Tab selection state - use rememberSaveable to preserve across navigation
     var selectedTab by androidx.compose.runtime.saveable
         .rememberSaveable { mutableStateOf(ContactsTab.MY_CONTACTS) }
+
+    // Which tabs this build offers. Restored state is coerced back into the list: an
+    // install that was on "Network" before an update to Маяк must not come back to a tab
+    // that no longer exists.
+    val visibleContactsTabs =
+        remember {
+            ContactsTab.entries.filter { it != ContactsTab.NETWORK || AudienceProfile.showsNetworkTab }
+        }
+    if (selectedTab !in visibleContactsTabs) {
+        selectedTab = ContactsTab.MY_CONTACTS
+    }
 
     // Network tab state
     val announceSearchQuery by announceViewModel.searchQuery.collectAsState()
@@ -260,11 +273,22 @@ fun ContactsScreen(
             Column {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = stringResource(R.string.contacts_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.contacts_title),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            // The count used to live in the "My Contacts (N)" tab label.
+                            // Where that row is hidden it has to go somewhere, or the
+                            // number simply disappears — the same subtitle Chats uses.
+                            if (visibleContactsTabs.size <= 1) {
+                                Text(
+                                    text = pluralStringResource(R.plurals.contact_count, contactCount, contactCount),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                        }
                     },
                     actions = {
                         // Search button
@@ -419,25 +443,28 @@ fun ContactsScreen(
                     )
                 }
 
-                // Tab selector
-                SingleChoiceSegmentedButtonRow(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    ContactsTab.entries.forEachIndexed { index, tab ->
-                        SegmentedButton(
-                            shape = SegmentedButtonDefaults.itemShape(index = index, count = ContactsTab.entries.size),
-                            onClick = { selectedTab = tab },
-                            selected = selectedTab == tab,
-                        ) {
-                            val label =
-                                when (tab) {
-                                    ContactsTab.MY_CONTACTS -> "My Contacts ($contactCount)"
-                                    ContactsTab.NETWORK -> "Network ($announceCount)"
-                                }
-                            Text(label)
+                // Tab selector. Маяк ships only "My Contacts", and a segmented row with a
+                // single button is furniture, so the whole row goes with it.
+                if (visibleContactsTabs.size > 1) {
+                    SingleChoiceSegmentedButtonRow(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        visibleContactsTabs.forEachIndexed { index, tab ->
+                            SegmentedButton(
+                                shape = SegmentedButtonDefaults.itemShape(index = index, count = visibleContactsTabs.size),
+                                onClick = { selectedTab = tab },
+                                selected = selectedTab == tab,
+                            ) {
+                                val label =
+                                    when (tab) {
+                                        ContactsTab.MY_CONTACTS -> "My Contacts ($contactCount)"
+                                        ContactsTab.NETWORK -> "Network ($announceCount)"
+                                    }
+                                Text(label)
+                            }
                         }
                     }
                 }

@@ -500,6 +500,14 @@
 
     <!-- Контакты -->
     <string name="contacts_title">Контакты</string>
+    <!-- Shown under the Contacts title when the tab row is hidden, so the count does
+         not vanish with the tab label that used to carry it. -->
+    <plurals name="contact_count">
+        <item quantity="one">%1$d контакт</item>
+        <item quantity="few">%1$d контакта</item>
+        <item quantity="many">%1$d контактов</item>
+        <item quantity="other">%1$d контакта</item>
+    </plurals>
     <string name="contacts_add_cd">Добавить контакт</string>
     <string name="contacts_add_contact">Добавить контакт</string>
     <string name="contacts_announce_now">Анонсировать сейчас</string>

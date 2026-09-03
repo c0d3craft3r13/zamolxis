@@ -36,11 +36,31 @@ Two processes: UI, and the `:reticulum` foreground service. **Python/Chaquopy mu
 never load in the UI process.** Backend choice is a Gradle product flavor
 (`kotlinBackend` / `pythonBackend`) with flavor-specific source sets.
 
+## Two audiences, one codebase
+
+There are two shipped products, and they differ only in how much of the machine room is
+on screen — same code, same protocol, same vendored stack:
+
+| Flavor | Product | applicationId | Label |
+|---|---|---|---|
+| `expert` | Zamolxis | `network.zamolxis.app` | `Zamolxis` |
+| `mayak` | Маяк | `network.zamolxis.app.mayak` | `Маяк` |
+
+`audience` is the **first** flavor dimension, because dimension order is priority and
+Маяк has to override the `app_name` the `rnsImpl` flavors set. That is also why every
+variant name now starts with the audience: `assembleExpertNoSentryPythonBackendDebug`.
+CI builds `expert`; Маяк is the same variants with `Mayak` in place of `Expert`.
+
+What Маяк hides is one short list in `AudienceProfile` — not a fork, and not scattered
+`BuildConfig.SIMPLE_UI` checks. Most of the work predates it: `NetworkCard`,
+`IdentityCard` and the RNode/propagation cards were already behind the developer gate
+(seven taps on the version in About) so the app "reads as a plain messenger by default".
+
 ## Build & test
 
 ```bash
-./gradlew :app:assembleNoSentryKotlinBackendDebug
-./gradlew :app:testNoSentryKotlinBackendDebugUnitTest
+./gradlew :app:assembleExpertNoSentryKotlinBackendDebug
+./gradlew :app:testExpertNoSentryKotlinBackendDebugUnitTest
 ./gradlew detekt ktlintCheck cpdCheck
 ```
 

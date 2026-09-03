@@ -484,6 +484,12 @@ TO TALK</string>
 
     <!-- Contacts -->
     <string name="contacts_title">Contacts</string>
+    <!-- Shown under the Contacts title when the tab row is hidden, so the count does
+         not vanish with the tab label that used to carry it. -->
+    <plurals name="contact_count">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="other">%1$d contacts</item>
+    </plurals>
     <string name="contacts_add_cd">Add contact</string>
     <string name="contacts_add_contact">Add Contact</string>
     <string name="contacts_announce_now">Announce now</string>
