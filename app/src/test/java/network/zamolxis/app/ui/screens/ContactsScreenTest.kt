@@ -67,15 +67,41 @@ class ContactsScreenTest {
     }
 
     @Test
-    fun emptyContactsState_displaysSecondaryMessage() {
+    fun emptyContactsState_explainsHowTwoPeopleConnect() {
         composeTestRule.setContent {
             EmptyContactsState()
         }
 
         composeTestRule
             .onNodeWithText(
-                "Star peers in the Announce Stream\nor add contacts via QR code",
+                "Two people swap addresses once — after that they can write to each other.",
             ).assertIsDisplayed()
+        // The announce stream is a screen name, not something a new user arrives with.
+        composeTestRule.onNodeWithText("Announce Stream", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun emptyContactsState_offersToShowYourOwnCode() {
+        var shown = false
+        composeTestRule.setContent {
+            EmptyContactsState(onShowMyCode = { shown = true })
+        }
+
+        composeTestRule.onNodeWithText("Show my code").performClick()
+
+        assertTrue("the empty state must be able to hand over your address", shown)
+    }
+
+    @Test
+    fun emptyContactsState_offersToScanSomeoneElses() {
+        var scanned = false
+        composeTestRule.setContent {
+            EmptyContactsState(onScanCode = { scanned = true })
+        }
+
+        composeTestRule.onNodeWithText("Scan a code").performClick()
+
+        assertTrue("the other half of the exchange", scanned)
     }
 
     @Test

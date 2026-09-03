@@ -529,7 +529,12 @@
     <string name="contacts_edit_nickname">Изменить имя</string>
     <string name="contacts_loading">Загрузка контактов…</string>
     <string name="contacts_empty_title">Контактов пока нет</string>
-    <string name="contacts_empty_body">Отметьте пиров звёздочкой в ленте анонсов\nили добавьте контакты по QR-коду</string>
+    <!-- The empty state used to point at the "Announce Stream", a screen name that
+         means nothing to someone who has just installed the app. It now offers the
+         two things that actually connect two people. -->
+    <string name="contacts_empty_body">Двое один раз обмениваются адресами — дальше можно писать друг другу.</string>
+    <string name="contacts_empty_show_code">Показать мой код</string>
+    <string name="contacts_empty_scan_code">Отсканировать код</string>
     <string name="contacts_scan_qr_subtitle">Сканируйте QR-код контакта, чтобы добавить его</string>
     <string name="contacts_manual_entry">Ручной ввод</string>
     <string name="contacts_manual_entry_subtitle">Вставьте строку идентичности RNS</string>

@@ -1568,6 +1568,12 @@ fun ZamolxisNavigation(
                                         val encodedHash = Uri.encode(destinationHash)
                                         navController.navigate("announce_detail/$encodedHash")
                                     },
+                                    // Reached from the empty state, so someone with no
+                                    // contacts can hand over their address without first
+                                    // knowing it lives under Settings.
+                                    onNavigateToMyIdentity = {
+                                        navController.navigate("my_identity")
+                                    },
                                     onLocateOnMap = { peerHash ->
                                         mapViewModel.focusOnContact(peerHash)
                                         navController.navigate(Screen.Map.route) {

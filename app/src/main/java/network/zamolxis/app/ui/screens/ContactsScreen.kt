@@ -58,6 +58,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -72,6 +73,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -94,13 +96,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -136,6 +138,7 @@ fun ContactsScreen(
     onViewPeerDetails: (destinationHash: String) -> Unit = { },
     onLocateOnMap: (destinationHash: String) -> Unit = {},
     onNavigateToQrScanner: () -> Unit = {},
+    onNavigateToMyIdentity: () -> Unit = {},
     pendingDeepLinkContact: String? = null,
     onDeepLinkContactProcessed: () -> Unit = {},
     onNavigateToConversation: (destinationHash: String) -> Unit = {},
@@ -472,6 +475,8 @@ fun ContactsScreen(
                     }
                     !contactsState.isLoading && !hasContacts -> {
                         EmptyContactsState(
+                            onShowMyCode = onNavigateToMyIdentity,
+                            onScanCode = onNavigateToQrScanner,
                             modifier =
                                 Modifier
                                     .fillMaxSize()
@@ -1410,8 +1415,21 @@ fun LoadingContactsState(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * What the app says to someone who has nobody yet.
+ *
+ * It used to say "Star peers in the Announce Stream or add contacts via QR code".
+ * The announce stream is a screen name, not an idea a person arrives with, and the
+ * sentence describes the app to itself rather than telling anyone what to do. This
+ * is the first screen a new install lands on with nothing in it, so it carries the
+ * two actions that actually connect two people instead.
+ */
 @Composable
-fun EmptyContactsState(modifier: Modifier = Modifier) {
+fun EmptyContactsState(
+    modifier: Modifier = Modifier,
+    onShowMyCode: () -> Unit = {},
+    onScanCode: () -> Unit = {},
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1435,8 +1453,29 @@ fun EmptyContactsState(modifier: Modifier = Modifier) {
             text = stringResource(R.string.contacts_empty_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 32.dp),
         )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = onShowMyCode) {
+            Icon(
+                imageVector = Icons.Default.QrCode,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.contacts_empty_show_code))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedButton(onClick = onScanCode) {
+            Icon(
+                imageVector = Icons.Default.QrCodeScanner,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.contacts_empty_scan_code))
+        }
     }
 }
 
