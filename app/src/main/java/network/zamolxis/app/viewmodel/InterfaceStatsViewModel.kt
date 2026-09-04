@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.os.Build
 import android.util.Log
@@ -94,6 +95,15 @@ class InterfaceStatsViewModel
             context.getSystemService(Context.USB_SERVICE) as UsbManager
         }
 
+        /** Version-aware read of the USB device the permission broadcast is about. */
+        private fun usbDeviceFrom(intent: Intent): UsbDevice? =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(UsbManager.EXTRA_DEVICE, UsbDevice::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+            }
+
         // Broadcast receiver for USB permission results
         private val usbPermissionReceiver =
             object : BroadcastReceiver() {
@@ -102,8 +112,18 @@ class InterfaceStatsViewModel
                     intent: Intent,
                 ) {
                     if (intent.action == ACTION_USB_PERMISSION) {
-                        val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
-                        Log.d(TAG, "USB permission result received: granted=$granted")
+                        // On Android < 13 a runtime-registered receiver for this app-private
+                        // action is implicitly exported, so another app could broadcast it
+                        // with EXTRA_PERMISSION_GRANTED=true. Don't trust that extra: ask the
+                        // OS whether we actually hold the permission for the device. A spoofer
+                        // cannot make usbManager.hasPermission() return true.
+                        val device = usbDeviceFrom(intent)
+                        val claimed = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
+                        val granted = device != null && usbManager.hasPermission(device)
+                        if (claimed && !granted) {
+                            Log.w(TAG, "USB permission broadcast claimed granted but OS disagrees; ignoring (possible spoof)")
+                        }
+                        Log.d(TAG, "USB permission result: osGranted=$granted")
                         if (granted) {
                             // Permission granted - trigger reconnect
                             viewModelScope.launch {
