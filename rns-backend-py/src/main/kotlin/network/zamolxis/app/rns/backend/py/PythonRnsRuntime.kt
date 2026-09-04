@@ -256,6 +256,18 @@ class PythonRnsRuntime(
         storagePath = configDir.absolutePath
         Log.i(TAG, "Wrote RNS config to ${configDir.absolutePath}/config")
 
+        // Opt-in RNS file logging (off unless the marker file exists). Enabled
+        // before Reticulum() so bring-up + path-resolution logs are captured.
+        // Needed because some OEMs (Motorola) mute third-party logcat, hiding the
+        // trace required to diagnose BLE-only reachability. See [RnsDebugLog].
+        if (RnsDebugLog.isEnabled(configDir)) {
+            val logPath = RnsDebugLog.logFile(configDir).absolutePath
+            val level = RnsDebugLog.level(configDir)
+            runCatching { eventBridge.callAttr("enable_file_logging", logPath, level) }
+                .onSuccess { Log.w(TAG, "RNS file logging ENABLED -> $logPath (level $level)") }
+                .onFailure { Log.w(TAG, "Failed to enable RNS file logging", it) }
+        }
+
         // RNS.Transport.find_interfaces() scans <configdir>/interfaces/ for
         // custom interface .py files. Materialise the bundled ones (BLE
         // stack) from the APK before constructing Reticulum so it can

@@ -123,6 +123,32 @@ def apply_android_env_patches():
         )
 
 
+def enable_file_logging(path, level=6):
+    """Route RNS logging to a file so it survives OEMs that mute third-party logcat.
+
+    Motorola (and some other OEMs) drop non-system logcat tags, which hides the
+    RNS path-resolution / announce trace needed to diagnose BLE-only reachability.
+    RNS already supports a file sink via its module globals; point it at a file the
+    app can pull with `run-as`. Off unless Kotlin calls this (gated on a marker
+    file), so production pays nothing.
+
+    :param path: absolute path for the logfile (under the app's files dir).
+    :param level: RNS loglevel 0..7; default 6 (LOG_DEBUG) — enough for path/announce
+        tracing without the full LOG_EXTREME packet firehose that can stall the reactor.
+    """
+    try:
+        RNS.logdest = RNS.LOG_FILE
+        RNS.logfile = path
+        RNS.loglevel = int(level)
+        RNS.log(f"event_bridge: RNS file logging enabled at {path} (level {level})", RNS.LOG_NOTICE)
+    except Exception as e:  # noqa: BLE001
+        # Never let a diagnostic aid break stack bring-up.
+        try:
+            RNS.log(f"event_bridge: failed to enable file logging: {e}", RNS.LOG_WARNING)
+        except Exception:
+            pass
+
+
 # Slot for the KotlinBLEBridge instance. Populated by Kotlin via
 # `set_ble_bridge(...)` after the bridge is constructed; consulted by
 # `ble_modules.android_ble_driver._get_kotlin_bridge()` at driver start.
