@@ -396,12 +396,14 @@ class BleGattClient(
      */
     fun shouldConnect(peerAddress: String): Boolean {
         try {
-            val localAddress = bluetoothAdapter.address ?: return true // Fallback: always connect if we can't get local MAC
-
-            // Android 6+ returns a fixed placeholder here, not the real MAC, so the
-            // comparison below is meaningless and can wrongly make this side wait.
-            // See BleConstants.PLACEHOLDER_ADAPTER_MAC.
-            if (localAddress.equals(BleConstants.PLACEHOLDER_ADAPTER_MAC, ignoreCase = true)) {
+            // Fall back to connecting when the local MAC is unusable: absent, or the
+            // fixed placeholder Android 6+ hands ordinary apps instead of the real
+            // address. Comparing against the placeholder is meaningless and can
+            // wrongly make this side wait. See BleConstants.PLACEHOLDER_ADAPTER_MAC.
+            val localAddress = bluetoothAdapter.address
+            if (localAddress == null ||
+                localAddress.equals(BleConstants.PLACEHOLDER_ADAPTER_MAC, ignoreCase = true)
+            ) {
                 return true
             }
 
