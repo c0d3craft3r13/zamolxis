@@ -1,0 +1,59 @@
+# TEMPORARY diagnostic workflow — delete after the shard-1 hang is found.
+#
+# Why this exists: "Kotlin Tests (Shard 1/4)" hangs deterministically on Linux CI
+# (3/3 runs killed at the job timeout: 15m, then 20m twice) while passing locally
+# on Windows (~10 min, 1742 tests, all green). Job-level results cannot name the
+# hanging class, and runner logs need browser access.
+#
+# Shard 1-of-4 = sorted classes with index % 4 == 1. With -PtestShardTotal=32 the
+# same classes split into index % 32 ∈ {1,5,9,13,17,21,25,29} — eight sub-shards
+# of ~9 classes each, each its own check run, each with a hard 6-minute ceiling.
+# The one that hangs names ~9 suspects instead of 71.
+
+name: DEBUG shard1 bisect
+
+on:
+  push:
+    branches: [ 'zamolxis/**' ]
+
+permissions:
+  contents: read
+
+jobs:
+  shard1-slice:
+    name: "Shard1 slice (i%32=${{ matrix.subshard }})"
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        subshard: [1, 5, 9, 13, 17, 21, 25, 29]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6.3.0
+        with:
+          cache-read-only: false
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Clean AIDL generated code
+        run: |
+          rm -rf app/build/generated/aidl_source_output_dir
+          rm -rf */build/generated/aidl_source_output_dir
+
+      - name: Run sub-shard ${{ matrix.subshard }}
+        run: ./gradlew :app:testExpertNoSentryKotlinBackendDebugUnitTest -PtestShard=${{ matrix.subshard }} -PtestShardTotal=32 --stacktrace --max-workers=4
