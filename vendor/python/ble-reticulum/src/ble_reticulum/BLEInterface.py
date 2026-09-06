@@ -399,6 +399,18 @@ class BLEInterface(Interface):
         self._last_real_data = {}
         self._zombie_timeout = 30.0  # seconds - connection is zombie if no real data for this long
 
+        # Duplicate-identity rejection damping.
+        # Rejecting a duplicate connection is correct, but without backoff the
+        # scanner rediscovers the same address within seconds and the
+        # connect -> handshake -> reject -> disconnect cycle loops at the 5s
+        # connection-attempt rate limit, producing connection churn right next
+        # to whatever the healthy connection is carrying (e.g. an RNS link
+        # handshake). On reject we blacklist ONLY the rejected address for a
+        # bounded window: the healthy connection uses a different address, and
+        # MAC rotation gives the peer a fresh address, so legitimate reconnects
+        # after a real drop are unaffected beyond the window.
+        self._duplicate_reject_backoff = 60.0  # seconds
+
         # Fragmentation
         self.fragmenters = {}  # address -> BLEFragmenter (per MTU)
         self.reassemblers = {}  # address -> BLEReassembler
@@ -1104,6 +1116,15 @@ class BLEInterface(Interface):
                 f"rejecting connection from {address} (Android MAC rotation)",
                 RNS.LOG_WARNING
             )
+            # Dampen the connect-reject loop: blacklist ONLY the rejected
+            # address, never the healthy existing_address, for a bounded
+            # window. Without this the scanner rediscovers the address and the
+            # reject cycle repeats at the 5s attempt rate limit.
+            self.connection_blacklist[address] = (time.time() + self._duplicate_reject_backoff, 0)
+            RNS.log(
+                f"{self} blacklisted duplicate address {address} for {self._duplicate_reject_backoff:.0f}s",
+                RNS.LOG_DEBUG
+            )
             return True
 
         # Either new identity or same MAC - allow connection
@@ -1200,10 +1221,14 @@ class BLEInterface(Interface):
                 RNS.log(f"{self} received duplicate identity handshake from {address} (already known via callback)", RNS.LOG_DEBUG)
                 return True  # Consume the data, don't pass to reassembler
             else:
-                # 16 bytes but doesn't match known identity - log warning but still consume
-                # to avoid passing identity-like data to the reassembler
-                RNS.log(f"{self} received 16-byte data from {address} that differs from known identity, consuming as handshake", RNS.LOG_WARNING)
-                return True  # Consume to prevent reassembler errors
+                # 16 bytes that are NOT the known identity on an established
+                # connection are a legitimate data frame (a fragment tail or a
+                # small control packet), not a handshake: the identity of an
+                # established connection cannot change. Consuming them here
+                # silently corrupts the transfer the reassembler is waiting
+                # for, which surfaces as stalled packets and timed-out links.
+                RNS.log(f"{self} received 16-byte data from {address} that differs from known identity, passing to reassembler", RNS.LOG_DEBUG)
+                return False  # Real data - let _handle_ble_data process it
 
         try:
             # Store central's identity
