@@ -328,7 +328,11 @@ def test_real_resource_progress_reaches_outgoing_bubble(tmp_path: Path) -> None:
         enter_field(driver, "Nickname (optional)", "CI_Receiver")
         driver.click_text("Add")
         driver.click_text("CI_Receiver", timeout=45)
-        driver.click_text("Start Chat")
+        # Opening a contact now lands straight in the conversation — the separate
+        # "Start Chat" button only exists on the announce-detail route. Click it
+        # when it is there, and don't fail when it isn't; the composer assertion
+        # below is what actually proves we reached the conversation either way.
+        dismiss_optional(driver, "Start Chat", timeout=5)
         driver.wait_description("Attach", timeout=30)
 
         payload = hashlib.shake_256(b"zamolxis-transfer-progress-e2e").digest(FILE_SIZE)
