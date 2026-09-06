@@ -17,8 +17,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import network.zamolxis.app.audio.CallRingtoneEffect
 import network.zamolxis.app.rns.api.model.CallState
 import network.zamolxis.app.ui.components.IncomingCallLayout
-import network.zamolxis.app.viewmodel.CallViewModel
 import network.zamolxis.app.ui.model.CallPeerLabel
+import network.zamolxis.app.viewmodel.CallViewModel
 
 /**
  * Incoming call screen with answer/decline options.
@@ -102,4 +102,3 @@ fun IncomingCallScreen(
         onDecline = { viewModel.declineCall() },
     )
 }
-

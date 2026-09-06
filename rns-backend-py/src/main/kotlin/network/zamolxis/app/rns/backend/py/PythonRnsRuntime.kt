@@ -302,8 +302,9 @@ class PythonRnsRuntime(
 
         // Delivery identity. The 64-byte private key is held in memory only;
         // RNS.Identity.from_bytes() reconstructs the keypair.
-        val identityClass = rnsModule["Identity"]
-            ?: error("RNS.Identity not resolvable")
+        val identityClass =
+            rnsModule["Identity"]
+                ?: error("RNS.Identity not resolvable")
         val identity =
             config.deliveryIdentityKey?.let { key ->
                 identityClass.callAttr("from_bytes", key.toPyBytes())
@@ -319,11 +320,12 @@ class PythonRnsRuntime(
         val lxmfStorage = File(config.storagePath, "lxmf").apply { mkdirs() }
         val router = lxmfModule.callAttr("LXMRouter", identity, lxmfStorage.absolutePath)
         lxmRouter = router
-        localDestination = router.callAttr(
-            "register_delivery_identity",
-            identity,
-            config.displayName ?: "",
-        )
+        localDestination =
+            router.callAttr(
+                "register_delivery_identity",
+                identity,
+                config.displayName ?: "",
+            )
 
         // Bypass upstream LXMF's multiprocessing-based stamp generation,
         // which hangs on Android (Chaquopy lacks `sem_open` and the
@@ -443,12 +445,12 @@ class PythonRnsRuntime(
     }
 
     /** Resolve a destination hex hash to its live `RNS.Destination`, or throw [identityNotFound]. */
-    fun requireDestination(hexHash: String): PyObject =
-        destinations[hexHash] ?: featureUnsupportedDestination(hexHash)
+    fun requireDestination(hexHash: String): PyObject = destinations[hexHash] ?: featureUnsupportedDestination(hexHash)
 
     private fun featureUnsupportedDestination(hexHash: String): Nothing =
         throw network.zamolxis.app.rns.api.RnsException(
-            network.zamolxis.app.rns.api.RnsError.IdentityNotFound(hexHash),
+            network.zamolxis.app.rns.api.RnsError
+                .IdentityNotFound(hexHash),
         )
 
     /** Throw [network.zamolxis.app.rns.api.RnsError.BackendNotReady] if [start] hasn't run. */
@@ -560,7 +562,8 @@ internal class StampGeneratorCallback(
         // caller to hand the work back to. Never reached from the main thread.
         val isCancelled = throttledCancellationPredicate(cancellationToken)
         val result =
-            runBlocking(Dispatchers.Default) { // THREADING: allowed — synchronous Chaquopy callback
+            runBlocking(Dispatchers.Default) {
+                // THREADING: allowed — synchronous Chaquopy callback
                 generator.generateStamp(workblock, stampCost, isCancelled)
             }
 

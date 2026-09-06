@@ -148,12 +148,13 @@ class PythonNetworkTransport(
                 Log.w(TAG, "establishLink: cached path looks stale — expiring and rediscovering")
                 runCatching { transport.callAttr("expire_path", pyLxstHash) }
                     .onFailure { Log.w(TAG, "expire_path failed", it) }
-                link = if (awaitPath(transport, pyLxstHash)) {
-                    openLink(destination)
-                } else {
-                    Log.w(TAG, "establishLink: no fresh path after expiring the stale one")
-                    null
-                }
+                link =
+                    if (awaitPath(transport, pyLxstHash)) {
+                        openLink(destination)
+                    } else {
+                        Log.w(TAG, "establishLink: no fresh path after expiring the stale one")
+                        null
+                    }
             }
 
             val active = link != null
@@ -173,8 +174,10 @@ class PythonNetworkTransport(
                 val id = localIdentity
                 if (id != null) {
                     runCatching {
-                        val identified = established.callAttr("identify", id)
-                            ?.toJava(Boolean::class.javaObjectType) ?: false
+                        val identified =
+                            established
+                                .callAttr("identify", id)
+                                ?.toJava(Boolean::class.javaObjectType) ?: false
                         Log.i(TAG, "establishLink: proactive identify=$identified")
                     }.onFailure { Log.w(TAG, "Proactive identify failed", it) }
                 } else {
@@ -250,7 +253,9 @@ class PythonNetworkTransport(
             // Wire format MUST match NativeNetworkTransport: audio is a msgpack
             // map {FIELD_FRAMES(0x01): binary}. Sending the raw frame would make
             // Python<->Kotlin (and Python<->Sideband) voice mutually unintelligible.
-            val packer = org.msgpack.core.MessagePack.newDefaultBufferPacker()
+            val packer =
+                org.msgpack.core.MessagePack
+                    .newDefaultBufferPacker()
             packer.packMapHeader(1)
             packer.packInt(FIELD_FRAMES)
             packer.packBinaryHeader(encodedFrame.size)
@@ -268,7 +273,9 @@ class PythonNetworkTransport(
         runCatching {
             // Wire format MUST match NativeNetworkTransport: a signal is a msgpack
             // map {FIELD_SIGNALLING(0x00): [signal]} (the value is an array).
-            val packer = org.msgpack.core.MessagePack.newDefaultBufferPacker()
+            val packer =
+                org.msgpack.core.MessagePack
+                    .newDefaultBufferPacker()
             packer.packMapHeader(1)
             packer.packInt(FIELD_SIGNALLING)
             packer.packArrayHeader(1)
@@ -293,22 +300,6 @@ class PythonNetworkTransport(
         signalCallback = callback
     }
 
-    /**
-     * Attach a single RNS packet callback to [link] that demuxes inbound frames
-     * and fans them out to [packetCallback] / [signalCallback].
-     *
-     * `RNS.Link.set_packet_callback` takes a `callback(message, packet)` Python
-     * callable; `event_bridge.make_link_packet_handler` wraps a [PyEventCallback]
-     * into one. The [PyEventCallback] reads the `@Volatile` callback fields live,
-     * so it works regardless of whether they were set before or after the link
-     * was established.
-     *
-     * **On-device scope**: the wire framing in [handleIncomingPacket] matches
-     * `NativeNetworkTransport` byte-for-byte, so cross-backend voice is correct
-     * by construction. What still needs a real call to verify is the Chaquopy
-     * round-trip itself — that `event_bridge.make_link_packet_handler`'s closure
-     * actually re-enters Kotlin when RNS fires it on its packet thread.
-     */
     /**
      * Accept an inbound `RNS.Link` from an incoming caller as the active
      * call link. Mirrors `NativeNetworkTransport.acceptInboundLink`.
@@ -341,38 +332,56 @@ class PythonNetworkTransport(
      */
     private fun attachLinkClosedHandler(link: PyObject) {
         runCatching {
-            val sink = PyEventCallback { closedLinkPy ->
-                runCatching {
-                    val wasLocalTeardown = locallyClosingLink === link
-                    Log.i(
-                        TAG,
-                        "Link closed: localTeardown=$wasLocalTeardown",
-                    )
-                    if (wasLocalTeardown) {
-                        locallyClosingLink = null
-                    }
-                    if (activeLink === link) {
-                        activeLink = null
-                    }
-                    if (!wasLocalTeardown) {
-                        // Remote tore down — tell Telephone the call is over.
-                        signalCallback?.invoke(Signalling.STATUS_AVAILABLE)
-                    }
-                }.onFailure { Log.e(TAG, "link-closed dispatch failed", it) }
-            }
+            val sink =
+                PyEventCallback { closedLinkPy ->
+                    runCatching {
+                        val wasLocalTeardown = locallyClosingLink === link
+                        Log.i(
+                            TAG,
+                            "Link closed: localTeardown=$wasLocalTeardown",
+                        )
+                        if (wasLocalTeardown) {
+                            locallyClosingLink = null
+                        }
+                        if (activeLink === link) {
+                            activeLink = null
+                        }
+                        if (!wasLocalTeardown) {
+                            // Remote tore down — tell Telephone the call is over.
+                            signalCallback?.invoke(Signalling.STATUS_AVAILABLE)
+                        }
+                    }.onFailure { Log.e(TAG, "link-closed dispatch failed", it) }
+                }
             val handler = runtime.eventBridge.callAttr("make_link_closed_handler", sink)
             link.callAttr("set_link_closed_callback", handler)
             Log.i(TAG, "Attached RNS link-closed callback")
         }.onFailure { Log.e(TAG, "failed to attach link-closed handler", it) }
     }
 
+    /**
+     * Attach a single RNS packet callback to [link] that demuxes inbound frames
+     * and fans them out to [packetCallback] / [signalCallback].
+     *
+     * `RNS.Link.set_packet_callback` takes a `callback(message, packet)` Python
+     * callable; `event_bridge.make_link_packet_handler` wraps a [PyEventCallback]
+     * into one. The [PyEventCallback] reads the `@Volatile` callback fields live,
+     * so it works regardless of whether they were set before or after the link
+     * was established.
+     *
+     * **On-device scope**: the wire framing in [handleIncomingPacket] matches
+     * `NativeNetworkTransport` byte-for-byte, so cross-backend voice is correct
+     * by construction. What still needs a real call to verify is the Chaquopy
+     * round-trip itself — that `event_bridge.make_link_packet_handler`'s closure
+     * actually re-enters Kotlin when RNS fires it on its packet thread.
+     */
     private fun attachLinkPacketHandler(link: PyObject) {
         runCatching {
-            val sink = PyEventCallback { payload ->
-                runCatching {
-                    handleIncomingPacket(payload.toJava(ByteArray::class.java))
-                }.onFailure { Log.w(TAG, "inbound link packet dispatch failed", it) }
-            }
+            val sink =
+                PyEventCallback { payload ->
+                    runCatching {
+                        handleIncomingPacket(payload.toJava(ByteArray::class.java))
+                    }.onFailure { Log.w(TAG, "inbound link packet dispatch failed", it) }
+                }
             val handler = runtime.eventBridge.callAttr("make_link_packet_handler", sink)
             link.callAttr("set_packet_callback", handler)
             Log.i(TAG, "Attached RNS link packet handler")
@@ -389,14 +398,25 @@ class PythonNetworkTransport(
      */
     private fun handleIncomingPacket(data: ByteArray) {
         if (data.isEmpty()) return
-        val unpacked = runCatching {
-            org.msgpack.core.MessagePack.newDefaultUnpacker(data).unpackValue()
-        }.getOrNull()
+        val unpacked =
+            runCatching {
+                org.msgpack.core.MessagePack
+                    .newDefaultUnpacker(data)
+                    .unpackValue()
+            }.getOrNull()
 
         if (unpacked != null && unpacked.isMapValue) {
             val map = unpacked.asMapValue().map()
-            val signalling = map[org.msgpack.value.ValueFactory.newInteger(FIELD_SIGNALLING.toLong())]
-            val frames = map[org.msgpack.value.ValueFactory.newInteger(FIELD_FRAMES.toLong())]
+            val signalling =
+                map[
+                    org.msgpack.value.ValueFactory
+                        .newInteger(FIELD_SIGNALLING.toLong()),
+                ]
+            val frames =
+                map[
+                    org.msgpack.value.ValueFactory
+                        .newInteger(FIELD_FRAMES.toLong()),
+                ]
             if (signalling != null && signalling.isArrayValue) {
                 for (sig in signalling.asArrayValue()) {
                     signalCallback?.invoke(sig.asIntegerValue().toInt())

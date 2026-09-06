@@ -38,7 +38,6 @@ import javax.inject.Inject
  */
 @Suppress("TooManyFunctions") // Call + PTT controls require many small action methods
 
-
 /** Reasons a Call-again / Call action can fail before or during initiation. */
 enum class CallInitiationFailure {
     INVALID_IDENTITY,
@@ -69,7 +68,6 @@ class CallViewModel
         // The address the caller actually dialled. The telephony seam reports a different
         // hash for the same peer, so this is what we fall back to when no name is known.
         private var dialledHash: String? = null
-
 
         // Expose call state from telephony seam
         val callState: StateFlow<CallState> = telephony.callState
@@ -246,7 +244,6 @@ class CallViewModel
                 }
             }
         }
-
 
         private fun resolvePeerNameSync(identityHash: String) {
             viewModelScope.launch {
