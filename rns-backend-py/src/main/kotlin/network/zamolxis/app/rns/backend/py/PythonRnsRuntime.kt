@@ -562,8 +562,7 @@ internal class StampGeneratorCallback(
         // caller to hand the work back to. Never reached from the main thread.
         val isCancelled = throttledCancellationPredicate(cancellationToken)
         val result =
-            runBlocking(Dispatchers.Default) {
-                // THREADING: allowed — synchronous Chaquopy callback
+            runBlocking(Dispatchers.Default) /* THREADING: allowed — synchronous Chaquopy callback */ {
                 generator.generateStamp(workblock, stampCost, isCancelled)
             }
 
