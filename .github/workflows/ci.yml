@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, 'v[0-9].[0-9]+.x', 'release/**' ]
+    branches: [ main, 'v[0-9].[0-9]+.x', 'release/**', 'zamolxis/**' ]
   pull_request:
-    branches: [ main, 'v[0-9].[0-9]+.x', 'release/**' ]
+    branches: [ main, 'v[0-9].[0-9]+.x', 'release/**', 'zamolxis/**' ]
 
 permissions:
   contents: read
@@ -212,7 +212,11 @@ jobs:
     name: Kotlin Tests (Shard ${{ matrix.shard }}/4)
     needs: [lint, validate-wrapper]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 20m: shards run 8–9m nominally, and a slow runner once pushed a shard past
+    # the old 15m ceiling, killing it mid-run with no failing test (a "cancelled"
+    # job is a timeout, not a test failure). The headroom distinguishes a slow
+    # machine from a real hang without hiding the latter behind a re-run.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:

@@ -16,6 +16,28 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
+    # compileSdk ceiling is 36 (android-37 has no stable SDK platform yet — see the
+    # CEILING note in gradle/libs.versions.toml). The updates below require
+    # compileSdk 37 and CANNOT be merged; without these ignores Dependabot
+    # re-opens them forever (PRs #2, #3, #4 were exactly that). Remove entries
+    # here together with raising compileSdk, not one by one.
+    ignore:
+      # Compose BOM >= 2026.08.00 sets an AAR-metadata floor of compileSdk 37
+      - dependency-name: "androidx.compose:compose-bom"
+        versions: [ ">= 2026.08.00" ]
+      - dependency-name: "androidx.core:core-ktx"
+        versions: [ ">= 1.19.0" ]
+      - dependency-name: "androidx.lifecycle*"
+        versions: [ ">= 2.11.0" ]
+      - dependency-name: "androidx.hilt:hilt-navigation-compose"
+        versions: [ ">= 1.4.0" ]
+      - dependency-name: "com.mikepenz:multiplatform-markdown-renderer*"
+        versions: [ ">= 0.42.0" ]
+      # AGP beyond 9.1.x targets the same preview SDK; revisit with android-37
+      - dependency-name: "com.android.library"
+        versions: [ ">= 9.2.0" ]
+      - dependency-name: "com.android.application"
+        versions: [ ">= 9.2.0" ]
     # Group updates to reduce PR noise
     groups:
       kotlin:
