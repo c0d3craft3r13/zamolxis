@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +29,12 @@ sealed interface AppLockState {
     data class Locked(
         val failedAttempts: Int = 0,
         val busy: Boolean = false,
+        /**
+         * Milliseconds until a PIN will be judged again, or zero when it will
+         * be judged now. Counted down once a second so the pad can say how long
+         * is left rather than silently refusing.
+         */
+        val lockoutRemainingMs: Long = 0L,
     ) : AppLockState
 
     /** Entered correctly. Contents visible until the app next goes away. */
@@ -50,22 +58,63 @@ class AppLockViewModel
     ) : ViewModel() {
         companion object {
             private const val TAG = "AppLockViewModel"
+
+            /** How often the lockout countdown is refreshed on screen. */
+            private const val LOCKOUT_TICK_MS = 1000L
         }
 
         private val _state =
             MutableStateFlow<AppLockState>(
                 if (appLockRepository.isConfigured) {
-                    AppLockState.Locked(appLockRepository.failedAttempts)
+                    lockedState()
                 } else {
                     AppLockState.Disabled
                 },
             )
         val state: StateFlow<AppLockState> = _state.asStateFlow()
 
+        private var lockoutTicker: Job? = null
+
+        init {
+            startLockoutTickerIfNeeded()
+        }
+
         /** Re-lock when the app leaves the foreground. */
         fun onMovedToBackground() {
             if (!appLockRepository.isConfigured) return
-            _state.value = AppLockState.Locked(appLockRepository.failedAttempts)
+            _state.value = lockedState()
+            startLockoutTickerIfNeeded()
+        }
+
+        private fun lockedState(busy: Boolean = false) =
+            AppLockState.Locked(
+                failedAttempts = appLockRepository.failedAttempts,
+                busy = busy,
+                lockoutRemainingMs = appLockRepository.lockoutRemainingMs(),
+            )
+
+        /**
+         * Keep the remaining-time figure on the pad honest.
+         *
+         * Only runs while a lockout is actually outstanding, and stops itself at
+         * zero — a ticker left spinning behind a screen nobody is looking at is
+         * a wakelock the user did not ask for.
+         */
+        private fun startLockoutTickerIfNeeded() {
+            lockoutTicker?.cancel()
+            if (appLockRepository.lockoutRemainingMs() <= 0L) return
+            lockoutTicker =
+                viewModelScope.launch {
+                    while (true) {
+                        delay(LOCKOUT_TICK_MS)
+                        val remaining = appLockRepository.lockoutRemainingMs()
+                        val current = _state.value
+                        if (current is AppLockState.Locked) {
+                            _state.value = current.copy(lockoutRemainingMs = remaining)
+                        }
+                        if (remaining <= 0L) break
+                    }
+                }
         }
 
         /**
@@ -97,12 +146,13 @@ class AppLockViewModel
                 when (appLockRepository.verify(pin)) {
                     PinVerdict.UNLOCK -> _state.value = AppLockState.Unlocked
                     PinVerdict.DURESS -> wipeAndRestart(context)
-                    PinVerdict.WRONG ->
-                        _state.value =
-                            AppLockState.Locked(
-                                failedAttempts = appLockRepository.failedAttempts,
-                                busy = false,
-                            )
+                    // Both land in the same place. The pad is told how long is
+                    // left, not which of the two happened, so a submission made
+                    // during a lockout looks exactly like one made outside it.
+                    PinVerdict.WRONG, PinVerdict.LOCKED_OUT -> {
+                        _state.value = lockedState()
+                        startLockoutTickerIfNeeded()
+                    }
                 }
             }
         }

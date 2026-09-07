@@ -137,6 +137,7 @@ import network.zamolxis.app.ui.screens.flasher.RNodeFlasherScreen
 import network.zamolxis.app.ui.screens.offlinemaps.OfflineMapDownloadScreen
 import network.zamolxis.app.ui.screens.offlinemaps.OfflineMapsScreen
 import network.zamolxis.app.security.AppLockRepository
+import network.zamolxis.app.security.ScreenSecurity
 import network.zamolxis.app.ui.screens.AppLockScreen
 import network.zamolxis.app.ui.screens.onboarding.OnboardingPagerScreen
 import network.zamolxis.app.ui.screens.tcpclient.TcpClientWizardScreen
@@ -301,6 +302,12 @@ class MainActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition { !isThemeReady || !isOnboardingReady }
 
         super.onCreate(savedInstanceState)
+
+        // Before anything is drawn. FLAG_SECURE decides whether Android keeps a
+        // thumbnail of this window for the Recents switcher, and that decision is
+        // made against the flag the window has when the frame is produced — set
+        // it later and the first frames are already capturable.
+        ScreenSecurity.apply(this, window)
 
         // Enable edge-to-edge mode for proper IME insets handling
         enableEdgeToEdge()
@@ -766,6 +773,7 @@ private fun AppLockGate(
                 failedAttempts = lock.failedAttempts,
                 busy = lock.busy,
                 onSubmit = { pin -> appLockViewModel.submitPin(activity, pin) },
+                lockoutRemainingMs = lock.lockoutRemainingMs,
             )
         }
     }

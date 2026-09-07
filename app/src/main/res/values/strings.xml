@@ -1121,6 +1121,9 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., under the MIT licence —
     <string name="app_lock_mismatch">The two entries did not match</string>
     <string name="app_lock_rejected">Pick a different PIN — it must not match your other one</string>
     <string name="app_lock_duress_needs_unlock">Set an unlock PIN first</string>
+    <string name="app_lock_locked_out">Too many attempts. Try again in %1$s</string>
+    <string name="app_lock_block_screenshots">Block screenshots</string>
+    <string name="app_lock_block_screenshots_sub">Also hides Zamolxis from screen recording, casting and the Recents preview</string>
     <string name="about_built_with">Built With</string>
     <string name="about_updates">Updates</string>
     <string name="about_prereleases">Include pre-releases</string>

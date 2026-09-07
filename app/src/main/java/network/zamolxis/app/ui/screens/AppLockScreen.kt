@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import network.zamolxis.app.R
 import network.zamolxis.app.security.AppLockRepository
+import java.util.Locale
 
 /**
  * The PIN pad drawn over the app's contents while it is locked.
@@ -51,6 +52,11 @@ import network.zamolxis.app.security.AppLockRepository
  * @param onSubmit called with the digits entered; the caller decides what they
  *   mean. The field clears on every submission, correct or not, so a wrong
  *   entry leaves nothing on screen to compare against the next attempt.
+ * @param lockoutRemainingMs how long until a PIN will be judged again, or zero.
+ *   Shown as a countdown, but the keypad stays live throughout: the duress PIN
+ *   is honoured during a lockout, and a pad that refused input would take that
+ *   escape away from someone who is being made to unlock the phone — the exact
+ *   situation the second PIN exists for.
  */
 @Composable
 fun AppLockScreen(
@@ -58,6 +64,7 @@ fun AppLockScreen(
     busy: Boolean,
     onSubmit: (String) -> Unit,
     modifier: Modifier = Modifier,
+    lockoutRemainingMs: Long = 0L,
 ) {
     var pin by remember { mutableStateOf("") }
 
@@ -104,13 +111,19 @@ fun AppLockScreen(
 
             Text(
                 text =
-                    if (failedAttempts > 0) {
-                        stringResource(R.string.app_lock_incorrect)
-                    } else {
-                        stringResource(R.string.app_lock_subtitle)
+                    when {
+                        lockoutRemainingMs > 0L ->
+                            stringResource(R.string.app_lock_locked_out, formatRemaining(lockoutRemainingMs))
+                        failedAttempts > 0 -> stringResource(R.string.app_lock_incorrect)
+                        else -> stringResource(R.string.app_lock_subtitle)
                     },
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color =
+                    if (lockoutRemainingMs > 0L) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
             )
 
             Spacer(Modifier.height(32.dp))
@@ -134,6 +147,21 @@ fun AppLockScreen(
         }
     }
 }
+
+/**
+ * A remaining duration as `M:SS`.
+ *
+ * Rounded up, so the final second reads `0:01` rather than `0:00`: a countdown
+ * showing zero while the app is still refusing looks like a bug, and this
+ * screen is the wrong place to make someone wonder whether the app is broken.
+ */
+internal fun formatRemaining(remainingMs: Long): String {
+    val seconds = ((remainingMs + MILLIS_PER_SECOND - 1) / MILLIS_PER_SECOND).coerceAtLeast(0L)
+    return String.format(Locale.ROOT, "%d:%02d", seconds / SECONDS_PER_MINUTE, seconds % SECONDS_PER_MINUTE)
+}
+
+private const val MILLIS_PER_SECOND = 1000L
+private const val SECONDS_PER_MINUTE = 60L
 
 /**
  * One filled dot per digit entered.

@@ -25,6 +25,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import network.zamolxis.app.audio.CallRinger
 import network.zamolxis.app.notifications.CallNotificationHelper
 import network.zamolxis.app.repository.SettingsRepository
+import network.zamolxis.app.security.ScreenSecurity
 import network.zamolxis.app.ui.screens.IncomingCallActivityScreen
 import network.zamolxis.app.ui.theme.ThemeMode
 import kotlinx.coroutines.Job
@@ -78,6 +79,11 @@ class IncomingCallActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // This window shows the caller's name over the keyguard, which makes it
+        // the one screen in the app that a passer-by can see without unlocking
+        // the phone. It carries the same capture setting as everything else.
+        ScreenSecurity.apply(this, window)
 
         currentIdentityHash.value = intent?.getStringExtra(CallNotificationHelper.EXTRA_IDENTITY_HASH)
         currentCallerName.value = intent?.getStringExtra(CallNotificationHelper.EXTRA_CALLER_NAME)

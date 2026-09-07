@@ -1147,6 +1147,9 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., лицензия MIT — 
     <string name="app_lock_mismatch">Введённые PIN не совпали</string>
     <string name="app_lock_rejected">Выберите другой PIN — он не должен совпадать со вторым</string>
     <string name="app_lock_duress_needs_unlock">Сначала задайте PIN разблокировки</string>
+    <string name="app_lock_locked_out">Слишком много попыток. Повторите через %1$s</string>
+    <string name="app_lock_block_screenshots">Запретить скриншоты</string>
+    <string name="app_lock_block_screenshots_sub">Также скрывает Zamolxis от записи экрана, трансляции и превью в «Недавних»</string>
     <string name="about_built_with">Создано с помощью</string>
     <string name="about_updates">Обновления</string>
     <string name="about_prereleases">Включая предрелизы</string>

@@ -38,6 +38,14 @@ import javax.inject.Singleton
  * PIN would make the duress path measurably slower, and a timing difference
  * is exactly the kind of tell that gives away the existence of a second PIN.
  *
+ * ## Why there is a lockout on top of the PBKDF2 cost
+ *
+ * 600k rounds cost roughly a second per guess on a phone, which sounds like a
+ * lot until you multiply it by the ten thousand guesses a 4-digit PIN is
+ * worth: an afternoon. [lockoutRemainingMs] adds a growing refusal after four
+ * consecutive failures, capping at half an hour, which turns that afternoon
+ * into most of a year. The duress PIN is exempt — see [verify].
+ *
  * ## Why these are suspend functions
  *
  * Every entry point that touches a PIN runs 600k rounds of PBKDF2, twice —
@@ -55,6 +63,17 @@ enum class PinVerdict {
 
     /** Neither. Nothing happens beyond the attempt being counted. */
     WRONG,
+
+    /**
+     * Too many wrong entries; the app refuses to judge this one at all.
+     *
+     * Returned for anything but the duress PIN while a lockout is running,
+     * including the correct unlock PIN. The attempt is not counted — a guess
+     * that could never have opened the app is not a guess, and counting it
+     * would let an attacker extend the lockout forever and leave the owner
+     * permanently shut out of their own phone.
+     */
+    LOCKED_OUT,
 }
 
 @Singleton
@@ -70,6 +89,8 @@ class AppLockRepository
             private const val KEY_DURESS_HASH = "duress_hash"
             private const val KEY_DURESS_SALT = "duress_salt"
             private const val KEY_FAILED_ATTEMPTS = "failed_attempts"
+            private const val KEY_LOCKOUT_UNTIL = "lockout_until"
+            private const val KEY_LOCKOUT_STARTED = "lockout_started"
 
             /** Shortest PIN we accept. Four digits is the floor people expect. */
             const val MIN_PIN_LENGTH = 4
@@ -88,6 +109,35 @@ class AppLockRepository
              * chosen against the same OWASP guidance.
              */
             private const val PBKDF2_ITERATIONS = 600_000
+
+            /**
+             * Wrong entries allowed before the lockout starts.
+             *
+             * Four, because people mistype PINs and the first few failures are
+             * almost always the owner's own thumbs, not an attack.
+             */
+            const val FREE_ATTEMPTS = 4
+
+            /**
+             * How long the app refuses to judge a PIN after the 5th, 6th, …
+             * consecutive failure, in milliseconds. The last entry repeats.
+             *
+             * PBKDF2 alone is not a rate limit. 600k rounds cost about a second
+             * on a phone, so an attacker with a finger and patience walks the
+             * whole ten-thousand-key space of a 4-digit PIN in a few hours.
+             * With this ladder they get one usable guess per window, and at the
+             * 30-minute cap that is 48 a day — the same space now takes most of
+             * a year.
+             */
+            private val LOCKOUT_LADDER_MS =
+                longArrayOf(
+                    30_000L,
+                    60_000L,
+                    120_000L,
+                    300_000L,
+                    900_000L,
+                    1_800_000L,
+                )
         }
 
         private val prefs: SharedPreferences
@@ -107,6 +157,32 @@ class AppLockRepository
             private set(value) = prefs.edit().putInt(KEY_FAILED_ATTEMPTS, value).apply()
 
         /**
+         * Milliseconds left before a PIN will be judged again; zero when none.
+         *
+         * Persisted as a wall-clock deadline rather than kept in memory, because
+         * the alternative is a lockout that a force-stop clears — and force-stop
+         * is available to anyone holding the phone.
+         *
+         * ## Clock tampering
+         *
+         * Wall-clock is the only timebase Android offers that survives both a
+         * process death and a reboot: `elapsedRealtime` restarts at zero when the
+         * phone does. So the deadline can be escaped by moving the system clock
+         * forward, which needs leaving the app and entering Settings. Moving it
+         * *backwards* is handled — a clock now earlier than the moment the
+         * lockout began is a clock that was moved, and the full duration is
+         * served again rather than trusted away. This is a speed bump on the
+         * physical-access path, not a seal; the seal is the duress PIN.
+         */
+        fun lockoutRemainingMs(now: Long = System.currentTimeMillis()): Long {
+            val until = prefs.getLong(KEY_LOCKOUT_UNTIL, 0L)
+            if (until == 0L) return 0L
+            val started = prefs.getLong(KEY_LOCKOUT_STARTED, 0L)
+            if (now < started) return until - started
+            return (until - now).coerceAtLeast(0L)
+        }
+
+        /**
          * Set or replace the unlock PIN.
          *
          * @return false when the PIN is too short, too long, or equal to the
@@ -121,6 +197,7 @@ class AppLockRepository
                     false
                 } else {
                     store(pin, KEY_UNLOCK_HASH, KEY_UNLOCK_SALT)
+                    clearLockout()
                     failedAttempts = 0
                     true
                 }
@@ -146,7 +223,11 @@ class AppLockRepository
 
         /** Remove the duress PIN, leaving the unlock PIN in place. */
         fun clearDuressPin() {
-            prefs.edit().remove(KEY_DURESS_HASH).remove(KEY_DURESS_SALT).apply()
+            prefs
+                .edit()
+                .remove(KEY_DURESS_HASH)
+                .remove(KEY_DURESS_SALT)
+                .apply()
         }
 
         /** Remove both PINs. The app stops asking. */
@@ -171,25 +252,60 @@ class AppLockRepository
 
             val unlockMatch = matches(pin, KEY_UNLOCK_HASH, KEY_UNLOCK_SALT)
             val duressMatch = hasDuressPin && matches(pin, KEY_DURESS_HASH, KEY_DURESS_SALT)
+            val lockedOut = lockoutRemainingMs() > 0L
 
             return when {
+                // The duress PIN is honoured even mid-lockout, and deliberately
+                // before the lockout is consulted. The lockout exists to slow an
+                // attacker guessing; it must never be the thing that stands
+                // between someone being made to unlock their phone and the one
+                // PIN that helps them. An attacker who guesses their way into
+                // the duress PIN gets the wipe, which is the correct outcome.
+                duressMatch -> PinVerdict.DURESS
+                lockedOut -> PinVerdict.LOCKED_OUT
                 // Unlock wins a tie. A tie cannot happen — the setters refuse
                 // equal PINs — but if one ever did, opening the app is the
                 // failure that loses no data.
                 unlockMatch -> {
+                    clearLockout()
                     failedAttempts = 0
                     PinVerdict.UNLOCK
                 }
-                duressMatch -> PinVerdict.DURESS
                 else -> {
-                    failedAttempts += 1
+                    val attempts = failedAttempts + 1
+                    failedAttempts = attempts
+                    startLockoutFor(attempts)
                     PinVerdict.WRONG
                 }
             }
         }
 
-        private fun isAcceptable(pin: String): Boolean =
-            pin.length in MIN_PIN_LENGTH..MAX_PIN_LENGTH && pin.all { it.isDigit() }
+        /**
+         * Begin the lockout this many consecutive failures has earned, if any.
+         *
+         * Rewritten on every failure past the threshold rather than extended, so
+         * the deadline always reflects the current rung of the ladder.
+         */
+        private fun startLockoutFor(attempts: Int) {
+            if (attempts <= FREE_ATTEMPTS) return
+            val rung = (attempts - FREE_ATTEMPTS - 1).coerceAtMost(LOCKOUT_LADDER_MS.lastIndex)
+            val now = System.currentTimeMillis()
+            prefs
+                .edit()
+                .putLong(KEY_LOCKOUT_STARTED, now)
+                .putLong(KEY_LOCKOUT_UNTIL, now + LOCKOUT_LADDER_MS[rung])
+                .apply()
+        }
+
+        private fun clearLockout() {
+            prefs
+                .edit()
+                .remove(KEY_LOCKOUT_UNTIL)
+                .remove(KEY_LOCKOUT_STARTED)
+                .apply()
+        }
+
+        private fun isAcceptable(pin: String): Boolean = pin.length in MIN_PIN_LENGTH..MAX_PIN_LENGTH && pin.all { it.isDigit() }
 
         private fun store(
             pin: String,
