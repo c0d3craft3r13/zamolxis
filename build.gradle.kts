@@ -2,12 +2,12 @@
 plugins {
     id("com.android.application") version "9.1.0" apply false
     id("com.android.library") version "9.1.0" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "2.3.21" apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.4.10" apply false
     // Keep in lockstep with the `hilt` version in gradle/libs.versions.toml — the
     // plugin and the runtime artifacts are released as a set.
     id("com.google.dagger.hilt.android") version "2.60.1" apply false
     id("com.google.devtools.ksp") version "2.3.6" apply false
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.21" apply false
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.10" apply false
     id("io.sentry.android.gradle") version "6.1.0" apply false
     // Chaquopy — applied ONLY by :rns-backend-py (module-level, never at :app level)
     // so the kotlinBackend flavor's classpath is never polluted with the Python
