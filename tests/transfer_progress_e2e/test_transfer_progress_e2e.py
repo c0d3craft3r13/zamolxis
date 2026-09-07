@@ -62,6 +62,39 @@ def broadcast(driver: AdbUiDriver, action: str, **extras: str) -> None:
     driver.adb(*args)
 
 
+def allow_screen_capture(driver: AdbUiDriver) -> None:
+    """Let `screencap` see the app, so the evidence screenshots are not black.
+
+    The app sets FLAG_SECURE by default, which is the point: it blocks
+    screenshots, screen recording and the Recents thumbnail. It also blocks
+    `adb shell screencap`, so without this the artifacts this test attaches
+    would be blank frames and `capture_verified_progress` would never see one
+    over its size floor.
+
+    Order matters twice over. `pm clear` above wipes the preference back to its
+    secure default, so this has to come after it. And MainActivity reads the
+    flag once in onCreate, so it has to come before `am start` — flipping it
+    afterwards does nothing until the activity is recreated. The app is stopped
+    at this point, which is why the broadcast carries
+    FLAG_INCLUDE_STOPPED_PACKAGES (0x00000020); without it the system drops
+    broadcasts to a package in the stopped state.
+    """
+    driver.adb(
+        "shell",
+        "am",
+        "broadcast",
+        "-n",
+        RECEIVER,
+        "-a",
+        "network.zamolxis.test.SET_SCREEN_CAPTURE",
+        "--es",
+        "allow",
+        "true",
+        "-f",
+        "0x00000020",
+    )
+
+
 def wait_for_log_reply(
     driver: AdbUiDriver,
     action: str,
@@ -285,6 +318,7 @@ def test_real_resource_progress_reaches_outgoing_bubble(tmp_path: Path) -> None:
         driver.adb("install", "-r", str(apk), timeout=180)
         driver.adb("shell", "pm", "clear", PKG)
         driver.adb("logcat", "-c")
+        allow_screen_capture(driver)
         driver.adb("shell", "am", "start", "-n", ACTIVITY)
         complete_onboarding(driver)
 
