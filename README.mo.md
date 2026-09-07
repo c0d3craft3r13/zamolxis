@@ -4,7 +4,7 @@
 
 # Zamolxis
 
-**[Русский](README.md) | [English](README.en.md) | Română**
+**[Русский](README.md) | [English](README.en.md) | Moldovenească**
 
 [![CI](https://github.com/c0d3craft3r13/zamolxis/actions/workflows/ci.yml/badge.svg)](https://github.com/c0d3craft3r13/zamolxis/actions/workflows/ci.yml)
 
