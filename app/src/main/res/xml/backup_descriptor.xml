@@ -18,4 +18,20 @@
     <!-- Python RNS transport_identity (private key) + ratchets; keep off backups.
          See backup_rules.xml for the full rationale. -->
     <exclude domain="file" path="reticulum" />
+    <!-- The app-lock PINs. `zamolxis_app_lock.xml` holds `duress_hash` and
+         `duress_salt` under those literal names, so backing it up tells anyone
+         who reads the backup that a duress PIN exists — which is the one fact
+         the duress PIN depends on nobody knowing — and hands them a salted
+         verifier they can brute-force offline, where the 600k PBKDF2 rounds
+         that make a 4-digit PIN expensive on a phone cost an attacker with a
+         cluster very little. It is excluded, not just for that: the data it
+         guards (zamolxis_database) is excluded too, so a restored PIN would
+         guard nothing. -->
+    <exclude domain="sharedpref" path="zamolxis_app_lock.xml" />
+    <!-- LXMF forward-secrecy ratchets (private keys) in the kotlinBackend's
+         routing store; the rest of the file is re-derivable from the mesh.
+         See backup_rules.xml for the full rationale. -->
+    <exclude domain="database" path="reticulum.db" />
+    <exclude domain="database" path="reticulum.db-wal" />
+    <exclude domain="database" path="reticulum.db-shm" />
 </full-backup-content>

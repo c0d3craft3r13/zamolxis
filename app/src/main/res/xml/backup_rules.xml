@@ -11,12 +11,16 @@
     (the wrapped passphrase) is excluded for the same reason.
     Consequence, and it is deliberate: message history, conversations and contacts
     do not survive a device transfer. There is no encrypted-export flow yet.
-  - Other Room databases: BACKED UP
-    * interface_database: user-configured RNS interfaces.
-    * reticulum.db: RNS routing state (paths, announces, packet
-      hashlist, tunnels, known destinations, identity ratchets,
-      destination ratchets for LXMF forward secrecy).
-  - SharedPreferences: BACKED UP
+  - reticulum.db: EXCLUDED. It is the kotlinBackend's routing store, and alongside
+    the re-derivable parts (paths, announces, packet hashlist, tunnels, known
+    destinations) it holds identity_ratchets and destination_ratchets — the
+    private keys behind LXMF forward secrecy — in a plain Room database. Backing
+    those up cancels the property they exist to provide.
+  - interface_database: BACKED UP. User-configured RNS interfaces; losing them on
+    a device transfer means reconfiguring every hub by hand, and it holds no key
+    material.
+  - SharedPreferences: BACKED UP, except zamolxis_app_lock.xml — that file's key
+    names alone (duress_hash, duress_salt) disclose that a duress PIN exists.
   - Files under files/: BACKED UP apart from the database passphrase
   - Cache: EXCLUDED (Android default)
 
@@ -52,6 +56,32 @@
         <exclude domain="file" path="zamolxis_database.key" />
         <!-- Python RNS private key + forward-secrecy ratchets; never to the cloud. -->
         <exclude domain="file" path="reticulum" />
+        <!-- The app-lock PINs. `zamolxis_app_lock.xml` holds `duress_hash` and
+             `duress_salt` under those literal names, so backing it up tells anyone
+             who reads the backup that a duress PIN exists — which is the one fact
+             the duress PIN depends on nobody knowing — and hands them a salted
+             verifier they can brute-force offline, where the 600k PBKDF2 rounds
+             that make a 4-digit PIN expensive on a phone cost an attacker with a
+             cluster very little. It is excluded, not just for that: the data it
+             guards (zamolxis_database) is excluded too, so a restored PIN would
+             guard nothing. -->
+        <exclude domain="sharedpref" path="zamolxis_app_lock.xml" />
+        <!-- reticulum.db, the kotlinBackend's routing store. It holds
+             `identity_ratchets` and `destination_ratchets` — the X25519 private
+             keys that give LXMF its forward secrecy, in a plain Room database
+             with no SQLCipher over it. Forward secrecy means precisely that
+             those keys do not outlive their use; a copy sitting in cloud backup
+             is the one place they must never outlive it, because an adversary
+             holding the backup and any recorded ciphertext can then read
+             traffic the ratchet was rotated to protect. This is the same leak
+             `files/reticulum` was excluded for on the Python side, one flavor
+             over. Everything else in the file — paths, tunnels, the announce
+             cache, the packet hashlist — is re-derivable from the mesh, so
+             excluding the whole database costs a few minutes of re-announce and
+             nothing else. -->
+        <exclude domain="database" path="reticulum.db" />
+        <exclude domain="database" path="reticulum.db-wal" />
+        <exclude domain="database" path="reticulum.db-shm" />
     </cloud-backup>
 
     <device-transfer>
@@ -65,5 +95,31 @@
         <exclude domain="file" path="zamolxis_database.key" />
         <!-- Python RNS private key + forward-secrecy ratchets; never off the device. -->
         <exclude domain="file" path="reticulum" />
+        <!-- The app-lock PINs. `zamolxis_app_lock.xml` holds `duress_hash` and
+             `duress_salt` under those literal names, so backing it up tells anyone
+             who reads the backup that a duress PIN exists — which is the one fact
+             the duress PIN depends on nobody knowing — and hands them a salted
+             verifier they can brute-force offline, where the 600k PBKDF2 rounds
+             that make a 4-digit PIN expensive on a phone cost an attacker with a
+             cluster very little. It is excluded, not just for that: the data it
+             guards (zamolxis_database) is excluded too, so a restored PIN would
+             guard nothing. -->
+        <exclude domain="sharedpref" path="zamolxis_app_lock.xml" />
+        <!-- reticulum.db, the kotlinBackend's routing store. It holds
+             `identity_ratchets` and `destination_ratchets` — the X25519 private
+             keys that give LXMF its forward secrecy, in a plain Room database
+             with no SQLCipher over it. Forward secrecy means precisely that
+             those keys do not outlive their use; a copy sitting in cloud backup
+             is the one place they must never outlive it, because an adversary
+             holding the backup and any recorded ciphertext can then read
+             traffic the ratchet was rotated to protect. This is the same leak
+             `files/reticulum` was excluded for on the Python side, one flavor
+             over. Everything else in the file — paths, tunnels, the announce
+             cache, the packet hashlist — is re-derivable from the mesh, so
+             excluding the whole database costs a few minutes of re-announce and
+             nothing else. -->
+        <exclude domain="database" path="reticulum.db" />
+        <exclude domain="database" path="reticulum.db-wal" />
+        <exclude domain="database" path="reticulum.db-shm" />
     </device-transfer>
 </data-extraction-rules>
