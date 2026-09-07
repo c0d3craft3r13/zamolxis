@@ -364,7 +364,11 @@ jobs:
             zamolxis-*.apk.sha256
             zamolxis-*.aab
             zamolxis-*.aab.sha256
-          draft: true
+          # Published on the tag, not staged for review. The gate this used to
+          # provide is now the build itself: the rename step fails the run when
+          # it collects no APKs, which is the failure that previously produced
+          # empty releases, so a run that reaches this step has assets to ship.
+          draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
           generate_release_notes: true
           body: |
