@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import network.zamolxis.app.audio.CallRingtoneEffect
 import network.zamolxis.app.rns.api.model.CallState
 import network.zamolxis.app.ui.components.IncomingCallLayout
+import network.zamolxis.app.ui.model.CallPeerLabel
 import network.zamolxis.app.viewmodel.CallViewModel
 
 /**
@@ -96,16 +97,8 @@ fun IncomingCallScreen(
 
     IncomingCallLayout(
         // The peer name arrives asynchronously; until it does, the hash stands in.
-        displayName = peerName ?: formatIncomingHash(identityHash),
+        displayName = peerName ?: CallPeerLabel.shortenHash(identityHash),
         onAnswer = handleAnswer,
         onDecline = { viewModel.declineCall() },
     )
-}
-
-internal fun formatIncomingHash(hash: String): String {
-    return if (hash.length > 12) {
-        "${hash.take(6)}...${hash.takeLast(6)}"
-    } else {
-        hash
-    }
 }

@@ -1099,6 +1099,19 @@ class KotlinBLEBridge(
                 return true
             }
 
+            // Android 6+ hands ordinary apps a fixed placeholder, not the real
+            // adapter MAC. Comparing that against the peer's rotating random address
+            // can tell BOTH devices to wait, so neither ever becomes central and the
+            // link never forms. Attempt the connection and let dedup sort it out.
+            if (localAddress.equals(BleConstants.PLACEHOLDER_ADAPTER_MAC, ignoreCase = true)) {
+                Log.w(
+                    TAG,
+                    "Local MAC is the Android placeholder ($localAddress); MAC tie-break is not " +
+                        "meaningful, attempting connection to $peerAddress and relying on dedup",
+                )
+                return true
+            }
+
             // Strip colons and convert to lowercase for comparison
             val localMacStripped = localAddress.replace(":", "").lowercase()
             val peerMacStripped = peerAddress.replace(":", "").lowercase()
@@ -1376,16 +1389,14 @@ class KotlinBLEBridge(
                         onSuccess = { Log.v(TAG, "Fragment sent via central to $targetAddress") },
                         onFailure = { Log.e(TAG, "Failed to send fragment via central to $targetAddress", it) },
                     ) ?: Log.w(TAG, "Cannot send via central - Bluetooth not available")
-                }
-                // Otherwise use peripheral connection (notify their TX)
-                else if (usePeripheral) {
+                } else if (usePeripheral) {
+                    // Otherwise use the peripheral connection (notify their TX).
                     gattServer?.notifyCentrals(data, targetAddress)?.fold(
                         onSuccess = { Log.v(TAG, "Fragment sent via peripheral to $targetAddress") },
                         onFailure = { Log.e(TAG, "Failed to send fragment via peripheral to $targetAddress", it) },
                     ) ?: Log.w(TAG, "Cannot send via peripheral - Bluetooth not available")
-                }
-                // Both paths blocked during deduplication
-                else if (peer.deduplicationState != DeduplicationState.NONE) {
+                } else if (peer.deduplicationState != DeduplicationState.NONE) {
+                    // Both paths blocked during deduplication.
                     Log.w(TAG, "Cannot send to $targetAddress - deduplication in progress (state=${peer.deduplicationState})")
                 }
             }
@@ -1732,12 +1743,13 @@ class KotlinBLEBridge(
 
         val centralMtu = centralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU
         val peripheralMtu = peripheralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU
-        val preferredRole = preferredBleRole(
-            centralMtu,
-            peripheralMtu,
-            localIdentityBytes.toHex(),
-            peerIdentity,
-        )
+        val preferredRole =
+            preferredBleRole(
+                centralMtu,
+                peripheralMtu,
+                localIdentityBytes.toHex(),
+                peerIdentity,
+            )
 
         return peer.stateMutex.withLock {
             if (preferredRole == PreferredBleRole.CENTRAL) {
@@ -1799,10 +1811,11 @@ class KotlinBLEBridge(
                 peer.isPeripheral = true
                 peripheralPeerMtus[address] = mtu
             }
-            peer.mtu = maxOf(
-                centralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU,
-                peripheralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU,
-            )
+            peer.mtu =
+                maxOf(
+                    centralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU,
+                    peripheralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU,
+                )
             // Update RSSI if we got a valid one (might be first connection as central)
             if (rssiAtConnection != -100) {
                 peer.rssi = rssiAtConnection
@@ -2093,24 +2106,26 @@ class KotlinBLEBridge(
         mtu: Int,
         isCentral: Boolean,
     ) {
-        val effectiveMtu = peersMutex.withLock {
-            val peer = connectedPeers[address]
-            if (peer != null) {
-                if (isCentral) {
-                    centralPeerMtus[address] = mtu
+        val effectiveMtu =
+            peersMutex.withLock {
+                val peer = connectedPeers[address]
+                if (peer != null) {
+                    if (isCentral) {
+                        centralPeerMtus[address] = mtu
+                    } else {
+                        peripheralPeerMtus[address] = mtu
+                    }
+                    peer.mtu =
+                        maxOf(
+                            centralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU,
+                            peripheralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU,
+                        )
+                    Log.d(TAG, "MTU updated for $address: ${peer.mtu}")
+                    peer.mtu
                 } else {
-                    peripheralPeerMtus[address] = mtu
+                    mtu
                 }
-                peer.mtu = maxOf(
-                    centralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU,
-                    peripheralPeerMtus[address] ?: BleConstants.MIN_USABLE_MTU,
-                )
-                Log.d(TAG, "MTU updated for $address: ${peer.mtu}")
-                peer.mtu
-            } else {
-                mtu
             }
-        }
         // Python driver sizes its fragmenter/reassembler on each MTU update.
         // Fire outside the mutex so a slow Python callback doesn't stall other
         // peers' connection callbacks waiting for the same lock.
@@ -2206,8 +2221,10 @@ class KotlinBLEBridge(
         if (duplicateCallback != null) {
             try {
                 val identityBytes = identityHash.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-                val isDuplicate = duplicateCallback.callAttr("__call__", address, identityBytes)
-                    ?.toBoolean() == true
+                val isDuplicate =
+                    duplicateCallback
+                        .callAttr("__call__", address, identityBytes)
+                        ?.toBoolean() == true
                 if (isDuplicate) {
                     Log.w(
                         TAG,

@@ -267,6 +267,58 @@ class MessagingViewModel
         // Send-path error events for UI feedback: a payload too large to fit in
         // memory, or a post-quantum refusal. Composer-side problems (a file that
         // could not be read) are reported by the picker that hit them.
+
+        /**
+         * Refuse a message the chosen propagation node will not accept.
+         *
+         * A relay advertises the largest message it stores; the app already
+         * parses that into [RelayInfo.transferLimitKb] and shows it on the node
+         * card, but nothing used to compare it against what is being sent. The
+         * node then drops what it cannot hold and says nothing back, so the
+         * message stays under a cloud icon forever — reproduced with a node
+         * advertising 256 KB and photos several times that, where the text sent
+         * alongside them arrived instantly.
+         *
+         * Only relevant when the message can actually reach the relay: the
+         * configured method is PROPAGATED, or delivery is DIRECT with the
+         * fall-back to propagation enabled. Attachment bytes are compared rather
+         * than the exact LXMF frame — the framing overhead is small next to the
+         * payload, and erring on the side of letting a borderline message
+         * through keeps this from blocking sends the node would have taken.
+         *
+         * @return true when the send may proceed.
+         */
+        private suspend fun relayAcceptsPayload(
+            deliveryMethod: DeliveryMethod,
+            tryPropagationOnFail: Boolean,
+            attachmentBytes: Long,
+        ): Boolean {
+            val relayMayBeUsed =
+                deliveryMethod == DeliveryMethod.PROPAGATED ||
+                    (deliveryMethod == DeliveryMethod.DIRECT && tryPropagationOnFail)
+            val limitBytes =
+                propagationNodeManager.currentRelay.value
+                    ?.transferLimitKb
+                    ?.let { it.toLong() * 1024L }
+            val overLimit =
+                attachmentBytes > 0L &&
+                    relayMayBeUsed &&
+                    limitBytes != null &&
+                    attachmentBytes > limitBytes
+
+            if (overLimit) {
+                Log.w(TAG, "Refusing send: $attachmentBytes bytes exceeds relay limit of $limitBytes")
+                _fileAttachmentError.emit(
+                    applicationContext.getString(
+                        R.string.messaging_relay_limit_exceeded,
+                        formatBytesHelper(attachmentBytes),
+                        formatBytesHelper(limitBytes),
+                    ),
+                )
+            }
+            return !overLimit
+        }
+
         private val _fileAttachmentError = MutableSharedFlow<String>()
         val fileAttachmentError: SharedFlow<String> = _fileAttachmentError.asSharedFlow()
 
@@ -1272,6 +1324,9 @@ class MessagingViewModel
                             voiceBytes = voiceBytes,
                             defaultMethod = defaultMethod,
                         )
+                    if (!relayAcceptsPayload(deliveryMethod, tryPropOnFail, totalAttachmentBytes)) {
+                        return@launch
+                    }
                     val deliveryMethodString = deliveryMethod.toStorageString()
 
                     // Convert file attachments to protocol format: List<Pair<String, ByteArray>>
@@ -2109,10 +2164,11 @@ class MessagingViewModel
         /**
          * Send a message with an image directly, bypassing the single-image StateFlows.
          * Used by multi-image share to send each image as a separate message.
+         *
+         * ReturnCount is suppressed: the post-quantum refusal is a guard clause
+         * alongside the existing validation guards. Folding them into nesting
+         * would bury the send call several levels deep for no gain in clarity.
          */
-        // ReturnCount: the post-quantum refusal is a guard clause alongside the
-        // existing validation guards. Folding them into nesting would bury the
-        // send call several levels deep for no gain in clarity.
         @Suppress("ReturnCount")
         private suspend fun sendImageMessageDirect(
             destinationHash: String,
@@ -2643,11 +2699,12 @@ class MessagingViewModel
          * @param payload everything the user is sending — text, attachments and the
          *   quoted text of a reply. All of it goes inside the seal, so the layer has
          *   to be handed all of it.
+         *
+         * ReturnCount is suppressed: three guards and the result. Each guard is a
+         * distinct reason the layer cannot run, and each resolves differently against
+         * the mode — collapsing them would lose exactly the distinction that keeps
+         * REQUIRED from sending plaintext.
          */
-        // ReturnCount: three guards and the result. Each guard is a distinct reason
-        // the layer cannot run, and each resolves differently against the mode —
-        // collapsing them would lose exactly the distinction that keeps REQUIRED
-        // from sending plaintext.
         @Suppress("ReturnCount")
         private suspend fun preparePqSend(
             destinationHash: String,
@@ -2740,13 +2797,15 @@ class MessagingViewModel
          * updating the database with the new message hash.
          *
          * @param messageId The ID (hash) of the failed message to retry
+         *
+         * Retry reconstructs every supported persisted attachment form and
+         * deliberately keeps the lifecycle in one coroutine so status restoration
+         * cannot be skipped. CyclomaticComplexMethod is suppressed because the
+         * post-quantum guard adds one more branch to a function that is long by
+         * design — splitting it would move the status restoration out of the
+         * coroutine that owns it, which is the bug the single-coroutine shape
+         * exists to prevent.
          */
-        // Retry reconstructs every supported persisted attachment form and deliberately
-        // keeps the lifecycle in one coroutine so status restoration cannot be skipped.
-        // CyclomaticComplexMethod: the post-quantum guard adds one more branch to a
-        // function that is long by design — splitting it would move the status
-        // restoration out of the coroutine that owns it, which is the bug the
-        // single-coroutine shape exists to prevent.
         @Suppress("LongMethod", "CyclomaticComplexMethod")
         fun retryFailedMessage(messageId: String) {
             if (!retriesInProgress.add(messageId)) return

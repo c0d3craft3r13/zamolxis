@@ -283,6 +283,11 @@ class SettingsViewModelIncomingMessageLimitTest {
                 mockk<PqKeyRepository>().also {
                     coEvery { it.rotateOurKeyPair(any()) } returns null
                 },
+            vpnStatusMonitor =
+                mockk<network.zamolxis.app.service.manager.VpnStatusMonitor>().also {
+                    every { it.start() } just Runs
+                    every { it.vpnActive } returns MutableStateFlow(false)
+                },
         )
 
     // ========== Initial State Tests ==========

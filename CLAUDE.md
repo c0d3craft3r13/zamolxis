@@ -19,18 +19,54 @@ in this repo.
 | `:micron` | Micron markup parser/renderer for NomadNet. |
 | `:rns-stats` | Interface statistics. |
 | `:detekt-rules` | Project-specific detekt rules (see below). |
+| `:vendor:*` | Third-party sources built from this repo — see `vendor/PROVENANCE.md`. |
+
+The Reticulum/LXMF/LXST stack is **not a dependency coordinate** — its sources live in
+`vendor/` and build as Gradle modules (`:vendor:reticulum-kt:rns-core`,
+`:vendor:lxmf-kt:lxmf-core`, `:vendor:lxst-kt:lxst`, …). The Python flavor's RNS, LXMF and
+ble-reticulum are vendored the same way under `vendor/python/` and pip-installed from
+there, not from `git+https://…`. There is no JitPack repository, no version-catalog alias
+and no git URL for any of them; do not add one back. `vendor/PROVENANCE.md` records
+upstream versions and commits, the local patches carried on top, the source audit, and
+how to re-sync. Vendored code is held out of detekt/ktlint/CPD and
+`audit-dispatchers.sh` on purpose: reformatting it would destroy the diffability
+vendoring exists for.
 
 Two processes: UI, and the `:reticulum` foreground service. **Python/Chaquopy must
 never load in the UI process.** Backend choice is a Gradle product flavor
 (`kotlinBackend` / `pythonBackend`) with flavor-specific source sets.
 
+## Two audiences, one codebase
+
+There are two shipped products, and they differ only in how much of the machine room is
+on screen — same code, same protocol, same vendored stack:
+
+| Flavor | Product | applicationId | Label |
+|---|---|---|---|
+| `expert` | Zamolxis | `network.zamolxis.app` | `Zamolxis` |
+| `mayak` | Маяк | `network.zamolxis.app.mayak` | `Маяк` |
+
+`audience` is the **first** flavor dimension, because dimension order is priority and
+Маяк has to override the `app_name` the `rnsImpl` flavors set. That is also why every
+variant name now starts with the audience: `assembleExpertNoSentryPythonBackendDebug`.
+CI builds `expert`; Маяк is the same variants with `Mayak` in place of `Expert`.
+
+What Маяк hides is one short list in `AudienceProfile` — not a fork, and not scattered
+`BuildConfig.SIMPLE_UI` checks. Most of the work predates it: `NetworkCard`,
+`IdentityCard` and the RNode/propagation cards were already behind the developer gate
+(seven taps on the version in About) so the app "reads as a plain messenger by default".
+
 ## Build & test
 
 ```bash
-./gradlew :app:assembleNoSentryKotlinBackendDebug
-./gradlew :app:testNoSentryKotlinBackendDebugUnitTest
+./gradlew :app:assembleExpertNoSentryKotlinBackendDebug
+./gradlew :app:testExpertNoSentryKotlinBackendDebugUnitTest
 ./gradlew detekt ktlintCheck cpdCheck
 ```
+
+Anything touching `:vendor:lxst-kt:lxst` needs the **Android NDK** (`ndkVersion` is
+pinned in that module's `build.gradle.kts`) and CMake ≥ 3.22 — its JNI layer is compiled
+from C/C++ on every build, where it used to arrive as a prebuilt `.aar`.
 
 Anything touching `:rns-backend-py` needs **Python 3.11 on PATH** — Chaquopy 17
 accepts no other minor version, and `installDebugPythonRequirements` fails the

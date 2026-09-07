@@ -194,6 +194,150 @@ class AppLockRepositoryTest {
             assertEquals(PinVerdict.UNLOCK, repository.verify("1234"))
         }
 
+    // ---- Lockout after repeated failures -------------------------------------
+
+    /**
+     * The first few failures are the owner's own thumbs. Nothing should happen
+     * until it stops looking like a mistype.
+     */
+    @Test
+    fun `the first four failures carry no lockout`() =
+        runTest {
+            repository.setUnlockPin("1234")
+
+            repeat(AppLockRepository.FREE_ATTEMPTS) {
+                assertEquals(PinVerdict.WRONG, repository.verify("9999"))
+            }
+
+            assertEquals(0L, repository.lockoutRemainingMs())
+            assertEquals(PinVerdict.UNLOCK, repository.verify("1234"))
+        }
+
+    @Test
+    fun `the fifth failure starts a lockout`() =
+        runTest {
+            repository.setUnlockPin("1234")
+
+            repeat(AppLockRepository.FREE_ATTEMPTS + 1) { repository.verify("9999") }
+
+            assertTrue("expected a lockout", repository.lockoutRemainingMs() > 0L)
+        }
+
+    /**
+     * The point of the lockout: during it, even the right PIN buys nothing. If
+     * the correct PIN opened the app mid-lockout the whole thing would be
+     * decoration, since an attacker's winning guess is a correct PIN too.
+     */
+    @Test
+    fun `the correct pin is refused while locked out`() =
+        runTest {
+            repository.setUnlockPin("1234")
+            repeat(AppLockRepository.FREE_ATTEMPTS + 1) { repository.verify("9999") }
+
+            assertEquals(PinVerdict.LOCKED_OUT, repository.verify("1234"))
+        }
+
+    /**
+     * And the exception that makes it survivable. Someone being made to unlock
+     * their phone must not find the escape hatch bolted shut because whoever is
+     * holding the phone tried a few guesses first.
+     */
+    @Test
+    fun `the duress pin still works while locked out`() =
+        runTest {
+            repository.setUnlockPin("1234")
+            repository.setDuressPin("5678")
+            repeat(AppLockRepository.FREE_ATTEMPTS + 1) { repository.verify("9999") }
+            assertTrue(repository.lockoutRemainingMs() > 0L)
+
+            assertEquals(PinVerdict.DURESS, repository.verify("5678"))
+        }
+
+    /**
+     * A refused attempt is not an attempt. Counting guesses made during a
+     * lockout would let anyone hold the owner out of their own phone forever
+     * just by tapping at it.
+     */
+    @Test
+    fun `guesses made during a lockout do not extend it`() =
+        runTest {
+            repository.setUnlockPin("1234")
+            repeat(AppLockRepository.FREE_ATTEMPTS + 1) { repository.verify("9999") }
+            val attemptsAtLockout = repository.failedAttempts
+            val deadline = repository.lockoutRemainingMs()
+
+            repeat(3) { repository.verify("7777") }
+
+            assertEquals(attemptsAtLockout, repository.failedAttempts)
+            assertTrue(repository.lockoutRemainingMs() <= deadline)
+        }
+
+    @Test
+    fun `the lockout grows with each further failure`() =
+        runTest {
+            repository.setUnlockPin("1234")
+            repeat(AppLockRepository.FREE_ATTEMPTS + 1) { repository.verify("9999") }
+            val first = repository.lockoutRemainingMs()
+
+            // Wait out the window the only way a test can, then fail once more.
+            expireLockout()
+            repository.verify("9999")
+
+            assertTrue("expected a longer wait, was $first", repository.lockoutRemainingMs() > first)
+        }
+
+    @Test
+    fun `unlocking clears the lockout and the count`() =
+        runTest {
+            repository.setUnlockPin("1234")
+            repeat(AppLockRepository.FREE_ATTEMPTS + 1) { repository.verify("9999") }
+            expireLockout()
+
+            assertEquals(PinVerdict.UNLOCK, repository.verify("1234"))
+
+            assertEquals(0, repository.failedAttempts)
+            assertEquals(0L, repository.lockoutRemainingMs())
+        }
+
+    @Test
+    fun `setting a new unlock pin clears the lockout`() =
+        runTest {
+            repository.setUnlockPin("1234")
+            repeat(AppLockRepository.FREE_ATTEMPTS + 1) { repository.verify("9999") }
+
+            assertTrue(repository.setUnlockPin("4321"))
+
+            assertEquals(0L, repository.lockoutRemainingMs())
+            assertEquals(PinVerdict.UNLOCK, repository.verify("4321"))
+        }
+
+    /**
+     * Moving the system clock back to before the lockout began is an attempt to
+     * escape it, not a shorter wait.
+     */
+    @Test
+    fun `a clock moved backwards does not shorten the lockout`() =
+        runTest {
+            repository.setUnlockPin("1234")
+            repeat(AppLockRepository.FREE_ATTEMPTS + 1) { repository.verify("9999") }
+            val honest = repository.lockoutRemainingMs()
+
+            val rolledBack = repository.lockoutRemainingMs(now = System.currentTimeMillis() - 86_400_000L)
+
+            assertTrue("rolling the clock back must not help", rolledBack >= honest)
+        }
+
+    /** Rewrite the stored deadline into the past, standing in for time passing. */
+    private fun expireLockout() {
+        ApplicationProvider
+            .getApplicationContext<Context>()
+            .getSharedPreferences("zamolxis_app_lock", Context.MODE_PRIVATE)
+            .edit()
+            .putLong("lockout_started", 0L)
+            .putLong("lockout_until", 1L)
+            .apply()
+    }
+
     private fun storedUnlockHash(): String? =
         ApplicationProvider
             .getApplicationContext<Context>()

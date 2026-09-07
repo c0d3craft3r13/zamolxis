@@ -123,6 +123,12 @@ class NativeRnsBackendImpl(
         /** Live-poll cadence for `propagationTransferState`. ~2 polls / second. */
         private const val PROPAGATION_POLL_INTERVAL_MS = 500L
 
+        /** A Reticulum destination hash is a truncated SHA-256: 16 bytes. */
+        private const val DESTINATION_HASH_BYTES = 16
+
+        /** An identity public key is X25519 + Ed25519 concatenated: 32 + 32 bytes. */
+        private const val IDENTITY_PUBLIC_KEY_BYTES = 64
+
         fun NativeIdentity.toZamolxis(): ZamolxisIdentity =
             ZamolxisIdentity(
                 hash = this.hash,
@@ -287,13 +293,13 @@ class NativeRnsBackendImpl(
     override val networkStatus: StateFlow<NetworkStatus> = _networkStatus.asStateFlow()
 
     private val _announces = MutableSharedFlow<AnnounceEvent>(extraBufferCapacity = 64)
-    private val _messages = MutableSharedFlow<ReceivedMessage>(extraBufferCapacity = 64)
-    private val _deliveryStatus = MutableSharedFlow<DeliveryStatusUpdate>(extraBufferCapacity = 64)
-    private val _locationTelemetryFlow = MutableSharedFlow<LocationTelemetry>(extraBufferCapacity = 64)
+    private val messageSink = MutableSharedFlow<ReceivedMessage>(extraBufferCapacity = 64)
+    private val deliveryStatusSink = MutableSharedFlow<DeliveryStatusUpdate>(extraBufferCapacity = 64)
+    private val locationTelemetrySink = MutableSharedFlow<LocationTelemetry>(extraBufferCapacity = 64)
     private val _reactionReceivedFlow = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    private val _packets = MutableSharedFlow<ReceivedPacket>(extraBufferCapacity = 16)
-    private val _links = MutableSharedFlow<LinkEvent>(extraBufferCapacity = 16)
-    private val _debugInfoFlow = MutableSharedFlow<String>(replay = 1, extraBufferCapacity = 8)
+    private val packetSink = MutableSharedFlow<ReceivedPacket>(extraBufferCapacity = 16)
+    private val linkEventSink = MutableSharedFlow<LinkEvent>(extraBufferCapacity = 16)
+    private val debugInfoSink = MutableSharedFlow<String>(replay = 1, extraBufferCapacity = 8)
     private val _interfaceStatusFlow = MutableSharedFlow<String>(replay = 1, extraBufferCapacity = 8)
     private val _interfaceStatusChanged = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
     private val _propagationStateFlow = MutableSharedFlow<PropagationState>(replay = 1, extraBufferCapacity = 8)
@@ -362,7 +368,7 @@ class NativeRnsBackendImpl(
             routerProvider = { router },
             deliveryIdentityProvider = { deliveryIdentity },
             deliveryDestinationProvider = { deliveryDestination },
-            deliveryStatusFlow = _deliveryStatus,
+            deliveryStatusFlow = deliveryStatusSink,
             scopeProvider = { scope },
         )
     }
@@ -370,7 +376,7 @@ class NativeRnsBackendImpl(
     private val telemetryHandler by lazy {
         NativeTelemetryHandler(
             scopeProvider = { scope },
-            locationTelemetryFlow = _locationTelemetryFlow,
+            locationTelemetryFlow = locationTelemetrySink,
             deliveryIdentityProvider = { deliveryIdentity },
             sendMessageFn = { destHash, content, method, extraFields ->
                 messageSender.sendLxmfMessageWithMethod(
@@ -449,7 +455,7 @@ class NativeRnsBackendImpl(
 
         router!!.registerFailedDeliveryCallback { message ->
             val hash = message.hash?.toHex() ?: return@registerFailedDeliveryCallback
-            _deliveryStatus.tryEmit(DeliveryStatusUpdate(hash, "failed", System.currentTimeMillis()))
+            deliveryStatusSink.tryEmit(DeliveryStatusUpdate(hash, "failed", System.currentTimeMillis()))
         }
 
         return identity
@@ -922,7 +928,7 @@ class NativeRnsBackendImpl(
 
     override fun observeAnnounces(): Flow<AnnounceEvent> = _announces.asSharedFlow()
 
-    override val debugInfoFlow = _debugInfoFlow.asSharedFlow()
+    override val debugInfoFlow = debugInfoSink.asSharedFlow()
     override val interfaceStatusFlow = _interfaceStatusFlow.asSharedFlow()
     override val interfaceStatusChanged = _interfaceStatusChanged.asSharedFlow()
     override val nomadnetRequestStatusFlow: StateFlow<String> = nomadNetHandler.requestStatusFlow
@@ -978,7 +984,7 @@ class NativeRnsBackendImpl(
                     iconAppearance = iconAppearance,
                 )
             if (received.isUserVisibleChatMessage()) {
-                _messages.tryEmit(received)
+                messageSink.tryEmit(received)
             } else {
                 Log.d(
                     TAG,
@@ -1072,13 +1078,13 @@ class NativeRnsBackendImpl(
             else -> null
         }
 
-    override val locationTelemetryFlow = _locationTelemetryFlow.asSharedFlow()
+    override val locationTelemetryFlow = locationTelemetrySink.asSharedFlow()
 
     override val reactionReceivedFlow = _reactionReceivedFlow.asSharedFlow()
 
-    override fun observeMessages(): Flow<ReceivedMessage> = _messages.asSharedFlow()
+    override fun observeMessages(): Flow<ReceivedMessage> = messageSink.asSharedFlow()
 
-    override fun observeDeliveryStatus(): Flow<DeliveryStatusUpdate> = _deliveryStatus.asSharedFlow()
+    override fun observeDeliveryStatus(): Flow<DeliveryStatusUpdate> = deliveryStatusSink.asSharedFlow()
 
     // ==================== Phase 1: Path & Transport Queries ====================
 
@@ -1615,7 +1621,7 @@ class NativeRnsBackendImpl(
             }
         }
 
-    override fun observePackets(): Flow<ReceivedPacket> = _packets.asSharedFlow()
+    override fun observePackets(): Flow<ReceivedPacket> = packetSink.asSharedFlow()
 
     // ==================== Phase 3: Link Operations ====================
 
@@ -1650,7 +1656,7 @@ class NativeRnsBackendImpl(
             Unit
         }
 
-    override fun observeLinks(): Flow<LinkEvent> = _links.asSharedFlow()
+    override fun observeLinks(): Flow<LinkEvent> = linkEventSink.asSharedFlow()
 
     override suspend fun establishConversationLink(
         destinationHash: ByteArray,
@@ -1692,13 +1698,13 @@ class NativeRnsBackendImpl(
                         destination = dest,
                         establishedCallback = { l ->
                             activeLinks[hexHash] = l
-                            _links.tryEmit(
+                            linkEventSink.tryEmit(
                                 LinkEvent.Established(l.toZamolxisLink(destinationHash)),
                             )
                         },
                         closedCallback = { l ->
                             activeLinks.remove(hexHash)
-                            _links.tryEmit(
+                            linkEventSink.tryEmit(
                                 LinkEvent.Closed(l.toZamolxisLink(destinationHash), l.teardownReason.toString()),
                             )
                         },
@@ -1785,7 +1791,7 @@ class NativeRnsBackendImpl(
         scope.launch {
             runCatching {
                 val debugInfo = getDebugInfo()
-                _debugInfoFlow.emit(JSONObject(debugInfo).toString())
+                debugInfoSink.emit(JSONObject(debugInfo).toString())
 
                 val statusJson = JSONObject()
                 @Suppress("UNCHECKED_CAST")
@@ -2281,10 +2287,16 @@ class NativeRnsBackendImpl(
         }
 
     override suspend fun blockIdentity(identityHashHex: String): Result<Unit> =
-        runCatching { blockedIdentities.add(identityHashHex.lowercase()); Unit }
+        runCatching {
+            blockedIdentities.add(identityHashHex.lowercase())
+            Unit
+        }
 
     override suspend fun unblockIdentity(identityHashHex: String): Result<Unit> =
-        runCatching { blockedIdentities.remove(identityHashHex.lowercase()); Unit }
+        runCatching {
+            blockedIdentities.remove(identityHashHex.lowercase())
+            Unit
+        }
 
     override suspend fun blackholeIdentity(identityHashHex: String): Result<Unit> =
         runCatching {
@@ -2302,15 +2314,76 @@ class NativeRnsBackendImpl(
 
     // ==================== Peer / Announce Identity Restoration ====================
     //
-    // The native stack re-seeds identities and announces via reticulum-kt's
-    // built-in stores on startup; the bulk-restore methods are no-ops here.
-    // Callers that need explicit reseeding will pass restored entries through
-    // future helpers — for now we acknowledge the call by reporting
-    // `entries.size` so call sites that block on a real count don't spin.
+    // reticulum-kt reloads the destinations *it* learned from announces, but it
+    // knows nothing about keys the app holds from another source — a scanned QR
+    // code, a pasted `lxma://` string, or message history restored from a
+    // backup. Without seeding those, `Identity.recall` misses on the send path,
+    // `NativeMessageSender` falls back to a path request, and a peer that is not
+    // announcing right now is simply unreachable: the contact is visible in the
+    // app but every message to it fails.
+    //
+    // These two methods used to return `entries.size` without storing anything,
+    // so the startup restore reported success while changing nothing.
 
-    override suspend fun restorePeerIdentities(peerIdentities: List<Pair<String, ByteArray>>): Result<Int> = Result.success(peerIdentities.size)
+    override suspend fun restorePeerIdentities(peerIdentities: List<Pair<String, ByteArray>>): Result<Int> = rememberKnownDestinations(peerIdentities, "peer")
 
-    override suspend fun restoreAnnounceIdentities(announces: List<Pair<String, ByteArray>>): Result<Int> = Result.success(announces.size)
+    override suspend fun restoreAnnounceIdentities(announces: List<Pair<String, ByteArray>>): Result<Int> = rememberKnownDestinations(announces, "announce")
+
+    /**
+     * Seed reticulum-kt's known-destination store from `(destinationHashHex,
+     * publicKey)` pairs, the same shape an announce would have produced.
+     *
+     * Entries that cannot be a destination/key pair are skipped rather than
+     * failing the batch: this runs over app storage that predates the current
+     * validation, and one bad row must not cost the user every other identity.
+     * The returned count is what was actually stored, not what was offered.
+     */
+    private suspend fun rememberKnownDestinations(
+        entries: List<Pair<String, ByteArray>>,
+        kind: String,
+    ): Result<Int> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                var stored = 0
+                entries.forEach { (hashHex, publicKey) ->
+                    validDestinationHash(hashHex, publicKey, kind)?.let { destinationHash ->
+                        runCatching {
+                            // packetHash has no announce packet to point at here; the
+                            // destination hash is what the instrumented transport tests
+                            // pass too, and the field is only used to correlate a stored
+                            // entry back to its announce.
+                            NativeIdentity.remember(
+                                packetHash = destinationHash,
+                                destHash = destinationHash,
+                                publicKey = publicKey,
+                            )
+                            stored++
+                        }.onFailure { Log.w(TAG, "Could not remember $kind identity ${hashHex.take(16)}", it) }
+                    }
+                }
+                if (stored > 0) {
+                    runCatching { NativeIdentity.saveKnownDestinations() }
+                        .onFailure { Log.w(TAG, "Could not persist restored $kind identities", it) }
+                }
+                Log.d(TAG, "Restored $stored/${entries.size} $kind identities into the known-destination store")
+                stored
+            }
+        }
+
+    /** The hash bytes of a well-formed `(destinationHashHex, publicKey)` pair, or null. */
+    private fun validDestinationHash(
+        hashHex: String,
+        publicKey: ByteArray,
+        kind: String,
+    ): ByteArray? {
+        val destinationHash = runCatching { hashHex.hexToBytes() }.getOrNull()
+        return if (destinationHash?.size == DESTINATION_HASH_BYTES && publicKey.size == IDENTITY_PUBLIC_KEY_BYTES) {
+            destinationHash
+        } else {
+            Log.w(TAG, "Skipping malformed $kind identity ${hashHex.take(16)}")
+            null
+        }
+    }
 
     // ==================== RnsTransportAdmin: RNode + BLE diagnostics ====================
 

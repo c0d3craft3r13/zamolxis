@@ -8,8 +8,11 @@ import kotlinx.coroutines.CoroutineScope
 import network.zamolxis.app.data.config.ConfigFileParser
 import network.zamolxis.app.data.database.dao.InterfaceDao
 import network.zamolxis.app.data.database.entity.InterfaceEntity
+import network.zamolxis.app.data.model.TcpCommunityServer
+import network.zamolxis.app.data.model.TcpCommunityServers
 import network.zamolxis.app.rns.api.model.InterfaceConfig
 import network.zamolxis.app.rns.api.model.toJsonString
+import org.json.JSONObject
 import java.io.File
 import javax.inject.Provider
 
@@ -111,22 +114,29 @@ abstract class InterfaceDatabase : RoomDatabase() {
                 ),
             )
 
-            // Insert the bootstrap hub (see the note on bootstrapServerInterface
-            // for why this is no longer rns.beleth.net).
-            db.execSQL(
-                """
-                INSERT INTO interfaces (name, type, enabled, configJson, displayOrder)
-                VALUES (?, ?, ?, ?, ?)
-            """,
-                arrayOf<Any>(
-                    "g00n.cloud Hub",
-                    "TCPClient",
-                    // enabled=true
-                    1,
-                    """{"target_host":"dfw.us.g00n.cloud","target_port":6969,"kiss_framing":false,"mode":"full","bootstrap_only":true}""",
-                    2,
-                ),
-            )
+            // Seed EVERY measured bootstrap hub, not one. A single seed is a single
+            // point of failure for a fresh install: rns.beleth.net accepted the
+            // connection, delivered no announces and dropped the client every ~82
+            // seconds, and an install that only ever saw it reached the network never
+            // — an empty Network tab with nothing on screen to explain it. Redundancy
+            // here is the cheapest possible fix; the hubs are `bootstrap_only`, so RNS
+            // detaches them once enough discovered interfaces are up.
+            TcpCommunityServers.bootstrapServers.forEachIndexed { index, server ->
+                db.execSQL(
+                    """
+                    INSERT INTO interfaces (name, type, enabled, configJson, displayOrder)
+                    VALUES (?, ?, ?, ?, ?)
+                """,
+                    arrayOf<Any>(
+                        server.name,
+                        "TCPClient",
+                        // enabled=true
+                        1,
+                        bootstrapConfigJson(server),
+                        BOOTSTRAP_DISPLAY_ORDER_BASE + index,
+                    ),
+                )
+            }
         }
 
         /**
@@ -225,34 +235,23 @@ abstract class InterfaceDatabase : RoomDatabase() {
                     displayOrder = 1,
                 )
 
-            // Bootstrap hub for a fresh install. rns.beleth.net:4242 used to sit
-            // here and is unreachable: it accepts the connection, delivers no
-            // announces, and drops the client every ~82 seconds — the same under
-            // both backends, so it is the host, not us. An install that only ever
-            // saw that hub showed an empty Network tab forever. This host was
-            // measured as the busiest of the reachable ones. See
-            // TcpCommunityServers for the full measurement note.
-            val bootstrapServerInterface =
-                InterfaceEntity(
-                    name = "g00n.cloud Hub",
-                    type = "TCPClient",
-                    enabled = true,
-                    configJson =
-                        """
-                        {
-                            "target_host": "dfw.us.g00n.cloud",
-                            "target_port": 6969,
-                            "kiss_framing": false,
-                            "mode": "full",
-                            "bootstrap_only": true
-                        }
-                        """.trimIndent(),
-                    displayOrder = 2,
-                )
+            // Every measured bootstrap hub, not one — see the note in
+            // populateDatabaseDirect for what a single seed cost us, and
+            // TcpCommunityServers for the measurements behind the list.
+            val bootstrapInterfaces =
+                TcpCommunityServers.bootstrapServers.mapIndexed { index, server ->
+                    InterfaceEntity(
+                        name = server.name,
+                        type = "TCPClient",
+                        enabled = true,
+                        configJson = bootstrapConfigJson(server),
+                        displayOrder = BOOTSTRAP_DISPLAY_ORDER_BASE + index,
+                    )
+                }
 
             interfaceDao.insertInterface(defaultAutoInterface)
             interfaceDao.insertInterface(defaultBleInterface)
-            interfaceDao.insertInterface(bootstrapServerInterface)
+            bootstrapInterfaces.forEach { interfaceDao.insertInterface(it) }
         }
 
         /**
@@ -269,5 +268,29 @@ abstract class InterfaceDatabase : RoomDatabase() {
                 configJson = config.toJsonString(),
                 displayOrder = displayOrder,
             )
+
+        companion object {
+            /**
+             * Bootstrap hubs sort after AutoInterface (0) and AndroidBLE (1).
+             */
+            const val BOOTSTRAP_DISPLAY_ORDER_BASE = 2
+
+            /**
+             * The one place a bootstrap hub's interface config is written.
+             *
+             * Both seed paths (raw SQL in [Callback.onCreate] and the DAO path) and the
+             * top-up for existing installs go through here, so a hub can never end up
+             * configured two subtly different ways. `bootstrap_only` is what lets RNS
+             * drop these once enough discovered interfaces are connected.
+             */
+            fun bootstrapConfigJson(server: TcpCommunityServer): String =
+                JSONObject()
+                    .put("target_host", server.host)
+                    .put("target_port", server.port)
+                    .put("kiss_framing", false)
+                    .put("mode", "full")
+                    .put("bootstrap_only", true)
+                    .toString()
+        }
     }
 }

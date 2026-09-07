@@ -43,10 +43,10 @@ jobs:
           echo "Building version: $VERSION from tag: $TAG_NAME"
 
       - name: Build Release APK
-        # 40m to match build-prerelease-apk.yml: assembleRelease builds the two
-        # pythonBackend flavors, which bundle a Python runtime per ABI via
-        # Chaquopy and overrun the old 20m budget.
-        timeout-minutes: 40
+        # 60m: the pythonBackend flavors bundle a Python runtime per ABI via
+        # Chaquopy and dominate the build. Маяк adds two more of them on top of
+        # the four expert combos, so the old 40m budget no longer fits.
+        timeout-minutes: 60
         env:
           KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -56,13 +56,24 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
         run: |
-          # Python backend first, then Kotlin backend; each in sentry / noSentry
-          # telemetry variants. Four flavor combos × ABI splits + universal.
+          # Zamolxis (expert): python backend first, then kotlin; each in
+          # sentry / noSentry telemetry variants — four combos × ABI splits
+          # + universal.
+          #
+          # Маяк ships the python backend only. It is the same code with less
+          # of the machine room on screen, aimed at people who are not going to
+          # reason about which RNS implementation they are running — handing
+          # that audience the EXPERIMENTAL, AI-GENERATED kotlin stack would be
+          # the wrong default, and doubling their choices defeats the point of
+          # the flavor. Both telemetry variants stay, so the no-crash-reporting
+          # build is available to them too.
           ./gradlew \
-            :app:assembleSentryPythonBackendRelease \
-            :app:assembleNoSentryPythonBackendRelease \
-            :app:assembleSentryKotlinBackendRelease \
-            :app:assembleNoSentryKotlinBackendRelease \
+            :app:assembleExpertSentryPythonBackendRelease \
+            :app:assembleExpertNoSentryPythonBackendRelease \
+            :app:assembleExpertSentryKotlinBackendRelease \
+            :app:assembleExpertNoSentryKotlinBackendRelease \
+            :app:assembleMayakSentryPythonBackendRelease \
+            :app:assembleMayakNoSentryPythonBackendRelease \
             --no-daemon --stacktrace
           echo "✓ Release APKs built successfully"
 
@@ -82,7 +93,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
         run: |
-          ./gradlew :app:bundleSentryPythonBackendRelease --no-daemon --stacktrace
+          ./gradlew :app:bundleExpertSentryPythonBackendRelease --no-daemon --stacktrace
           echo "✓ Release AAB built successfully"
 
       - name: Extract signing certificate fingerprints
@@ -107,48 +118,79 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # Two flavor dimensions (telemetry × rnsImpl) mean Gradle writes to
-          # app/build/outputs/apk/<telemetry><Backend>/release/, e.g.
-          # sentryPythonBackend/release/. Output filenames:
-          #   zamolxis-{version}-{backend}-{abi}[-no-sentry].apk
-          # Backend is python first, then kotlin.
+          # Three flavor dimensions (audience × telemetry × rnsImpl) mean Gradle
+          # writes to app/build/outputs/apk/<audience><Telemetry><Backend>Backend/
+          # release/, e.g. expertSentryPythonBackend/release/.
+          #
+          # The audience segment is load-bearing and was missing here: this loop
+          # used to build "<telemetry><Backend>Backend" (noSentryPythonBackend),
+          # which stopped existing the moment `audience` became the first flavor
+          # dimension. On a clean CI checkout nothing matched, so the release
+          # published with no APKs at all. Keep the directory name assembled from
+          # the same three tokens Gradle uses.
+          #
+          # Output filenames:
+          #   zamolxis-{version}-[mayak-]{backend}-{abi}[-no-sentry].apk
+          # Expert keeps its historical names exactly (empty audience infix) so
+          # existing download links and the tables below stay valid.
           APK_DIR="app/build/outputs/apk"
 
-          # "<dir-infix>:<filename-token>"
-          for backend in "Python:official-rns-py" "Kotlin:EXPERIMENTAL-reticulum-kt"; do
-            dir_backend="${backend%%:*}"
-            name_backend="${backend##*:}"
+          # "<dir-token>:<filename-infix>"
+          for audience in "expert:" "mayak:mayak-"; do
+            dir_audience="${audience%%:*}"
+            name_audience="${audience##*:}"
 
-            for telemetry in sentry noSentry; do
-              sentry_suffix=""
-              [ "$telemetry" = "noSentry" ] && sentry_suffix="-no-sentry"
-              variant_dir="${telemetry}${dir_backend}Backend"
+            # "<dir-token>:<filename-token>"
+            for backend in "Python:official-rns-py" "Kotlin:EXPERIMENTAL-reticulum-kt"; do
+              dir_backend="${backend%%:*}"
+              name_backend="${backend##*:}"
 
-              for apk in "$APK_DIR/$variant_dir/release/"*.apk; do
-                [ -e "$apk" ] || continue
-                filename=$(basename "$apk")
+              # Маяк is python-backend only — see the build step.
+              if [ "$dir_audience" = "mayak" ] && [ "$dir_backend" != "Python" ]; then
+                continue
+              fi
 
-                if echo "$filename" | grep -q "armeabi-v7a"; then
-                  cp "$apk" "zamolxis-${VERSION}-${name_backend}-armeabi-v7a${sentry_suffix}.apk"
-                elif echo "$filename" | grep -q "arm64-v8a"; then
-                  cp "$apk" "zamolxis-${VERSION}-${name_backend}-arm64-v8a${sentry_suffix}.apk"
-                elif echo "$filename" | grep -q "x86_64"; then
-                  cp "$apk" "zamolxis-${VERSION}-${name_backend}-x86_64${sentry_suffix}.apk"
-                elif echo "$filename" | grep -q "universal"; then
-                  cp "$apk" "zamolxis-${VERSION}-${name_backend}-universal${sentry_suffix}.apk"
-                fi
+              # "<dir-token>:<filename-suffix>"
+              for telemetry in "Sentry:" "NoSentry:-no-sentry"; do
+                dir_telemetry="${telemetry%%:*}"
+                sentry_suffix="${telemetry##*:}"
+                variant_dir="${dir_audience}${dir_telemetry}${dir_backend}Backend"
+
+                for apk in "$APK_DIR/$variant_dir/release/"*.apk; do
+                  [ -e "$apk" ] || continue
+                  filename=$(basename "$apk")
+                  out_stem="zamolxis-${VERSION}-${name_audience}${name_backend}"
+
+                  if echo "$filename" | grep -q "armeabi-v7a"; then
+                    cp "$apk" "${out_stem}-armeabi-v7a${sentry_suffix}.apk"
+                  elif echo "$filename" | grep -q "arm64-v8a"; then
+                    cp "$apk" "${out_stem}-arm64-v8a${sentry_suffix}.apk"
+                  elif echo "$filename" | grep -q "x86_64"; then
+                    cp "$apk" "${out_stem}-x86_64${sentry_suffix}.apk"
+                  elif echo "$filename" | grep -q "universal"; then
+                    cp "$apk" "${out_stem}-universal${sentry_suffix}.apk"
+                  fi
+                done
               done
             done
           done
 
+          # Fail loudly rather than publishing an empty release: the bug above
+          # was silent precisely because nothing checked that anything matched.
+          count=$(ls -1 zamolxis-*.apk 2>/dev/null | wc -l)
+          if [ "$count" -eq 0 ]; then
+            echo "::error::No APKs were collected — flavor output directories under $APK_DIR did not match. Contents:"
+            ls -la "$APK_DIR" || true
+            exit 1
+          fi
           ls -la zamolxis-*.apk
-          echo "✓ Renamed APKs"
+          echo "✓ Renamed $count APKs"
 
       - name: Rename AAB with version
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          cp app/build/outputs/bundle/sentryPythonBackendRelease/app-sentry-pythonBackend-release.aab \
+          cp app/build/outputs/bundle/expertSentryPythonBackendRelease/app-expert-sentry-pythonBackend-release.aab \
             "zamolxis-${VERSION}-official-rns-py.aab"
           sha256sum "zamolxis-${VERSION}-official-rns-py.aab" > "zamolxis-${VERSION}-official-rns-py.aab.sha256"
           echo "✓ Renamed AAB"
@@ -204,7 +246,15 @@ jobs:
 
           NOTES=""
           # libdef format: "<libs.versions.toml var>:<github repo>"
-          for libdef in "reticulumKt:reticulum-kt" "lxmfKt:LXMF-kt" "lxstKt:LXST-kt"; do
+          #
+          # These libraries are no longer resolved as coordinates — their sources are
+          # vendored under vendor/ (see vendor/PROVENANCE.md) and the catalog keys were
+          # renamed to `vendored*` to say so. The keys are still worth reading here:
+          # they record which upstream revision the vendored source was taken from, so a
+          # release that follows a re-sync still gets the upstream changelog in its
+          # notes. Renaming the keys without renaming them here would have left this
+          # loop matching nothing and reporting "no pin" forever, quietly.
+          for libdef in "vendoredReticulumKt:reticulum-kt" "vendoredLxmfKt:LXMF-kt" "vendoredLxstKt:LXST-kt"; do
             var="${libdef%%:*}"
             repo="${libdef##*:}"
             old=""
@@ -314,7 +364,11 @@ jobs:
             zamolxis-*.apk.sha256
             zamolxis-*.aab
             zamolxis-*.aab.sha256
-          draft: true
+          # Published on the tag, not staged for review. The gate this used to
+          # provide is now the build itself: the rename step fails the run when
+          # it collects no APKs, which is the failure that previously produced
+          # empty releases, so a run that reaches this step has assets to ship.
+          draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
           generate_release_notes: true
           body: |
@@ -344,6 +398,23 @@ jobs:
             | [`zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a.apk) | arm64-v8a | Most modern Android phones & tablets |
             | [`zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-x86_64.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-x86_64.apk) | x86_64 | Chromebooks, emulators, some tablets |
             | [`zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-universal.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-universal.apk) | All | Universal fallback (larger download) |
+
+            ### Маяк
+
+            Same app, same protocol, same vendored stack — with the machine room off
+            screen. No announce stream, no interface management, no RNode wizard: it
+            reads as a plain messenger. Install it alongside Zamolxis if you like;
+            it has its own application id and does not replace it.
+
+            Маяк ships the **python backend only** — the audience it is for should not
+            have to choose an RNS implementation, and the kotlin stack is experimental.
+
+            | APK | Architecture | Devices |
+            |-----|-------------|---------|
+            | [`zamolxis-${{ steps.version.outputs.version }}-mayak-official-rns-py-armeabi-v7a.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-mayak-official-rns-py-armeabi-v7a.apk) | armeabi-v7a | Older 32-bit ARM phones & tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-mayak-official-rns-py-arm64-v8a.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-mayak-official-rns-py-arm64-v8a.apk) | arm64-v8a | Most modern Android phones & tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-mayak-official-rns-py-x86_64.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-mayak-official-rns-py-x86_64.apk) | x86_64 | Chromebooks, emulators, some tablets |
+            | [`zamolxis-${{ steps.version.outputs.version }}-mayak-official-rns-py-universal.apk`](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-mayak-official-rns-py-universal.apk) | All | Universal fallback (larger download) |
 
             **Telemetry variants:**
             Each APK above also has a `-no-sentry` variant without crash reporting for maximum privacy — append `-no-sentry` to any download link above (e.g. the most common builds: [Python arm64-v8a no-sentry](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-official-rns-py-arm64-v8a-no-sentry.apk) · [Kotlin arm64-v8a no-sentry](${{ steps.version.outputs.dl }}/zamolxis-${{ steps.version.outputs.version }}-EXPERIMENTAL-reticulum-kt-arm64-v8a-no-sentry.apk)). Sentry collects stack traces when Zamolxis encounters errors

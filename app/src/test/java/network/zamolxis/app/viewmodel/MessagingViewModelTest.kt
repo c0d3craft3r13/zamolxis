@@ -712,6 +712,94 @@ class MessagingViewModelTest {
         }
 
     @Test
+    fun `an image over the relay transfer limit is refused instead of silently dropped`() =
+        runViewModelTest {
+            coEvery { settingsRepository.getDefaultDeliveryMethod() } returns "propagated"
+            // A real node observed advertising 256 KB; anything larger it stores
+            // nowhere and reports nothing back, so the message would sit under a
+            // cloud icon forever.
+            every { propagationNodeManager.currentRelay } returns
+                MutableStateFlow(
+                    network.zamolxis.app.service.RelayInfo(
+                        destinationHash = testPeerHash,
+                        displayName = "relay",
+                        hops = 1,
+                        isAutoSelected = true,
+                        lastSeenTimestamp = 0L,
+                        transferLimitKb = 256,
+                    ),
+                )
+
+            var sendAttempted = false
+            coEvery {
+                rnsLxmf.sendLxmfMessageWithMethod(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+            } answers {
+                sendAttempted = true
+                Result.failure(IllegalStateException("must not be called"))
+            }
+
+            viewModel.loadMessages(testPeerHash, testPeerName)
+            advanceUntilIdle()
+            viewModel.sendMessage(
+                testPeerHash,
+                "photo",
+                network.zamolxis.app.viewmodel.ComposerAttachments(
+                    imageData = ByteArray(400 * 1024),
+                    imageFormat = "jpeg",
+                ),
+            )
+            advanceUntilIdle()
+
+            // A message the relay would reject must never reach the transport —
+            // that is the whole difference between a refusal the user can act on
+            // and a cloud icon that never resolves.
+            assertFalse("the oversized image must not be handed to LXMF", sendAttempted)
+        }
+
+    @Test
+    fun `an image within the relay transfer limit is sent`() =
+        runViewModelTest {
+            coEvery { settingsRepository.getDefaultDeliveryMethod() } returns "propagated"
+            every { propagationNodeManager.currentRelay } returns
+                MutableStateFlow(
+                    network.zamolxis.app.service.RelayInfo(
+                        destinationHash = testPeerHash,
+                        displayName = "relay",
+                        hops = 1,
+                        isAutoSelected = true,
+                        lastSeenTimestamp = 0L,
+                        transferLimitKb = 256,
+                    ),
+                )
+            val destHashBytes = testPeerHash.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+            var sendAttempted = false
+            coEvery {
+                rnsLxmf.sendLxmfMessageWithMethod(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+            } answers {
+                sendAttempted = true
+                Result.success(
+                    MessageReceipt(messageHash = ByteArray(32), timestamp = 1L, destinationHash = destHashBytes),
+                )
+            }
+            coEvery { conversationRepository.saveMessage(any(), any(), any(), any()) } just Runs
+
+            viewModel.loadMessages(testPeerHash, testPeerName)
+            advanceUntilIdle()
+            viewModel.sendMessage(
+                testPeerHash,
+                "photo",
+                network.zamolxis.app.viewmodel.ComposerAttachments(
+                    imageData = ByteArray(100 * 1024),
+                    imageFormat = "jpeg",
+                ),
+            )
+            advanceUntilIdle()
+
+            // The guard must only stop what the relay would actually reject.
+            assertTrue("an image inside the limit must still be sent", sendAttempted)
+        }
+
+    @Test
     fun `sendMessage with direct default method keeps OPPORTUNISTIC for short text`() =
         runViewModelTest {
             // setup() already stubs getDefaultDeliveryMethod -> "direct"
@@ -1045,7 +1133,9 @@ class MessagingViewModelTest {
             assertTrue("sendMessage should complete without error", result.isSuccess)
 
             // Verify: sendLxmfMessageWithMethod was NOT called
-            coVerify(exactly = 0) { failingRnsLxmf.sendLxmfMessageWithMethod(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+            coVerify(
+                exactly = 0,
+            ) { failingRnsLxmf.sendLxmfMessageWithMethod(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
 
             // Verify: saveMessage was NOT called
             coVerify(exactly = 0) { failingRepository.saveMessage(any(), any(), any(), any()) }
@@ -1514,10 +1604,10 @@ class MessagingViewModelTest {
                 conversationLinkManager,
                 blockedPeerRepository,
                 identityResolutionManager,
-            notificationHelper,
+                notificationHelper,
                 rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                pqMessageSealer,
+                pqKeyRepository,
             )
             advanceUntilIdle()
 
@@ -1590,10 +1680,10 @@ class MessagingViewModelTest {
                 conversationLinkManager,
                 blockedPeerRepository,
                 identityResolutionManager,
-            notificationHelper,
+                notificationHelper,
                 rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                pqMessageSealer,
+                pqKeyRepository,
             )
             advanceUntilIdle()
 
@@ -1664,10 +1754,10 @@ class MessagingViewModelTest {
                 conversationLinkManager,
                 blockedPeerRepository,
                 identityResolutionManager,
-            notificationHelper,
+                notificationHelper,
                 rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                pqMessageSealer,
+                pqKeyRepository,
             )
             advanceUntilIdle()
 
@@ -1726,10 +1816,10 @@ class MessagingViewModelTest {
                 conversationLinkManager,
                 blockedPeerRepository,
                 identityResolutionManager,
-            notificationHelper,
+                notificationHelper,
                 rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                pqMessageSealer,
+                pqKeyRepository,
             )
             advanceUntilIdle()
 
@@ -1802,10 +1892,10 @@ class MessagingViewModelTest {
                     conversationLinkManager,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -1871,10 +1961,10 @@ class MessagingViewModelTest {
                     conversationLinkManager,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -1940,10 +2030,10 @@ class MessagingViewModelTest {
                     conversationLinkManager,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2009,10 +2099,10 @@ class MessagingViewModelTest {
                     conversationLinkManager,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2078,10 +2168,10 @@ class MessagingViewModelTest {
                     conversationLinkManager,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2146,10 +2236,10 @@ class MessagingViewModelTest {
                     conversationLinkManager,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2209,10 +2299,10 @@ class MessagingViewModelTest {
                     conversationLinkManager,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -2272,10 +2362,10 @@ class MessagingViewModelTest {
                     conversationLinkManager,
                     blockedPeerRepository,
                     identityResolutionManager,
-                notificationHelper,
-                rnsTelephony,
-            pqMessageSealer,
-            pqKeyRepository,
+                    notificationHelper,
+                    rnsTelephony,
+                    pqMessageSealer,
+                    pqKeyRepository,
                 )
             advanceUntilIdle()
 
@@ -3499,7 +3589,8 @@ class MessagingViewModelTest {
 
             mockkStatic(androidx.core.content.FileProvider::class)
             every {
-                androidx.core.content.FileProvider.getUriForFile(any(), any(), any())
+                androidx.core.content.FileProvider
+                    .getUriForFile(any(), any(), any())
             } returns mockk<android.net.Uri>()
 
             viewModel.getFileAttachmentUri(context, "first-id", 0)
@@ -3516,7 +3607,8 @@ class MessagingViewModelTest {
 
     /** Every file staged for sharing, across the per-attachment directories. */
     private fun cachedAttachments(tempDir: java.io.File): List<java.io.File> =
-        java.io.File(tempDir, "attachments")
+        java.io
+            .File(tempDir, "attachments")
             .listFiles()
             .orEmpty()
             .flatMap { it.listFiles().orEmpty().asList() }
@@ -5137,10 +5229,11 @@ class MessagingViewModelTest {
                     sourceIdentity = testIdentity,
                     deliveryMethod = any(),
                     tryPropagationOnFail = any(),
-                    imageData = match {
-                        preservedImage = it?.contentEquals(byteArrayOf(1, 2, 3, 4)) == true
-                        preservedImage
-                    },
+                    imageData =
+                        match {
+                            preservedImage = it?.contentEquals(byteArrayOf(1, 2, 3, 4)) == true
+                            preservedImage
+                        },
                     imageFormat = "jpg",
                     extraFields = any(),
                 )
@@ -5475,28 +5568,30 @@ class MessagingViewModelTest {
         }
 
     @Test
-    fun `resource progress is exposed while active and removed at terminal state`() = runTest {
-        val progressFlow = MutableSharedFlow<TransferProgressUpdate>(extraBufferCapacity = 4)
-        every { rnsLxmf.observeTransferProgress() } returns progressFlow
-        val viewModel = createTestViewModel()
-        advanceUntilIdle()
-        val active = TransferProgressUpdate(
-            transferId = "resource-1",
-            messageHash = "aabbcc",
-            direction = Direction.OUT,
-            progress = 0.64f,
-            phase = TransferPhase.TRANSFERRING,
-            deliveryMethod = DeliveryMethod.DIRECT,
-        )
+    fun `resource progress is exposed while active and removed at terminal state`() =
+        runTest {
+            val progressFlow = MutableSharedFlow<TransferProgressUpdate>(extraBufferCapacity = 4)
+            every { rnsLxmf.observeTransferProgress() } returns progressFlow
+            val viewModel = createTestViewModel()
+            advanceUntilIdle()
+            val active =
+                TransferProgressUpdate(
+                    transferId = "resource-1",
+                    messageHash = "aabbcc",
+                    direction = Direction.OUT,
+                    progress = 0.64f,
+                    phase = TransferPhase.TRANSFERRING,
+                    deliveryMethod = DeliveryMethod.DIRECT,
+                )
 
-        progressFlow.emit(active)
-        advanceUntilIdle()
-        assertEquals(active, viewModel.transferProgress.value["aabbcc"])
+            progressFlow.emit(active)
+            advanceUntilIdle()
+            assertEquals(active, viewModel.transferProgress.value["aabbcc"])
 
-        progressFlow.emit(active.copy(progress = 1f, phase = TransferPhase.COMPLETE))
-        advanceUntilIdle()
-        assertTrue(viewModel.transferProgress.value.isEmpty())
-    }
+            progressFlow.emit(active.copy(progress = 1f, phase = TransferPhase.COMPLETE))
+            advanceUntilIdle()
+            assertTrue(viewModel.transferProgress.value.isEmpty())
+        }
     // The behavior is indirectly tested via the ViewModel lifecycle in integration tests
 
     // ========== SEND WITH FILE ATTACHMENT ==========

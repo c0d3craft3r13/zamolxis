@@ -49,6 +49,7 @@ object BleConstants {
     val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
     // Connection Parameters
+
     /**
      * Maximum number of simultaneous peer connections.
      * Android typically supports ~8 total BLE connections across all apps.
@@ -77,6 +78,18 @@ object BleConstants {
     const val ATT_HEADER_SIZE = 3
 
     /**
+     * The placeholder MAC that `BluetoothAdapter.getAddress()` returns to ordinary
+     * apps on Android 6+. The real adapter address is withheld for privacy, so a
+     * role tie-break that compares this against a peer's (random, privacy-rotated)
+     * address is meaningless — and worse than useless: for a peer whose current
+     * random address sorts below `02:00:…`, the comparison tells this device to
+     * *wait*, and if both devices reason that way about each other neither ever
+     * connects. Detect it and fall back to "attempt the connection", letting the
+     * existing dedup resolve the collision once real identities are exchanged.
+     */
+    const val PLACEHOLDER_ADAPTER_MAC = "02:00:00:00:00:00"
+
+    /**
      * Minimum characteristic payload available when no MTU callback occurs.
      * CoreBluetooth centrals do not expose Android's explicit requestMtu API,
      * so Android GATT-server links must use this fallback for interoperability.
@@ -84,8 +97,7 @@ object BleConstants {
     const val MIN_USABLE_MTU = MIN_MTU - ATT_HEADER_SIZE
 
     /** Convert a raw ATT MTU into bytes usable by one characteristic value. */
-    fun usableValueLength(rawAttMtu: Int): Int =
-        (rawAttMtu - ATT_HEADER_SIZE).coerceIn(MIN_USABLE_MTU, MAX_ATTRIBUTE_VALUE_LENGTH)
+    fun usableValueLength(rawAttMtu: Int): Int = (rawAttMtu - ATT_HEADER_SIZE).coerceIn(MIN_USABLE_MTU, MAX_ATTRIBUTE_VALUE_LENGTH)
 
     /**
      * Default MTU if negotiation doesn't happen.
@@ -94,6 +106,7 @@ object BleConstants {
     const val DEFAULT_MTU = 185
 
     // Scanning Parameters
+
     /**
      * Discovery interval in milliseconds (active scanning).
      * How often to start a new scan when actively discovering.
@@ -113,6 +126,7 @@ object BleConstants {
     const val SCAN_DURATION_MS = 10000L // 10 seconds
 
     // Connection Timeouts
+
     /**
      * Connection attempt timeout in milliseconds.
      * If connection doesn't complete in this time, consider it failed.
@@ -126,6 +140,7 @@ object BleConstants {
     const val OPERATION_TIMEOUT_MS = 5000L // 5 seconds
 
     // Retry Configuration
+
     /**
      * Maximum number of connection failures before blacklisting a device.
      */
@@ -144,6 +159,7 @@ object BleConstants {
     const val MAX_CONNECTION_RETRY_BACKOFF_MS = CONNECTION_RETRY_BACKOFF_MS * 8
 
     // Fragmentation
+
     /**
      * Fragment header size in bytes.
      * Format: [Type: 1][Sequence: 2][Total: 2] = 5 bytes
@@ -165,6 +181,7 @@ object BleConstants {
     const val REASSEMBLY_TIMEOUT_MS = 30000L // 30 seconds
 
     // Service Configuration
+
     /**
      * Notification channel ID for BLE foreground service.
      */
@@ -181,6 +198,7 @@ object BleConstants {
     const val DEFAULT_DEVICE_NAME_PREFIX = "Reticulum-"
 
     // Error Codes
+
     /**
      * GATT error code 133.
      * Undocumented but common error indicating connection issues or stack problems.
@@ -206,6 +224,7 @@ object BleConstants {
     const val GATT_REQUEST_NOT_SUPPORTED = 143
 
     // Timing Constants
+
     /**
      * Delay in milliseconds to allow BLE stack to settle after MTU negotiation.
      * The BLE stack may still be processing internally even after onMtuChanged callback fires.

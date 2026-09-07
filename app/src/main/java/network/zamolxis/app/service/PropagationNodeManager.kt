@@ -80,6 +80,16 @@ data class RelayInfo(
     val hops: Int,
     val isAutoSelected: Boolean,
     val lastSeenTimestamp: Long,
+    /**
+     * Largest message this node accepts, in KB, as advertised in its announce —
+     * null when the node did not state one.
+     *
+     * Carried here so the send path can refuse an oversized message while the
+     * user is still looking at it. Without that the node simply drops what it
+     * cannot store and the message sits under a cloud icon forever: observed
+     * with a node advertising 256 KB and photos several times that.
+     */
+    val transferLimitKb: Int? = null,
 )
 
 /**
@@ -159,6 +169,7 @@ class PropagationNodeManager
                 lastSeenTimestamp =
                     announce?.lastSeenTimestamp
                         ?: contact.lastInteractionTimestamp,
+                transferLimitKb = announce?.propagationTransferLimitKb,
             )
         }
 
@@ -233,7 +244,7 @@ class PropagationNodeManager
         val syncProgress: StateFlow<SyncProgress> = _syncProgress.asStateFlow()
 
         // Track whether current sync was manually triggered (for toast display)
-        private var _isManualSync = false
+        private var manualSyncInProgress = false
 
         // Timeout for sync operation (5 minutes for large transfers)
         private val syncTimeoutMs = 5 * 60 * 1000L
@@ -446,9 +457,9 @@ class PropagationNodeManager
                     timeoutJob.cancel()
                     _isSyncing.value = false
                     _syncProgress.value = SyncProgress.Idle
-                    if (_isManualSync) {
+                    if (manualSyncInProgress) {
                         _manualSyncResult.emit(SyncResult.Error("Sync failed: ${state.stateName}"))
-                        _isManualSync = false
+                        manualSyncInProgress = false
                     }
                     true
                 }
@@ -461,7 +472,7 @@ class PropagationNodeManager
         private suspend fun handleSyncComplete(messagesReceived: Int) {
             if (!syncFinalized.compareAndSet(false, true)) return
             if (_isSyncing.value) {
-                Log.d(TAG, "Sync complete: $messagesReceived messages received (manual=$_isManualSync)")
+                Log.d(TAG, "Sync complete: $messagesReceived messages received (manual=$manualSyncInProgress)")
                 _isSyncing.value = false
 
                 // Only show Complete if messages were actually downloaded
@@ -487,9 +498,9 @@ class PropagationNodeManager
                 settingsRepository.saveLastSyncTimestamp(timestamp)
 
                 // Emit result for UI only if manually triggered
-                if (_isManualSync) {
+                if (manualSyncInProgress) {
                     _manualSyncResult.emit(SyncResult.Success(messagesReceived))
-                    _isManualSync = false
+                    manualSyncInProgress = false
                 }
             }
         }
@@ -508,15 +519,15 @@ class PropagationNodeManager
                         0xf4 -> "Access denied"
                         else -> "Unknown error (${state.state})"
                     }
-                Log.w(TAG, "Sync error: $errorMsg (manual=$_isManualSync)")
+                Log.w(TAG, "Sync error: $errorMsg (manual=$manualSyncInProgress)")
                 syncFinalized.set(true)
                 _isSyncing.value = false
                 _syncProgress.value = SyncProgress.Idle
 
                 // Emit error for UI only if manually triggered
-                if (_isManualSync) {
+                if (manualSyncInProgress) {
                     _manualSyncResult.emit(SyncResult.Error(errorMsg, state.state))
-                    _isManualSync = false
+                    manualSyncInProgress = false
                 }
             }
         }
@@ -893,7 +904,7 @@ class PropagationNodeManager
             activePollJob = null
             syncFinalized.set(false)
             _isSyncing.value = true
-            _isManualSync = !silent
+            manualSyncInProgress = !silent
             _syncProgress.value = SyncProgress.Starting
 
             val timeoutJob = launchSyncTimeoutWatchdog()
@@ -944,9 +955,9 @@ class PropagationNodeManager
                     syncFinalized.set(true)
                     _isSyncing.value = false
                     _syncProgress.value = SyncProgress.Idle
-                    if (_isManualSync) {
+                    if (manualSyncInProgress) {
                         _manualSyncResult.emit(SyncResult.Timeout)
-                        _isManualSync = false
+                        manualSyncInProgress = false
                     }
                 }
             }
@@ -975,9 +986,9 @@ class PropagationNodeManager
                         _isSyncing.value = false
                         _syncProgress.value = SyncProgress.Idle
                     }
-                    if (_isManualSync) {
+                    if (manualSyncInProgress) {
                         _manualSyncResult.emit(SyncResult.Error("Propagation node not reachable"))
-                        _isManualSync = false
+                        manualSyncInProgress = false
                     }
                 }
                 else -> {
@@ -1000,9 +1011,9 @@ class PropagationNodeManager
                 _isSyncing.value = false
                 _syncProgress.value = SyncProgress.Idle
             }
-            if (_isManualSync) {
+            if (manualSyncInProgress) {
                 _manualSyncResult.emit(SyncResult.Error(errorMessage))
-                _isManualSync = false
+                manualSyncInProgress = false
             }
         }
 

@@ -192,6 +192,7 @@
 
     <!-- Баннер офлайн-режима -->
     <string name="offline_banner_shutdown">Zamolxis не в сети</string>
+    <string name="vpn_local_network_banner">VPN включён — узлы в локальной сети могут не находиться. Добавьте Zamolxis в исключения VPN, чтобы их видеть.</string>
     <string name="offline_banner_error">Ошибка соединения</string>
     <string name="offline_banner_reconnecting">Повторное подключение\u2026</string>
     <string name="offline_banner_reconnect">Переподключиться</string>
@@ -268,11 +269,11 @@
     <string name="transfer_sending">Отправка</string>
     <string name="transfer_sending_directly">Прямая отправка</string>
     <string name="transfer_retrying_direct">Повтор прямой отправки (%1$d/%2$d)</string>
-    <string name="transfer_sending_to_relay">Отправка через сеть релеев</string>
+    <string name="transfer_sending_to_relay">Отправка через сеть ретрансляторов</string>
     <string name="transfer_transferring_resource">Передача ресурса</string>
-    <string name="message_status_sending_to_relay">Отправка через сеть релеев</string>
-    <string name="message_status_stored_on_relay">Сохранено в сети релеев</string>
-    <string name="transfer_receiving_via_relay">Получение сообщений через релей</string>
+    <string name="message_status_sending_to_relay">Отправка через сеть ретрансляторов</string>
+    <string name="message_status_stored_on_relay">Сохранено в сети ретрансляторов</string>
+    <string name="transfer_receiving_via_relay">Получение сообщений через ретранслятор</string>
     <plurals name="transfer_receiving_directly">
         <item quantity="one">Прямое получение сообщения</item>
         <item quantity="few">Прямое получение %1$d сообщений</item>
@@ -295,6 +296,12 @@
     <string name="call_ptt_talking">ГОВОРЮ</string>
     <string name="call_ptt_hold">УДЕРЖИВАЙ
 ДЛЯ РАЗГОВОРА</string>
+    <string name="call_mute">Без звука</string>
+    <string name="call_unmute">Включить звук</string>
+    <string name="call_ptt">Рация</string>
+    <string name="call_ptt_on">Рация вкл.</string>
+    <string name="call_speaker">Громкая связь</string>
+    <string name="call_earpiece">Динамик у уха</string>
 
     <!-- Карточка разрешений на звонки -->
     <string name="voiceperm_title">Разрешения для звонков</string>
@@ -426,8 +433,8 @@
     <string name="msgdetail_method_opportunistic_sub">Доставка одним пакетом для малых сообщений, линк не требуется</string>
     <string name="msgdetail_method_direct">Прямая</string>
     <string name="msgdetail_method_direct_sub">Доставка по линку с повторами, поддерживает большие сообщения</string>
-    <string name="msgdetail_method_propagated">Через релей</string>
-    <string name="msgdetail_method_propagated_sub">Доставлено через узел-релей для офлайн-получателей</string>
+    <string name="msgdetail_method_propagated">Через ретранслятор</string>
+    <string name="msgdetail_method_propagated_sub">Доставлено через ретранслятор для офлайн-получателей</string>
     <string name="msgdetail_method_unknown_sub">Неизвестный способ доставки</string>
     <string name="msgdetail_hops_unavailable_sub">Число хопов недоступно</string>
     <string name="msgdetail_received_direct_sub">Сообщение получено напрямую от отправителя</string>
@@ -438,10 +445,10 @@
         <item quantity="other">%1$d хопа</item>
     </plurals>
     <plurals name="msgdetail_relays_sub">
-        <item quantity="one">Сообщение прошло через %1$d релей</item>
-        <item quantity="few">Сообщение прошло через %1$d релея</item>
-        <item quantity="many">Сообщение прошло через %1$d релеев</item>
-        <item quantity="other">Сообщение прошло через %1$d релея</item>
+        <item quantity="one">Сообщение прошло через %1$d ретранслятор</item>
+        <item quantity="few">Сообщение прошло через %1$d ретранслятора</item>
+        <item quantity="many">Сообщение прошло через %1$d ретрансляторов</item>
+        <item quantity="other">Сообщение прошло через %1$d ретранслятора</item>
     </plurals>
 
     <!-- Экран переписки -->
@@ -459,6 +466,7 @@
     <string name="messaging_cd_image">Изображение</string>
     <string name="messaging_cd_image_unavailable">Изображение недоступно</string>
     <string name="messaging_image_unavailable_title">Изображение недоступно</string>
+    <string name="messaging_relay_limit_exceeded">Слишком большой для вашего ретранслятора (%1$s, лимит %2$s). Отправьте по прямой связи, выберите ретранслятор с большим лимитом или уменьшите качество изображения.</string>
     <string name="messaging_reply">Ответить</string>
     <string name="messaging_view_details">Подробнее</string>
     <string name="messaging_cd_selected_animated">Выбранное анимированное изображение</string>
@@ -498,31 +506,53 @@
 
     <!-- Контакты -->
     <string name="contacts_title">Контакты</string>
+    <!-- Shown under the Contacts title when the tab row is hidden, so the count does
+         not vanish with the tab label that used to carry it. -->
+    <plurals name="contact_count">
+        <item quantity="one">%1$d контакт</item>
+        <item quantity="few">%1$d контакта</item>
+        <item quantity="many">%1$d контактов</item>
+        <item quantity="other">%1$d контакта</item>
+    </plurals>
     <string name="contacts_add_cd">Добавить контакт</string>
     <string name="contacts_add_contact">Добавить контакт</string>
     <string name="contacts_announce_now">Анонсировать сейчас</string>
     <string name="contacts_clear_announces">Очистить все анонсы</string>
-    <string name="contacts_my_relay">МОЙ РЕЛЕЙ</string>
-    <string name="contacts_my_relay_cd">Мой релей</string>
+    <string name="contacts_my_relay">МОЙ РЕТРАНСЛЯТОР</string>
+    <string name="contacts_my_relay_cd">Мой ретранслятор</string>
     <string name="contacts_auto">(авто)</string>
+    <!-- Stands in for the destination hash on the relay card in Маяк, where the
+         propagation node was picked automatically and never announced a name.
+         See RelayLabel. -->
+    <string name="contacts_relay_unnamed">Ретранслятор сети</string>
     <string name="contacts_pinned">ЗАКРЕПЛЁН</string>
     <string name="contacts_all">ВСЕ КОНТАКТЫ</string>
-    <string name="contacts_unset_relay_title">Убрать назначение релеем?</string>
+    <string name="contacts_unset_relay_title">Убрать назначение ретранслятором?</string>
     <string name="contacts_unset_relay_body">«%1$s» будет удалён из контактов.</string>
     <string name="contacts_relay_remove_auto">Удалить и выбрать новый</string>
     <string name="contacts_relay_remove_only">Только удалить</string>
     <string name="contacts_identity_not_found_cd">Идентичность не найдена</string>
     <string name="contacts_searching_identity">Поиск идентичности…</string>
     <string name="contacts_identity_not_found_retry">Идентичность не найдена — нажмите для повтора</string>
+    <!-- Shown once the first minutes of searching have passed. Says what is
+         actually true — still looking — and names the two likely reasons, the
+         second of which is the easiest mistake to make. See ContactSearch. -->
+    <string name="contacts_not_found_yet">Пока не нашли</string>
+    <string name="contacts_not_found_yet_why">Возможно, собеседник не в сети. Если он так и не появится — сверьте адрес: нужен тот, что под «Ваш адрес», а не хеш идентичности.</string>
     <string name="contacts_never_seen">Не видели ни разу</string>
     <string name="contacts_sharing_location">Делится с вами геолокацией</string>
-    <string name="contacts_relay_badge">РЕЛЕЙ</string>
+    <string name="contacts_relay_badge">РЕТРАНСЛЯТОР</string>
     <string name="contacts_added_via">Добавлен через %1$s</string>
     <string name="contacts_retry_search">Повторить поиск</string>
     <string name="contacts_edit_nickname">Изменить имя</string>
     <string name="contacts_loading">Загрузка контактов…</string>
     <string name="contacts_empty_title">Контактов пока нет</string>
-    <string name="contacts_empty_body">Отметьте пиров звёздочкой в ленте анонсов\nили добавьте контакты по QR-коду</string>
+    <!-- The empty state used to point at the "Announce Stream", a screen name that
+         means nothing to someone who has just installed the app. It now offers the
+         two things that actually connect two people. -->
+    <string name="contacts_empty_body">Двое один раз обмениваются адресами — дальше можно писать друг другу.</string>
+    <string name="contacts_empty_show_code">Показать мой код</string>
+    <string name="contacts_empty_scan_code">Отсканировать код</string>
     <string name="contacts_scan_qr_subtitle">Сканируйте QR-код контакта, чтобы добавить его</string>
     <string name="contacts_manual_entry">Ручной ввод</string>
     <string name="contacts_manual_entry_subtitle">Вставьте строку идентичности RNS</string>
@@ -593,6 +623,8 @@
     <string name="announcedetail_node_details">Детали узла</string>
     <string name="announcedetail_node_not_found">Узел не найден</string>
     <string name="announcedetail_go_back">Назад</string>
+    <string name="announcedetail_never_announced_title">Контакт ещё не анонсировался</string>
+    <string name="announcedetail_never_announced_body">Добавлен по QR-коду или адресу, поэтому из сети о нём пока ничего не слышно. Хопы, сигнал и интерфейс появятся после первого анонса. Написать ему можно уже сейчас.</string>
     <string name="announcedetail_start_chat">Начать чат</string>
     <string name="announcedetail_view_messaging_dest">Показать адрес сообщений</string>
     <string name="announcedetail_view_telephony_dest">Показать адрес телефонии</string>
@@ -689,6 +721,14 @@
     <string name="identityqr_share">Поделиться идентичностью</string>
     <string name="identityqr_identity_hash">Хеш идентичности</string>
     <string name="identityqr_dest_hash">Хеш назначения (LXMF)</string>
+    <!-- The address a person shares to be reachable. Deliberately not called a
+         hash: it is the one string a user has to hand to someone else, and the
+         identity hash sitting next to it in Advanced is not it. -->
+    <string name="myidentity_your_address">Ваш адрес</string>
+    <string name="myidentity_your_address_hint">Передайте его тому, кто должен вам написать.</string>
+    <string name="myidentity_address_copied">Адрес скопирован</string>
+    <string name="myidentity_copy_address">Скопировать адрес</string>
+    <string name="myidentity_address_pending">Адрес появится, когда приложение доберётся до сети.</string>
     <!-- Batch 5c: MyIdentityScreen -->
     <string name="myidentity_title">Моя идентичность</string>
     <string name="myidentity_section">Отображаемое имя и идентичность</string>
@@ -1107,6 +1147,9 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., лицензия MIT — 
     <string name="app_lock_mismatch">Введённые PIN не совпали</string>
     <string name="app_lock_rejected">Выберите другой PIN — он не должен совпадать со вторым</string>
     <string name="app_lock_duress_needs_unlock">Сначала задайте PIN разблокировки</string>
+    <string name="app_lock_locked_out">Слишком много попыток. Повторите через %1$s</string>
+    <string name="app_lock_block_screenshots">Запретить скриншоты</string>
+    <string name="app_lock_block_screenshots_sub">Также скрывает Zamolxis от записи экрана, трансляции и превью в «Недавних»</string>
     <string name="about_built_with">Создано с помощью</string>
     <string name="about_updates">Обновления</string>
     <string name="about_prereleases">Включая предрелизы</string>
@@ -2305,10 +2348,23 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., лицензия MIT — 
     <!-- Полировка P2: статусы в when-ветках + ошибки QR -->
     <string name="qr_failed">Не удалось сгенерировать QR-код</string>
     <string name="qr_no_data">Нет данных для кодирования</string>
-    <string name="quality_probing">Проверка линка...</string>
+    <string name="quality_probing">Проверяем связь…</string>
     <string name="quality_conn_failed">Сбой подключения</string>
-    <string name="quality_no_link">Нет активного линка</string>
-    <string name="quality_mtu">%1$s Б MTU</string>
+    <string name="quality_no_link">Связь ещё не установлена</string>
+    <!-- The call dialog used to read "1 хоп · 40.0 kbps · 500 Б MTU". These say the
+         same two useful things in words: how far away the person is, and whether
+         the link is any good. MTU is gone; it told the reader nothing. -->
+    <string name="quality_link_direct">напрямую</string>
+    <plurals name="quality_link_via">
+        <item quantity="one">через %1$d узел</item>
+        <item quantity="few">через %1$d узла</item>
+        <item quantity="many">через %1$d узлов</item>
+        <item quantity="other">через %1$d узла</item>
+    </plurals>
+    <string name="quality_link_poor">связь очень слабая</string>
+    <string name="quality_link_weak">связь слабая</string>
+    <string name="quality_link_good">связь хорошая</string>
+    <string name="quality_link_excellent">связь отличная</string>
     <string name="messaging_cd_link_active">В сети — линк активен</string>
     <string name="messaging_cd_seen_recently">Недавняя активность</string>
     <string name="messaging_offline">Не в сети</string>

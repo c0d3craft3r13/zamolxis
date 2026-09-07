@@ -103,6 +103,7 @@ import network.zamolxis.app.ui.components.BlePermissionBottomSheet
 import network.zamolxis.app.ui.components.LocalCapabilities
 import network.zamolxis.app.ui.components.LocalWindowSize
 import network.zamolxis.app.ui.components.OfflineModeBanner
+import network.zamolxis.app.ui.components.VpnLocalNetworkBanner
 import network.zamolxis.app.ui.screens.AnnounceDetailScreen
 import network.zamolxis.app.ui.screens.AnnounceStreamScreen
 import network.zamolxis.app.ui.screens.ApkSharingScreen
@@ -136,6 +137,7 @@ import network.zamolxis.app.ui.screens.flasher.RNodeFlasherScreen
 import network.zamolxis.app.ui.screens.offlinemaps.OfflineMapDownloadScreen
 import network.zamolxis.app.ui.screens.offlinemaps.OfflineMapsScreen
 import network.zamolxis.app.security.AppLockRepository
+import network.zamolxis.app.security.ScreenSecurity
 import network.zamolxis.app.ui.screens.AppLockScreen
 import network.zamolxis.app.ui.screens.onboarding.OnboardingPagerScreen
 import network.zamolxis.app.ui.screens.tcpclient.TcpClientWizardScreen
@@ -300,6 +302,12 @@ class MainActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition { !isThemeReady || !isOnboardingReady }
 
         super.onCreate(savedInstanceState)
+
+        // Before anything is drawn. FLAG_SECURE decides whether Android keeps a
+        // thumbnail of this window for the Recents switcher, and that decision is
+        // made against the flag the window has when the frame is produced — set
+        // it later and the first frames are already capturable.
+        ScreenSecurity.apply(this, window)
 
         // Enable edge-to-edge mode for proper IME insets handling
         enableEdgeToEdge()
@@ -765,6 +773,7 @@ private fun AppLockGate(
                 failedAttempts = lock.failedAttempts,
                 busy = lock.busy,
                 onSubmit = { pin -> appLockViewModel.submitPin(activity, pin) },
+                lockoutRemainingMs = lock.lockoutRemainingMs,
             )
         }
     }
@@ -1414,6 +1423,19 @@ fun ZamolxisNavigation(
                         onReconnect = { settingsViewModel.restartService() },
                         hasCompletedOnboarding = onboardingState.hasCompletedOnboarding,
                     )
+                    val vpnActive by settingsViewModel.vpnActive.collectAsState()
+                    VpnLocalNetworkBanner(
+                        vpnActive = vpnActive,
+                        // Mirrors OfflineModeBanner's own visibility so only one of
+                        // the two reserves the status-bar inset.
+                        insetConsumedAbove =
+                            network.zamolxis.app.ui.components
+                                .shouldShowOfflineBanner(
+                                    settingsState.networkStatus,
+                                    onboardingState.hasCompletedOnboarding,
+                                ) ||
+                                settingsState.isRestarting,
+                    )
                     val resolvedStartDestination = startDestination
                     if (resolvedStartDestination == null) {
                         Box(modifier = Modifier.weight(1f))
@@ -1536,13 +1558,29 @@ fun ZamolxisNavigation(
                                 DoubleBackToExitHandler(Screen.Contacts.route)
                                 val contactsViewModel: ContactsViewModel = hiltViewModel()
                                 ContactsScreen(
+                                    // Tapping a contact opens the conversation. It used to
+                                    // open the announce detail, which is a dead end for any
+                                    // contact that has never announced — a QR scan or a
+                                    // pasted lxma:// address — because that screen has
+                                    // nothing to render and says "node not found". Network
+                                    // details stay reachable from the row's "details" menu.
                                     onContactClick = { destinationHash, displayName ->
                                         val encodedHash = Uri.encode(destinationHash)
-                                        navController.navigate("announce_detail/$encodedHash")
+                                        // An empty name segment would not match the
+                                        // messaging route at all, and the tap would
+                                        // silently do nothing.
+                                        val encodedName = Uri.encode(displayName.ifBlank { destinationHash })
+                                        navController.navigate("messaging/$encodedHash/$encodedName")
                                     },
                                     onViewPeerDetails = { destinationHash ->
                                         val encodedHash = Uri.encode(destinationHash)
                                         navController.navigate("announce_detail/$encodedHash")
+                                    },
+                                    // Reached from the empty state, so someone with no
+                                    // contacts can hand over their address without first
+                                    // knowing it lives under Settings.
+                                    onNavigateToMyIdentity = {
+                                        navController.navigate("my_identity")
                                     },
                                     onLocateOnMap = { peerHash ->
                                         mapViewModel.focusOnContact(peerHash)

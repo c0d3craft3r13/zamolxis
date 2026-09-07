@@ -59,6 +59,7 @@ import network.zamolxis.app.audio.RingbackToneEffect
 import network.zamolxis.app.rns.api.model.CallState
 import androidx.compose.ui.res.stringResource
 import network.zamolxis.app.R
+import network.zamolxis.app.ui.model.CallPeerLabel
 
 /**
  * Voice call screen for active/outgoing calls.
@@ -228,7 +229,7 @@ fun VoiceCallScreen(
 
                 // Peer name
                 Text(
-                    text = peerName ?: formatHash(destinationHash),
+                    text = peerName ?: CallPeerLabel.shortenHash(destinationHash),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -294,7 +295,7 @@ fun VoiceCallScreen(
                     // Mute button (disabled in PTT mode since PTT controls transmit)
                     CallControlButton(
                         icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                        label = if (isMuted) "Unmute" else "Mute",
+                        label = stringResource(if (isMuted) R.string.call_unmute else R.string.call_mute),
                         isActive = isMuted,
                         onClick = { viewModel.toggleMute() },
                         enabled = callState is CallState.Active && !isPttMode,
@@ -304,7 +305,7 @@ fun VoiceCallScreen(
                     // PTT mode toggle
                     CallControlButton(
                         icon = Icons.Default.Mic,
-                        label = if (isPttMode) "PTT On" else "PTT",
+                        label = stringResource(if (isPttMode) R.string.call_ptt_on else R.string.call_ptt),
                         isActive = isPttMode,
                         onClick = { viewModel.togglePttMode() },
                         enabled = callState is CallState.Active,
@@ -314,7 +315,7 @@ fun VoiceCallScreen(
                     // Speaker button
                     CallControlButton(
                         icon = if (isSpeakerOn) Icons.Default.VolumeUp else Icons.Default.VolumeDown,
-                        label = if (isSpeakerOn) "Earpiece" else "Speaker",
+                        label = stringResource(if (isSpeakerOn) R.string.call_earpiece else R.string.call_speaker),
                         isActive = isSpeakerOn,
                         onClick = { viewModel.toggleSpeaker() },
                         enabled = callState is CallState.Active,
@@ -492,10 +493,3 @@ private fun CallControlButton(
         )
     }
 }
-
-private fun formatHash(hash: String): String =
-    if (hash.length > 12) {
-        "${hash.take(6)}...${hash.takeLast(6)}"
-    } else {
-        hash
-    }

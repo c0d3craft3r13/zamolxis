@@ -44,9 +44,16 @@ android {
         create("kotlinBackend") {
             dimension = "rnsImpl"
             isDefault = true
+            // reticulum-kt takes a multicast lock per running AutoInterface
+            // (MulticastLockHelper) and drops it when the last one stops, so the
+            // service must not hold one for the whole process lifetime.
+            buildConfigField("boolean", "RNS_BACKEND_MANAGES_MULTICAST_LOCK", "true")
         }
         create("pythonBackend") {
             dimension = "rnsImpl"
+            // Upstream Python RNS has no such hook — without a process-held lock
+            // Android filters inbound multicast and AutoInterface never sees a peer.
+            buildConfigField("boolean", "RNS_BACKEND_MANAGES_MULTICAST_LOCK", "false")
         }
     }
 
@@ -122,14 +129,14 @@ dependencies {
     implementation(libs.coroutines.android)
 
     // LXST voice runtime (Telephone, PacketRouter, AudioDevice, CallCoordinator).
-    api(libs.lxst.kt)
+    api(project(":vendor:lxst-kt:lxst"))
 
     // Reticulum-kt + LXMF-kt — peripherals (RNode, BLE) reach into RNS internals
     // and `NativeRnsBackend` (A.8) will sit alongside.
-    api(libs.rns.core)
-    api(libs.rns.interfaces)
-    api(libs.rns.android)
-    api(libs.lxmf.kt)
+    api(project(":vendor:reticulum-kt:rns-core"))
+    api(project(":vendor:reticulum-kt:rns-interfaces"))
+    api(project(":vendor:reticulum-kt:rns-android"))
+    api(project(":vendor:lxmf-kt:lxmf-core"))
 
     // USB serial — KotlinUSBBridge wraps mik3y's lib for RNode-over-USB.
     api("com.github.mik3y:usb-serial-for-android:3.7.0")
@@ -159,7 +166,7 @@ dependencies {
 
     androidTestImplementation(libs.junit.android)
     androidTestImplementation(libs.test.core)
-    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation(libs.test.runner)
 }
 
 ksp {

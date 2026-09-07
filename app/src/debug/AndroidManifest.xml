@@ -32,6 +32,7 @@
                 <action android:name="network.zamolxis.test.GET_MSG_STATE" />
                 <action android:name="network.zamolxis.test.GET_RX" />
                 <action android:name="network.zamolxis.test.RX_CLEAR" />
+                <action android:name="network.zamolxis.test.SET_SCREEN_CAPTURE" />
                 <action android:name="network.zamolxis.test.ANNOUNCE" />
                 <action android:name="network.zamolxis.test.LIST_INTERFACES" />
                 <action android:name="network.zamolxis.test.DISABLE_ALL_INTERFACES" />

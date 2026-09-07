@@ -1,6 +1,7 @@
 package network.zamolxis.app.reticulum.util
 
 import android.util.Log
+import network.zamolxis.app.util.generatedDisplayNameFor
 import org.msgpack.core.MessagePack
 import org.msgpack.value.ValueType
 
@@ -58,15 +59,14 @@ object AppDataParser {
     /**
      * Generate a fallback name based on the destination hash.
      *
+     * Delegates to [generatedDisplayNameFor] so that the one place which reads these
+     * names back — [network.zamolxis.app.util.isGeneratedDisplayName] — cannot drift
+     * from the place that writes them.
+     *
      * @param destinationHash The hex string of the destination hash
      * @return A formatted name like "Peer 970A60FC"
      */
-    private fun generateFallbackName(destinationHash: String): String =
-        if (destinationHash.length >= 8) {
-            "Peer ${destinationHash.take(8).uppercase()}"
-        } else {
-            "Unknown Peer"
-        }
+    private fun generateFallbackName(destinationHash: String): String = generatedDisplayNameFor(destinationHash)
 
     private val emptyMetadata = PropagationNodeMetadata(name = null, transferLimitKb = null)
 

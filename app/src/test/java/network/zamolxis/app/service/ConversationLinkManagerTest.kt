@@ -1,7 +1,9 @@
 package network.zamolxis.app.service
 
 import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.rns.api.model.ConversationLinkResult
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -406,7 +408,7 @@ class ConversationLinkManagerTest {
         val rnsCore = io.mockk.mockk<network.zamolxis.app.rns.api.RnsCore>()
         val repository = io.mockk.mockk<network.zamolxis.app.data.repository.PeerActivityRepository>(relaxed = true)
         io.mockk.coEvery { rnsCore.establishConversationLink(any(), any()) } returns
-            Result.success(network.zamolxis.app.rns.api.model.ConversationLinkResult(isActive = true))
+            Result.success(ConversationLinkResult(isActive = true))
         val manager = ConversationLinkManager(rnsCore, repository)
 
         manager.openConversationLink("00112233445566778899aabbccddeeff")
@@ -434,5 +436,131 @@ class ConversationLinkManagerTest {
 
         io.mockk.coVerify(exactly = 0) { repository.recordActivity(any(), any(), any()) }
         assertEquals(0L, manager.getLinkState("00112233445566778899aabbccddeeff")?.lastActivityTimestamp)
+    }
+
+    // --- the BLE driver's guess, corrected on this side of the seam ---------------
+
+    private val bleLabel = "BLEPeerInterface[BLE-56:31:F5]"
+
+    /** What ble-reticulum reports for every BLE link, regardless of the link. */
+    private val bleGuessBps = 700_000L
+
+    @Test
+    fun `a BLE first hop is corrected down to the measured figure`() {
+        assertEquals(
+            ConversationLinkManager.BLE_MEASURED_BITRATE_BPS,
+            ConversationLinkManager.firstHopBitrate(bleLabel, bleGuessBps),
+        )
+    }
+
+    @Test
+    fun `a BLE hop reporting something slower than measured is believed`() {
+        assertEquals(
+            9_000L,
+            ConversationLinkManager.firstHopBitrate(bleLabel, 9_000L),
+        )
+    }
+
+    @Test
+    fun `a BLE hop with no figure at all still gets the measured one`() {
+        assertEquals(
+            ConversationLinkManager.BLE_MEASURED_BITRATE_BPS,
+            ConversationLinkManager.firstHopBitrate(bleLabel, null),
+        )
+    }
+
+    @Test
+    fun `every other interface is left exactly as reported`() {
+        listOf(
+            "TCPInterface[g00n.cloud Hub/dfw.us.g00n.cloud:6969]",
+            "AutoInterface[Local]",
+        ).forEach { label ->
+            assertEquals(label, 10_000_000L, ConversationLinkManager.firstHopBitrate(label, 10_000_000L))
+        }
+    }
+
+    @Test
+    fun `an unknown path corrects nothing`() {
+        assertEquals(bleGuessBps, ConversationLinkManager.firstHopBitrate(null, bleGuessBps))
+    }
+
+    @Test
+    fun `BLE stops being classified as a fast interface`() {
+        val uncorrected =
+            ConversationLinkManager.LinkState(
+                isActive = true,
+                nextHopBitrateBps = bleGuessBps,
+                hops = 1,
+            )
+        val corrected = uncorrected.copy(nextHopInterfaceLabel = bleLabel)
+
+        assertEquals(
+            "700 kbps reads as a fast link and offers the full-size photo",
+            ImageCompressionPreset.ORIGINAL,
+            uncorrected.recommendPreset(),
+        )
+        assertFalse(
+            "once corrected it must not still be ORIGINAL",
+            corrected.recommendPreset() == ImageCompressionPreset.ORIGINAL,
+        )
+        assertEquals(
+            "40 kbps sits below the slow-interface threshold, so the balanced preset",
+            ImageCompressionPreset.MEDIUM,
+            corrected.recommendPreset(),
+        )
+    }
+
+    @Test
+    fun `the rate shown to the user is the corrected one`() {
+        val state =
+            ConversationLinkManager.LinkState(
+                isActive = true,
+                nextHopBitrateBps = bleGuessBps,
+                nextHopInterfaceLabel = bleLabel,
+            )
+        assertEquals(ConversationLinkManager.BLE_MEASURED_BITRATE_BPS, state.bestRateBps)
+    }
+
+    @Test
+    fun `a measured transfer rate still wins over the interface figure`() {
+        val state =
+            ConversationLinkManager.LinkState(
+                isActive = true,
+                expectedRateBps = 120_000,
+                nextHopBitrateBps = bleGuessBps,
+                nextHopInterfaceLabel = bleLabel,
+            )
+        assertEquals(120_000L, state.bestRateBps)
+    }
+
+    // --- what the call dialog says instead of "1 hop / 40.0 kbps / 500 B MTU" ---------
+
+    @Test
+    fun `a BLE link reads as weak, not as something to send a photo over`() {
+        assertEquals(
+            LinkQuality.WEAK,
+            ConversationLinkManager.qualityFor(ConversationLinkManager.BLE_MEASURED_BITRATE_BPS),
+        )
+    }
+
+    @Test
+    fun `the words and the recommended preset never disagree`() {
+        // Both read the same thresholds, so every rate must land on a matching pair.
+        val pairs =
+            mapOf(
+                1_000L to Pair(LinkQuality.POOR, ImageCompressionPreset.LOW),
+                20_000L to Pair(LinkQuality.WEAK, ImageCompressionPreset.MEDIUM),
+                200_000L to Pair(LinkQuality.GOOD, ImageCompressionPreset.HIGH),
+                5_000_000L to Pair(LinkQuality.EXCELLENT, ImageCompressionPreset.ORIGINAL),
+            )
+        pairs.forEach { (bps, expected) ->
+            assertEquals("quality at $bps", expected.first, ConversationLinkManager.qualityFor(bps))
+            assertEquals("preset at $bps", expected.second, ConversationLinkManager.presetFromBitrate(bps))
+        }
+    }
+
+    @Test
+    fun `a dead link is not described as merely weak`() {
+        assertEquals(LinkQuality.POOR, ConversationLinkManager.qualityFor(0))
     }
 }

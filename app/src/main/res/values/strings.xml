@@ -188,6 +188,7 @@
 
     <!-- Offline mode banner -->
     <string name="offline_banner_shutdown">Zamolxis is offline</string>
+    <string name="vpn_local_network_banner">VPN is on — peers on your local network may not be found. Exclude Zamolxis in your VPN app to reach them.</string>
     <string name="offline_banner_error">Connection error</string>
     <string name="offline_banner_reconnecting">Reconnecting\u2026</string>
     <string name="offline_banner_reconnect">Reconnect</string>
@@ -287,6 +288,12 @@
     <string name="call_ptt_talking">TALKING</string>
     <string name="call_ptt_hold">HOLD
 TO TALK</string>
+    <string name="call_mute">Mute</string>
+    <string name="call_unmute">Unmute</string>
+    <string name="call_ptt">PTT</string>
+    <string name="call_ptt_on">PTT On</string>
+    <string name="call_speaker">Speaker</string>
+    <string name="call_earpiece">Earpiece</string>
 
     <!-- Voice call permissions card -->
     <string name="voiceperm_title">Voice Call Permissions</string>
@@ -447,6 +454,7 @@ TO TALK</string>
     <string name="messaging_cd_image">Image attachment</string>
     <string name="messaging_cd_image_unavailable">Image unavailable</string>
     <string name="messaging_image_unavailable_title">Image Not Available</string>
+    <string name="messaging_relay_limit_exceeded">Too large for your relay (%1$s, limit %2$s). Send it over a direct link, pick a relay with a higher limit, or reduce the image quality.</string>
     <string name="messaging_reply">Reply</string>
     <string name="messaging_view_details">View Details</string>
     <string name="messaging_cd_selected_animated">Selected animated image</string>
@@ -482,6 +490,12 @@ TO TALK</string>
 
     <!-- Contacts -->
     <string name="contacts_title">Contacts</string>
+    <!-- Shown under the Contacts title when the tab row is hidden, so the count does
+         not vanish with the tab label that used to carry it. -->
+    <plurals name="contact_count">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="other">%1$d contacts</item>
+    </plurals>
     <string name="contacts_add_cd">Add contact</string>
     <string name="contacts_add_contact">Add Contact</string>
     <string name="contacts_announce_now">Announce now</string>
@@ -489,6 +503,10 @@ TO TALK</string>
     <string name="contacts_my_relay">MY RELAY</string>
     <string name="contacts_my_relay_cd">My Relay</string>
     <string name="contacts_auto">(auto)</string>
+    <!-- Stands in for the destination hash on the relay card in Маяк, where the
+         propagation node was picked automatically and never announced a name.
+         See RelayLabel. -->
+    <string name="contacts_relay_unnamed">Network relay</string>
     <string name="contacts_pinned">PINNED</string>
     <string name="contacts_all">ALL CONTACTS</string>
     <string name="contacts_unset_relay_title">Unset as Your Relay?</string>
@@ -498,6 +516,11 @@ TO TALK</string>
     <string name="contacts_identity_not_found_cd">Identity not found</string>
     <string name="contacts_searching_identity">Searching for identity...</string>
     <string name="contacts_identity_not_found_retry">Identity not found - tap to retry</string>
+    <!-- Shown once the first minutes of searching have passed. Says what is
+         actually true — still looking — and names the two likely reasons, the
+         second of which is the easiest mistake to make. See ContactSearch. -->
+    <string name="contacts_not_found_yet">Not found yet</string>
+    <string name="contacts_not_found_yet_why">They may be offline. If they never appear, check the address — it must be the one under "Your address", not the identity hash.</string>
     <string name="contacts_never_seen">Never seen</string>
     <string name="contacts_sharing_location">Sharing location with you</string>
     <string name="contacts_relay_badge">RELAY</string>
@@ -506,7 +529,12 @@ TO TALK</string>
     <string name="contacts_edit_nickname">Edit Nickname</string>
     <string name="contacts_loading">Loading contacts...</string>
     <string name="contacts_empty_title">No contacts yet</string>
-    <string name="contacts_empty_body">Star peers in the Announce Stream\nor add contacts via QR code</string>
+    <!-- The empty state used to point at the "Announce Stream", a screen name that
+         means nothing to someone who has just installed the app. It now offers the
+         two things that actually connect two people. -->
+    <string name="contacts_empty_body">Two people swap addresses once — after that they can write to each other.</string>
+    <string name="contacts_empty_show_code">Show my code</string>
+    <string name="contacts_empty_scan_code">Scan a code</string>
     <string name="contacts_scan_qr_subtitle">Scan a contact\'s QR code to add them</string>
     <string name="contacts_manual_entry">Manual Entry</string>
     <string name="contacts_manual_entry_subtitle">Paste RNS identity string</string>
@@ -575,6 +603,8 @@ TO TALK</string>
     <string name="announcedetail_node_details">Node Details</string>
     <string name="announcedetail_node_not_found">Node not found</string>
     <string name="announcedetail_go_back">Go Back</string>
+    <string name="announcedetail_never_announced_title">This contact has not announced yet</string>
+    <string name="announcedetail_never_announced_body">Added from a QR code or address, so there is nothing heard from the network yet. Hops, signal and interface details appear after the first announce reaches you. You can message them now.</string>
     <string name="announcedetail_start_chat">Start Chat</string>
     <string name="announcedetail_view_messaging_dest">View messaging destination</string>
     <string name="announcedetail_view_telephony_dest">View telephony destination</string>
@@ -667,6 +697,14 @@ TO TALK</string>
     <string name="identityqr_share">Share Identity</string>
     <string name="identityqr_identity_hash">Identity Hash</string>
     <string name="identityqr_dest_hash">Destination Hash (LXMF)</string>
+    <!-- The address a person shares to be reachable. Deliberately not called a
+         hash: it is the one string a user has to hand to someone else, and the
+         identity hash sitting next to it in Advanced is not it. -->
+    <string name="myidentity_your_address">Your address</string>
+    <string name="myidentity_your_address_hint">Give this to someone so they can write to you.</string>
+    <string name="myidentity_address_copied">Address copied</string>
+    <string name="myidentity_copy_address">Copy address</string>
+    <string name="myidentity_address_pending">Your address appears once the app reaches the network.</string>
     <!-- Batch 5c: MyIdentityScreen -->
     <string name="myidentity_title">My Identity</string>
     <string name="myidentity_section">Display Name &amp; Identity</string>
@@ -1083,6 +1121,9 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., under the MIT licence —
     <string name="app_lock_mismatch">The two entries did not match</string>
     <string name="app_lock_rejected">Pick a different PIN — it must not match your other one</string>
     <string name="app_lock_duress_needs_unlock">Set an unlock PIN first</string>
+    <string name="app_lock_locked_out">Too many attempts. Try again in %1$s</string>
+    <string name="app_lock_block_screenshots">Block screenshots</string>
+    <string name="app_lock_block_screenshots_sub">Also hides Zamolxis from screen recording, casting and the Recents preview</string>
     <string name="about_built_with">Built With</string>
     <string name="about_updates">Updates</string>
     <string name="about_prereleases">Include pre-releases</string>
@@ -2240,10 +2281,21 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., under the MIT licence —
     <!-- Polish P2: status words in when-branches + QR errors -->
     <string name="qr_failed">Failed to generate QR code</string>
     <string name="qr_no_data">No data to encode</string>
-    <string name="quality_probing">Probing link...</string>
+    <string name="quality_probing">Checking the connection…</string>
     <string name="quality_conn_failed">Connection failed</string>
-    <string name="quality_no_link">No active link</string>
-    <string name="quality_mtu">%1$sB MTU</string>
+    <string name="quality_no_link">Not connected yet</string>
+    <!-- The call dialog used to read "1 hop · 40.0 kbps · 500B MTU". These say the
+         same two useful things in words: how far away the person is, and whether
+         the link is any good. MTU is gone; it told the reader nothing. -->
+    <string name="quality_link_direct">direct</string>
+    <plurals name="quality_link_via">
+        <item quantity="one">via %1$d node</item>
+        <item quantity="other">via %1$d nodes</item>
+    </plurals>
+    <string name="quality_link_poor">very weak connection</string>
+    <string name="quality_link_weak">weak connection</string>
+    <string name="quality_link_good">good connection</string>
+    <string name="quality_link_excellent">excellent connection</string>
     <string name="messaging_cd_link_active">Online — link active</string>
     <string name="messaging_cd_seen_recently">Last seen recently</string>
     <string name="messaging_offline">Offline</string>

@@ -86,6 +86,12 @@ class ZamolxisApplication : Application() {
     lateinit var interfaceRepository: InterfaceRepository
 
     @Inject
+    lateinit var bootstrapResilience: network.zamolxis.app.service.BootstrapResilience
+
+    @Inject
+    lateinit var bootstrapHubHealth: network.zamolxis.app.service.BootstrapHubHealth
+
+    @Inject
     lateinit var autoAnnounceManager: network.zamolxis.app.service.AutoAnnounceManager
 
     @Inject
@@ -191,6 +197,12 @@ class ZamolxisApplication : Application() {
             network.zamolxis.app.util.FileUtils
                 .cleanupAllTempFiles(this@ZamolxisApplication)
         }
+
+        // Watch whether the seeded bootstrap hubs actually deliver announces, and swap
+        // them out if they do not. Started unconditionally: it schedules its own delay,
+        // and the paths below that return early (service already running, identity
+        // locked) are exactly the ones where a silent hub would otherwise go unnoticed.
+        bootstrapHubHealth.start(applicationScope)
 
         // Migrate unencrypted identity keys to encrypted storage (one-time, idempotent),
         // then scrub any stale plaintext identity_<hash> files. The migration reads those
@@ -395,7 +407,14 @@ class ZamolxisApplication : Application() {
                             "ZamolxisApplication",
                             "Identity verified (${verificationResult.dbIdentityHash?.take(8) ?: "none"}...) - reconnecting",
                         )
-                        // Identity matches - reconnect collectors and managers
+                        // Identity matches - reconnect collectors and managers.
+                        // Re-seed identities here too: this branch reattaches to a
+                        // service process the UI did not start, and if Android
+                        // recreated that service its identity store came back with
+                        // only what it had persisted. Seeding is idempotent, so the
+                        // common case (service still warm) just overwrites equal
+                        // entries.
+                        restorePeerIdentities(rnsCore)
                         messageCollector.startCollecting()
                         groupChatManager.start()
                         autoAnnounceManager.start()
@@ -419,6 +438,28 @@ class ZamolxisApplication : Application() {
 
                 // Service is SHUTDOWN or ERROR - need to initialize
                 android.util.Log.d("ZamolxisApplication", "Service needs initialization (status: $currentStatus)")
+
+                // Top up bootstrap hubs and raise the discovery default before the
+                // config is read — otherwise the repair would not take effect until the
+                // launch after next, which for an install whose only hub is dead means
+                // one more session with no network and no explanation.
+                try {
+                    val outcome = bootstrapResilience.applyOnce()
+                    if (!outcome.alreadyApplied) {
+                        android.util.Log.i(
+                            "ZamolxisApplication",
+                            "Bootstrap resilience: added=${outcome.hubsAdded} " +
+                                "discovery=${outcome.discoveryEnabled} " +
+                                "seedsRestored=${outcome.seedsRestored} " +
+                                "deadHubsRetired=${outcome.deadHubsRetired} " +
+                                "rotationBudgetReset=${outcome.rotationBudgetReset}",
+                        )
+                    }
+                } catch (e: Exception) {
+                    // Never let this block startup: without it the app still runs with
+                    // whatever interfaces it already has.
+                    android.util.Log.e("ZamolxisApplication", "Bootstrap resilience repair failed", e)
+                }
 
                 // Load all configuration from database in parallel for faster startup
                 android.util.Log.d("ZamolxisApplication", "Loading configuration from database (parallel)...")

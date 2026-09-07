@@ -23,6 +23,35 @@ import java.util.Locale
  * Provides functions for reading files from URIs, extracting metadata,
  * and formatting file information for display.
  */
+private const val MAX_EXTENSION_LENGTH = 8
+
+/**
+ * A file extension safe to append to a path we build ourselves.
+ *
+ * The source filename here comes from a content provider owned by whatever app
+ * shared to us — its `DISPLAY_NAME` is fully attacker-chosen. Naively taking
+ * `substringAfterLast('.')` off a name like `x.a/../../files/rns_config_snapshot.bin`
+ * yields an "extension" carrying `/` and `..`, so the temp file lands wherever the
+ * sender points inside our sandbox. Keep only a short, alphanumeric suffix — no
+ * separators, no dots, so it cannot climb out of the directory we chose.
+ *
+ * Top-level rather than a member of [FileUtils] so it stays independently testable
+ * without pushing that object past its function-count budget.
+ *
+ * @return the extension WITH a leading dot (e.g. ".png"), or null if the name has
+ *   no usable one — the caller then falls back to the MIME type.
+ */
+internal fun sanitizedExtension(filename: String?): String? {
+    if (filename == null || !filename.contains('.')) return null
+    val cleaned =
+        filename
+            .substringAfterLast('.')
+            .filter { it.isLetterOrDigit() }
+            .take(MAX_EXTENSION_LENGTH)
+            .lowercase(Locale.ROOT)
+    return if (cleaned.isEmpty()) null else ".$cleaned"
+}
+
 object FileUtils {
     private const val TAG = "FileUtils"
 
@@ -423,11 +452,8 @@ object FileUtils {
             if (!dir.exists()) dir.mkdirs()
 
             val extension =
-                run {
-                    val filename = getFilename(context, uri)
-                    if (filename != null && filename.contains('.')) {
-                        ".${filename.substringAfterLast('.')}"
-                    } else {
+                sanitizedExtension(getFilename(context, uri))
+                    ?: run {
                         val mimeType = context.contentResolver.getType(uri)
                         when {
                             mimeType == null -> ".jpg"
@@ -437,7 +463,6 @@ object FileUtils {
                             else -> ".jpg"
                         }
                     }
-                }
             val tempFile = File(dir, "${index}_${System.currentTimeMillis()}$extension")
 
             context.contentResolver.openInputStream(uri)?.use { input ->

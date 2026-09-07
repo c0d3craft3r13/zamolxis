@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import network.zamolxis.app.data.repository.AnnounceRepository
 import network.zamolxis.app.data.repository.ContactRepository
+import network.zamolxis.app.data.util.HashUtils
 import network.zamolxis.app.audio.CallMicrophoneAdmissionCoordinator
 import network.zamolxis.app.rns.api.RnsTelephony
 import network.zamolxis.app.rns.api.model.CallState
+import network.zamolxis.app.ui.model.CallPeerLabel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +38,6 @@ import javax.inject.Inject
  */
 @Suppress("TooManyFunctions") // Call + PTT controls require many small action methods
 
-
 /** Reasons a Call-again / Call action can fail before or during initiation. */
 enum class CallInitiationFailure {
     INVALID_IDENTITY,
@@ -64,6 +65,9 @@ class CallViewModel
         // Serializes mute IPC calls to prevent race conditions (e.g. PTT release vs toggle off)
         private val muteMutex = Mutex()
 
+        // The address the caller actually dialled. The telephony seam reports a different
+        // hash for the same peer, so this is what we fall back to when no name is known.
+        private var dialledHash: String? = null
 
         // Expose call state from telephony seam
         val callState: StateFlow<CallState> = telephony.callState
@@ -101,6 +105,7 @@ class CallViewModel
                             durationTimerJob = null
                             _callDuration.value = 0L
                             _isConnecting.value = false
+                            dialledHash = null
                         }
                         is CallState.Connecting -> {
                             _isConnecting.value = true
@@ -138,51 +143,39 @@ class CallViewModel
         }
 
         /**
-         * Resolve display name for a peer with priority:
-         * 1. Contact's custom nickname (user-set)
-         * 2. Announce peer name (from network) - by destination hash
-         * 3. Announce peer name (from network) - by identity hash (for LXST calls)
-         * 4. Formatted identity hash (fallback)
+         * Resolve the display name for the peer on the other end of a call.
+         *
+         * [hash] is whatever the telephony seam reports, which for an LXST call is the
+         * peer's `lxst.telephony` destination — not the address the caller dialled. So
+         * the search widens from that hash to the identity behind it and back out to
+         * the peer's other destinations, and [CallPeerLabel] discards any name the app
+         * invented along the way. See that class for why a placeholder is worse than a hash.
          */
-        private suspend fun resolvePeerName(identityHash: String) {
+        private suspend fun resolvePeerName(hash: String) {
             try {
-                // Check contact for custom nickname first
-                val contact = contactRepository.getContact(identityHash)
-                if (!contact?.customNickname.isNullOrBlank()) {
-                    _peerName.value = contact!!.customNickname
-                    return
-                }
-
-                // Check announce for peer name by destination hash
-                val announce = announceRepository.getAnnounce(identityHash)
-                if (!announce?.peerName.isNullOrBlank()) {
-                    _peerName.value = announce!!.peerName
-                    return
-                }
-
-                // For LXST calls, the hash might be an identity hash rather than destination hash
-                // (different aspects produce different destination hashes for the same identity)
-                val announceByIdentity = announceRepository.findByIdentityHash(identityHash)
-                if (!announceByIdentity?.peerName.isNullOrBlank()) {
-                    Log.d(TAG, "Found peer name via identity hash: ${announceByIdentity!!.peerName}")
-                    _peerName.value = announceByIdentity.peerName
-                    return
-                }
-
-                // Fallback to formatted hash
-                _peerName.value = formatIdentityHash(identityHash)
+                _peerName.value = CallPeerLabel.of(peerNameCandidates(hash), dialledHash ?: hash)
             } catch (e: Exception) {
                 Log.e(TAG, "Error resolving peer name", e)
-                _peerName.value = formatIdentityHash(identityHash)
+                _peerName.value = CallPeerLabel.shortenHash(dialledHash ?: hash)
             }
         }
 
-        private fun formatIdentityHash(hash: String): String =
-            if (hash.length > 12) {
-                "${hash.take(6)}...${hash.takeLast(6)}"
-            } else {
-                hash
+        /** Every name the app can find for [hash], best first. */
+        private suspend fun peerNameCandidates(hash: String): List<String?> {
+            val announce = announceRepository.getAnnounce(hash)
+            val identityHash = announce?.publicKey?.let { HashUtils.computeIdentityHash(it) }
+            val linked =
+                identityHash?.let { announceRepository.getLinkedAnnounces(it, hash) }.orEmpty()
+
+            return buildList {
+                add(contactRepository.getContact(hash)?.customNickname)
+                add(announce?.peerName)
+                identityHash?.let { add(contactRepository.getContact(it)?.customNickname) }
+                linked.forEach { add(it.peerName) }
+                // The reported hash is sometimes an identity hash rather than a destination.
+                add(announceRepository.findByIdentityHash(hash)?.peerName)
             }
+        }
 
         /**
          * Initiate an outgoing call.
@@ -203,6 +196,7 @@ class CallViewModel
             Log.w(TAG, "📞📞📞 initiateCall() CALLED - destHash=${destinationHash.take(16)}, profile=${profileCode ?: "default"}...")
             Log.w(TAG, "📞 Current callState=${callState.value}")
             _isConnecting.value = true
+            dialledHash = destinationHash
             resolvePeerNameSync(destinationHash)
 
             // Update local state then initiate via service IPC with retry for CallManager init
@@ -250,7 +244,6 @@ class CallViewModel
                 }
             }
         }
-
 
         private fun resolvePeerNameSync(identityHash: String) {
             viewModelScope.launch {

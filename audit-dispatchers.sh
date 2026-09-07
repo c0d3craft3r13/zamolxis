@@ -80,6 +80,14 @@ RETICULUM_SRC=$(find . -mindepth 4 -maxdepth 4 -type d \( -name java -o -name ko
     sed 's|^\./||' |
     grep -v -E "^(app|data)/src/main/(java|kotlin)$" |
     grep -v -E "/src/(test|androidTest)[^/]*/" |
+    # Vendored third-party sources (see vendor/PROVENANCE.md). This project's threading
+    # rules are not upstream's: the vendored stack uses GlobalScope and runBlocking in
+    # about ten places, and rewriting them would fork code we want to keep diffable
+    # against upstream. Today the -maxdepth 4 above already misses vendor/ (its source
+    # roots sit at depth 6), which is exactly the kind of accidental pass this script's
+    # own header warns about — so the exclusion is spelled out rather than left to a
+    # depth limit that someone may widen later.
+    grep -v -E "^vendor/" |
     sort | tr '\n' ' ' || true)
 
 # Drop `file:line:` hits that aren't code: imports, `//` comments, and — the case

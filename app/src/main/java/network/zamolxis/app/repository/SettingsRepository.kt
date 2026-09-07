@@ -128,6 +128,8 @@ class SettingsRepository
             val DISCOVER_INTERFACES_ENABLED = booleanPreferencesKey("discover_interfaces_enabled")
             val AUTOCONNECT_DISCOVERED_COUNT = intPreferencesKey("autoconnect_discovered_count")
             val AUTOCONNECT_IFAC_ONLY = booleanPreferencesKey("autoconnect_ifac_only")
+            val BOOTSTRAP_RESILIENCE_VERSION = intPreferencesKey("bootstrap_resilience_version")
+            val BOOTSTRAP_ROTATIONS_USED = intPreferencesKey("bootstrap_rotations_used")
 
             // Location sharing preferences
             val LOCATION_SHARING_ENABLED = booleanPreferencesKey("location_sharing_enabled")
@@ -1264,6 +1266,48 @@ class SettingsRepository
         suspend fun saveDiscoverInterfacesEnabled(enabled: Boolean) {
             context.dataStore.edit { preferences ->
                 preferences[PreferencesKeys.DISCOVER_INTERFACES_ENABLED] = enabled
+            }
+        }
+
+        /**
+         * Whether the user has ever expressed a choice about interface discovery.
+         *
+         * The stored default and an explicit "off" are the same value, so raising the
+         * default would silently re-enable discovery for someone who turned it off on
+         * purpose. [BootstrapResilience] uses this to change only the *unset* case.
+         */
+        suspend fun hasDiscoverInterfacesPreference(): Boolean =
+            context.dataStore.data
+                .map { preferences -> preferences.contains(PreferencesKeys.DISCOVER_INTERFACES_ENABLED) }
+                .first()
+
+        /**
+         * Version of the bootstrap-resilience repair that has been applied, 0 if none.
+         * See [BootstrapResilience].
+         */
+        suspend fun getBootstrapResilienceVersion(): Int =
+            context.dataStore.data
+                .map { preferences -> preferences[PreferencesKeys.BOOTSTRAP_RESILIENCE_VERSION] ?: 0 }
+                .first()
+
+        suspend fun saveBootstrapResilienceVersion(version: Int) {
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.BOOTSTRAP_RESILIENCE_VERSION] = version
+            }
+        }
+
+        /**
+         * How many times this install has swapped out silent bootstrap hubs.
+         * Capped by [network.zamolxis.app.service.BootstrapRotationPolicy.MAX_ROTATIONS].
+         */
+        suspend fun getBootstrapRotationsUsed(): Int =
+            context.dataStore.data
+                .map { preferences -> preferences[PreferencesKeys.BOOTSTRAP_ROTATIONS_USED] ?: 0 }
+                .first()
+
+        suspend fun saveBootstrapRotationsUsed(count: Int) {
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.BOOTSTRAP_ROTATIONS_USED] = count
             }
         }
 

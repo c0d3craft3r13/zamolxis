@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import network.zamolxis.app.data.model.InterfaceType
 import network.zamolxis.app.data.repository.Announce
@@ -14,6 +15,7 @@ import network.zamolxis.app.viewmodel.AnnounceStreamViewModel
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -183,10 +185,11 @@ class AnnounceDetailScreenTest {
     @Test
     fun `node details distinguishes current path from recent interfaces`() {
         val mockViewModel = mockk<AnnounceStreamViewModel>()
-        val announce = createLxmfPeerAnnounce().copy(
-            receivingInterface = "TCPClientInterface[Backbone]",
-            receivingInterfaceType = "TCP_CLIENT",
-        )
+        val announce =
+            createLxmfPeerAnnounce().copy(
+                receivingInterface = "TCPClientInterface[Backbone]",
+                receivingInterfaceType = "TCP_CLIENT",
+            )
         val sightings =
             listOf(
                 AnnounceInterfaceSighting(
@@ -266,4 +269,60 @@ class AnnounceDetailScreenTest {
             peeringCost = null,
             propagationTransferLimitKb = null,
         )
+    // ========== Saved contact that has never announced ==========
+
+    @Test
+    fun `a saved contact with no announce is offered a chat instead of node not found`() {
+        val mockViewModel = mockk<AnnounceStreamViewModel>()
+        // No announce row: exactly what a QR-scanned contact looks like until the
+        // peer is first heard on the air.
+        every { mockViewModel.getAnnounceFlow(any()) } returns MutableStateFlow(null)
+        every { mockViewModel.isContactFlow(any()) } returns MutableStateFlow(true)
+        every { mockViewModel.isMyRelayFlow(any()) } returns MutableStateFlow(false)
+        every { mockViewModel.isTransportEnabled } returns MutableStateFlow(false)
+        every { mockViewModel.getLinkedAnnouncesFlow(any()) } returns MutableStateFlow(emptyList())
+        every { mockViewModel.getRecentInterfaceSightings(any()) } returns MutableStateFlow(emptyList())
+
+        var chatStartedFor: String? = null
+        composeTestRule.setContent {
+            MaterialTheme {
+                AnnounceDetailScreen(
+                    destinationHash = "test_hash",
+                    onBackClick = {},
+                    onStartChat = { hash, _ -> chatStartedFor = hash },
+                    onViewAnnounce = {},
+                    viewModel = mockViewModel,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("This contact has not announced yet").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Start Chat").performClick()
+        assertEquals("test_hash", chatStartedFor)
+    }
+
+    @Test
+    fun `an unknown destination that is not a contact still reads as node not found`() {
+        val mockViewModel = mockk<AnnounceStreamViewModel>()
+        every { mockViewModel.getAnnounceFlow(any()) } returns MutableStateFlow(null)
+        every { mockViewModel.isContactFlow(any()) } returns MutableStateFlow(false)
+        every { mockViewModel.isMyRelayFlow(any()) } returns MutableStateFlow(false)
+        every { mockViewModel.isTransportEnabled } returns MutableStateFlow(false)
+        every { mockViewModel.getLinkedAnnouncesFlow(any()) } returns MutableStateFlow(emptyList())
+        every { mockViewModel.getRecentInterfaceSightings(any()) } returns MutableStateFlow(emptyList())
+
+        composeTestRule.setContent {
+            MaterialTheme {
+                AnnounceDetailScreen(
+                    destinationHash = "test_hash",
+                    onBackClick = {},
+                    onStartChat = { _, _ -> },
+                    onViewAnnounce = {},
+                    viewModel = mockViewModel,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Node not found").assertIsDisplayed()
+    }
 }

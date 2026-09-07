@@ -322,6 +322,11 @@ class SettingsViewModelTest {
                 mockk<PqKeyRepository>().also {
                     coEvery { it.rotateOurKeyPair(any()) } returns null
                 },
+            vpnStatusMonitor =
+                mockk<network.zamolxis.app.service.manager.VpnStatusMonitor>().also {
+                    every { it.start() } just Runs
+                    every { it.vpnActive } returns MutableStateFlow(false)
+                },
         )
 
     @Test
@@ -1723,6 +1728,11 @@ class SettingsViewModelTest {
                         mockk<PqKeyRepository>().also {
                             coEvery { it.rotateOurKeyPair(any()) } returns null
                         },
+                    vpnStatusMonitor =
+                        mockk<network.zamolxis.app.service.manager.VpnStatusMonitor>().also {
+                            every { it.start() } just Runs
+                            every { it.vpnActive } returns MutableStateFlow(false)
+                        },
                 )
 
             viewModel.state.test {
@@ -1783,6 +1793,11 @@ class SettingsViewModelTest {
                     pqKeyRepository =
                         mockk<PqKeyRepository>().also {
                             coEvery { it.rotateOurKeyPair(any()) } returns null
+                        },
+                    vpnStatusMonitor =
+                        mockk<network.zamolxis.app.service.manager.VpnStatusMonitor>().also {
+                            every { it.start() } just Runs
+                            every { it.vpnActive } returns MutableStateFlow(false)
                         },
                 )
 
@@ -2455,6 +2470,11 @@ class SettingsViewModelTest {
                         mockk<PqKeyRepository>().also {
                             coEvery { it.rotateOurKeyPair(any()) } returns null
                         },
+                    vpnStatusMonitor =
+                        mockk<network.zamolxis.app.service.manager.VpnStatusMonitor>().also {
+                            every { it.start() } just Runs
+                            every { it.vpnActive } returns MutableStateFlow(false)
+                        },
                 )
 
             // Wait for any potential async operations to settle
@@ -2631,6 +2651,11 @@ class SettingsViewModelTest {
                     pqKeyRepository =
                         mockk<PqKeyRepository>().also {
                             coEvery { it.rotateOurKeyPair(any()) } returns null
+                        },
+                    vpnStatusMonitor =
+                        mockk<network.zamolxis.app.service.manager.VpnStatusMonitor>().also {
+                            every { it.start() } just Runs
+                            every { it.vpnActive } returns MutableStateFlow(false)
                         },
                 )
 

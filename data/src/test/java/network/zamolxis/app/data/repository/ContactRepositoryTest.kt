@@ -8,10 +8,12 @@ import android.util.Log
 import network.zamolxis.app.data.db.dao.AnnounceDao
 import network.zamolxis.app.data.db.dao.ContactDao
 import network.zamolxis.app.data.db.dao.LocalIdentityDao
+import network.zamolxis.app.data.db.dao.PeerIdentityDao
 import network.zamolxis.app.data.db.entity.AnnounceEntity
 import network.zamolxis.app.data.db.entity.ContactEntity
 import network.zamolxis.app.data.db.entity.ContactStatus
 import network.zamolxis.app.data.db.entity.LocalIdentityEntity
+import network.zamolxis.app.data.db.entity.PeerIdentityEntity
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -32,6 +34,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -51,6 +54,7 @@ class ContactRepositoryTest {
     private lateinit var mockContactDao: ContactDao
     private lateinit var mockLocalIdentityDao: LocalIdentityDao
     private lateinit var mockAnnounceDao: AnnounceDao
+    private lateinit var mockPeerIdentityDao: PeerIdentityDao
     private val testDispatcher = StandardTestDispatcher()
 
     private val testIdentityHash = "test_identity_hash_123"
@@ -72,6 +76,7 @@ class ContactRepositoryTest {
         mockContactDao = mockk(relaxed = true)
         mockLocalIdentityDao = mockk(relaxed = true)
         mockAnnounceDao = mockk(relaxed = true)
+        mockPeerIdentityDao = mockk(relaxed = true)
 
         // Default: active identity exists
         every { mockLocalIdentityDao.getActiveIdentity() } returns flowOf(createTestIdentity())
@@ -82,6 +87,7 @@ class ContactRepositoryTest {
                 contactDao = mockContactDao,
                 localIdentityDao = mockLocalIdentityDao,
                 announceDao = mockAnnounceDao,
+                peerIdentityDao = mockPeerIdentityDao,
             )
     }
 
@@ -880,5 +886,72 @@ class ContactRepositoryTest {
             // Then: Should return the relay regardless of which identity it belongs to
             assertEquals(otherIdentityRelay, result)
             assertEquals("different_identity_hash", result?.identityHash)
+        }
+    // ========== Out-of-band keys reach peer_identities ==========
+
+    @Test
+    fun `addContactFromQrCode also mirrors the key into peer identities`() =
+        runTest {
+            val captured = slot<PeerIdentityEntity>()
+            coEvery { mockPeerIdentityDao.insertPeerIdentity(capture(captured)) } returns Unit
+
+            val result = repository.addContactFromQrCode(testDestHash.uppercase(), testPublicKey, "Alice")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // Without this row the Reticulum identity store is never re-seeded
+            // with the scanned key and the first message fails to resolve the
+            // recipient.
+            assertTrue(result.isSuccess)
+            assertEquals(testDestHash, captured.captured.peerHash)
+            assertArrayEquals(testPublicKey, captured.captured.publicKey)
+        }
+
+    @Test
+    fun `addContactManually also mirrors the key into peer identities`() =
+        runTest {
+            val captured = slot<PeerIdentityEntity>()
+            coEvery { mockPeerIdentityDao.insertPeerIdentity(capture(captured)) } returns Unit
+
+            val result = repository.addContactManually(testDestHash, testPublicKey, "Alice")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertTrue(result.isSuccess)
+            assertEquals(testDestHash, captured.captured.peerHash)
+            assertArrayEquals(testPublicKey, captured.captured.publicKey)
+        }
+
+    @Test
+    fun `restorable contact identities are keyed by destination hash, not identity hash`() =
+        runTest {
+            val contact =
+                createTestContact(destinationHash = testDestHash).copy(publicKey = testPublicKey)
+            coEvery {
+                mockContactDao.getRestorableContactsForIdentity(testIdentityHash, ContactStatus.ACTIVE.name)
+            } returns listOf(contact)
+
+            val restorable = repository.getRestorableContactIdentitiesForActiveIdentity()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // The Reticulum identity store is looked up by destination hash on
+            // the send path (Identity.recall(destinationHash)). Seeding it under
+            // SHA-256(publicKey) — the identity hash — means the lookup misses
+            // and the contact is unreachable despite its key being on disk.
+            assertEquals(1, restorable.size)
+            assertEquals(testDestHash, restorable.single().first)
+            assertArrayEquals(testPublicKey, restorable.single().second)
+        }
+
+    @Test
+    fun `restorable contact identities skip contacts with no key`() =
+        runTest {
+            val keyless = createTestContact(destinationHash = testDestHash).copy(publicKey = null)
+            coEvery {
+                mockContactDao.getRestorableContactsForIdentity(testIdentityHash, ContactStatus.ACTIVE.name)
+            } returns listOf(keyless)
+
+            val restorable = repository.getRestorableContactIdentitiesForActiveIdentity()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertTrue(restorable.isEmpty())
         }
 }

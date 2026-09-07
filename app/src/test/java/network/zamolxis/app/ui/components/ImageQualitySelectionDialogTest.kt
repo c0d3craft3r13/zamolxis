@@ -185,7 +185,7 @@ class ImageQualitySelectionDialogTest {
     }
 
     @Test
-    fun dialog_displaysHopsAndBitrate_whenLinkActive() {
+    fun dialog_describesTheLinkInWordsNotProtocolNumbers() {
         val linkState =
             ConversationLinkManager.LinkState(
                 isActive = true,
@@ -207,8 +207,11 @@ class ImageQualitySelectionDialogTest {
             )
         }
 
-        // Should display hops
-        composeTestRule.onNodeWithText("3 hops", substring = true).assertIsDisplayed()
+        // 12 kbps over three hops: far enough to say so, slow enough to say so.
+        composeTestRule.onNodeWithText("via 3 nodes", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("weak connection", substring = true).assertIsDisplayed()
+        // MTU was a protocol detail with nothing in it for the reader.
+        composeTestRule.onNodeWithText("MTU", substring = true).assertDoesNotExist()
     }
 
     @Test
@@ -223,7 +226,7 @@ class ImageQualitySelectionDialogTest {
             )
         }
 
-        composeTestRule.onNodeWithText("No active link").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Not connected yet").assertIsDisplayed()
     }
 
     // ========== Interaction Tests ==========

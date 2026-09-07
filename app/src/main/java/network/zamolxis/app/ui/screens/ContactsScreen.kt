@@ -58,6 +58,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -72,6 +73,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -94,13 +96,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -114,7 +117,10 @@ import network.zamolxis.app.ui.components.AddContactConfirmationDialog
 import network.zamolxis.app.ui.components.LocalWindowSize
 import network.zamolxis.app.ui.components.ProfileIcon
 import network.zamolxis.app.ui.components.simpleVerticalScrollbar
-import network.zamolxis.app.ui.theme.MeshConnected
+import network.zamolxis.app.ui.model.ContactSearch
+import network.zamolxis.app.ui.model.ContactSearchState
+import network.zamolxis.app.ui.model.RelayLabel
+import network.zamolxis.app.ui.screens.settings.AudienceProfile
 import network.zamolxis.app.ui.util.rememberLifecycleTickerMillis
 import network.zamolxis.app.util.formatTimeSince
 import network.zamolxis.app.util.validation.InputValidator
@@ -135,6 +141,7 @@ fun ContactsScreen(
     onViewPeerDetails: (destinationHash: String) -> Unit = { },
     onLocateOnMap: (destinationHash: String) -> Unit = {},
     onNavigateToQrScanner: () -> Unit = {},
+    onNavigateToMyIdentity: () -> Unit = {},
     pendingDeepLinkContact: String? = null,
     onDeepLinkContactProcessed: () -> Unit = {},
     onNavigateToConversation: (destinationHash: String) -> Unit = {},
@@ -161,6 +168,17 @@ fun ContactsScreen(
     // Tab selection state - use rememberSaveable to preserve across navigation
     var selectedTab by androidx.compose.runtime.saveable
         .rememberSaveable { mutableStateOf(ContactsTab.MY_CONTACTS) }
+
+    // Which tabs this build offers. Restored state is coerced back into the list: an
+    // install that was on "Network" before an update to Маяк must not come back to a tab
+    // that no longer exists.
+    val visibleContactsTabs =
+        remember {
+            ContactsTab.entries.filter { it != ContactsTab.NETWORK || AudienceProfile.showsNetworkTab }
+        }
+    if (selectedTab !in visibleContactsTabs) {
+        selectedTab = ContactsTab.MY_CONTACTS
+    }
 
     // Network tab state
     val announceSearchQuery by announceViewModel.searchQuery.collectAsState()
@@ -256,11 +274,22 @@ fun ContactsScreen(
             Column {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = stringResource(R.string.contacts_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.contacts_title),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            // The count used to live in the "My Contacts (N)" tab label.
+                            // Where that row is hidden it has to go somewhere, or the
+                            // number simply disappears — the same subtitle Chats uses.
+                            if (visibleContactsTabs.size <= 1) {
+                                Text(
+                                    text = pluralStringResource(R.plurals.contact_count, contactCount, contactCount),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                        }
                     },
                     actions = {
                         // Search button
@@ -415,25 +444,28 @@ fun ContactsScreen(
                     )
                 }
 
-                // Tab selector
-                SingleChoiceSegmentedButtonRow(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    ContactsTab.entries.forEachIndexed { index, tab ->
-                        SegmentedButton(
-                            shape = SegmentedButtonDefaults.itemShape(index = index, count = ContactsTab.entries.size),
-                            onClick = { selectedTab = tab },
-                            selected = selectedTab == tab,
-                        ) {
-                            val label =
-                                when (tab) {
-                                    ContactsTab.MY_CONTACTS -> "My Contacts ($contactCount)"
-                                    ContactsTab.NETWORK -> "Network ($announceCount)"
-                                }
-                            Text(label)
+                // Tab selector. Маяк ships only "My Contacts", and a segmented row with a
+                // single button is furniture, so the whole row goes with it.
+                if (visibleContactsTabs.size > 1) {
+                    SingleChoiceSegmentedButtonRow(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        visibleContactsTabs.forEachIndexed { index, tab ->
+                            SegmentedButton(
+                                shape = SegmentedButtonDefaults.itemShape(index = index, count = visibleContactsTabs.size),
+                                onClick = { selectedTab = tab },
+                                selected = selectedTab == tab,
+                            ) {
+                                val label =
+                                    when (tab) {
+                                        ContactsTab.MY_CONTACTS -> "My Contacts ($contactCount)"
+                                        ContactsTab.NETWORK -> "Network ($announceCount)"
+                                    }
+                                Text(label)
+                            }
                         }
                     }
                 }
@@ -471,6 +503,8 @@ fun ContactsScreen(
                     }
                     !contactsState.isLoading && !hasContacts -> {
                         EmptyContactsState(
+                            onShowMyCode = onNavigateToMyIdentity,
+                            onScanCode = onNavigateToQrScanner,
                             modifier =
                                 Modifier
                                     .fillMaxSize()
@@ -478,6 +512,25 @@ fun ContactsScreen(
                         )
                     }
                     else -> {
+                        // A relay that never announced a name arrives here with its hash
+                        // as the display name. Resolve the stand-in now: the LazyColumn
+                        // builder below is not a composable scope, so `stringResource`
+                        // cannot be called from inside `item { }`.
+                        val rawRelay = contactsState.groupedContacts.relay
+                        val relaySubstitutesName =
+                            rawRelay != null &&
+                                RelayLabel.substitutesName(
+                                    displayName = rawRelay.displayName,
+                                    destinationHash = rawRelay.destinationHash,
+                                    simpleUi = AudienceProfile.isSimpleUi,
+                                )
+                        val relayName = stringResource(R.string.contacts_relay_unnamed)
+                        val namedRelay =
+                            if (relaySubstitutesName) {
+                                rawRelay?.copy(displayName = relayName)
+                            } else {
+                                rawRelay
+                            }
                         LazyColumn(
                             state = contactsListState,
                             modifier =
@@ -490,7 +543,7 @@ fun ContactsScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             // My Relay section (shown at top, separate from pinned)
-                            contactsState.groupedContacts.relay?.let { relay ->
+                            namedRelay?.let { relay ->
                                 item {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -523,6 +576,7 @@ fun ContactsScreen(
                                     ContactListItemWithMenu(
                                         contact = relay,
                                         nowMillis = timestampTick,
+                                        showsDestinationHash = !relaySubstitutesName,
                                         onClick = {
                                             if (relay.status == ContactStatus.PENDING_IDENTITY ||
                                                 relay.status == ContactStatus.UNRESOLVED
@@ -927,6 +981,10 @@ fun ContactsScreen(
 /**
  * Contact list item with integrated context menu.
  * Extracted to reduce duplication between pinned and all contacts sections.
+ *
+ * @param showsDestinationHash false to drop the monospace hash beneath the name. Set
+ *   only where the name already is the hash and would otherwise be printed twice — see
+ *   [network.zamolxis.app.ui.model.RelayLabel].
  */
 @Composable
 private fun ContactListItemWithMenu(
@@ -939,6 +997,7 @@ private fun ContactListItemWithMenu(
     onRemove: () -> Unit,
     onLocateOnMap: () -> Unit = {},
     getContactLocation: suspend (String) -> Pair<Double, Double>? = { null },
+    showsDestinationHash: Boolean = true,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     var showMenu by remember { mutableStateOf(false) }
@@ -959,6 +1018,7 @@ private fun ContactListItemWithMenu(
             nowMillis = nowMillis,
             onClick = onClick,
             onPinClick = onPinToggle,
+            showsDestinationHash = showsDestinationHash,
             onLongPress = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 showMenu = true
@@ -1005,11 +1065,13 @@ fun ContactListItem(
     onClick: () -> Unit,
     onPinClick: () -> Unit,
     onLongPress: () -> Unit = {},
+    showsDestinationHash: Boolean = true,
 ) {
     // Determine if contact is pending or unresolved
     val isPending = contact.status == ContactStatus.PENDING_IDENTITY
     val isUnresolved = contact.status == ContactStatus.UNRESOLVED
     val isActive = contact.status == ContactStatus.ACTIVE
+    val searchState = ContactSearch.stateFor(addedAtMs = contact.addedTimestamp, nowMs = nowMillis)
 
     // Dim colors for non-active contacts
     val textAlpha = if (isActive) 1f else 0.6f
@@ -1123,12 +1185,14 @@ fun ContactListItem(
                 )
 
                 // Destination hash
-                Text(
-                    text = contact.destinationHash,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = textAlpha),
-                )
+                if (showsDestinationHash) {
+                    Text(
+                        text = contact.destinationHash,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = textAlpha),
+                    )
+                }
 
                 // Status line - varies based on contact status
                 Row(
@@ -1138,7 +1202,12 @@ fun ContactListItem(
                     when {
                         isPending -> {
                             Text(
-                                text = stringResource(R.string.contacts_searching_identity),
+                                text =
+                                    if (searchState == ContactSearchState.LOOKING) {
+                                        stringResource(R.string.contacts_searching_identity)
+                                    } else {
+                                        stringResource(R.string.contacts_not_found_yet)
+                                    },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -1178,6 +1247,16 @@ fun ContactListItem(
                             }
                         }
                     }
+                }
+
+                // Why it may be taking this long. Only after the quiet window, so a
+                // contact added a moment ago is not greeted with troubleshooting.
+                if (isPending && searchState == ContactSearchState.NOT_FOUND_YET) {
+                    Text(
+                        text = stringResource(R.string.contacts_not_found_yet_why),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
 
@@ -1393,8 +1472,21 @@ fun LoadingContactsState(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * What the app says to someone who has nobody yet.
+ *
+ * It used to say "Star peers in the Announce Stream or add contacts via QR code".
+ * The announce stream is a screen name, not an idea a person arrives with, and the
+ * sentence describes the app to itself rather than telling anyone what to do. This
+ * is the first screen a new install lands on with nothing in it, so it carries the
+ * two actions that actually connect two people instead.
+ */
 @Composable
-fun EmptyContactsState(modifier: Modifier = Modifier) {
+fun EmptyContactsState(
+    modifier: Modifier = Modifier,
+    onShowMyCode: () -> Unit = {},
+    onScanCode: () -> Unit = {},
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1418,8 +1510,29 @@ fun EmptyContactsState(modifier: Modifier = Modifier) {
             text = stringResource(R.string.contacts_empty_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 32.dp),
         )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = onShowMyCode) {
+            Icon(
+                imageVector = Icons.Default.QrCode,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.contacts_empty_show_code))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedButton(onClick = onScanCode) {
+            Icon(
+                imageVector = Icons.Default.QrCodeScanner,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.contacts_empty_scan_code))
+        }
     }
 }
 

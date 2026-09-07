@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import network.zamolxis.app.ui.components.IncomingCallLayout
+import network.zamolxis.app.ui.model.CallPeerLabel
 
 /**
  * Standalone incoming call screen composable for IncomingCallActivity.
@@ -28,7 +29,7 @@ fun IncomingCallActivityScreen(
     onDecline: () -> Unit,
 ) {
     val context = LocalContext.current
-    val displayName = callerName ?: formatIncomingHash(identityHash)
+    val displayName = callerName ?: CallPeerLabel.shortenHash(identityHash)
 
     // Permission state
     var hasAudioPermission by remember {

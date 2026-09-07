@@ -176,10 +176,12 @@ fun AboutCard(
 
             HorizontalDivider()
 
-            // Identity
-            if (systemInfo.identityHash != null) {
+            // Identity. Shows the address rather than the identity hash: this screen
+            // is where people look for "my address", and the two are both 32 hex
+            // characters with only one of them writable.
+            if (systemInfo.destinationHash != null) {
                 InfoSection(title = stringResource(R.string.identitycard_title)) {
-                    InfoRow("Identity Hash", systemInfo.identityHash)
+                    InfoRow(stringResource(R.string.myidentity_your_address), systemInfo.destinationHash)
                 }
                 HorizontalDivider()
             }

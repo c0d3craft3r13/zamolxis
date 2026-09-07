@@ -2,27 +2,32 @@ package network.zamolxis.app.ui.screens.settings.cards
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import network.zamolxis.app.R
-import kotlinx.coroutines.launch
 import network.zamolxis.app.security.AppLockRepository
+import network.zamolxis.app.security.ScreenSecurity
 import network.zamolxis.app.ui.components.CollapsibleSettingsCard
+import network.zamolxis.app.ui.components.findActivity
 import network.zamolxis.app.ui.screens.settings.dialogs.PinEntryDialog
 
 /**
@@ -87,6 +92,10 @@ fun AppLockCard(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            ScreenCaptureToggle()
+
+            HorizontalDivider()
+
             Text(
                 text = stringResource(R.string.app_lock_settings_description),
                 style = MaterialTheme.typography.bodyMedium,
@@ -149,6 +158,48 @@ fun AppLockCard(
                 }
             }
         }
+    }
+}
+
+/**
+ * The screenshot / screen-recording switch.
+ *
+ * Applies the change to the window it is drawn in, not just to storage. The
+ * setting is read once per activity at `onCreate`, so without this the user
+ * would flip the switch, see nothing happen, and have to restart the app to
+ * find out whether it worked.
+ */
+@Composable
+private fun ScreenCaptureToggle() {
+    val context = LocalContext.current
+    var blocked by remember { mutableStateOf(ScreenSecurity.isBlocked(context)) }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+            Text(
+                text = stringResource(R.string.app_lock_block_screenshots),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(
+                text = stringResource(R.string.app_lock_block_screenshots_sub),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(
+            checked = blocked,
+            onCheckedChange = { enabled ->
+                blocked = enabled
+                ScreenSecurity.setBlocked(context, enabled)
+                // findActivity throws when the composable is previewed outside an
+                // Activity; the setting is still stored, so failing quietly here
+                // costs nothing but a restart.
+                runCatching { ScreenSecurity.apply(context.findActivity().window, enabled) }
+            },
+        )
     }
 }
 

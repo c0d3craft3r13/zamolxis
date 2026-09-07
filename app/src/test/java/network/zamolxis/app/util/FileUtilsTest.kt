@@ -407,4 +407,39 @@ class FileUtilsTest {
         // Adding a small file to existing attachments
         assertFalse(FileUtils.wouldExceedSizeLimit(5 * 1024 * 1024, 100))
     }
+
+    // ========== sanitizedExtension (path-traversal guard) ==========
+
+    @Test
+    fun `sanitizedExtension keeps a normal extension`() {
+        assertEquals(".png", sanitizedExtension("photo.png"))
+        assertEquals(".jpg", sanitizedExtension("IMG_0001.JPG"))
+        assertEquals(".webp", sanitizedExtension("a.b.c.webp"))
+    }
+
+    @Test
+    fun `sanitizedExtension returns null when there is nothing usable`() {
+        assertEquals(null, sanitizedExtension(null))
+        assertEquals(null, sanitizedExtension("noextension"))
+        assertEquals(null, sanitizedExtension("trailingdot."))
+    }
+
+    @Test
+    fun `sanitizedExtension strips path separators so a shared name cannot traverse`() {
+        // A malicious provider's DISPLAY_NAME. Without sanitising, the "extension"
+        // would be "/../../files/rns_config_snapshot.bin" and the temp file would land
+        // there instead of in the cache dir.
+        val hostile = "x.a/../../files/rns_config_snapshot.bin"
+        val ext = sanitizedExtension(hostile)
+        assertFalse("must not contain a path separator", ext!!.contains('/'))
+        assertFalse("must not contain a parent ref", ext.contains(".."))
+    }
+
+    @Test
+    fun `sanitizedExtension drops backslashes and null bytes and caps length`() {
+        assertFalse(sanitizedExtension("x.a\\..\\evil")!!.contains('\\'))
+        assertFalse(sanitizedExtension("x.ev il")!!.contains(' '))
+        // Overlong junk is capped, never a path fragment.
+        assertEquals(".aaaaaaaa", sanitizedExtension("x.aaaaaaaaaaaaaaaaaaaa"))
+    }
 }

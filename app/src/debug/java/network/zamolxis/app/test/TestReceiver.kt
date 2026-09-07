@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Log
 import network.zamolxis.app.BuildConfig
 import network.zamolxis.app.rns.api.model.DeliveryMethod
+import network.zamolxis.app.security.ScreenSecurity
 
 /**
  * Debug-only BroadcastReceiver that exposes the [TestController] surface
@@ -50,6 +51,14 @@ import network.zamolxis.app.rns.api.model.DeliveryMethod
  *   network.zamolxis.test.SEND_FILE   --es to,text,path,name         -> file_sent id=<hex> | file_send_err …
  *   network.zamolxis.test.SEND_AUDIO  --es to,text,path,codec        -> audio_sent id=<hex> | audio_send_err …
  *   network.zamolxis.test.SEND_ICON   --es to,text,icon,fg,bg        -> icon_sent id=<hex> | icon_send_err …
+ *   network.zamolxis.test.SET_SCREEN_CAPTURE --es allow                  -> screen_capture allow=true|false
+ *
+ * NOTE: SET_SCREEN_CAPTURE exists because the app blocks screen capture by
+ * default, and `adb shell screencap` on a FLAG_SECURE window returns a black
+ * frame — so a UI test that attaches screenshots as evidence collects blank
+ * images. Send it with FLAG_INCLUDE_STOPPED_PACKAGES *before* the first
+ * `am start`: the flag is read once in MainActivity.onCreate, so flipping the
+ * preference after the window exists changes nothing until it is recreated.
  *
  * Dispatch happens off the main thread via [TestController]'s coroutine
  * scope, so we don't need [BroadcastReceiver.goAsync]; the broadcast
@@ -57,7 +66,10 @@ import network.zamolxis.app.rns.api.model.DeliveryMethod
  * ready. The harness blocks on the logcat reply, not on the broadcast.
  */
 class TestReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         val action = intent.action ?: return
 
         // ── Threat model + why there's no caller auth here ──
@@ -200,6 +212,16 @@ class TestReceiver : BroadcastReceiver() {
                 } else {
                     TestController.handleGetMsgState(app, id)
                 }
+            }
+
+            "network.zamolxis.test.SET_SCREEN_CAPTURE" -> {
+                // Handled inline rather than through TestController: it is one
+                // SharedPreferences write with no backend involved, and the
+                // harness sends it while the app is stopped, before anything
+                // the controller needs has been built.
+                val allow = intent.getStringExtra("allow")?.equals("true", ignoreCase = true) == true
+                ScreenSecurity.setBlocked(app, blocked = !allow)
+                Log.i(TestController.LOGCAT_TAG, "screen_capture allow=$allow")
             }
 
             "network.zamolxis.test.GET_RX" ->

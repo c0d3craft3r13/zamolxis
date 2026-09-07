@@ -4,6 +4,7 @@ import android.util.Log
 import network.zamolxis.app.data.db.entity.PeerActivityEntity
 import network.zamolxis.app.data.db.entity.PeerActivityType
 import network.zamolxis.app.data.model.ImageCompressionPreset
+import network.zamolxis.app.data.model.InterfaceType
 import network.zamolxis.app.data.repository.PeerActivityRepository
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.util.HexUtils
@@ -12,12 +13,28 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/**
+ * What to say about a link to someone who is about to place a call.
+ *
+ * The dialog used to show "1 hop · 40.0 kbps · 500 B MTU". Hops and bitrate are at
+ * least about the link; MTU is a protocol detail with nothing in it for the person
+ * reading. None of the three tells them the thing they actually want to know, which
+ * is whether this call will be any good.
+ */
+enum class LinkQuality {
+    POOR,
+    WEAK,
+    GOOD,
+    EXCELLENT,
+}
 
 /**
  * Manages conversation links for real-time connectivity status and speed probing.
@@ -28,6 +45,7 @@ import javax.inject.Singleton
  *
  * Links are left open and naturally close via Reticulum's stale timeout (~12 minutes).
  */
+
 @Singleton
 class ConversationLinkManager
     @Inject
@@ -49,6 +67,59 @@ class ConversationLinkManager
             // Interface type detection thresholds
             private const val THRESHOLD_SLOW_INTERFACE_BPS = 50_000L // < 50 kbps = likely LoRa/BLE
             private const val THRESHOLD_FAST_INTERFACE_BPS = 500_000L // >= 500 kbps = likely WiFi/TCP
+
+            /**
+             * What a BLE link actually carries, measured rather than guessed.
+             *
+             * 92 KB moved between two phones in about 19 seconds with every other
+             * interface switched off — roughly 39 kbps, which is what the protocol
+             * claims for BLE in the first place.
+             */
+            const val BLE_MEASURED_BITRATE_BPS = 40_000L
+
+            /**
+             * The first hop's bitrate, with the BLE driver's guess corrected.
+             *
+             * `ble-reticulum` hands every BLE link the same `BITRATE_GUESS = 700_000`.
+             * It is a guess, not a measurement, and it is roughly eighteen times the
+             * measured figure — enough to put BLE above [THRESHOLD_SLOW_INTERFACE_BPS]
+             * and have the app offer to send a full-size photo over a link that needs
+             * twenty seconds for ninety kilobytes.
+             *
+             * The vendored driver is deliberately left byte-identical to upstream, so
+             * the correction belongs here, where the number enters the app.
+             *
+             * @param interfaceLabel the label RNS reports, e.g. `"BLEPeerInterface[BLE-56:31:F5]"`;
+             *   null when the path is unknown, in which case nothing is corrected
+             * @return the lower of the reported and the measured figure for BLE, the
+             *   reported one untouched for every other interface
+             */
+            fun firstHopBitrate(
+                interfaceLabel: String?,
+                reportedBps: Long?,
+            ): Long? {
+                val isBle = interfaceLabel != null && InterfaceType.fromName(interfaceLabel) == InterfaceType.BLE
+                if (!isBle) return reportedBps
+                // A driver that reports something slower than the measurement is
+                // believed; only the fixed guess above it is capped.
+                val reported = reportedBps?.takeIf { it > 0 } ?: BLE_MEASURED_BITRATE_BPS
+                return minOf(reported, BLE_MEASURED_BITRATE_BPS)
+            }
+
+            /**
+             * How good the link is, in the terms a person picking a codec needs.
+             *
+             * Shares [presetFromBitrate]'s thresholds on purpose: the word shown and
+             * the preset recommended below it come from the same number, so they can
+             * never contradict each other on screen.
+             */
+            fun qualityFor(bps: Long): LinkQuality =
+                when {
+                    bps < THRESHOLD_LOW_BPS -> LinkQuality.POOR
+                    bps < THRESHOLD_MEDIUM_BPS -> LinkQuality.WEAK
+                    bps < THRESHOLD_HIGH_BPS -> LinkQuality.GOOD
+                    else -> LinkQuality.EXCELLENT
+                }
 
             /**
              * Convert a bitrate to a compression preset based on thresholds.
@@ -112,6 +183,13 @@ class ConversationLinkManager
             val expectedRateBps: Long? = null,
             /** First hop interface bitrate (for fast links like WiFi) */
             val nextHopBitrateBps: Long? = null,
+            /**
+             * The label RNS reports for the first hop, when it is known.
+             *
+             * Kept so [firstHopBitrate] can tell a driver's guess from a measurement.
+             * Null means "not looked up yet" and nothing is corrected.
+             */
+            val nextHopInterfaceLabel: String? = null,
             /** Round-trip time in seconds */
             val rttSeconds: Double? = null,
             /** Number of hops to destination */
@@ -146,8 +224,15 @@ class ConversationLinkManager
                     if (establishment != null) {
                         return establishment
                     }
-                    return nextHopBitrateBps?.takeIf { it > 0 }
+                    return correctedNextHopBitrateBps?.takeIf { it > 0 }
                 }
+
+            /**
+             * [nextHopBitrateBps] with the BLE driver's fixed guess corrected — the
+             * figure every decision below should read. See [firstHopBitrate].
+             */
+            val correctedNextHopBitrateBps: Long?
+                get() = firstHopBitrate(nextHopInterfaceLabel, nextHopBitrateBps)
 
             /**
              * Calculate estimated transfer time for a given size in bytes.
@@ -179,7 +264,7 @@ class ConversationLinkManager
              */
             @Suppress("ReturnCount")
             fun recommendPreset(): ImageCompressionPreset {
-                val interfaceBitrate = nextHopBitrateBps?.takeIf { it > 0 }
+                val interfaceBitrate = correctedNextHopBitrateBps?.takeIf { it > 0 }
                 val linkRate = expectedRateBps ?: establishmentRateBps
                 val hopCount = hops
 
@@ -256,6 +341,12 @@ class ConversationLinkManager
                             LINK_ESTABLISHMENT_TIMEOUT_SECONDS,
                         )
 
+                    // Looked up once here so the BLE driver's fixed bitrate guess can be
+                    // told apart from a real measurement. Failure is not fatal: a null
+                    // label simply means nothing gets corrected.
+                    val nextHopLabel =
+                        runCatching { rnsCore.getNextHopInterfaceName(destHashBytes) }.getOrNull()
+
                     result.fold(
                         onSuccess = { linkResult ->
                             Log.d(
@@ -271,6 +362,7 @@ class ConversationLinkManager
                                     establishmentRateBps = linkResult.establishmentRateBps,
                                     expectedRateBps = linkResult.expectedRateBps,
                                     nextHopBitrateBps = linkResult.nextHopBitrateBps,
+                                    nextHopInterfaceLabel = nextHopLabel,
                                     rttSeconds = linkResult.rttSeconds,
                                     hops = linkResult.hops,
                                     linkMtu = linkResult.linkMtu,
@@ -348,8 +440,7 @@ class ConversationLinkManager
         fun getLinkState(destHashHex: String): LinkState? = _linkStates.value[destHashHex]
 
         /** Observe durable verified inbound activity for a conversation peer. */
-        fun observePeerActivity(destHashHex: String): kotlinx.coroutines.flow.Flow<PeerActivityEntity?> =
-            peerActivityRepository.observeActivity(destHashHex)
+        fun observePeerActivity(destHashHex: String): Flow<PeerActivityEntity?> = peerActivityRepository.observeActivity(destHashHex)
 
         /**
          * Record peer activity (delivery proof, incoming message, etc).
@@ -389,6 +480,9 @@ class ConversationLinkManager
             try {
                 val destHashBytes = HexUtils.hexToBytes(destHashHex)
                 val result = rnsCore.getConversationLinkStatus(destHashBytes)
+                val nextHopLabel =
+                    runCatching { rnsCore.getNextHopInterfaceName(destHashBytes) }.getOrNull()
+                        ?: getLinkState(destHashHex)?.nextHopInterfaceLabel
 
                 val state =
                     LinkState(
@@ -396,6 +490,7 @@ class ConversationLinkManager
                         establishmentRateBps = result.establishmentRateBps,
                         expectedRateBps = result.expectedRateBps,
                         nextHopBitrateBps = result.nextHopBitrateBps,
+                        nextHopInterfaceLabel = nextHopLabel,
                         rttSeconds = result.rttSeconds,
                         hops = result.hops,
                         linkMtu = result.linkMtu,
@@ -518,6 +613,9 @@ class ConversationLinkManager
                     establishmentRateBps = result.establishmentRateBps,
                     expectedRateBps = result.expectedRateBps,
                     nextHopBitrateBps = result.nextHopBitrateBps,
+                    // No suspend lookup on this path; carry forward what is already known
+                    // rather than losing the correction until the next refresh.
+                    nextHopInterfaceLabel = getLinkState(destHashHex)?.nextHopInterfaceLabel,
                     rttSeconds = result.rttSeconds,
                     hops = result.hops,
                     linkMtu = result.linkMtu,

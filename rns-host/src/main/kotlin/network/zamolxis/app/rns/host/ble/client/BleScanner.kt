@@ -132,6 +132,7 @@ class BleScanner(
                 Log.e(TAG, "BLE scan failed with error code: $errorCode")
                 scope.launch {
                     _isScanning.value = false
+                    releaseFailedRegistration(errorCode)
                     onScanFailed?.invoke(errorCode)
                 }
             }
@@ -220,6 +221,35 @@ class BleScanner(
             Log.e(TAG, "Error stopping scan", e)
         }
     }
+
+    /**
+     * Hand a failed scan registration back to the Bluetooth stack.
+     *
+     * A `startScan` that fails still leaves the callback registered: the stack
+     * allocated a client record for it and only `stopScan` releases that record.
+     * Nothing here used to do that, so every retry added one more — measured on
+     * a Motorola Edge 50 Fusion as **270 stale `app_if: 0` entries** for this
+     * package in `dumpsys bluetooth_manager`. Once the client pool is exhausted
+     * the damage is total and permanent for the app: `startScan` keeps returning
+     * [android.bluetooth.le.ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED]
+     * and `openGattServer` starts returning null, so BLE stays dead across app
+     * restarts until Bluetooth itself is toggled.
+     *
+     * Releasing on every failure keeps the pool balanced no matter how often the
+     * caller retries. Best-effort by nature: if the stack already dropped the
+     * registration, `stopScan` is a no-op.
+     */
+    private suspend fun releaseFailedRegistration(errorCode: Int): Unit =
+        withContext(Dispatchers.Main) {
+            try {
+                bluetoothLeScanner?.stopScan(scanCallback)
+                Log.d(TAG, "Released scan registration after failure $errorCode")
+            } catch (e: SecurityException) {
+                Log.w(TAG, "Permission denied releasing failed scan registration", e)
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not release failed scan registration", e)
+            }
+        }
 
     /**
      * Immediately stop scanning without coroutines.

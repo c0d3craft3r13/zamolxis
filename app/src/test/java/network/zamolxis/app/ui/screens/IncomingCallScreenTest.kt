@@ -34,6 +34,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import network.zamolxis.app.test.RegisterComponentActivityRule
+import network.zamolxis.app.ui.model.CallPeerLabel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -117,7 +118,7 @@ class IncomingCallScreenTest {
         val longHash = "0102030405060708090a0b0c0d0e0f10"
         composeTestRule.setContent {
             TestIncomingCallScreen(
-                callerDisplayName = formatIncomingHash(longHash),
+                callerDisplayName = CallPeerLabel.shortenHash(longHash),
                 onAnswer = {},
                 onDecline = {},
             )
@@ -132,7 +133,7 @@ class IncomingCallScreenTest {
         val shortHash = "abc123"
         composeTestRule.setContent {
             TestIncomingCallScreen(
-                callerDisplayName = formatIncomingHash(shortHash),
+                callerDisplayName = CallPeerLabel.shortenHash(shortHash),
                 onAnswer = {},
                 onDecline = {},
             )
@@ -147,7 +148,7 @@ class IncomingCallScreenTest {
         val hash = "123456789012"
         composeTestRule.setContent {
             TestIncomingCallScreen(
-                callerDisplayName = formatIncomingHash(hash),
+                callerDisplayName = CallPeerLabel.shortenHash(hash),
                 onAnswer = {},
                 onDecline = {},
             )
@@ -162,7 +163,7 @@ class IncomingCallScreenTest {
         val hash = "1234567890123"
         composeTestRule.setContent {
             TestIncomingCallScreen(
-                callerDisplayName = formatIncomingHash(hash),
+                callerDisplayName = CallPeerLabel.shortenHash(hash),
                 onAnswer = {},
                 onDecline = {},
             )

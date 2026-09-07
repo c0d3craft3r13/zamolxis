@@ -24,6 +24,16 @@ from typing import List, Optional, Callable, Union
 # Hierarchical log tag for consistent filtering (matches Kotlin BLE components)
 LOG_TAG = "Zamolxis:BLE:Py:Driver"
 
+# Bounds for the pre-connection identity cache (`_pending_identities`).
+# An identity is cached when onIdentityReceived beats onConnected for a
+# peripheral-mode peer. If the connection then never completes — the usual
+# end of a connect/reject churn cycle under Android MAC rotation — the
+# entry would otherwise sit in the dict forever, one per rotated MAC
+# address. Entries are timestamped and evicted on insert past this TTL;
+# the MAX is a hard belt-and-suspenders bound against pathological churn.
+_PENDING_IDENTITY_TTL_S = 120.0
+_PENDING_IDENTITY_MAX = 128
+
 
 def ensure_bytes(data: Union[bytes, 'jarray']) -> bytes:
     """
@@ -110,7 +120,11 @@ class AndroidBLEDriver(BLEDriverInterface):
 
         # Thread safety for identity handling (prevents race conditions)
         self._identity_lock = threading.Lock()
-        self._pending_identities = {}  # address -> identity bytes (cached before connection)
+        # address -> (identity bytes, time.monotonic() of caching).
+        # See _PENDING_IDENTITY_TTL_S / _PENDING_IDENTITY_MAX above: the
+        # cache is bounded so half-open MAC-rotation attempts cannot grow
+        # it without limit.
+        self._pending_identities = {}
 
         # Track last receive address for RSSI queries (signal_quality.py)
         self._last_receive_address = None
@@ -714,7 +728,7 @@ class AndroidBLEDriver(BLEDriverInterface):
                 # Fall back to pending identities (from earlier onIdentityReceived if it arrived first)
                 # Use lock to prevent race condition with _handle_identity_received
                 with self._identity_lock:
-                    identity = self._pending_identities.pop(address, None)
+                    identity = self._pop_pending_identity(address)
                 if identity:
                     RNS.log(f"{LOG_TAG}: Using identity from pending cache", RNS.LOG_DEBUG)
 
@@ -832,14 +846,13 @@ class AndroidBLEDriver(BLEDriverInterface):
             # to arrive from one MAC but onConnected for a different MAC with same identity
             if address not in self._connected_peers:
                 with self._identity_lock:
-                    pending_identity = self._pending_identities.get(address)
+                    # Pop (not peek) so a finalized entry can't be used twice.
+                    pending_identity = self._pop_pending_identity(address)
                     if pending_identity:
                         # Finalize connection with pending identity
                         RNS.log(f"{LOG_TAG}: Finalizing connection for {address} from pending identity (data arrived first)", RNS.LOG_DEBUG)
                         self._connected_peers.append(address)
                         self._peer_roles[address] = "peripheral"  # Data arriving = peripheral role
-                        # Remove from pending before callback to prevent double-use
-                        del self._pending_identities[address]
 
                         # Call on_device_connected to create identity mappings
                         if self.on_device_connected:
@@ -858,6 +871,31 @@ class AndroidBLEDriver(BLEDriverInterface):
 
         except Exception as e:
             RNS.log(f"{LOG_TAG}: Error handling data received: {e}", RNS.LOG_ERROR)
+
+    def _cache_pending_identity(self, address: str, identity_bytes: bytes):
+        """Cache a pre-connection identity. Caller must hold _identity_lock.
+
+        Evicts entries older than _PENDING_IDENTITY_TTL_S first; as a hard
+        bound, drops the oldest entries (dicts are insertion-ordered) once
+        _PENDING_IDENTITY_MAX is reached.
+        """
+        now = time.monotonic()
+        expired = [a for a, (_, ts) in self._pending_identities.items()
+                   if now - ts > _PENDING_IDENTITY_TTL_S]
+        for a in expired:
+            del self._pending_identities[a]
+        while len(self._pending_identities) >= _PENDING_IDENTITY_MAX:
+            oldest = next(iter(self._pending_identities))
+            del self._pending_identities[oldest]
+        self._pending_identities[address] = (identity_bytes, now)
+
+    def _pop_pending_identity(self, address: str) -> Optional[bytes]:
+        """Remove and return a cached identity's bytes, or None.
+
+        Caller must hold _identity_lock.
+        """
+        entry = self._pending_identities.pop(address, None)
+        return entry[0] if entry is not None else None
 
     def _handle_identity_received(self, address: str, identity_hash: str):
         """Handle identity received event from Kotlin (Protocol v2.2).
@@ -914,7 +952,7 @@ class AndroidBLEDriver(BLEDriverInterface):
                 else:
                     # Peer not yet connected - cache identity for when onConnected fires
                     # This handles the race where identity arrives before connection
-                    self._pending_identities[address] = identity_bytes
+                    self._cache_pending_identity(address, identity_bytes)
                     RNS.log(f"{LOG_TAG}: Cached identity for {address}, waiting for connection complete", RNS.LOG_DEBUG)
                     RNS.log(f"{LOG_TAG}: [CALLBACK] _handle_identity_received: Cached identity (peer not connected yet) for {address}", RNS.LOG_DEBUG)
 

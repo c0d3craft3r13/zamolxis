@@ -1,6 +1,7 @@
 package network.zamolxis.app.ui.screens
 
 import android.app.Application
+import network.zamolxis.app.ui.screens.settings.AudienceProfile
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
@@ -67,15 +68,41 @@ class ContactsScreenTest {
     }
 
     @Test
-    fun emptyContactsState_displaysSecondaryMessage() {
+    fun emptyContactsState_explainsHowTwoPeopleConnect() {
         composeTestRule.setContent {
             EmptyContactsState()
         }
 
         composeTestRule
             .onNodeWithText(
-                "Star peers in the Announce Stream\nor add contacts via QR code",
+                "Two people swap addresses once — after that they can write to each other.",
             ).assertIsDisplayed()
+        // The announce stream is a screen name, not something a new user arrives with.
+        composeTestRule.onNodeWithText("Announce Stream", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun emptyContactsState_offersToShowYourOwnCode() {
+        var shown = false
+        composeTestRule.setContent {
+            EmptyContactsState(onShowMyCode = { shown = true })
+        }
+
+        composeTestRule.onNodeWithText("Show my code").performClick()
+
+        assertTrue("the empty state must be able to hand over your address", shown)
+    }
+
+    @Test
+    fun emptyContactsState_offersToScanSomeoneElses() {
+        var scanned = false
+        composeTestRule.setContent {
+            EmptyContactsState(onScanCode = { scanned = true })
+        }
+
+        composeTestRule.onNodeWithText("Scan a code").performClick()
+
+        assertTrue("the other half of the exchange", scanned)
     }
 
     @Test
@@ -121,8 +148,10 @@ class ContactsScreenTest {
             ContactsScreen(viewModel = mockViewModel, announceViewModel = createMockAnnounceStreamViewModel())
         }
 
-        // Contact count is now displayed in the tab label
-        composeTestRule.onNodeWithText("My Contacts (1)").assertIsDisplayed()
+        // The count lives in the tab label where there is a tab row, and in the
+        // subtitle where there is not. Маяк ships without the row.
+        val expected1 = if (AudienceProfile.showsNetworkTab) "My Contacts (1)" else "1 contact"
+        composeTestRule.onNodeWithText(expected1).assertIsDisplayed()
     }
 
     @Test
@@ -143,8 +172,10 @@ class ContactsScreenTest {
             ContactsScreen(viewModel = mockViewModel, announceViewModel = createMockAnnounceStreamViewModel())
         }
 
-        // Contact count is now displayed in the tab label
-        composeTestRule.onNodeWithText("My Contacts (3)").assertIsDisplayed()
+        // The count lives in the tab label where there is a tab row, and in the
+        // subtitle where there is not. Маяк ships without the row.
+        val expected3 = if (AudienceProfile.showsNetworkTab) "My Contacts (3)" else "3 contacts"
+        composeTestRule.onNodeWithText(expected3).assertIsDisplayed()
     }
 
     @Test
@@ -1211,9 +1242,15 @@ class ContactsScreenTest {
             )
         }
 
-        // Both tab buttons should be visible
-        composeTestRule.onNodeWithText("My Contacts (5)").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Network (3)").assertIsDisplayed()
+        if (AudienceProfile.showsNetworkTab) {
+            composeTestRule.onNodeWithText("My Contacts (5)").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Network (3)").assertIsDisplayed()
+        } else {
+            // A segmented row with one button is furniture, so Маяк has none — but the
+            // count it carried must not vanish with it.
+            composeTestRule.onNodeWithText("Network (3)").assertDoesNotExist()
+            composeTestRule.onNodeWithText("5 contacts").assertIsDisplayed()
+        }
     }
 
     @Test
