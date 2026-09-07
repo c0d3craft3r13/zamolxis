@@ -1,63 +1,191 @@
 <p align="center">
-  <img src="./zamolxis-icon.png" width="200" height="200" alt="Zamolxis" />
+  <img src="./zamolxis-icon.png" width="180" height="180" alt="Zamolxis" />
 </p>
 
 # Zamolxis
 
-**English | [Русский](README.ru.md)**
+**Русский | [English](README.en.md) | [Română](README.ro.md)**
 
 [![CI](https://github.com/c0d3craft3r13/zamolxis/actions/workflows/ci.yml/badge.svg)](https://github.com/c0d3craft3r13/zamolxis/actions/workflows/ci.yml)
 
-Zamolxis is a messaging and voice app for the [Reticulum](https://github.com/markqvist/Reticulum) network on Android. Send [LXMF](https://github.com/markqvist/LXMF) messages and make [LXST](https://github.com/markqvist/LXST/tree/master/LXST) voice calls without relying on the internet, cell towers, or any central servers.
+Zamolxis — мессенджер и голосовая связь для Android, который не зависит от интернета, сотовых вышек и каких-либо серверов.
+Сообщения и звонки идут напрямую между устройствами через Bluetooth, Wi-Fi, радио (LoRa) или через любые доступные узлы сети Reticulum.
 
-It is built for people who cannot assume the network is neutral — reporters, field operators, and anyone who would rather not route their private conversations through an infrastructure someone else controls. No accounts, no phone numbers, no directory, nothing to seize.
+Никаких аккаунтов.
+Никаких номеров телефона.
+Никакой регистрации.
+Нечего блокировать и нечего изымать.
 
-## What You Can Do
+---
 
-- **Message without infrastructure** — Send messages even when the internet is down, throttled, or shut off
-- **Connect multiple ways** — Bluetooth LE for people near you, Wi-Fi at home, LoRa radio via [RNode](https://github.com/markqvist/RNode_Firmware) for distance, or TCP to reach any Reticulum node worldwide
-- **Stay private** — End-to-end encryption with no accounts, no tracking, and no central servers
-- **Chat in groups** — Group conversations with a shared member list, admin controls, and delivery status per recipient
-- **Share location** — Share your position securely with chosen contacts, viewable on a dedicated map
-- **Download maps for offline use** — Vector and raster maps in MBTiles format
-- **Browse NomadNetwork** — Access nomadnet pages over Reticulum
-- **Build your network** — Relay traffic for others and extend the mesh
-- **Keep your identity** — Generate your messaging identity on-device
-- **Manage multiple identities** — Swap between identities freely
-- **Export and import identities** — Back up your keys or migrate devices. Imports from other Reticulum clients such as [Sideband](https://github.com/markqvist/Sideband)
-- **Share your identity via QR code** — Built-in scanner and generator
-- **Custom color themes** — Restyle it however you like
+<p align="center">
+  <img src="./docs/images/hero-banner.jpg" alt="Zamolxis — связь, которую нельзя выключить" />
+</p>
 
-## Getting Started
+<p align="center">
+  <a href="./docs/media/promo-clip.mp4">
+    <img src="./docs/images/promo.webp" width="760" alt="Сообщение уходит от телефона к телефону над ночным городом" />
+  </a>
+</p>
 
-Download the latest release from [Releases](https://github.com/c0d3craft3r13/zamolxis/releases) and install it on your Android device. See [SECURITY.md](./SECURITY.md) for APK verification instructions — verify before you install.
+<p align="center"><sub>Нажмите, чтобы открыть ролик целиком</sub></p>
 
-<a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/c0d3craft3r13/zamolxis"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="60" alt="Get it on Obtainium"></a>
+---
 
-## About Reticulum
+### Для кого это
 
-[Reticulum](https://github.com/markqvist/Reticulum) is a networking stack that lets devices communicate directly with each other, forming resilient mesh networks. It is optimized for low bandwidth, high latency links and can run over nearly any medium. Zamolxis uses [LXMF](https://github.com/markqvist/LXMF) (Lightweight Extensible Message Format) to carry messages across the network, and a native Android implementation of [ble-reticulum](https://github.com/torlando-tech/ble-reticulum) for messaging over BLE with other Android and Linux devices.
+- Журналисты и активисты в условиях цензуры или отключений связи
+- Люди в экспедициях, удалённых районах и при чрезвычайных ситуациях
+- Все, кто не хочет, чтобы личная переписка проходила через чужие серверы
 
-Want to learn more? Visit [Reticulum's documentation](https://reticulum.network/).
+---
 
-## Why "Zamolxis"
+### Чем Zamolxis отличается
 
-Zamolxis was the god of the Dacians, associated with immortality. Herodotus tells that he withdrew into an underground chamber for three years while his people mourned him as dead — and then returned. A fitting name for a network that goes quiet and comes back.
+| Возможность                                 | Обычные мессенджеры | Columba¹     | **Zamolxis**                 |
+|---------------------------------------------|---------------------|--------------|------------------------------|
+| Работает без интернета                       | Нет                 | Да           | **Да**                       |
+| Нет аккаунтов и центральных серверов         | Нет                 | Да           | **Да**                       |
+| Постквантовое шифрование                     | Редко               | Нет          | **Да (X25519 + ML-KEM-768)** |
+| Переписка зашифрована на устройстве          | Частично            | Нет          | **Да (SQLCipher)**           |
+| PIN-блокировка приложения                    | Есть                | Нет          | **Да**                       |
+| **Duress PIN** (уничтожение данных)          | Почти нигде         | Нет          | **Да**                       |
+| Защита от скриншотов и записи экрана         | Редко               | Нет          | **Да**                       |
+| Групповые чаты                               | Да                  | Нет          | **Да**                       |
+| Голосовые звонки                             | Да                  | Да           | **Да**                       |
+| Офлайн-карты и безопасный обмен геопозицией  | Нет                 | Да           | **Да**                       |
 
-## Security
+<sub>¹ Columba — проект, из кода которого вырос Zamolxis. Сравнение сделано по состоянию upstream на 21 августа 2026 года.</sub>
 
-Zamolxis carries private messages and identity keys. Report vulnerabilities privately through [GitHub Security Advisories](https://github.com/c0d3craft3r13/zamolxis/security/advisories/new), never as a public issue. See [SECURITY.md](./SECURITY.md) for the threat model, including what is *not* yet covered.
+---
 
-## Donate
+### Главные преимущества
 
-Zamolxis is free and open source. If it is useful to you, you can support its development:
+**1. Защита от принуждения — Duress PIN**
+После установки обычного PIN можно задать второй — аварийный.
+Он выглядит точно так же. Если вас заставляют разблокировать приложение, вы вводите аварийный PIN. Все данные безвозвратно уничтожаются, а приложение выглядит как только что установленное. Никаких предупреждений и следов, что существовал второй PIN.
 
-- **USDT (TRC-20, Tron network):** `TNPzvsfsdNC3XrxJPB2NMVh1nZSPcvZzxC`
+Аварийный PIN работает даже тогда, когда приложение временно заблокировано после неудачных попыток входа — иначе тот, кто отобрал телефон и потыкал наугад, отобрал бы и запасной выход.
 
-<img src="./docs/images/donate-usdt-trc20.png" width="160" alt="USDT TRC-20 donation QR code" />
+**2. Защита от будущего**
+Между пользователями Zamolxis сообщения дополнительно запечатываются гибридным постквантовым шифрованием (X25519 + ML-KEM-768). Даже если трафик запишут сегодня, расшифровать его в будущем будет крайне сложно.
 
-## License
+По умолчанию это работает в режиме «когда возможно»: печать применяется, если собеседник её понимает и канал способен унести лишние байты — на медленном LoRa-радио они стоят секунд эфирного времени. Тем, кому нужна гарантия, в настройках есть строгий режим: не отправлять вовсе, если запечатать нельзя.
 
-Zamolxis is released under the Mozilla Public License 2.0 — see [LICENSE.md](./LICENSE.md).
+<p align="center">
+  <img src="./docs/images/feature-post-quantum.jpg" width="620" alt="Запечатанное письмо в дакском орнаменте" />
+</p>
 
-It is a fork of [Columba](https://github.com/torlando-tech/columba) by the Columba Contributors, used under the same license. The upstream project is not affiliated with Zamolxis and does not endorse it.
+**3. Данные под замком**
+Вся переписка на телефоне хранится в базе, зашифрованной SQLCipher под ключом из аппаратного хранилища Android. Просто скопировать базу и прочитать её не получится.
+
+**4. Экран под замком**
+Скриншоты, запись экрана и трансляция заблокированы, а Android не сохраняет эскиз приложения для меню «Недавних» — иначе заблокированное приложение всё равно показывало бы последнюю переписку каждому, кто смахнёт вверх. Включено по умолчанию, отключается в настройках.
+
+**5. Настоящая автономность**
+Работает через Bluetooth рядом с вами, через радио на расстоянии и через любые узлы сети, когда они доступны. Интернет не обязателен.
+
+<p align="center">
+  <img src="./docs/images/feature-mesh.jpg" width="620" alt="Сообщение прыгает от телефона к телефону через ночной город" />
+</p>
+
+**6. Полное отсутствие следа**
+Нет аккаунтов, нет центрального сервера, нет каталога пользователей. Нечего изымать и нечего блокировать.
+
+---
+
+### Что умеет прямо сейчас
+
+- Сообщения и голосовые звонки без интернета
+- Групповые чаты
+- Duress PIN — аварийное уничтожение данных
+- Задержка после неудачных попыток ввода PIN
+- Блокировка скриншотов и записи экрана
+- Несколько личностей (идентичностей) на одном устройстве
+- Безопасный обмен геопозицией и офлайн-карты
+- Просмотр страниц NomadNetwork
+- Резервное копирование ключей и перенос личности на другой телефон
+- Полностью настраиваемый внешний вид
+
+История переписки намеренно **не** покидает устройство: база зашифрована ключом, который никогда не выходит за пределы телефона, поэтому её копия на другом устройстве всё равно не открылась бы. Переносятся ключи и личность, а не сообщения.
+
+---
+
+### Как это работает простыми словами
+
+<p align="center">
+  <img src="./docs/images/how-it-works.png" alt="Ключ на телефоне, обмен QR-кодом, передача через Bluetooth, Wi-Fi, радио и эстафету, чтение только адресатом" />
+</p>
+
+Представьте сеть, в которой телефоны, рации и компьютеры сами находят друг друга и передают сообщения дальше — как живая цепочка.
+Не нужен ни один «главный» сервер.
+
+Пропал интернет — связь остаётся.
+Отключили вышки — связь остаётся.
+Вы в месте без связи — можно использовать радиомодуль.
+
+Zamolxis построен на открытом протоколе [Reticulum](https://reticulum.network/) — одном из самых устойчивых способов связи без централизованной инфраструктуры.
+
+<p align="center">
+  <img src="./docs/images/feature-direct.jpg" width="620" alt="Два телефона переписываются напрямую, вышка перечёркнута" />
+</p>
+
+---
+
+### Установка
+
+1. Скачайте APK со страницы [Releases](https://github.com/c0d3craft3r13/zamolxis/releases)
+2. Обязательно проверьте подпись по инструкции в [SECURITY.md](./SECURITY.md)
+3. Установите приложение и создайте свою личность прямо в нём
+
+Или установите через Obtainium:
+
+<a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/c0d3craft3r13/zamolxis">
+  <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="56" alt="Получить в Obtainium" />
+</a>
+
+---
+
+### Безопасность
+
+Zamolxis создан для ситуаций, когда противник может контролировать сеть или физически получить доступ к устройству.
+
+- Сообщения защищены сквозным шифрованием, между пользователями Zamolxis — дополнительно постквантовым
+- База данных на устройстве зашифрована
+- Есть обычный PIN, задержка после неудачных попыток и **Duress PIN** для уничтожения данных
+- Экран защищён от скриншотов, записи и трансляции
+
+Подробная модель угроз и то, что пока **не** покрыто, описаны в [SECURITY.md](./SECURITY.md).
+
+Нашли уязвимость — сообщайте **только** через [GitHub Security Advisories](https://github.com/c0d3craft3r13/zamolxis/security/advisories/new). Никогда не создавайте публичные issues с описанием уязвимостей.
+
+---
+
+### Почему название «Zamolxis»
+
+Zamolxis — бог даков, связанный с бессмертием.
+По преданию, он ушёл в подземное жилище на три года, и все считали его мёртвым. А потом вернулся.
+
+Подходящее имя для сети, которая может затихнуть — и снова появиться.
+
+---
+
+### Поддержать проект
+
+Zamolxis полностью бесплатный и с открытым исходным кодом.
+
+**USDT (TRC-20, сеть Tron):**
+`TNPzvsfsdNC3XrxJPB2NMVh1nZSPcvZzxC`
+
+<p align="center">
+  <img src="./docs/images/donate-usdt-trc20.png" width="160" alt="QR-код для доната USDT TRC-20" />
+</p>
+
+---
+
+### Лицензия
+
+Mozilla Public License 2.0 — см. [LICENSE.md](./LICENSE.md).
+
+Проект основан на коде [Columba](https://github.com/torlando-tech/columba), но развивается самостоятельно.
+Авторы оригинального проекта не связаны с Zamolxis и не поддерживают его.
