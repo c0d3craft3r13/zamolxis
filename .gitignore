@@ -147,3 +147,10 @@ signing.properties
 vendor/python/*/build/
 vendor/python/*/*.egg-info/
 vendor/python/*/src/*.egg-info/
+
+# Local assistant tooling. Kept on disk — CLAUDE.md carries the module map, the
+# Chaquopy pitfalls and the list of gates CI actually enforces, and losing it
+# would mean re-deriving all of that every time. It is simply not the project's
+# business to publish, so it is tracked nowhere.
+.claude/
+CLAUDE.md
