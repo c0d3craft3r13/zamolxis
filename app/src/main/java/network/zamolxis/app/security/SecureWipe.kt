@@ -134,9 +134,15 @@ class SecureWipe
             DATABASE_NAMES.fold(true) { ok, name ->
                 // deleteDatabase takes the -wal and -shm sidecars with it; those
                 // hold recently written rows that outlive the main file.
-                val deleted = runCatching { context.deleteDatabase(name) }.getOrDefault(false)
-                if (!deleted) Log.w(TAG, "Database $name was not deleted (may not exist)")
-                ok
+                runCatching { context.deleteDatabase(name) }
+
+                // Its return value is not usable as a verdict: false means both
+                // "could not delete" and "there was nothing there", and this
+                // method's whole job is to report the difference. Ask the
+                // filesystem instead — what matters is that nothing is left.
+                val gone = runCatching { !context.getDatabasePath(name).exists() }.getOrDefault(false)
+                if (!gone) Log.w(TAG, "Database $name is still on disk after the wipe")
+                gone && ok
             }
 
         private fun deleteKeystoreEntries(): Boolean =
@@ -162,7 +168,14 @@ class SecureWipe
             var ok = deleteContents(context.cacheDir)
             context.externalCacheDir?.let { ok = deleteContents(it) && ok }
             // Attachments the app staged for sharing live here on some devices.
-            context.getExternalFilesDir(null)?.let { ok = deleteContents(it) && ok }
+            // The plural form, because the singular returns only the primary
+            // volume: on a phone with an SD card the app's directory on that card
+            // is a second copy of the same files, and leaving it behind would
+            // leave the duress wipe with a hole exactly the size of the removable
+            // storage someone can pull out and read elsewhere.
+            context.getExternalFilesDirs(null).orEmpty().filterNotNull().forEach {
+                ok = deleteContents(it) && ok
+            }
             return ok
         }
 
