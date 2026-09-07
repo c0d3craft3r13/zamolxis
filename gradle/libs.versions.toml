@@ -143,7 +143,7 @@ cameraX-view = { module = "androidx.camera:camera-view", version.ref = "cameraX"
 # Testing
 junit = { module = "junit:junit", version = "4.13.2" }
 # Held on JUnit 5.x: 6.x is a major with a raised Java baseline and API removals.
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.14.4" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "6.1.3" }
 mockk = { module = "io.mockk:mockk", version = "1.14.11" }
 mockk-android = { module = "io.mockk:mockk-android", version = "1.14.11" }
 turbine = { module = "app.cash.turbine:turbine", version = "1.2.1" }
