@@ -608,7 +608,7 @@ dependencies {
     // Scoped to the `sentry` flavor ONLY so the SDK is entirely absent from the noSentry
     // APK. The noSentry flavor uses src/noSentry/.../NoOpCrashReporter instead. Requires
     // autoInstallation.enabled = false in the sentry { } block above.
-    "sentryImplementation"("io.sentry:sentry-android:8.31.0")
+    "sentryImplementation"("io.sentry:sentry-android:8.55.0")
 
     // Performance Monitoring - JankStats for frame monitoring
     // Phase 1 Plan 01-03: Frame tracking integration with Sentry
