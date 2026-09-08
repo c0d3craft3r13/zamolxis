@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -55,9 +57,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -263,11 +268,12 @@ fun MigrationScreen(
     // Import Password Dialog (encrypted file detected)
     val currentState = uiState
     if (currentState is MigrationUiState.PasswordRequired || currentState is MigrationUiState.WrongPassword) {
-        val fileUri = when (currentState) {
-            is MigrationUiState.PasswordRequired -> currentState.fileUri
-            is MigrationUiState.WrongPassword -> currentState.fileUri
-            else -> null
-        }
+        val fileUri =
+            when (currentState) {
+                is MigrationUiState.PasswordRequired -> currentState.fileUri
+                is MigrationUiState.WrongPassword -> currentState.fileUri
+                else -> null
+            }
         if (fileUri != null) {
             PasswordDialog(
                 title = stringResource(R.string.migr_encrypted_title),
@@ -285,6 +291,13 @@ fun MigrationScreen(
     }
 
     // Import Confirmation Dialog
+    (uiState as? MigrationUiState.RecoveryKeyIssued)?.let { issued ->
+        RecoveryKeyDialog(
+            key = issued.key,
+            onAcknowledged = { viewModel.onRecoveryKeyAcknowledged() },
+        )
+    }
+
     if (showImportConfirmDialog && uiState is MigrationUiState.ImportPreview) {
         val preview = (uiState as MigrationUiState.ImportPreview).preview
         ImportConfirmDialog(
@@ -869,8 +882,11 @@ internal fun PasswordDialog(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     visualTransformation =
-                        if (passwordVisible) VisualTransformation.None
-                        else PasswordVisualTransformation(),
+                        if (passwordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
                     trailingIcon = {
                         TextButton(onClick = { passwordVisible = !passwordVisible }) {
                             Text(stringResource(if (passwordVisible) R.string.migr_pw_hide else R.string.migr_pw_show))
@@ -891,8 +907,11 @@ internal fun PasswordDialog(
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         visualTransformation =
-                            if (passwordVisible) VisualTransformation.None
-                            else PasswordVisualTransformation(),
+                            if (passwordVisible) {
+                                VisualTransformation.None
+                            } else {
+                                PasswordVisualTransformation()
+                            },
                         isError = errorMessage != null,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -922,6 +941,73 @@ internal fun PasswordDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
+            }
+        },
+    )
+}
+
+/**
+ * Shows the recovery key once, and refuses to go away until the user says they
+ * have it.
+ *
+ * Not dismissible by tapping outside, and with no cancel: the key is in the
+ * container and on whatever the user writes it on, and nowhere else. A dialog
+ * that could be swiped away by accident would quietly cost people the one
+ * secret that makes a forgotten password survivable.
+ */
+@Composable
+private fun RecoveryKeyDialog(
+    key: String,
+    onAcknowledged: () -> Unit,
+) {
+    val clipboard = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text(stringResource(R.string.migration_recovery_key_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(R.string.migration_recovery_key_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                SelectionContainer {
+                    Text(
+                        text = key,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontFamily = FontFamily.Monospace,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    MaterialTheme.shapes.small,
+                                ).padding(12.dp),
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.migration_recovery_key_warning),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                TextButton(
+                    onClick = {
+                        clipboard.setText(AnnotatedString(key))
+                        copied = true
+                    },
+                ) {
+                    Text(
+                        stringResource(
+                            if (copied) R.string.migration_recovery_key_copied else R.string.migration_recovery_key_copy,
+                        ),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onAcknowledged) {
+                Text(stringResource(R.string.migration_recovery_key_ack))
             }
         },
     )

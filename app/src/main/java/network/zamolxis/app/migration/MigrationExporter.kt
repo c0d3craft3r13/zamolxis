@@ -1,5 +1,6 @@
 package network.zamolxis.app.migration
 
+import android.app.ActivityManager
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
@@ -54,6 +55,8 @@ class MigrationExporter
             private const val MANIFEST_FILENAME = "manifest.json"
             private const val ATTACHMENTS_DIR = "attachments"
             private const val EXPORT_DIR = "migration_export"
+            private const val BYTES_PER_KIB = 1024L
+            private const val ARGON2_HEADROOM = 3
         }
 
         private val json =
@@ -76,6 +79,7 @@ class MigrationExporter
             onProgress: (Float) -> Unit = {},
             includeAttachments: Boolean = true,
             exportPassword: CharArray? = null,
+            recoveryKey: ByteArray? = null,
         ): Result<Uri> =
             withContext(Dispatchers.IO) {
                 try {
@@ -138,12 +142,12 @@ class MigrationExporter
                             keysEncrypted = keysEncrypted,
                         )
 
-                    // Create ZIP file, then encrypt it
-                    val exportFile = createExportZip(bundle, attachmentRefs, onProgress)
-                    onProgress(0.95f)
-
-                    Log.i(TAG, "Encrypting export file...")
-                    MigrationCrypto.encryptFile(exportFile, password)
+                    val unlocks =
+                        buildList {
+                            add(MigrationContainer.Unlock.Password(password))
+                            recoveryKey?.let { add(MigrationContainer.Unlock.Recovery(it)) }
+                        }
+                    val exportFile = createExportContainer(bundle, attachmentRefs, unlocks, onProgress)
                     Log.i(TAG, "Export complete: ${exportFile.absolutePath}")
                     onProgress(1.0f)
 
@@ -242,8 +246,8 @@ class MigrationExporter
         private suspend fun exportIdentities(
             identities: List<network.zamolxis.app.data.db.entity.LocalIdentityEntity>,
             exportPassword: CharArray? = null,
-        ): List<IdentityExport> {
-            return identities.map { identity ->
+        ): List<IdentityExport> =
+            identities.map { identity ->
                 // Get decrypted key data (from encrypted storage or file)
                 val plainKeyData = getDecryptedKeyData(identity)
 
@@ -282,16 +286,13 @@ class MigrationExporter
                     )
                 }
             }
-        }
 
         /**
          * Get decrypted key data for an identity.
          * Handles both encrypted (new) and unencrypted (legacy) storage.
          */
         @Suppress("DEPRECATION")
-        private suspend fun getDecryptedKeyData(
-            identity: network.zamolxis.app.data.db.entity.LocalIdentityEntity,
-        ): ByteArray? {
+        private suspend fun getDecryptedKeyData(identity: network.zamolxis.app.data.db.entity.LocalIdentityEntity): ByteArray? {
             // Try to get from encrypted storage first
             if (identity.keyEncryptionVersion > 0 && identity.encryptedKeyData != null) {
                 return try {
@@ -359,9 +360,7 @@ class MigrationExporter
             return customThemes.map { it.toExport() }
         }
 
-        private suspend fun exportCallHistory(
-            identities: List<network.zamolxis.app.data.db.entity.LocalIdentityEntity>,
-        ): List<CallHistoryExport> {
+        private suspend fun exportCallHistory(identities: List<network.zamolxis.app.data.db.entity.LocalIdentityEntity>): List<CallHistoryExport> {
             val records =
                 identities.flatMap { identity ->
                     database.callHistoryDao().getForExport(identity.identityHash)
@@ -477,9 +476,18 @@ class MigrationExporter
             return refs
         }
 
-        private fun createExportZip(
+        /**
+         * Write the archive straight into the container.
+         *
+         * The nesting is the point: `ZipOutputStream` feeds the sealing stream,
+         * which feeds the file, so no unencrypted archive is ever written down.
+         * The previous shape — zip to disk, then encrypt in place — left the
+         * plaintext in flash blocks that overwriting does not necessarily reach.
+         */
+        private fun createExportContainer(
             bundle: MigrationBundle,
             attachmentRefs: List<AttachmentRef>,
+            unlocks: List<MigrationContainer.Unlock>,
             onProgress: (Float) -> Unit,
         ): File {
             val exportDir = File(context.cacheDir, EXPORT_DIR).also { it.mkdirs() }
@@ -487,7 +495,39 @@ class MigrationExporter
             val timestamp = dateFormat.format(Date())
             val exportFile = File(exportDir, "zamolxis_export_$timestamp.zamolxis")
 
-            ZipOutputStream(FileOutputStream(exportFile)).use { zipOut ->
+            FileOutputStream(exportFile).use { fileOut ->
+                MigrationContainer.sealingStream(fileOut, unlocks, argon2Cost()).use { sealed ->
+                    writeArchive(sealed, bundle, attachmentRefs, onProgress)
+                }
+            }
+            return exportFile
+        }
+
+        /**
+         * How much the Argon2 slot is allowed to cost on this device.
+         *
+         * Asking rather than assuming, because the default wants 128 MiB and a
+         * phone that cannot spare it would have the export killed mid-write.
+         * Whatever is chosen is recorded in the file, so a container written
+         * cheaply on a weak device still opens anywhere.
+         */
+        private fun argon2Cost(): MigrationContainer.Argon2Cost {
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val memoryInfo = ActivityManager.MemoryInfo().also(activityManager::getMemoryInfo)
+            val availableKib = memoryInfo.availMem / BYTES_PER_KIB
+            // Threefold headroom: Argon2 holds the whole block array at once and
+            // the rest of the app still has to run underneath it.
+            val affordable = availableKib > MigrationContainer.DEFAULT_COST.memoryKib * ARGON2_HEADROOM
+            return if (affordable) MigrationContainer.DEFAULT_COST else MigrationContainer.MINIMUM_COST
+        }
+
+        private fun writeArchive(
+            sink: java.io.OutputStream,
+            bundle: MigrationBundle,
+            attachmentRefs: List<AttachmentRef>,
+            onProgress: (Float) -> Unit,
+        ) {
+            ZipOutputStream(sink).use { zipOut ->
                 zipOut.putNextEntry(ZipEntry(MANIFEST_FILENAME))
                 zipOut.write(json.encodeToString(bundle).toByteArray())
                 zipOut.closeEntry()
@@ -507,7 +547,6 @@ class MigrationExporter
                     }
                 }
             }
-            return exportFile
         }
 
         /**

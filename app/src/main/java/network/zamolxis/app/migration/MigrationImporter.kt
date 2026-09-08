@@ -691,7 +691,7 @@ class MigrationImporter
                             if (password == null) {
                                 throw PasswordRequiredException("This export file is encrypted")
                             }
-                            MigrationCrypto.decrypt(rawBytes, password)
+                            MigrationCrypto.decryptWithSecret(rawBytes, password)
                         } else {
                             rawBytes
                         }

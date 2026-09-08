@@ -143,6 +143,66 @@ object MigrationCrypto {
     }
 
     /**
+     * Work out what the user typed, without asking them.
+     *
+     * A recovery key is not a password and does not belong behind a mode
+     * switch: someone restoring a backup should be able to paste whichever
+     * secret they have into one field and have it work. The two are told apart
+     * by shape — a recovery key decodes cleanly from Crockford Base32 to
+     * exactly [RecoveryKey.LENGTH_BYTES] bytes, which a typed password
+     * essentially never does.
+     *
+     * When the text could be either, the recovery key is tried first: it costs
+     * one HKDF, while a password costs the whole Argon2id price, and trying the
+     * cheap one first wastes nothing.
+     */
+    fun unlocksFor(text: String): List<MigrationContainer.Unlock> =
+        buildList {
+            runCatching { RecoveryKey.decode(text) }
+                .getOrNull()
+                ?.takeIf { it.size == RecoveryKey.LENGTH_BYTES }
+                ?.let { add(MigrationContainer.Unlock.Recovery(it)) }
+            add(MigrationContainer.Unlock.Password(text))
+        }
+
+    /**
+     * Open with whichever of [unlocksFor] fits.
+     *
+     * @throws WrongPasswordException when none of them do — the same failure
+     *   whether the text was a bad password or a bad recovery key, because
+     *   which slots a container carries is not something an error should leak.
+     */
+    fun decryptWithSecret(
+        encrypted: ByteArray,
+        secret: String,
+    ): ByteArray =
+        unlocksFor(secret)
+            .firstNotNullOfOrNull { unlock -> runCatching { decryptAny(encrypted, unlock) }.getOrNull() }
+            ?: throw WrongPasswordException("Neither a password nor a recovery key opened this export")
+
+    /**
+     * Open an export of whichever version it turns out to be.
+     *
+     * The two formats are told apart by their first byte, so a container the
+     * app wrote last year still imports without the caller having to know or
+     * care which era it came from. New exports are [MigrationContainer]; this
+     * path exists for the ones already in people's backups.
+     */
+    fun decryptAny(
+        encrypted: ByteArray,
+        unlock: MigrationContainer.Unlock,
+    ): ByteArray =
+        if (encrypted.isNotEmpty() && encrypted[0] == MigrationContainer.VERSION) {
+            MigrationContainer.open(encrypted, unlock)
+        } else {
+            // v2 had no notion of anything but a password.
+            val password =
+                (unlock as? MigrationContainer.Unlock.Password)?.password
+                    ?: throw WrongPasswordException("This export predates recovery keys and needs its password")
+            decrypt(encrypted, password)
+        }
+
+    /**
      * Decrypt an encrypted export file and return an [InputStream] to the plaintext ZIP.
      *
      * @param encryptedStream input stream of the encrypted file
@@ -169,7 +229,7 @@ object MigrationCrypto {
         if (header.isEmpty()) {
             throw InvalidExportFileException("Export file is empty")
         }
-        if (header[0] == ENCRYPTED_VERSION) return true
+        if (header[0] == ENCRYPTED_VERSION || header[0] == MigrationContainer.VERSION) return true
         if (header.size >= 2 && header[0] == ZIP_MAGIC_BYTE_1 && header[1] == ZIP_MAGIC_BYTE_2) {
             return false
         }

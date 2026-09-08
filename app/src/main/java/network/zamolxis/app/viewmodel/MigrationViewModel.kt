@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import network.zamolxis.app.migration.ExportResult
 import network.zamolxis.app.migration.ImportResult
 import network.zamolxis.app.migration.MigrationExporter
+import network.zamolxis.app.migration.RecoveryKey
 import network.zamolxis.app.migration.MigrationImporter
 import network.zamolxis.app.migration.MigrationPreview
 import network.zamolxis.app.migration.PasswordRequiredException
@@ -121,17 +122,24 @@ class MigrationViewModel
                     _uiState.value = MigrationUiState.Exporting
                     _exportProgress.value = 0f
 
+                    // Always issued, never optional: the recovery key is what
+                    // makes a weak password survivable, and a safety net people
+                    // have to opt into is one most of them will not have.
+                    val recoveryKey = RecoveryKey.generate()
                     val result =
                         migrationExporter.exportData(
                             password = password,
                             onProgress = { progress -> _exportProgress.value = progress },
                             includeAttachments = _includeAttachments.value,
+                            recoveryKey = recoveryKey,
                         )
 
                     result.fold(
                         onSuccess = { uri ->
                             Log.i(TAG, "Export completed: $uri")
                             _exportedFileUri.value = uri
+                            pendingRecoveryKey = RecoveryKey.encode(recoveryKey)
+                            recoveryKey.fill(0)
                             _uiState.value = MigrationUiState.ExportComplete(uri)
                         },
                         onFailure = { error ->
@@ -303,6 +311,15 @@ class MigrationViewModel
             }
         }
 
+        /** Held between the export finishing and the file being saved; never persisted. */
+        private var pendingRecoveryKey: String? = null
+
+        /** The user says they have written the key down. It is not recoverable after this. */
+        fun onRecoveryKeyAcknowledged() {
+            pendingRecoveryKey = null
+            _uiState.value = MigrationUiState.ExportSaved
+        }
+
         /**
          * Called after the SAF save dialog is launched so the UI state resets
          * and won't re-trigger the dialog on configuration changes.
@@ -328,7 +345,12 @@ class MigrationViewModel
                             }
                         } ?: error("Could not open export file")
                     }
-                    _uiState.value = MigrationUiState.ExportSaved
+                    // Shown after the file is safely written, not before: a key
+                    // for an export that failed to save is worse than useless.
+                    _uiState.value =
+                        pendingRecoveryKey
+                            ?.let { MigrationUiState.RecoveryKeyIssued(it) }
+                            ?: MigrationUiState.ExportSaved
                     cleanupExportFiles()
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to save export file", e)
@@ -382,6 +404,18 @@ sealed class MigrationUiState {
     ) : MigrationUiState()
 
     data object ExportSaved : MigrationUiState()
+
+    /**
+     * The recovery key, shown once.
+     *
+     * Once, because it is not stored anywhere afterwards — it exists in the
+     * container's slot and in whatever the user wrote it on, and nowhere else.
+     */
+    data class RecoveryKeyIssued(
+        val key: String,
+    ) : MigrationUiState() {
+        override fun toString(): String = "RecoveryKeyIssued(key=<redacted>)"
+    }
 
     data class ImportPreview(
         val preview: MigrationPreview,

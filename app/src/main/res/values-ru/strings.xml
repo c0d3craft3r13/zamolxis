@@ -2451,4 +2451,10 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., лицензия MIT — 
         <item quantity="many">%d участников</item>
         <item quantity="other">%d участника</item>
     </plurals>
+    <string name="migration_recovery_key_title">Ключ восстановления</string>
+    <string name="migration_recovery_key_body">Запишите его и храните отдельно от телефона. Он откроет эту копию, даже если пароль забыт, — и, в отличие от пароля, его нельзя подобрать.</string>
+    <string name="migration_recovery_key_warning">Показывается один раз. Нигде не сохраняется и повторно показан не будет.</string>
+    <string name="migration_recovery_key_copy">Копировать</string>
+    <string name="migration_recovery_key_copied">Скопировано</string>
+    <string name="migration_recovery_key_ack">Я записал ключ</string>
 </resources>

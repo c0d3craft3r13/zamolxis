@@ -30,6 +30,7 @@ import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -150,7 +151,7 @@ class MigrationViewModelTest {
     fun `exportData sets state to Exporting then ExportComplete on success`() =
         runTest {
             val mockUri = mockk<Uri>()
-            coEvery { migrationExporter.exportData(any(), any(), any()) } returns Result.success(mockUri)
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } returns Result.success(mockUri)
 
             viewModel.exportData("testpass1")
 
@@ -179,7 +180,7 @@ class MigrationViewModelTest {
     fun `exportData sets state to Error on failure`() =
         runTest {
             val errorMessage = "Export failed: disk full"
-            coEvery { migrationExporter.exportData(any(), any(), any()) } returns Result.failure(Exception(errorMessage))
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } returns Result.failure(Exception(errorMessage))
 
             viewModel.exportData("testpass1")
             advanceUntilIdle()
@@ -195,7 +196,7 @@ class MigrationViewModelTest {
     fun `exportData updates progress during export`() =
         runTest {
             val mockUri = mockk<Uri>()
-            coEvery { migrationExporter.exportData(any(), any(), any()) } coAnswers {
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } coAnswers {
                 val progressCallback = secondArg<(Float) -> Unit>()
                 progressCallback(0.25f)
                 progressCallback(0.50f)
@@ -353,7 +354,7 @@ class MigrationViewModelTest {
     fun `resetState returns to Idle and clears progress`() =
         runTest {
             val mockUri = mockk<Uri>()
-            coEvery { migrationExporter.exportData(any(), any(), any()) } returns Result.success(mockUri)
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } returns Result.success(mockUri)
 
             // First export
             viewModel.exportData("testpass1")
@@ -428,7 +429,7 @@ class MigrationViewModelTest {
     fun `exportData passes includeAttachments false to exporter`() =
         runTest {
             val mockUri = mockk<Uri>()
-            coEvery { migrationExporter.exportData(any(), any(), any()) } returns Result.success(mockUri)
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } returns Result.success(mockUri)
 
             // Set includeAttachments to false
             viewModel.setIncludeAttachments(false)
@@ -441,14 +442,14 @@ class MigrationViewModelTest {
             // Assert operation completed successfully
             assertTrue("exportData should complete without throwing", result.isSuccess)
             // Verify exporter was called with includeAttachments = false
-            coVerify { migrationExporter.exportData(any(), any(), includeAttachments = false) }
+            coVerify { migrationExporter.exportData(any(), any(), includeAttachments = false, any(), any()) }
         }
 
     @Test
     fun `exportData passes includeAttachments true to exporter by default`() =
         runTest {
             val mockUri = mockk<Uri>()
-            coEvery { migrationExporter.exportData(any(), any(), any()) } returns Result.success(mockUri)
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } returns Result.success(mockUri)
 
             // Export without changing default
             val result = runCatching { viewModel.exportData("testpass1") }
@@ -457,7 +458,7 @@ class MigrationViewModelTest {
             // Assert operation completed successfully
             assertTrue("exportData should complete without throwing", result.isSuccess)
             // Verify exporter was called with includeAttachments = true
-            coVerify { migrationExporter.exportData(any(), any(), includeAttachments = true) }
+            coVerify { migrationExporter.exportData(any(), any(), includeAttachments = true, any(), any()) }
         }
 
     // endregion
@@ -468,7 +469,7 @@ class MigrationViewModelTest {
     fun `onExportSaveDialogLaunched sets state to Idle`() =
         runTest {
             val mockUri = mockk<Uri>()
-            coEvery { migrationExporter.exportData(any(), any(), any()) } returns Result.success(mockUri)
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } returns Result.success(mockUri)
 
             // Get into ExportComplete state first
             viewModel.exportData("testpass1")
@@ -488,14 +489,14 @@ class MigrationViewModelTest {
         }
 
     @Test
-    fun `saveExportToFile copies file and sets ExportSaved on success`() =
+    fun `saveExportToFile copies file and offers the recovery key before finishing`() =
         runTest {
             val sourceUri = mockk<Uri>()
             val destinationUri = mockk<Uri>()
             val mockContentResolver = mockk<android.content.ContentResolver>()
             val sourceData = "export data".toByteArray()
 
-            coEvery { migrationExporter.exportData(any(), any(), any()) } returns Result.success(sourceUri)
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } returns Result.success(sourceUri)
 
             // Export first to populate _exportedFileUri
             viewModel.exportData("testpass1")
@@ -512,11 +513,28 @@ class MigrationViewModelTest {
             withContext(Dispatchers.Default) { kotlinx.coroutines.delay(200) }
             advanceUntilIdle()
 
-            // Then
+            // Then: the key is shown first, and only acknowledging it finishes
+            // the export. It exists nowhere else once this dialog is gone.
+            viewModel.uiState.test {
+                val issued = awaitItem()
+                assertTrue("expected the recovery key, got $issued", issued is MigrationUiState.RecoveryKeyIssued)
+                assertTrue((issued as MigrationUiState.RecoveryKeyIssued).key.isNotBlank())
+            }
+
+            viewModel.onRecoveryKeyAcknowledged()
+
             viewModel.uiState.test {
                 assertEquals(MigrationUiState.ExportSaved, awaitItem())
             }
         }
+
+    /** The key is a secret; it must not turn up in a log line or a crash report. */
+    @Test
+    fun `the issued recovery key is redacted in toString`() {
+        val state = MigrationUiState.RecoveryKeyIssued("ABCD-EFGH-JKMN")
+
+        assertFalse(state.toString().contains("ABCD"))
+    }
 
     @Test
     fun `saveExportToFile sets Error on failure`() =
@@ -525,7 +543,7 @@ class MigrationViewModelTest {
             val destinationUri = mockk<Uri>()
             val mockContentResolver = mockk<android.content.ContentResolver>()
 
-            coEvery { migrationExporter.exportData(any(), any(), any()) } returns Result.success(sourceUri)
+            coEvery { migrationExporter.exportData(any(), any(), any(), any(), any()) } returns Result.success(sourceUri)
 
             // Export first to populate _exportedFileUri
             viewModel.exportData("testpass1")

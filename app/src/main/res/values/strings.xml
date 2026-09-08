@@ -2380,4 +2380,10 @@ Bouncy Castle © The Legion of the Bouncy Castle Inc., under the MIT licence —
         <item quantity="one">%d member</item>
         <item quantity="other">%d members</item>
     </plurals>
+    <string name="migration_recovery_key_title">Recovery key</string>
+    <string name="migration_recovery_key_body">Write this down and keep it somewhere separate from the phone. It opens this export even if you forget the password — and unlike a password, it cannot be guessed.</string>
+    <string name="migration_recovery_key_warning">Shown only once. It is not stored anywhere and cannot be shown again.</string>
+    <string name="migration_recovery_key_copy">Copy</string>
+    <string name="migration_recovery_key_copied">Copied</string>
+    <string name="migration_recovery_key_ack">I have written it down</string>
 </resources>
