@@ -3,18 +3,22 @@
 ## APK Verification
 
 All official Zamolxis releases are signed with our release certificate
-(RSA 4096, SHA384withRSA, valid until 2056-08-09). This certificate is
-Zamolxis's own — it is **not** the upstream Columba one, so a Columba
-fingerprint will never match a Zamolxis build.
+(RSA 4096, APK Signature Scheme v2). This certificate is Zamolxis's own — it
+is **not** the upstream Columba one, so a Columba fingerprint will never match
+a Zamolxis build.
+
+The fingerprints below belong to the key introduced with 2.3.0 and differ from
+those published before it. Nothing was signed with the earlier key: no release
+had ever been produced under it, so no installed build carries it.
 
 **SHA-256:**
 ```
-BD:6C:19:81:47:50:EB:11:81:33:B0:1B:40:6D:43:F5:C5:A3:0E:8F:BD:98:93:13:2D:AD:18:F2:FC:62:9D:E9
+25:E6:F2:34:65:76:BE:DF:01:B0:18:9F:5F:91:E5:5B:67:97:22:F5:6D:07:3E:F3:23:54:F1:3D:B6:A7:E5:A9
 ```
 
 **SHA-1:**
 ```
-9E:E3:3D:F0:6C:F0:B4:F2:CA:B3:E0:FA:93:29:E8:9F:E9:AD:52:3B
+DB:2D:57:61:C1:81:47:52:95:10:03:5A:21:7E:34:AC:82:03:4E:A1
 ```
 
 ### Verifying Before Installation
