@@ -21,6 +21,7 @@ import network.zamolxis.app.notifications.NotificationHelper
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.SenderVerification
 import network.zamolxis.app.rns.host.util.PeerNameResolver
 import network.zamolxis.app.service.group.GroupChatManager
 import network.zamolxis.app.service.group.GroupWireCodec
@@ -116,6 +117,13 @@ class MessageCollector
 
                 try {
                     rnsLxmf.observeMessages().collect { receivedMessage ->
+                        // Refuse to put a contact's name on a message nobody could
+                        // check. Runs before everything else, including the dedup
+                        // caches, so a refused message leaves no trace to reason about.
+                        if (!mayAttribute(receivedMessage)) {
+                            return@collect
+                        }
+
                         // De-duplicate: Skip if we've already processed this message in-memory
                         if (receivedMessage.messageHash in processedMessageIds) {
                             Log.d(TAG, "Skipping duplicate message ${receivedMessage.messageHash.take(16)} (in-memory cache)")
@@ -551,6 +559,68 @@ class MessageCollector
                     Log.e(TAG, "Error observing announces for names", e)
                 }
             }
+        }
+
+        /**
+         * Whether this message may be shown as coming from the address it names.
+         *
+         * The backends already refuse a message whose signature fails to match
+         * the identity it claims. What is left is the quieter case: the stack had
+         * no key for that sender, so it checked nothing and said so. Usually that
+         * is an honest first contact — someone whose announce we have never heard
+         * — and it is delivered, or nobody could ever write to us first.
+         *
+         * The exception is a sender we *do* hold a public key for. That
+         * combination should be impossible: [PeerIdentityPrimer] loads every
+         * contact key into the stack when it starts, precisely so that a message
+         * from a contact is always checkable. Seeing it anyway means either the
+         * identity cache lost the key, or someone is wearing a contact's address
+         * on a message they did not sign. There is no way to tell those apart
+         * from here, and both must not end up rendered under that contact's name,
+         * so the message is refused.
+         *
+         * The key is pushed back into the stack on the way out, which makes the
+         * cache-loss version of this self-correcting: whatever the contact sends
+         * next is verified normally. The impersonation version simply keeps
+         * failing, which is the point.
+         */
+        private suspend fun mayAttribute(message: ReceivedMessage): Boolean {
+            if (message.senderVerification != SenderVerification.SOURCE_UNKNOWN) return true
+
+            val sourceHash = message.sourceHash.joinToString("") { "%02x".format(it) }
+            val knownKey = storedKeyFor(sourceHash) ?: return true
+
+            Log.w(
+                TAG,
+                "Refusing an unverified message that claims to be from contact ${sourceHash.take(16)} — " +
+                    "we hold their key, so this should have been checkable",
+            )
+            restoreContactIdentity(sourceHash, knownKey)
+            return false
+        }
+
+        /**
+         * The public key we hold for a saved contact, or null if they are not one.
+         *
+         * Null on a database error too, which allows the message through. This
+         * guard exists to catch a contradiction, not to become a new way for mail
+         * to vanish whenever the database is briefly unavailable.
+         */
+        private suspend fun storedKeyFor(sourceHash: String): ByteArray? =
+            try {
+                contactRepository.getContact(sourceHash)?.publicKey
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not check the sender against contacts; allowing", e)
+                null
+            }
+
+        /** Put a contact's key back into the stack so their next message verifies. */
+        private suspend fun restoreContactIdentity(
+            sourceHash: String,
+            publicKey: ByteArray,
+        ) {
+            runCatching { rnsCore.restorePeerIdentities(listOf(sourceHash to publicKey)) }
+                .onFailure { Log.w(TAG, "Could not restore the identity for ${sourceHash.take(16)}", it) }
         }
 
         /**

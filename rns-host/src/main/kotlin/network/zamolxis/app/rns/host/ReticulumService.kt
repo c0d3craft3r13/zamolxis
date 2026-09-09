@@ -19,6 +19,7 @@ import network.zamolxis.app.rns.host.binder.ReticulumServiceBinder
 import network.zamolxis.app.rns.host.di.ServiceModule
 import network.zamolxis.app.rns.host.persistence.BackendInitializer
 import network.zamolxis.app.rns.host.persistence.PeerActivityCollector
+import network.zamolxis.app.rns.host.persistence.PeerIdentityPrimer
 import network.zamolxis.app.rns.host.rnode.KotlinRNodeBridge
 import network.zamolxis.app.rns.host.rnode.RNodeOnlineStatusListener
 import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
@@ -70,6 +71,13 @@ class ReticulumService : Service() {
      * the UI process alive to feed it config.
      */
     @Inject lateinit var backendInitializer: BackendInitializer
+
+    /**
+     * Loads known contacts' public keys into the identity cache once the stack
+     * is up. Without them an inbound message's signature cannot be checked at
+     * all, and an unchecked message is one anyone can put a contact's name on.
+     */
+    @Inject lateinit var peerIdentityPrimer: PeerIdentityPrimer
 
     // Coroutine scope for background tasks
     // Uses Dispatchers.Default for CPU-bound work (JSON parsing, orchestration)
@@ -166,6 +174,13 @@ class ReticulumService : Service() {
         // Install one lifecycle-owned protocol activity collector before backend
         // initialization, so non-replaying events cannot race startup.
         PeerActivityCollector(rnsBackend, managers.persistenceManager).start(serviceScope)
+
+        // Load contact public keys into the identity cache the moment the stack
+        // is ready, so an inbound message's signature can actually be checked.
+        // Installed here, before initialization, for the same reason as the line
+        // above: the status transition it waits on must not be able to fire
+        // before the watcher is attached.
+        peerIdentityPrimer.start(rnsBackend, serviceScope)
 
         // Create notification channel
         managers.notificationManager.createNotificationChannel()

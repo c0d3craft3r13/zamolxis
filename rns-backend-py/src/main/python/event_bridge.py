@@ -1161,6 +1161,14 @@ def _lxmf_delivery_callback(message):
             "content": message.content.decode("utf-8", "replace") if getattr(message, "content", None) else "",
             "timestamp": getattr(message, "timestamp", None),
             "signature_validated": bool(getattr(message, "signature_validated", False)),
+            # Why the signature did not check out, when it did not: upstream
+            # `LXMessage.SOURCE_UNKNOWN` (0x01) or `SIGNATURE_INVALID` (0x02),
+            # and None when validation threw. Kotlin needs the reason and not
+            # just the boolean, because "we have never heard this identity" is
+            # a first contact while "the signature is wrong" is someone wearing
+            # a contact's hash. `SenderVerification.of` turns the pair into the
+            # one verdict both backends act on.
+            "unverified_reason": getattr(message, "unverified_reason", None),
             "stamp_valid": bool(getattr(message, "stamp_valid", False)),
             "method": getattr(message, "method", None),
             "fields_json": fields_json,

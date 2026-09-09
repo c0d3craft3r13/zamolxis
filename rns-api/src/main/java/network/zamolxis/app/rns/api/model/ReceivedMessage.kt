@@ -33,4 +33,11 @@ data class ReceivedMessage(
     // Mirrors the string vocabulary already used for outbound on
     // `MessageEntity.deliveryMethod` and `MessageDetailScreen.getDeliveryMethodInfo`.
     val deliveryMethod: String? = null,
+    // Whether the LXMF signature proved the sender is who the message claims.
+    // Set by whichever backend produced the message; see [SenderVerification].
+    //
+    // Defaults to SOURCE_UNKNOWN rather than VERIFIED on purpose. A caller that
+    // forgets to fill this in should under-claim, not hand the UI a message that
+    // says its sender was proven when nobody checked.
+    val senderVerification: SenderVerification = SenderVerification.SOURCE_UNKNOWN,
 ) : Parcelable

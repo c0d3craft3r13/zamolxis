@@ -113,14 +113,53 @@ What that does and does not buy you:
   everything — the app is running, so the key is in use. The app PIN is a lock on
   the UI, not on the database.
 - The database is deliberately excluded from Android cloud backup and device
-  transfer, because a restored copy could never be opened on other hardware. Message
-  history therefore does not survive a move to a new phone; there is no encrypted
-  export flow yet.
+  transfer, because a restored copy could never be opened on other hardware. Moving
+  to a new phone goes through the export below instead.
 
-**Not covered today.** Screenshots are not blocked. The interface-configuration
-database (`interface_database`) and Reticulum's routing state (`reticulum.db`) are
-not encrypted. Treat a seized unlocked device as fully compromised. These are known
-gaps with planned work, not accidents.
+**Covered: moving to another phone.** An export is written into a sealed container
+rather than a password-protected archive. One random 256-bit key encrypts the data;
+that key is then wrapped once per way of opening the file. The password slot
+stretches what you type with Argon2id — memory-hard, so a graphics card runs tens of
+guesses in parallel where PBKDF2 would let it run tens of thousands. The recovery
+slot holds 256 bits of randomness shown once at export, which cannot be guessed at
+all and is the reason a weak password is not the ceiling on an export's strength.
+Either slot opens the file on its own. The archive is streamed straight into the
+container, so no plaintext copy is ever written to flash and then deleted — on flash,
+deletion is not erasure. Chunks authenticate their own position, so a truncated file
+is refused rather than yielding a prefix.
+
+**Covered: who a message is from.** Reticulum encrypts a message to its recipient
+but does not prove who wrote it; the proof is the LXMF signature, and a message
+carries its sender's address as a plain claim next to it. A message whose signature
+does not verify against the identity it names is dropped before anything in the app
+sees it — including the reaction, telemetry and profile-icon side channels, which a
+forged message must not be able to drive either.
+
+Checking a signature needs the sender's public key, and a sender whose key is not
+held cannot be checked by anyone. Those messages are delivered, because otherwise
+no one could ever make first contact, but they are not treated as verified. What
+must never happen is that gap opening under a name you trust, so the keys of saved
+contacts are loaded into the stack by the background service as soon as it starts —
+not only by the app, which may not be running when mail arrives. A message from a
+saved contact that still could not be checked is refused rather than shown: their
+key is on file, so either it is not really from them, or the identity cache lost
+it. The key is put back on the way out, so the honest version of that fixes itself
+on their next message and the dishonest one keeps failing.
+
+**Covered: the screen.** Screenshots, screen recording and casting are blocked, and
+Android is told to keep no thumbnail of the app for the Recents switcher — without
+that, a locked app still shows its last open conversation to anyone who swipes up.
+On by default and switchable in Settings, because some people need to file a bug
+report more than they need this.
+
+**Not covered today.** The interface-configuration database (`interface_database`)
+and Reticulum's routing state (`reticulum.db`) are not encrypted; `reticulum.db`
+holds ratchet private keys, so both are excluded from Android cloud backup and
+device transfer, but on the device itself they are plaintext. The post-quantum layer
+is opportunistic by default: when the other side has not advertised a key, or the
+link is a sub-kbps radio, the message goes with Reticulum's encryption alone and
+says so — "always" mode refuses to send instead. Treat a seized unlocked device as
+fully compromised. These are known gaps with planned work, not accidents.
 
 ## Supported Versions
 

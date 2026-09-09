@@ -41,6 +41,7 @@ import network.zamolxis.app.rns.api.model.PropagationState
 import network.zamolxis.app.rns.api.model.ReceivedMessage
 import network.zamolxis.app.rns.api.model.ReceivedPacket
 import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.api.model.SenderVerification
 import network.zamolxis.app.rns.api.model.VoiceCallState
 import network.zamolxis.app.rns.api.util.AppDataParser
 import network.zamolxis.app.rns.api.util.Aspects
@@ -939,6 +940,22 @@ class NativeRnsBackendImpl(
     private fun handleIncomingMessage(message: LXMessage) {
         scope.launch {
             val sourceHash = message.sourceHash
+
+            // Sender authenticity first. `lxmf-kt`'s router already turns an
+            // invalid signature away before this callback runs, so in practice
+            // this never fires — which is exactly why it is here. The rule that
+            // an unauthenticated message never reaches the user belongs to the
+            // app, not to a vendored router we re-sync from upstream; if that
+            // behaviour ever changes there, nothing downstream should notice.
+            val verification = message.senderVerification()
+            if (!verification.isDeliverable) {
+                Log.w(
+                    TAG,
+                    "Dropping LXMessage that claims to be from ${sourceHash.toHex().take(16)}: $verification",
+                )
+                return@launch
+            }
+
             val destHash = message.destinationHash
             val content = message.content
             val fields = message.fields
@@ -1058,8 +1075,20 @@ class NativeRnsBackendImpl(
             receivedRssi = message.receivedRssi,
             receivedSnr = message.receivedSnr,
             deliveryMethod = nativeDeliveryMethodName(message.method),
+            senderVerification = message.senderVerification(),
         )
     }
+
+    /**
+     * Read `lxmf-kt`'s two verification flags as the verdict `:rns-api` defines,
+     * so this backend and the Python one answer "is this really from them" with
+     * the same code rather than with two opinions that happen to agree.
+     */
+    private fun LXMessage.senderVerification(): SenderVerification =
+        SenderVerification.of(
+            signatureValidated = signatureValidated,
+            unverifiedReason = unverifiedReason?.value,
+        )
 
     /**
      * Map an inbound `LXMessage.method` (reticulum-kt's `DeliveryMethod`

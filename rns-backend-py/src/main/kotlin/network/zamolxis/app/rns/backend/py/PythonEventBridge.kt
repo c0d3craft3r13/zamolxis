@@ -15,6 +15,7 @@ import network.zamolxis.app.rns.api.model.LocationTelemetry
 import network.zamolxis.app.rns.api.model.NodeType
 import network.zamolxis.app.rns.api.model.ReceivedMessage
 import network.zamolxis.app.rns.api.model.ReceivedPacket
+import network.zamolxis.app.rns.api.model.SenderVerification
 import network.zamolxis.app.rns.api.util.AppDataParser
 import network.zamolxis.app.rns.api.util.isUserVisibleChatMessage
 import network.zamolxis.app.rns.api.util.LxmfFields
@@ -209,6 +210,28 @@ class PythonEventBridge {
     private fun handleLxmfDelivery(payload: PyObject) {
         runCatching {
             val sourceHash = payload.dictBytes("source_hash") ?: ByteArray(0)
+
+            // Sender authenticity, before anything else looks at this message.
+            // Upstream Python LXMF delivers an unverified message to its callback
+            // with the flag attached and lets the client decide; this is the
+            // client deciding. The check is up here rather than next to the chat
+            // emit because the side-channel routes below fire unconditionally —
+            // a forged message must not be able to move a contact's pin on the
+            // map or attach a reaction to their name either.
+            val verification =
+                SenderVerification.of(
+                    signatureValidated = payload.dictBool("signature_validated"),
+                    unverifiedReason = payload.dictInt("unverified_reason"),
+                )
+            if (!verification.isDeliverable) {
+                Log.w(
+                    TAG,
+                    "Dropping LXMessage that claims to be from ${sourceHash.toHex().take(16)}: " +
+                        "$verification",
+                )
+                return@runCatching
+            }
+
             val destHash = payload.dictBytes("destination_hash") ?: ByteArray(0)
             val fieldsJson = payload.dictStr("fields_json")
             val message = ReceivedMessage(
@@ -239,6 +262,7 @@ class PythonEventBridge {
                 receivedRssi = payload.dictInt("rssi"),
                 receivedSnr = payload.dictDouble("snr")?.toFloat(),
                 deliveryMethod = lxmfMethodName(payload.dictInt("method")),
+                senderVerification = verification,
             )
 
             // Side-channels always route — independent of the chat-emit

@@ -121,11 +121,6 @@
         <error line="799" column="43" source="standard:chain-method-continuation" />
         <error line="799" column="62" source="standard:chain-method-continuation" />
     </file>
-    <file name="app/src/debug/java/network/zamolxis/app/test/TestReceiver.kt">
-        <error line="60" column="28" source="standard:function-signature" />
-        <error line="60" column="46" source="standard:function-signature" />
-        <error line="60" column="60" source="standard:function-signature" />
-    </file>
     <file name="app/src/main/java/network/zamolxis/app/IncomingCallActivity.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="19" column="1" source="standard:no-unused-imports" />
@@ -361,11 +356,6 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/migration/MigrationExporter.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="245" column="33" source="standard:function-expression-body" />
-        <error line="293" column="13" source="standard:function-signature" />
-        <error line="293" column="79" source="standard:function-signature" />
-        <error line="363" column="13" source="standard:function-signature" />
-        <error line="363" column="87" source="standard:function-signature" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/navigation/AppDestination.kt">
         <error line="33" column="24" source="standard:multiline-expression-wrapping" />
@@ -417,19 +407,11 @@
     <file name="app/src/main/java/network/zamolxis/app/reticulum/util/SmartPoller.kt">
         <error line="72" column="33" source="standard:function-expression-body" />
     </file>
-    <file name="app/src/main/java/network/zamolxis/app/security/AppLockRepository.kt">
-        <error line="149" column="18" source="standard:chain-method-continuation" />
-        <error line="149" column="25" source="standard:chain-method-continuation" />
-        <error line="149" column="49" source="standard:chain-method-continuation" />
-        <error line="149" column="73" source="standard:chain-method-continuation" />
-        <error line="191" column="57" source="standard:function-signature" />
-    </file>
     <file name="app/src/main/java/network/zamolxis/app/service/AutoAnnounceManager.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/service/ConversationLinkManager.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="351" column="106" source="standard:function-signature" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/service/IdentityResolutionManager.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -461,12 +443,11 @@
         <error line="575" column="34" source="standard:multiline-expression-wrapping" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/service/MessageCollector.kt">
-        <error line="48" column="1" source="standard:no-consecutive-comments" />
-        <error line="571" column="9" source="standard:no-consecutive-comments" />
+        <error line="49" column="1" source="standard:no-consecutive-comments" />
+        <error line="641" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/service/PropagationNodeManager.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="236" column="21" source="standard:backing-property-naming" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/service/RNodeCompanionService.kt">
         <error line="47" column="5" source="standard:no-consecutive-comments" />
@@ -690,14 +671,6 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/ChatsScreen.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="218" column="1" source="standard:indent" />
-        <error line="219" column="1" source="standard:indent" />
-        <error line="252" column="1" source="standard:indent" />
-        <error line="355" column="1" source="standard:indent" />
-    </file>
-    <file name="app/src/main/java/network/zamolxis/app/ui/screens/ContactsScreen.kt">
-        <error line="97" column="1" source="standard:no-unused-imports" />
-        <error line="117" column="1" source="standard:no-unused-imports" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/ContactsTab.kt">
         <error line="9" column="24" source="standard:class-signature" />
@@ -729,9 +702,6 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/IdentityUnlockScreen.kt">
         <error line="42" column="1" source="standard:no-unused-imports" />
-    </file>
-    <file name="app/src/main/java/network/zamolxis/app/ui/screens/IncomingCallScreen.kt">
-        <error line="105" column="55" source="standard:function-expression-body" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/InterfaceManagementScreen.kt">
         <error line="200" column="1" source="standard:indent" />
@@ -876,22 +846,6 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/MigrationScreen.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="266" column="23" source="standard:multiline-expression-wrapping" />
-        <error line="872" column="46" source="standard:if-else-wrapping" />
-        <error line="872" column="46" source="standard:multiline-if-else" />
-        <error line="873" column="30" source="standard:if-else-wrapping" />
-        <error line="873" column="30" source="standard:multiline-if-else" />
-        <error line="894" column="50" source="standard:if-else-wrapping" />
-        <error line="894" column="50" source="standard:multiline-if-else" />
-        <error line="895" column="34" source="standard:if-else-wrapping" />
-        <error line="895" column="34" source="standard:multiline-if-else" />
-    </file>
-    <file name="app/src/main/java/network/zamolxis/app/ui/screens/MyIdentityScreen.kt">
-        <error line="495" column="1" source="standard:indent" />
-        <error line="496" column="1" source="standard:indent" />
-        <error line="497" column="1" source="standard:indent" />
-        <error line="498" column="1" source="standard:indent" />
-        <error line="499" column="1" source="standard:indent" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/NomadNetBrowserScreen.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -906,10 +860,6 @@
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/SettingsScreen.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="50" column="1" source="standard:no-unused-imports" />
-        <error line="226" column="51" source="standard:multiline-expression-wrapping" />
-        <error line="236" column="58" source="standard:multiline-expression-wrapping" />
-        <error line="658" column="43" source="standard:multiline-expression-wrapping" />
-        <error line="735" column="39" source="standard:multiline-expression-wrapping" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/ThemeEditorScreen.kt">
         <error line="198" column="1" source="standard:indent" />
@@ -998,11 +948,6 @@
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/settings/cards/AdvancedCard.kt">
         <error line="25" column="1" source="standard:no-unused-imports" />
         <error line="159" column="34" source="standard:multiline-expression-wrapping" />
-    </file>
-    <file name="app/src/main/java/network/zamolxis/app/ui/screens/settings/cards/AppLockCard.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="17" column="1" source="standard:no-unused-imports" />
-        <error line="23" column="1" source="standard:no-unused-imports" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/ui/screens/settings/cards/BatteryOptimizationCard.kt">
         <error line="46" column="1" source="standard:no-unused-imports" />
@@ -1456,9 +1401,6 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/CallViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="39" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="67" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="254" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/ChatsViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -1521,9 +1463,6 @@
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/MessagingViewModel.kt">
         <error line="159" column="21" source="standard:backing-property-naming" />
-        <error line="2113" column="9" source="standard:no-consecutive-comments" />
-        <error line="2647" column="9" source="standard:no-consecutive-comments" />
-        <error line="2744" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/MigrationViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -1570,12 +1509,6 @@
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="83" column="21" source="standard:class-signature" />
         <error line="83" column="46" source="standard:class-signature" />
-        <error line="324" column="37" source="standard:multiline-expression-wrapping" />
-        <error line="1109" column="52" source="standard:multiline-expression-wrapping" />
-        <error line="1370" column="32" source="standard:multiline-expression-wrapping" />
-        <error line="1914" column="37" source="standard:multiline-expression-wrapping" />
-        <error line="2111" column="9" source="standard:blank-line-before-declaration" />
-        <error line="2111" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="app/src/main/java/network/zamolxis/app/viewmodel/SharedImageViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -1643,32 +1576,6 @@
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="18" column="79" source="standard:multiline-expression-wrapping" />
         <error line="18" column="79" source="standard:function-signature" />
-    </file>
-    <file name="app/src/test/java/network/zamolxis/app/audio/Codec2AudioTest.kt">
-        <error line="132" column="29" source="standard:function-signature" />
-        <error line="132" column="46" source="standard:function-signature" />
-        <error line="132" column="63" source="standard:function-signature" />
-        <error line="139" column="29" source="standard:function-signature" />
-        <error line="139" column="49" source="standard:function-signature" />
-        <error line="139" column="67" source="standard:function-signature" />
-        <error line="160" column="27" source="standard:function-signature" />
-        <error line="160" column="47" source="standard:function-signature" />
-        <error line="160" column="60" source="standard:function-signature" />
-        <error line="160" column="69" source="standard:function-signature" />
-        <error line="192" column="27" source="standard:function-signature" />
-        <error line="192" column="47" source="standard:function-signature" />
-        <error line="192" column="60" source="standard:function-signature" />
-        <error line="192" column="69" source="standard:function-signature" />
-        <error line="218" column="29" source="standard:function-signature" />
-        <error line="218" column="46" source="standard:function-signature" />
-        <error line="218" column="63" source="standard:function-signature" />
-        <error line="233" column="29" source="standard:function-signature" />
-        <error line="233" column="49" source="standard:function-signature" />
-        <error line="233" column="67" source="standard:function-signature" />
-        <error line="251" column="27" source="standard:function-signature" />
-        <error line="251" column="47" source="standard:function-signature" />
-        <error line="251" column="60" source="standard:function-signature" />
-        <error line="251" column="69" source="standard:function-signature" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/audio/OggOpusMetadataReaderTest.kt">
         <error line="53" column="32" source="standard:chain-method-continuation" />
@@ -1905,9 +1812,6 @@
     <file name="app/src/test/java/network/zamolxis/app/service/AutoAnnounceManagerTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="app/src/test/java/network/zamolxis/app/service/ConversationLinkManagerTest.kt">
-        <error line="409" column="62" source="standard:chain-method-continuation" />
-    </file>
     <file name="app/src/test/java/network/zamolxis/app/service/InterfaceConfigManagerTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
@@ -2050,7 +1954,6 @@
     </file>
     <file name="app/src/test/java/network/zamolxis/app/ui/screens/AnnounceDetailScreenTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="186" column="24" source="standard:multiline-expression-wrapping" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/ui/screens/AnnounceStreamScreenTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2205,9 +2108,6 @@
     </file>
     <file name="app/src/test/java/network/zamolxis/app/ui/screens/rnode/ReviewConfigStepTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-    </file>
-    <file name="app/src/test/java/network/zamolxis/app/ui/screens/settings/cards/AboutCardTest.kt">
-        <error line="128" column="24" source="standard:chain-method-continuation" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/ui/screens/settings/cards/AutoAnnounceCardTest.kt">
         <error line="103" column="24" source="standard:chain-method-continuation" />
@@ -2538,74 +2438,6 @@
         <error line="534" column="1" source="standard:spacing-between-declarations-with-annotations" />
         <error line="543" column="79" source="standard:chain-method-continuation" />
         <error line="576" column="30" source="standard:multiline-expression-wrapping" />
-        <error line="1048" column="22" source="standard:argument-list-wrapping" />
-        <error line="1048" column="33" source="standard:argument-list-wrapping" />
-        <error line="1048" column="35" source="standard:function-literal" />
-        <error line="1048" column="78" source="standard:argument-list-wrapping" />
-        <error line="1048" column="85" source="standard:argument-list-wrapping" />
-        <error line="1048" column="92" source="standard:argument-list-wrapping" />
-        <error line="1048" column="99" source="standard:argument-list-wrapping" />
-        <error line="1048" column="106" source="standard:argument-list-wrapping" />
-        <error line="1048" column="113" source="standard:argument-list-wrapping" />
-        <error line="1048" column="120" source="standard:argument-list-wrapping" />
-        <error line="1048" column="127" source="standard:argument-list-wrapping" />
-        <error line="1048" column="134" source="standard:argument-list-wrapping" />
-        <error line="1048" column="141" source="standard:argument-list-wrapping" />
-        <error line="1048" column="148" source="standard:argument-list-wrapping" />
-        <error line="1048" column="155" source="standard:argument-list-wrapping" />
-        <error line="1048" column="160" source="standard:argument-list-wrapping" />
-        <error line="1048" column="161" source="standard:max-line-length" />
-        <error line="1048" column="162" source="standard:function-literal" />
-        <error line="1517" column="1" source="standard:indent" />
-        <error line="1519" column="1" source="standard:indent" />
-        <error line="1520" column="1" source="standard:indent" />
-        <error line="1593" column="1" source="standard:indent" />
-        <error line="1595" column="1" source="standard:indent" />
-        <error line="1596" column="1" source="standard:indent" />
-        <error line="1667" column="1" source="standard:indent" />
-        <error line="1669" column="1" source="standard:indent" />
-        <error line="1670" column="1" source="standard:indent" />
-        <error line="1729" column="1" source="standard:indent" />
-        <error line="1731" column="1" source="standard:indent" />
-        <error line="1732" column="1" source="standard:indent" />
-        <error line="1805" column="1" source="standard:indent" />
-        <error line="1806" column="1" source="standard:indent" />
-        <error line="1807" column="1" source="standard:indent" />
-        <error line="1808" column="1" source="standard:indent" />
-        <error line="1874" column="1" source="standard:indent" />
-        <error line="1875" column="1" source="standard:indent" />
-        <error line="1876" column="1" source="standard:indent" />
-        <error line="1877" column="1" source="standard:indent" />
-        <error line="1943" column="1" source="standard:indent" />
-        <error line="1944" column="1" source="standard:indent" />
-        <error line="1945" column="1" source="standard:indent" />
-        <error line="1946" column="1" source="standard:indent" />
-        <error line="2012" column="1" source="standard:indent" />
-        <error line="2013" column="1" source="standard:indent" />
-        <error line="2014" column="1" source="standard:indent" />
-        <error line="2015" column="1" source="standard:indent" />
-        <error line="2081" column="1" source="standard:indent" />
-        <error line="2082" column="1" source="standard:indent" />
-        <error line="2083" column="1" source="standard:indent" />
-        <error line="2084" column="1" source="standard:indent" />
-        <error line="2149" column="1" source="standard:indent" />
-        <error line="2150" column="1" source="standard:indent" />
-        <error line="2151" column="1" source="standard:indent" />
-        <error line="2152" column="1" source="standard:indent" />
-        <error line="2212" column="1" source="standard:indent" />
-        <error line="2213" column="1" source="standard:indent" />
-        <error line="2214" column="1" source="standard:indent" />
-        <error line="2215" column="1" source="standard:indent" />
-        <error line="2275" column="1" source="standard:indent" />
-        <error line="2276" column="1" source="standard:indent" />
-        <error line="2277" column="1" source="standard:indent" />
-        <error line="2278" column="1" source="standard:indent" />
-        <error line="3502" column="51" source="standard:chain-method-continuation" />
-        <error line="3519" column="16" source="standard:chain-method-continuation" />
-        <error line="5140" column="33" source="standard:multiline-expression-wrapping" />
-        <error line="5478" column="87" source="standard:multiline-expression-wrapping" />
-        <error line="5478" column="87" source="standard:function-signature" />
-        <error line="5483" column="22" source="standard:multiline-expression-wrapping" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/viewmodel/MigrationViewModelTest.kt">
         <error line="5" column="1" source="standard:import-ordering" />
@@ -2775,7 +2607,6 @@
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/repository/ContactRepository.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="400" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/repository/CustomThemeRepository.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -3659,20 +3490,8 @@
     </file>
     <file name="rns-backend-kt/src/main/kotlin/network/zamolxis/app/rns/backend/kt/NativeRnsBackendImpl.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="60" column="1" source="standard:no-unused-imports" />
-        <error line="289" column="17" source="standard:backing-property-naming" />
-        <error line="290" column="17" source="standard:backing-property-naming" />
-        <error line="291" column="17" source="standard:backing-property-naming" />
-        <error line="294" column="17" source="standard:backing-property-naming" />
-        <error line="295" column="17" source="standard:backing-property-naming" />
-        <error line="2283" column="80" source="standard:function-signature" />
-        <error line="2284" column="23" source="standard:statement-wrapping" />
-        <error line="2284" column="74" source="standard:statement-wrapping" />
-        <error line="2284" column="80" source="standard:statement-wrapping" />
-        <error line="2286" column="82" source="standard:function-signature" />
-        <error line="2287" column="23" source="standard:statement-wrapping" />
-        <error line="2287" column="77" source="standard:statement-wrapping" />
-        <error line="2287" column="83" source="standard:statement-wrapping" />
+        <error line="61" column="1" source="standard:no-unused-imports" />
+        <error line="296" column="17" source="standard:backing-property-naming" />
     </file>
     <file name="rns-backend-kt/src/main/kotlin/network/zamolxis/app/rns/backend/kt/NativeTelemetryHandler.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -3748,25 +3567,25 @@
     </file>
     <file name="rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/PythonEventBridge.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="95" column="5" source="standard:spacing-between-declarations-with-comments" />
-        <error line="106" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="185" column="25" source="standard:multiline-expression-wrapping" />
-        <error line="187" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="214" column="27" source="standard:multiline-expression-wrapping" />
-        <error line="219" column="29" source="standard:multiline-expression-wrapping" />
-        <error line="219" column="30" source="standard:wrapping" />
-        <error line="220" column="60" source="standard:wrapping" />
-        <error line="300" column="27" source="standard:multiline-expression-wrapping" />
-        <error line="302" column="24" source="standard:multiline-expression-wrapping" />
-        <error line="302" column="30" source="standard:chain-method-continuation" />
-        <error line="302" column="67" source="standard:chain-method-continuation" />
-        <error line="318" column="38" source="standard:multiline-expression-wrapping" />
-        <error line="333" column="34" source="standard:multiline-expression-wrapping" />
-        <error line="411" column="42" source="standard:function-signature" />
-        <error line="411" column="62" source="standard:function-signature" />
-        <error line="411" column="85" source="standard:function-signature" />
-        <error line="411" column="100" source="standard:function-signature" />
-        <error line="413" column="30" source="standard:chain-method-continuation" />
+        <error line="96" column="5" source="standard:spacing-between-declarations-with-comments" />
+        <error line="107" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="186" column="25" source="standard:multiline-expression-wrapping" />
+        <error line="188" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="237" column="27" source="standard:multiline-expression-wrapping" />
+        <error line="242" column="29" source="standard:multiline-expression-wrapping" />
+        <error line="242" column="30" source="standard:wrapping" />
+        <error line="243" column="60" source="standard:wrapping" />
+        <error line="324" column="27" source="standard:multiline-expression-wrapping" />
+        <error line="326" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="326" column="30" source="standard:chain-method-continuation" />
+        <error line="326" column="67" source="standard:chain-method-continuation" />
+        <error line="342" column="38" source="standard:multiline-expression-wrapping" />
+        <error line="357" column="34" source="standard:multiline-expression-wrapping" />
+        <error line="435" column="42" source="standard:function-signature" />
+        <error line="435" column="62" source="standard:function-signature" />
+        <error line="435" column="85" source="standard:function-signature" />
+        <error line="435" column="100" source="standard:function-signature" />
+        <error line="437" column="30" source="standard:chain-method-continuation" />
     </file>
     <file name="rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/PythonExt.kt">
         <error line="24" column="1" source="standard:no-consecutive-comments" />
@@ -3997,11 +3816,6 @@
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="194" column="19" source="standard:chain-method-continuation" />
         <error line="194" column="33" source="standard:chain-method-continuation" />
-        <error line="293" column="29" source="standard:multiline-expression-wrapping" />
-        <error line="310" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="434" column="56" source="standard:function-signature" />
-        <error line="439" column="50" source="standard:chain-method-continuation" />
-        <error line="551" column="46" source="standard:function-literal" />
     </file>
     <file name="rns-backend-py/src/main/kotlin/network/zamolxis/app/rns/backend/py/PythonRnsTelemetry.kt">
         <error line="99" column="26" source="standard:multiline-expression-wrapping" />
@@ -4111,9 +3925,6 @@
     </file>
     <file name="rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ReticulumService.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="191" column="57" source="standard:function-signature" />
-        <error line="191" column="76" source="standard:function-signature" />
-        <error line="191" column="97" source="standard:function-signature" />
     </file>
     <file name="rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ReticulumServiceConnection.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -4131,14 +3942,6 @@
     </file>
     <file name="rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/bridge/KotlinBLEBridge.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="1380" column="17" source="standard:if-else-wrapping" />
-        <error line="1387" column="17" source="standard:if-else-wrapping" />
-        <error line="1735" column="29" source="standard:multiline-expression-wrapping" />
-        <error line="1802" column="24" source="standard:multiline-expression-wrapping" />
-        <error line="2096" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="2104" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="2209" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="2209" column="52" source="standard:chain-method-continuation" />
     </file>
     <file name="rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/client/BleGattClient.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -4149,17 +3952,6 @@
     <file name="rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/model/BleConnectionState.kt">
         <error line="21" column="27" source="standard:class-signature" />
         <error line="21" column="46" source="standard:class-signature" />
-    </file>
-    <file name="rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/model/BleConstants.kt">
-        <error line="52" column="5" source="standard:no-consecutive-comments" />
-        <error line="87" column="49" source="standard:function-signature" />
-        <error line="97" column="5" source="standard:no-consecutive-comments" />
-        <error line="116" column="5" source="standard:no-consecutive-comments" />
-        <error line="129" column="5" source="standard:no-consecutive-comments" />
-        <error line="147" column="5" source="standard:no-consecutive-comments" />
-        <error line="168" column="5" source="standard:no-consecutive-comments" />
-        <error line="184" column="5" source="standard:no-consecutive-comments" />
-        <error line="209" column="5" source="standard:no-consecutive-comments" />
     </file>
     <file name="rns-host/src/main/kotlin/network/zamolxis/app/rns/host/ble/model/BleDevice.kt">
         <error line="37" column="34" source="standard:function-expression-body" />
@@ -4450,20 +4242,6 @@
         <error line="82" column="17" source="standard:multiline-expression-wrapping" />
         <error line="111" column="31" source="standard:multiline-expression-wrapping" />
         <error line="123" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="134" column="40" source="standard:chain-method-continuation" />
-        <error line="167" column="42" source="standard:multiline-expression-wrapping" />
-        <error line="167" column="46" source="standard:chain-method-continuation" />
-        <error line="204" column="54" source="standard:chain-method-continuation" />
-        <error line="222" column="54" source="standard:chain-method-continuation" />
-        <error line="263" column="5" source="standard:blank-line-before-declaration" />
-        <error line="263" column="5" source="standard:no-consecutive-comments" />
-        <error line="295" column="24" source="standard:multiline-expression-wrapping" />
-        <error line="322" column="24" source="standard:multiline-expression-wrapping" />
-        <error line="343" column="24" source="standard:multiline-expression-wrapping" />
-        <error line="344" column="41" source="standard:chain-method-continuation" />
-        <error line="344" column="66" source="standard:chain-method-continuation" />
-        <error line="349" column="64" source="standard:chain-method-continuation" />
-        <error line="350" column="60" source="standard:chain-method-continuation" />
     </file>
     <file name="rns-host/src/test/kotlin/network/zamolxis/app/rns/host/ReticulumServiceConnectionDeathTest.kt">
         <error line="41" column="1" source="standard:no-empty-first-line-in-class-body" />

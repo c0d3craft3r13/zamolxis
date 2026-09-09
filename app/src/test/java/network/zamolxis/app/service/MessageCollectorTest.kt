@@ -11,6 +11,7 @@ import network.zamolxis.app.notifications.NotificationHelper
 import network.zamolxis.app.rns.api.RnsCore
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.model.ReceivedMessage
+import network.zamolxis.app.rns.api.model.SenderVerification
 import network.zamolxis.app.service.group.GroupChatManager
 import network.zamolxis.app.service.pq.PqMessageSealer
 import io.mockk.Runs
@@ -58,6 +59,12 @@ class MessageCollectorTest {
     private val testDestHash = ByteArray(16) { (it + 16).toByte() }
     private val testSourceHashHex = testSourceHash.joinToString("") { "%02x".format(it) }
 
+    /** Senders the user was actually told about, in arrival order. */
+    private val notifiedSenders = mutableListOf<String>()
+
+    /** Identities the collector pushed back into the stack. */
+    private val restoredIdentities = mutableListOf<Pair<String, ByteArray>>()
+
     @Before
     fun setup() {
         rnsCore = mockk()
@@ -85,7 +92,9 @@ class MessageCollectorTest {
         }
 
         // Explicit stubs for notificationHelper (suspend function)
-        coEvery { notificationHelper.notifyMessageReceived(any(), any(), any(), any(), any()) } returns Unit
+        coEvery { notificationHelper.notifyMessageReceived(any(), any(), any(), any(), any()) } answers {
+            notifiedSenders += firstArg<String>()
+        }
 
         // Explicit stubs for peerIconDao
         coEvery { peerIconDao.getIcon(any()) } returns null
@@ -107,6 +116,20 @@ class MessageCollectorTest {
 
         // Mock announce repository
         coEvery { announceRepository.getAnnounce(any()) } returns null
+
+        // Nobody is a saved contact unless a test says so. The collector asks this
+        // of every inbound message, to catch a sender whose signature it should
+        // have been able to check and was not — see `mayAttribute`.
+        coEvery { contactRepository.getContact(any()) } returns null
+
+        // Recorded rather than only verified, so the attribution tests can assert
+        // on what actually reached the user instead of on a call having happened.
+        notifiedSenders.clear()
+        restoredIdentities.clear()
+        coEvery { rnsCore.restorePeerIdentities(any()) } answers {
+            restoredIdentities += firstArg<List<Pair<String, ByteArray>>>()
+            Result.success(1)
+        }
 
         // Mock getReceivedMessageIds for pre-seeding (empty by default)
         coEvery { conversationRepository.getReceivedMessageIds(since = any()) } returns emptyList()
@@ -575,4 +598,116 @@ class MessageCollectorTest {
                 )
             }
         }
+
+    // ========== Sender attribution ==========
+
+    /**
+     * A saved contact is exactly someone whose messages carry their name in the
+     * UI, and whose public key we hold — so their signature is always checkable.
+     * A message from that address that nobody could check is therefore either an
+     * impersonation or a broken identity cache, and neither may be rendered
+     * under the contact's name.
+     */
+    @Test
+    fun `an unverified message from a saved contact is refused`() =
+        runBlocking {
+            savedContact(publicKey = ByteArray(32) { it.toByte() })
+
+            emitAndSettle(receivedMessage("unverified_from_contact", SenderVerification.SOURCE_UNKNOWN))
+
+            assertEquals("nothing may reach the user under that contact's name", emptyList<String>(), notifiedSenders)
+        }
+
+    /** The cache-loss version of that case fixes itself: their next message verifies. */
+    @Test
+    fun `refusing an unverified contact message puts their key back into the stack`() =
+        runBlocking {
+            val key = ByteArray(32) { it.toByte() }
+            savedContact(publicKey = key)
+
+            emitAndSettle(receivedMessage("unverified_from_contact", SenderVerification.SOURCE_UNKNOWN))
+
+            assertEquals(listOf(testSourceHashHex to key), restoredIdentities)
+        }
+
+    @Test
+    fun `a verified message from a saved contact is delivered`() =
+        runBlocking {
+            savedContact(publicKey = ByteArray(32))
+
+            emitAndSettle(receivedMessage("verified_from_contact", SenderVerification.VERIFIED))
+
+            assertEquals(listOf(testSourceHashHex), notifiedSenders)
+            assertTrue("a verified sender needs no repair", restoredIdentities.isEmpty())
+        }
+
+    /**
+     * The case the guard must not break. Someone whose announce we have never
+     * heard cannot be verified by anyone, and refusing them would mean no one
+     * could ever write to us first.
+     */
+    @Test
+    fun `an unverified message from someone we hold no key for is delivered`() =
+        runBlocking {
+            emitAndSettle(receivedMessage("unverified_stranger", SenderVerification.SOURCE_UNKNOWN))
+
+            assertEquals(listOf(testSourceHashHex), notifiedSenders)
+        }
+
+    /** A contact row with no stored key leaves nothing to have checked against. */
+    @Test
+    fun `an unverified message from a contact we hold no key for is delivered`() =
+        runBlocking {
+            savedContact(publicKey = null)
+
+            emitAndSettle(receivedMessage("unverified_keyless_contact", SenderVerification.SOURCE_UNKNOWN))
+
+            assertEquals(listOf(testSourceHashHex), notifiedSenders)
+        }
+
+    /** A database that will not answer must not swallow mail. */
+    @Test
+    fun `a contact lookup failure lets the message through`() =
+        runBlocking {
+            coEvery { contactRepository.getContact(testSourceHashHex) } throws IllegalStateException("db gone")
+
+            emitAndSettle(receivedMessage("unverified_db_down", SenderVerification.SOURCE_UNKNOWN))
+
+            assertEquals(listOf(testSourceHashHex), notifiedSenders)
+        }
+
+    private fun savedContact(publicKey: ByteArray?) {
+        coEvery { contactRepository.getContact(testSourceHashHex) } returns
+            mockk { every { this@mockk.publicKey } returns publicKey }
+    }
+
+    private fun receivedMessage(
+        hash: String,
+        verification: SenderVerification,
+    ): ReceivedMessage {
+        // Already stored by the service process, so a delivered message shows a
+        // notification and a refused one shows nothing — which is the difference
+        // these tests read.
+        coEvery { conversationRepository.getMessageById(hash) } returns
+            mockk {
+                every { isRead } returns false
+                every { pqStatus } returns null
+                every { content } returns "hello"
+            }
+        return ReceivedMessage(
+            messageHash = hash,
+            content = "hello",
+            sourceHash = testSourceHash,
+            destinationHash = testDestHash,
+            timestamp = System.currentTimeMillis(),
+            senderVerification = verification,
+        )
+    }
+
+    private suspend fun emitAndSettle(message: ReceivedMessage) {
+        messageCollector.startCollecting()
+        kotlinx.coroutines.delay(50)
+        messageFlow.emit(message)
+        kotlinx.coroutines.delay(400)
+    }
 }
