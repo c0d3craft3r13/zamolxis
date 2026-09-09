@@ -163,11 +163,8 @@ internal class ClientRnsCore(
         Unit
     }
 
-    override suspend fun triggerAutoAnnounce(
-        displayName: String,
-        pqFingerprint: ByteArray?,
-    ): Result<Unit> = runCatching {
-        awaitResult { cb -> remote.triggerAutoAnnounce(displayName, pqFingerprint, cb) }
+    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> = runCatching {
+        awaitResult { cb -> remote.triggerAutoAnnounce(displayName, cb) }
         Unit
     }
 

@@ -97,6 +97,22 @@ switchable to "always" or off in Settings. Three limits are worth stating plainl
 Each message records what it actually got, and the message-detail screen shows it,
 so this is auditable per message rather than a claim about the app.
 
+**Partly covered: not standing out on the air.** An announce is broadcast across the
+mesh and its `app_data` travels in the clear — Reticulum signs it but does not
+encrypt it. What this app announces is therefore byte-identical to what upstream
+LXMF announces, and a test holds it to vectors taken from that reference: a captured
+announce cannot tell this app apart from any other LXMF node. It used to carry a
+post-quantum key fingerprint, which labelled every announce as ours and labelled it
+harder the more protection the user had switched on.
+
+That is one channel of several, and the others are not closed. A sealed message is
+about 1.1 KB larger than the same message unsealed, which is more than a single
+Reticulum packet holds, so it travels as a link and a multi-packet transfer where an
+ordinary short message travels as one packet. Counting packets still separates a
+protected conversation from an unprotected one. And no software change hides the
+fact that a radio transmitted at all: on LoRa, direction-finding works on the
+physical signal regardless of what is inside it.
+
 **Covered: the message database at rest.** The database holding messages,
 conversations, contacts and identities is encrypted with SQLCipher. The passphrase
 is 256 random bits generated on the device at first launch and stored wrapped by a

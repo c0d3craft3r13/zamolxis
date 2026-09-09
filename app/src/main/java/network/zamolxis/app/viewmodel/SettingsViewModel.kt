@@ -38,7 +38,6 @@ import network.zamolxis.app.rns.api.RnsBackend
 import network.zamolxis.app.R
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.rns.api.RnsCore
-import network.zamolxis.app.service.pq.PqAnnounceFingerprint
 import network.zamolxis.app.rns.api.RnsException
 import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.rns.api.RnsTransportAdmin
@@ -242,7 +241,6 @@ class SettingsViewModel
         private val contactRepository: ContactRepository,
         private val updateChecker: network.zamolxis.app.service.UpdateChecker,
         private val crashReportManager: network.zamolxis.app.util.CrashReportManager,
-        private val pqAnnounceFingerprint: PqAnnounceFingerprint,
         private val pqKeyRepository: PqKeyRepository,
         private val vpnStatusMonitor: network.zamolxis.app.service.manager.VpnStatusMonitor,
     ) : ViewModel() {
@@ -961,10 +959,7 @@ class SettingsViewModel
                     // Get display name
                     val displayName = state.value.displayName
 
-                    // Same fingerprint the scheduled announce carries — a manual
-                    // announce that omitted it would quietly retract the capability.
-                    val result =
-                        rnsCore.triggerAutoAnnounce(displayName, pqAnnounceFingerprint.current())
+                    val result = rnsCore.triggerAutoAnnounce(displayName)
 
                     if (result.isSuccess) {
                         // Update last announce timestamp
@@ -2219,17 +2214,10 @@ class SettingsViewModel
                                 context.getString(R.string.pq_rotate_failed)
                             },
                     )
-                if (rotated != null) {
-                    // Re-announce immediately: the fingerprint we were advertising
-                    // belongs to a key that no longer exists, and a peer acting on
-                    // the stale one would be told our key changed for no reason.
-                    runCatching {
-                        rnsCore.triggerAutoAnnounce(
-                            _state.value.displayName,
-                            pqAnnounceFingerprint.current(),
-                        )
-                    }.onFailure { Log.w(TAG, "Could not re-announce after key rotation", it) }
-                }
+                // No re-announce here. Rotating the post-quantum key used to change
+                // what the announce advertised, so one had to follow. The announce
+                // carries nothing about that key any more — and an announce fired
+                // moments after a rotation would be a timing signal in itself.
             }
         }
 

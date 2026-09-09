@@ -5,7 +5,6 @@ import network.zamolxis.app.data.repository.IdentityRepository
 import network.zamolxis.app.di.ApplicationScope
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.api.RnsCore
-import network.zamolxis.app.service.pq.PqAnnounceFingerprint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -33,7 +32,6 @@ class AutoAnnounceManager
         private val settingsRepository: SettingsRepository,
         private val identityRepository: IdentityRepository,
         private val rnsCore: RnsCore,
-        private val pqAnnounceFingerprint: PqAnnounceFingerprint,
         @ApplicationScope private val scope: CoroutineScope,
     ) {
         companion object {
@@ -131,7 +129,7 @@ class AutoAnnounceManager
                     Log.d(TAG, "Triggering auto-announce...")
 
                     val result =
-                        rnsCore.triggerAutoAnnounce(effectiveDisplayName, pqAnnounceFingerprint.current())
+                        rnsCore.triggerAutoAnnounce(effectiveDisplayName)
 
                     if (result.isSuccess) {
                         // Update last announce timestamp

@@ -125,10 +125,7 @@ internal class BoundRnsCore(
     override suspend fun announceDestination(destination: Destination, appData: ByteArray?): Result<Unit> =
         awaitBound().core.announceDestination(destination, appData)
 
-    override suspend fun triggerAutoAnnounce(
-        displayName: String,
-        pqFingerprint: ByteArray?,
-    ): Result<Unit> = awaitBound().core.triggerAutoAnnounce(displayName, pqFingerprint)
+    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> = awaitBound().core.triggerAutoAnnounce(displayName)
 
     override suspend fun sendPacket(
         destination: Destination,

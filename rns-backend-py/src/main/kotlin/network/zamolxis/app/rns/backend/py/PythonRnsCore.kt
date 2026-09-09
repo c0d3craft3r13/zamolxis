@@ -2,7 +2,6 @@ package network.zamolxis.app.rns.backend.py
 
 import android.util.Log
 import com.chaquo.python.PyObject
-import network.zamolxis.app.rns.api.util.PeerAnnounceAppData
 import network.zamolxis.app.rns.api.util.hexToBytes
 import network.zamolxis.app.rns.api.util.toHex
 import kotlinx.coroutines.flow.Flow
@@ -272,36 +271,19 @@ class PythonRnsCore(
             Unit
         }
 
-    override suspend fun triggerAutoAnnounce(
-        displayName: String,
-        pqFingerprint: ByteArray?,
-    ): Result<Unit> =
+    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
         pyResult {
             val router = runtime.lxmRouter
                 ?: throw RnsException(RnsError.BackendNotReady)
             val destination = runtime.localDestination
 
-            if (pqFingerprint != null && destination != null) {
-                // LXMF's own `LXMRouter.announce()` is a passthrough to
-                // `delivery_destination.announce(app_data=get_announce_app_data(...))`,
-                // and that app_data has no hook for an extra element. So the same
-                // call is made directly with app_data this side builds — through
-                // `PeerAnnounceAppData`, which is also what the Kotlin backend uses,
-                // so the two flavors put byte-identical announces on the wire.
-                //
-                // This used to be skipped entirely, which meant the flavor shipping
-                // under the plain application id never advertised post-quantum
-                // capability: peers could not verify a key against an announcement,
-                // and the fingerprint check degraded to bare trust-on-first-use.
-                destination.callAttr(
-                    "announce",
-                    PeerAnnounceAppData.build(displayName, pqFingerprint).toPyBytes(),
-                )
-            } else {
-                // Nothing to add — take LXMF's own path so the payload stays exactly
-                // what upstream would have produced.
-                router.callAttr("announce", destination?.get("hash"))
-            }
+            // Upstream's own path, always. `LXMRouter.announce()` passes through to
+            // `delivery_destination.announce(app_data=get_announce_app_data(...))`,
+            // which is the exact byte sequence every other LXMF node emits — and
+            // being exactly that is the point. The Kotlin flavour reaches the same
+            // bytes through `PeerAnnounceAppData`; `PeerAnnounceAppDataConformanceTest`
+            // holds both to vectors taken from this reference.
+            router.callAttr("announce", destination?.get("hash"))
 
             // Keep lxst.telephony announced on the same cadence as
             // lxmf.delivery so inbound callers can resolve a fresh path

@@ -5,49 +5,78 @@ import org.msgpack.core.MessagePack
 /**
  * The `app_data` payload attached to a peer (LXMF delivery) announce.
  *
- * Upstream LXMF packs `[display_name, stamp_cost]`. Zamolxis appends a third
- * element — the 16-byte hybrid post-quantum fingerprint — when the identity has
- * one, so peers learn sealing is possible before anyone writes the first
- * message.
+ * ## Byte-identical to upstream, deliberately
  *
- * Appending is safe for everyone else on the mesh: LXMF and NomadNet read
- * `app_data[0]` and `app_data[1]` by index, so a longer array is simply not
- * looked at. Only the fingerprint goes here, never the key itself — at 1216
- * bytes a key would inflate a message every transport node rebroadcasts,
- * spending airtime that belongs to the whole network.
+ * An announce is broadcast to the whole mesh and its `app_data` travels in the
+ * clear — Reticulum signs it but does not encrypt it. Everything put here is
+ * therefore readable by anyone within radio range of any node that forwards it,
+ * which makes this the one place where a private messenger can most easily
+ * announce which private messenger it is.
  *
- * **Lives in `:rns-api` so both backends build byte-identical announces.** It
- * previously existed only in the Kotlin backend, which left the Python
- * flavor — the one that ships under the plain application id — announcing
- * without a fingerprint at all. Peers therefore could never verify a key
- * against an announcement for the majority of installs, and the fingerprint
- * check silently degraded to bare trust-on-first-use.
+ * Upstream LXMF 1.1.0 packs three elements — `[display_name, stamp_cost,
+ * supported_functionality]` — where the third is a list of capability flags
+ * (`LXMRouter.get_announce_app_data`). This builds exactly that and nothing
+ * else, so a captured announce cannot separate this app from any other LXMF
+ * node.
+ *
+ * ## What used to be here
+ *
+ * A 16-byte post-quantum key fingerprint was packed into the third slot. Two
+ * things were wrong with it. It collided with `supported_functionality` rather
+ * than extending the array — upstream survives that only because it checks
+ * `type(peer_data[2]) == list` before use — and, more seriously, an array of
+ * three whose third element is raw bytes is a shape nothing else on the mesh
+ * produces. It marked every announce as ours, and it marked it *harder* the
+ * more protection the user had switched on.
+ *
+ * Nothing was lost by removing it. Its job was to let a peer check a key that
+ * arrived in a message against one the identity had advertised — and an LXMF
+ * message is already signed by that same identity, so a key delivered inside a
+ * signature-verified message carries the same binding, from the same key, with
+ * a full signature instead of 128 bits of digest. What the fingerprint bought
+ * beyond that was one extra state in the send policy, and
+ * [network.zamolxis.crypto.pq.PqPolicy] resolved that state to the same
+ * decision as its neighbour in every mode.
+ *
+ * **Lives in `:rns-api` so both backends build byte-identical announces**, and
+ * `PeerAnnounceAppDataConformanceTest` holds them to vectors produced by the
+ * Python reference itself.
  */
 object PeerAnnounceAppData {
     /**
-     * Pack an announce payload.
-     *
-     * @param displayName the identity's display name, UTF-8 on the wire
-     * @param pqFingerprint hybrid key fingerprint to advertise, or null for the
-     *   plain two-element upstream shape
+     * `LXMF.SF_COMPRESSION` — the one capability flag upstream advertises today
+     * (`LXMF/LXMF.py`). Inlined because `:rns-api` sits below both LXMF stacks
+     * and must not depend on either.
      */
-    fun build(
-        displayName: String,
-        pqFingerprint: ByteArray? = null,
-    ): ByteArray {
+    private const val SF_COMPRESSION = 0x00
+
+    /**
+     * Pack an announce payload identical to what upstream LXMF would emit.
+     *
+     * @param displayName the identity's display name, UTF-8 as a msgpack `bin`.
+     *   Null packs nil, which is what upstream does for an identity that has
+     *   none.
+     *
+     * The stamp cost is always nil: this app registers its delivery identity
+     * without one, and upstream packs nil in that slot for exactly that case.
+     */
+    fun build(displayName: String?): ByteArray {
         val packer = MessagePack.newDefaultBufferPacker()
-        val nameBytes = displayName.toByteArray(Charsets.UTF_8)
-        packer.packArrayHeader(if (pqFingerprint != null) 3 else 2)
-        packer.packBinaryHeader(nameBytes.size)
-        packer.writePayload(nameBytes)
-        // Stamp cost is nil: Zamolxis does not set one, and LXMF's own
-        // get_announce_app_data packs nil in the same slot when
-        // register_delivery_identity was called without a cost.
-        packer.packNil()
-        if (pqFingerprint != null) {
-            packer.packBinaryHeader(pqFingerprint.size)
-            packer.writePayload(pqFingerprint)
+        packer.packArrayHeader(3)
+
+        if (displayName == null) {
+            packer.packNil()
+        } else {
+            val nameBytes = displayName.toByteArray(Charsets.UTF_8)
+            packer.packBinaryHeader(nameBytes.size)
+            packer.writePayload(nameBytes)
         }
+
+        packer.packNil()
+
+        packer.packArrayHeader(1)
+        packer.packInt(SF_COMPRESSION)
+
         return packer.toByteArray()
     }
 }

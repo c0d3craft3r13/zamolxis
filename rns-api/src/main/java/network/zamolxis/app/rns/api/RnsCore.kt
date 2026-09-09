@@ -108,21 +108,12 @@ interface RnsCore {
     /**
      * Announce this identity's LXMF destinations.
      *
-     * @param pqFingerprint the 16-byte hybrid post-quantum key fingerprint, or
-     *   null when there is none. Advertising it lets peers know sealing is
-     *   possible before the first message; the key itself is far too large to put
-     *   in a message the whole mesh rebroadcasts.
-     *
-     *   Deliberately **not** defaulted. It used to default to null, and three of
-     *   the four call sites — every manual "announce now" path — silently took
-     *   that default, so a peer that only ever heard a manual announce never
-     *   learned this identity could be sealed to. Making it explicit turns that
-     *   class of omission into a compile error.
+     * Carries nothing but the display name. An announce is broadcast in the
+     * clear and rebroadcast by every transport node that hears it, so anything
+     * added here is a public statement about what this node is running — see
+     * [network.zamolxis.app.rns.api.util.PeerAnnounceAppData].
      */
-    suspend fun triggerAutoAnnounce(
-        displayName: String,
-        pqFingerprint: ByteArray?,
-    ): Result<Unit>
+    suspend fun triggerAutoAnnounce(displayName: String): Result<Unit>
 
     // ==================== Packet operations ====================
 

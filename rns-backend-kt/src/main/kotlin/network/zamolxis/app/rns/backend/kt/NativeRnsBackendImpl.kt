@@ -178,20 +178,12 @@ class NativeRnsBackendImpl(
         /**
          * Build the `app_data` for a peer announce.
          *
-         * Elements 0 and 1 are the LXMF standard: display name and stamp cost.
-         * A third element carries the 16-byte hybrid post-quantum key fingerprint
-         * when the identity has one.
-         *
-         * Appending is safe for everyone else on the mesh: LXMF and NomadNet read
-         * `app_data[0]` and `app_data[1]` by index, so a longer array is simply
-         * not looked at. Only the fingerprint goes here, never the key itself —
-         * at 1216 bytes a key would inflate a message that every transport node
-         * rebroadcasts, spending airtime that belongs to the whole network.
+         * Delegates rather than packing anything of its own: the bytes must be
+         * identical to upstream LXMF's and to the Python flavour's, or a capture
+         * tells an observer which build produced the announce. See
+         * [PeerAnnounceAppData].
          */
-        fun buildPeerAnnounceAppData(
-            displayName: String,
-            pqFingerprint: ByteArray? = null,
-        ): ByteArray = PeerAnnounceAppData.build(displayName, pqFingerprint)
+        fun buildPeerAnnounceAppData(displayName: String): ByteArray = PeerAnnounceAppData.build(displayName)
 
         fun network.reticulum.link.Link.toZamolxisLink(destHash: ByteArray): ZamolxisLink {
             val identity =
@@ -1602,7 +1594,14 @@ class NativeRnsBackendImpl(
                 ?: error("Delivery destination not initialized")
 
         deliveryDest.announce(appData)
-        callManager?.announce(appData)
+
+        // No app_data on the telephony announce. It is not an LXMF destination, so
+        // an LXMF-shaped payload on it is a shape nothing else on the mesh emits —
+        // and the two announces going out together with byte-identical contents
+        // also tied this node's voice address to its messaging one for anyone
+        // listening. The Python flavour has always announced telephony bare
+        // (`inboundCalls.announce()`); this makes the two agree.
+        callManager?.announce()
 
         Log.i(
             TAG,
@@ -1611,13 +1610,10 @@ class NativeRnsBackendImpl(
         )
     }
 
-    override suspend fun triggerAutoAnnounce(
-        displayName: String,
-        pqFingerprint: ByteArray?,
-    ): Result<Unit> =
+    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val appData = Companion.buildPeerAnnounceAppData(displayName, pqFingerprint)
+                val appData = Companion.buildPeerAnnounceAppData(displayName)
                 announceLocalPeerDestinations(appData, "auto-announce '$displayName'")
                 Unit
             }

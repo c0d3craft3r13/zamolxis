@@ -81,11 +81,10 @@ oneway interface IRnsCore {
 
     void announceDestination(in Destination destination, in @nullable byte[] appData, in IRnsResultCallback cb);
 
-    // pqFingerprint: 16-byte hybrid post-quantum key fingerprint, or null when the
-    // identity has none. Only the fingerprint travels in an announce — the key
-    // itself is 1216 bytes and every transport node on the mesh rebroadcasts
-    // announces, so it rides along with the first message instead.
-    void triggerAutoAnnounce(String displayName, in @nullable byte[] pqFingerprint, in IRnsResultCallback cb);
+    // The announce carries the display name and upstream LXMF's capability flags,
+    // and nothing else: app_data travels in the clear and the whole mesh
+    // rebroadcasts it, so anything extra labels this node.
+    void triggerAutoAnnounce(String displayName, in IRnsResultCallback cb);
 
     // ==================== Packet operations ====================
 

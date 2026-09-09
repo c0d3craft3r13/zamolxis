@@ -14,7 +14,6 @@ import network.zamolxis.app.data.repository.IdentityRepository
 import network.zamolxis.app.rns.api.model.NetworkStatus
 import network.zamolxis.app.rns.api.model.NodeType
 import network.zamolxis.app.rns.api.RnsCore
-import network.zamolxis.app.service.pq.PqAnnounceFingerprint
 import network.zamolxis.app.service.IdentityResolutionManager
 import network.zamolxis.app.service.PropagationNodeManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,7 +60,6 @@ class AnnounceStreamViewModel
         private val identityRepository: IdentityRepository,
         private val blockedPeerRepository: network.zamolxis.app.data.repository.BlockedPeerRepository,
         private val identityResolutionManager: IdentityResolutionManager,
-        private val pqAnnounceFingerprint: PqAnnounceFingerprint,
     ) : ViewModel() {
         companion object {
             private const val TAG = "AnnounceStreamViewModel"
@@ -472,7 +470,7 @@ class AnnounceStreamViewModel
                     // announce without it tells peers this identity cannot be sealed
                     // to, undoing what the automatic announce advertised.
                     val result =
-                        rnsCore.triggerAutoAnnounce(displayName, pqAnnounceFingerprint.current())
+                        rnsCore.triggerAutoAnnounce(displayName)
 
                     if (result.isSuccess) {
                         _isAnnouncing.value = false

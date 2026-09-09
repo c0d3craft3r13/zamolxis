@@ -130,9 +130,8 @@ internal class ServerRnsCore(
 
     override fun triggerAutoAnnounce(
         displayName: String,
-        pqFingerprint: ByteArray?,
         cb: IRnsResultCallback,
-    ) = dispatch(cb, scope) { impl.triggerAutoAnnounce(displayName, pqFingerprint).bundleOrThrow() }
+    ) = dispatch(cb, scope) { impl.triggerAutoAnnounce(displayName).bundleOrThrow() }
 
     override fun sendPacket(
         destination: Destination,
