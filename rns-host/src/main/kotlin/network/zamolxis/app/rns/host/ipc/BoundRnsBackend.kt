@@ -17,6 +17,7 @@ import network.zamolxis.app.rns.api.RnsTelemetry
 import network.zamolxis.app.rns.api.RnsTelephony
 import network.zamolxis.app.rns.api.RnsTransportAdmin
 import network.zamolxis.app.rns.host.ReticulumServiceConnection
+import network.zamolxis.app.rns.host.emission.EmissionPolicy
 
 /**
  * UI-process [RnsBackend] implementation that proxies to the live
@@ -51,8 +52,17 @@ class BoundRnsBackend(
             .bind(context, scope)
             .stateIn(scope, SharingStarted.Eagerly, initialValue = null)
 
-    override val core: RnsCore = BoundRnsCore(connectionFlow, scope)
-    override val lxmf: RnsLxmf = BoundRnsLxmf(connectionFlow, scope)
+    /**
+     * Consulted before anything this device would start on its own goes out.
+     *
+     * Placed at the seam rather than in each scheduler because this is the one
+     * point every app-initiated transmission already passes through. A gate in
+     * the callers would be a gate the next caller forgets.
+     */
+    private val emissions = EmissionPolicy(context)
+
+    override val core: RnsCore = BoundRnsCore(connectionFlow, scope, emissions)
+    override val lxmf: RnsLxmf = BoundRnsLxmf(connectionFlow, scope, emissions)
     override val telephony: RnsTelephony = BoundRnsTelephony(connectionFlow, scope)
     override val telemetry: RnsTelemetry = BoundRnsTelemetry(connectionFlow, scope)
     override val nomadnet: RnsNomadnet = BoundRnsNomadnet(connectionFlow, scope)

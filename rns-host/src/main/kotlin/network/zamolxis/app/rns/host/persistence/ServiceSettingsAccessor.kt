@@ -26,10 +26,33 @@ class ServiceSettingsAccessor(
         const val KEY_NETWORK_CHANGE_ANNOUNCE_TIME = "network_change_announce_time"
         const val KEY_LAST_AUTO_ANNOUNCE_TIME = "last_auto_announce_time"
         const val KEY_LAST_NETWORK_STATUS = "last_network_status"
+
+        /**
+         * Radio silence: nothing is transmitted unless the operator acts.
+         *
+         * Cross-process because both sides start transmissions — the UI process
+         * schedules announces, relay syncs and path sweeps, and the service
+         * announces on network changes by itself. A flag one of them held
+         * privately would be a flag the other kept transmitting through.
+         */
+        const val KEY_RADIO_SILENCE = "radio_silence"
     }
 
     // Get fresh SharedPreferences each time to avoid caching issues across processes
     private fun getCrossProcessPrefs() = context.getSharedPreferences(CROSS_PROCESS_PREFS_NAME, Context.MODE_MULTI_PROCESS)
+
+    /**
+     * Whether the operator has asked for radio silence.
+     *
+     * Defaults to off. A device already in someone's hands behaves as it did
+     * yesterday until they say otherwise; silence is a decision, not something
+     * an update imposes.
+     */
+    fun getRadioSilence(): Boolean = getCrossProcessPrefs().getBoolean(KEY_RADIO_SILENCE, false)
+
+    fun setRadioSilence(silent: Boolean) {
+        getCrossProcessPrefs().edit().putBoolean(KEY_RADIO_SILENCE, silent).apply()
+    }
 
     /**
      * Save the network change announce timestamp.

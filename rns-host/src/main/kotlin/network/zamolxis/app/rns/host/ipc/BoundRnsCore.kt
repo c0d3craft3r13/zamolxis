@@ -28,6 +28,8 @@ import network.zamolxis.app.rns.api.model.PacketReceipt
 import network.zamolxis.app.rns.api.model.PacketType
 import network.zamolxis.app.rns.api.model.ReceivedPacket
 import network.zamolxis.app.rns.api.model.ReticulumConfig
+import network.zamolxis.app.rns.host.emission.EmissionPolicy
+import network.zamolxis.app.rns.host.emission.RadioSilentException
 
 /**
  * UI-side proxy that delegates every [RnsCore] member to the currently-bound
@@ -43,6 +45,7 @@ import network.zamolxis.app.rns.api.model.ReticulumConfig
 internal class BoundRnsCore(
     private val backendFlow: StateFlow<RnsBackend?>,
     scope: CoroutineScope,
+    private val emissions: EmissionPolicy,
 ) : RnsCore {
     private suspend fun awaitBound(): RnsBackend = backendFlow.filterNotNull().first()
 
@@ -125,7 +128,14 @@ internal class BoundRnsCore(
     override suspend fun announceDestination(destination: Destination, appData: ByteArray?): Result<Unit> =
         awaitBound().core.announceDestination(destination, appData)
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> = awaitBound().core.triggerAutoAnnounce(displayName)
+    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
+        if (emissions.mayEmit()) {
+            awaitBound().core.triggerAutoAnnounce(displayName)
+        } else {
+            // An announce is the loudest thing this app says, and it says it
+            // whether or not anyone was listening for it.
+            Result.failure(RadioSilentException("announce"))
+        }
 
     override suspend fun sendPacket(
         destination: Destination,
@@ -153,7 +163,13 @@ internal class BoundRnsCore(
         awaitBound().core.hasPath(destinationHash)
 
     override suspend fun requestPath(destinationHash: ByteArray): Result<Unit> =
-        awaitBound().core.requestPath(destinationHash)
+        if (emissions.mayEmit()) {
+            awaitBound().core.requestPath(destinationHash)
+        } else {
+            // A path request is broadcast and names the address it is looking
+            // for, so it says both that someone is here and who they want.
+            Result.failure(RadioSilentException("path request"))
+        }
 
     override suspend fun persistTransportData() {
         awaitBound().core.persistTransportData()

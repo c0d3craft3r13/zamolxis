@@ -54,6 +54,9 @@ class ReticulumService : Service() {
         // (the time between :reticulum dying and Android auto-restarting the FGS),
         // so 5s is plenty of headroom while still failing fast for genuine STOPs.
         private const val STALE_STOP_GRACE_MS = 5_000L
+
+        /** Budget for the interface hot-add plus announce that follows a network change. */
+        private const val NETWORK_CHANGE_ANNOUNCE_TIMEOUT_MS = 10_000L
     }
 
     /**
@@ -134,41 +137,7 @@ class ReticulumService : Service() {
             ServiceModule.createManagers(
                 context = this,
                 scope = serviceScope,
-                onNetworkChanged = {
-                    // Trigger AutoInterface hot-add + LXMF announce when network changes.
-                    // CRITICAL: Run in coroutine scope to avoid blocking the ConnectivityManager
-                    // callback thread. Blocking that thread can cause Android's watchdog to kill
-                    // the service, leading to "Service not bound" errors.
-                    Log.d(TAG, "Network changed - restarting AutoInterface and triggering LXMF announce")
-                    // Guard: binder property must be initialized AND Reticulum must be ready
-                    // This prevents announces during service initialization, which can cause
-                    // DataStore race conditions and service crashes
-                    if (::binder.isInitialized && binder.isInitialized()) {
-                        serviceScope.launch {
-                            try {
-                                withTimeout(10_000L) {
-                                    // Hot-add any new network interfaces to AutoInterface FIRST,
-                                    // so the subsequent announce goes out on the new interface.
-                                    // This fixes the bug where starting without WiFi and later
-                                    // connecting never discovers AutoInterface peers.
-                                    binder.restartAutoInterface()
-                                    binder.announceLxmfDestination()
-                                }
-                                // Signal main app's AutoAnnounceManager to reset its timer
-                                // This uses DataStore for cross-process communication
-                                val now = System.currentTimeMillis()
-                                managers.settingsAccessor.saveNetworkChangeAnnounceTime(now)
-                                managers.settingsAccessor.saveLastAutoAnnounceTime(now)
-                            } catch (_: TimeoutCancellationException) {
-                                Log.w(TAG, "LXMF announce timed out on network change")
-                            } catch (e: Exception) {
-                                Log.w(TAG, "Failed to announce on network change", e)
-                            }
-                        }
-                    } else {
-                        Log.d(TAG, "Skipping announce - Reticulum not yet initialized")
-                    }
-                },
+                onNetworkChanged = ::onNetworkChanged,
             )
 
         // Install one lifecycle-owned protocol activity collector before backend
@@ -327,6 +296,49 @@ class ReticulumService : Service() {
         } else {
             serviceScope.launch {
                 backendInitializer.initializeFromSnapshot(rnsBackend)
+            }
+        }
+    }
+
+    /**
+     * Hot-add new interfaces and re-announce when the network changes.
+     *
+     * Runs on `serviceScope` rather than the callback thread: blocking a
+     * ConnectivityManager callback invites Android's watchdog to kill the
+     * service, which surfaces later as "Service not bound".
+     *
+     * The interface hot-add happens first so the announce that follows goes out
+     * over the interface that just appeared — without it, starting with no Wi-Fi
+     * and connecting later never discovered an AutoInterface peer.
+     */
+    private fun onNetworkChanged() {
+        Log.d(TAG, "Network changed - restarting AutoInterface and triggering LXMF announce")
+        if (!::binder.isInitialized || !binder.isInitialized()) {
+            Log.d(TAG, "Skipping announce - Reticulum not yet initialized")
+            return
+        }
+        serviceScope.launch {
+            // Checked here as well as at the UI seam, because this announce is the
+            // service's own idea. Nothing in the app process asked for it, so
+            // nothing there can hold it back — and a network change is exactly the
+            // moment a device has moved.
+            if (managers.settingsAccessor.getRadioSilence()) {
+                Log.i(TAG, "Network changed; staying silent as asked")
+                return@launch
+            }
+            try {
+                withTimeout(NETWORK_CHANGE_ANNOUNCE_TIMEOUT_MS) {
+                    binder.restartAutoInterface()
+                    binder.announceLxmfDestination()
+                }
+                // Tell the app process's AutoAnnounceManager to reset its timer.
+                val now = System.currentTimeMillis()
+                managers.settingsAccessor.saveNetworkChangeAnnounceTime(now)
+                managers.settingsAccessor.saveLastAutoAnnounceTime(now)
+            } catch (_: TimeoutCancellationException) {
+                Log.w(TAG, "LXMF announce timed out on network change")
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to announce on network change", e)
             }
         }
     }

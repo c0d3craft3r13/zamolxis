@@ -22,6 +22,8 @@ import network.zamolxis.app.rns.api.model.MessageReceipt
 import network.zamolxis.app.rns.api.model.PropagationState
 import network.zamolxis.app.rns.api.model.ReceivedMessage
 import network.zamolxis.app.rns.api.model.TransferProgressUpdate
+import network.zamolxis.app.rns.host.emission.EmissionPolicy
+import network.zamolxis.app.rns.host.emission.RadioSilentException
 
 /**
  * UI-side proxy that delegates every [RnsLxmf] member to the currently-bound
@@ -32,6 +34,7 @@ import network.zamolxis.app.rns.api.model.TransferProgressUpdate
 internal class BoundRnsLxmf(
     private val backendFlow: StateFlow<RnsBackend?>,
     private val scope: CoroutineScope,
+    private val emissions: EmissionPolicy,
 ) : RnsLxmf {
     private suspend fun awaitBound(): RnsBackend = backendFlow.filterNotNull().first()
 
@@ -117,7 +120,14 @@ internal class BoundRnsLxmf(
         identityPrivateKey: ByteArray?,
         maxMessages: Int,
     ): Result<PropagationState> =
-        awaitBound().lxmf.requestMessagesFromPropagationNode(identityPrivateKey, maxMessages)
+        if (emissions.mayEmit()) {
+            awaitBound().lxmf.requestMessagesFromPropagationNode(identityPrivateKey, maxMessages)
+        } else {
+            // The most frequent thing this app does unasked: an hourly link to a
+            // relay, which tells that relay this device is switched on, roughly
+            // where it is, and how often it wakes up.
+            Result.failure(RadioSilentException("relay sync"))
+        }
 
     override suspend fun getPropagationState(): Result<PropagationState> =
         awaitBound().lxmf.getPropagationState()

@@ -1,7 +1,10 @@
 package network.zamolxis.app.rns.host.ipc
 
+import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,8 +12,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import network.zamolxis.app.rns.api.BackendCapabilities
@@ -29,8 +31,8 @@ import network.zamolxis.app.rns.api.model.DeliveryMethod
 import network.zamolxis.app.rns.api.model.DeliveryStatusUpdate
 import network.zamolxis.app.rns.api.model.Destination
 import network.zamolxis.app.rns.api.model.DestinationType
-import network.zamolxis.app.rns.api.model.DiscoveredInterface
 import network.zamolxis.app.rns.api.model.Direction
+import network.zamolxis.app.rns.api.model.DiscoveredInterface
 import network.zamolxis.app.rns.api.model.FailedInterface
 import network.zamolxis.app.rns.api.model.IconAppearance
 import network.zamolxis.app.rns.api.model.Identity
@@ -51,6 +53,9 @@ import network.zamolxis.app.rns.api.model.ReticulumConfig
 import network.zamolxis.app.rns.api.model.TransferPhase
 import network.zamolxis.app.rns.api.model.TransferProgressUpdate
 import network.zamolxis.app.rns.api.model.VoiceCallState
+import network.zamolxis.app.rns.host.emission.EmissionPolicy
+import network.zamolxis.app.rns.host.emission.RadioSilentException
+import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -58,7 +63,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlinx.coroutines.flow.first
 
 /**
  * Unit tests for the [BoundRnsBackend] sub-wrappers' three load-bearing
@@ -84,10 +88,22 @@ import kotlinx.coroutines.flow.first
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class BoundRnsBackendTest {
+    /**
+     * A policy over the real cross-process store, with silence off — these tests
+     * are about the proxy delegating, and a device that has not been asked for
+     * silence is the ordinary case. What silence itself does is
+     * `RadioSilenceTest`'s business.
+     */
+    private fun emissionPolicy(): EmissionPolicy {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        ServiceSettingsAccessor(context).setRadioSilence(false)
+        return EmissionPolicy(context)
+    }
+
     @Test
     fun `BoundRnsLxmf republishes transfer progress after binding`() = runTest {
         val flow = MutableStateFlow<RnsBackend?>(null)
-        val lxmf = BoundRnsLxmf(flow.asStateFlow(), backgroundScope)
+        val lxmf = BoundRnsLxmf(flow.asStateFlow(), backgroundScope, emissionPolicy())
         val fake = FakeRnsBackend()
         val update = TransferProgressUpdate(
             transferId = "resource-id",
@@ -111,7 +127,7 @@ class BoundRnsBackendTest {
     @Test
     fun `BoundRnsCore suspend call awaits binding then forwards`() = runTest {
         val flow = MutableStateFlow<RnsBackend?>(null)
-        val core = BoundRnsCore(flow.asStateFlow(), backgroundScope)
+        val core = BoundRnsCore(flow.asStateFlow(), backgroundScope, emissionPolicy())
 
         // Calling initialize before binding suspends; advancing the dispatcher
         // proves the call is suspended (not throwing).
@@ -130,7 +146,7 @@ class BoundRnsBackendTest {
     @Test
     fun `BoundRnsCore networkStatus republishes across rebinds`() = runTest {
         val flow = MutableStateFlow<RnsBackend?>(null)
-        val core = BoundRnsCore(flow.asStateFlow(), backgroundScope)
+        val core = BoundRnsCore(flow.asStateFlow(), backgroundScope, emissionPolicy())
 
         val first = FakeRnsBackend()
         val second = FakeRnsBackend()
@@ -265,6 +281,8 @@ class BoundRnsBackendTest {
      */
     private class FakeRnsCore : RnsCore {
         var initializeCalls = 0
+        var announceCalls = 0
+        var pathRequestCalls = 0
         val networkStatusEmitter = MutableStateFlow<NetworkStatus>(NetworkStatus.INITIALIZING)
 
         override suspend fun initialize(config: ReticulumConfig): Result<Unit> {
@@ -286,7 +304,10 @@ class BoundRnsBackendTest {
             appName: String, aspects: List<String>,
         ): Result<Destination> = error("not used")
         override suspend fun announceDestination(destination: Destination, appData: ByteArray?) = Result.success(Unit)
-        override suspend fun triggerAutoAnnounce(displayName: String) = Result.success(Unit)
+        override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> {
+            announceCalls++
+            return Result.success(Unit)
+        }
         override suspend fun sendPacket(destination: Destination, data: ByteArray, packetType: PacketType): Result<PacketReceipt> = error("not used")
         override fun observePackets() = kotlinx.coroutines.flow.emptyFlow<ReceivedPacket>()
         override suspend fun establishLink(destination: Destination): Result<Link> = error("not used")
@@ -294,7 +315,10 @@ class BoundRnsBackendTest {
         override suspend fun sendOverLink(link: Link, data: ByteArray) = Result.success(Unit)
         override fun observeLinks() = kotlinx.coroutines.flow.emptyFlow<LinkEvent>()
         override suspend fun hasPath(destinationHash: ByteArray) = false
-        override suspend fun requestPath(destinationHash: ByteArray) = Result.success(Unit)
+        override suspend fun requestPath(destinationHash: ByteArray): Result<Unit> {
+            pathRequestCalls++
+            return Result.success(Unit)
+        }
         override suspend fun persistTransportData() = Unit
         override suspend fun getHopCount(destinationHash: ByteArray): Int? = null
         override suspend fun getNextHopInterfaceName(destinationHash: ByteArray): String? = null
@@ -417,5 +441,69 @@ class BoundRnsBackendTest {
         override suspend fun identifyNomadnetLink(destinationHash: String) = Result.success(false)
         override val nomadnetRequestStatusFlow: StateFlow<String> = MutableStateFlow("idle").asStateFlow()
         override val nomadnetDownloadProgressFlow: StateFlow<Float> = MutableStateFlow(0f).asStateFlow()
+    }
+    // ── radio silence ────────────────────────────────────────────────────────
+
+    /**
+     * The assertion that matters is the call count, not the returned failure.
+     * A gate that returned an error *after* forwarding would look identical to
+     * the caller and would still have put bytes on the air.
+     */
+    @Test
+    fun `an announce asked for during silence never reaches the backend`() =
+        runTest {
+            val flow = MutableStateFlow<RnsBackend?>(FakeRnsBackend())
+            val core = BoundRnsCore(flow.asStateFlow(), backgroundScope, silentPolicy())
+
+            val result = core.triggerAutoAnnounce("Someone")
+            advanceUntilIdle()
+
+            assertTrue("must not be reported as success", result.isFailure)
+            assertTrue(
+                "must say why, not look like a fault",
+                result.exceptionOrNull() is RadioSilentException,
+            )
+            assertEquals(
+                "nothing may reach the stack",
+                0,
+                (flow.value as FakeRnsBackend).coreFake.announceCalls,
+            )
+        }
+
+    /** A path request is broadcast and names the address it wants. */
+    @Test
+    fun `a path request asked for during silence never reaches the backend`() =
+        runTest {
+            val flow = MutableStateFlow<RnsBackend?>(FakeRnsBackend())
+            val core = BoundRnsCore(flow.asStateFlow(), backgroundScope, silentPolicy())
+
+            val result = core.requestPath(ByteArray(16))
+            advanceUntilIdle()
+
+            assertTrue(result.exceptionOrNull() is RadioSilentException)
+            assertEquals(0, (flow.value as FakeRnsBackend).coreFake.pathRequestCalls)
+        }
+
+    /** And with silence lifted, the same calls go through untouched. */
+    @Test
+    fun `the same calls forward normally when silence is not asked for`() =
+        runTest {
+            val flow = MutableStateFlow<RnsBackend?>(FakeRnsBackend())
+            val core = BoundRnsCore(flow.asStateFlow(), backgroundScope, emissionPolicy())
+
+            assertTrue(core.triggerAutoAnnounce("Someone").isSuccess)
+            assertTrue(core.requestPath(ByteArray(16)).isSuccess)
+            advanceUntilIdle()
+
+            val fake = flow.value as FakeRnsBackend
+            assertEquals(1, fake.coreFake.announceCalls)
+            assertEquals(1, fake.coreFake.pathRequestCalls)
+        }
+
+    /** A policy over the real store, with silence asked for. */
+    private fun silentPolicy(): EmissionPolicy {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        ServiceSettingsAccessor(context).setRadioSilence(true)
+        return EmissionPolicy(context)
     }
 }
