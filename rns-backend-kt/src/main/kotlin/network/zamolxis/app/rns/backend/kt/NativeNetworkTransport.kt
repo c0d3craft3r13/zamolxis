@@ -31,6 +31,14 @@ class NativeNetworkTransport : NetworkTransport {
         private const val TAG = "NativeNetworkTransport"
         private const val LXST_APP_NAME = "lxst"
         private const val LXST_ASPECT = "telephony"
+
+        /** How long to wait for a path before giving up on the call. */
+        private const val PATH_RESOLVE_TIMEOUT_MS = 8_000L
+
+        private const val PATH_POLL_MS = 100L
+
+        /** Time allowed for a link to come up, generous for low-bandwidth paths. */
+        private const val LINK_ESTABLISH_TIMEOUT_MS = 15_000L
     }
 
     // These fields are written from both coroutines (call lifecycle) and
@@ -135,6 +143,80 @@ class NativeNetworkTransport : NetworkTransport {
                 LXST_ASPECT,
             )
 
+        // The path has to be to the telephony destination's own hash, not to the
+        // one that was dialled. `lxmf.delivery` and `lxst.telephony` are separate
+        // destinations with separate hashes, and knowing how to reach someone's
+        // messages says nothing about reaching their phone.
+        //
+        // This used to be carried by the telephony announce, which published a
+        // path for everyone whether they were calling or not. Asking for one at
+        // dial time gets the same result from the callee alone: a registered
+        // destination answers a path request with a path response, so the path
+        // exists for the length of the call rather than being broadcast every few
+        // hours to the whole mesh.
+        val hadCachedPath = Transport.hasPath(dest.hash)
+        if (!hadCachedPath && !awaitPath(dest.hash)) {
+            Log.w(TAG, "No path to the telephony destination after ${PATH_RESOLVE_TIMEOUT_MS}ms")
+            return false
+        }
+
+        var link = openLink(dest)
+
+        // A cached path can outlive the interface that taught it. When the phone
+        // drops to BLE-only, a TCP-learned entry stays in the path table, hasPath
+        // keeps saying yes, and every link request goes into a route that is no
+        // longer there — the callee sees nothing at all. Expire it, rediscover
+        // over whatever interface is still up, and try once more. The Python
+        // backend has carried this since it was observed on two phones.
+        if (link == null && hadCachedPath) {
+            Log.w(TAG, "Cached path to telephony looks stale — expiring and rediscovering")
+            Transport.expirePath(dest.hash)
+            link = if (awaitPath(dest.hash)) openLink(dest) else null
+        }
+
+        if (link == null) {
+            Log.w(TAG, "Could not open a link to the telephony destination")
+            activeLink = null
+            return false
+        }
+
+        Log.i(TAG, "Link active to ${destHash.toHex().take(16)}")
+
+        // Identify proactively as soon as the link becomes active.
+        // In theory the callee's STATUS_AVAILABLE should trigger this, but on real
+        // devices that first 1-byte signal can race with callback installation on
+        // either side. Sending LINKIDENTIFY immediately avoids that handshake race
+        // while remaining protocol-correct: only the initiator may identify, and
+        // Link.identify() already enforces ACTIVE status.
+        val localId = localIdentity
+        if (localId != null) {
+            Log.i(TAG, "Proactive identify sent=${link.identify(localId)}")
+        } else {
+            Log.w(TAG, "Link became active but localIdentity was null")
+        }
+        return true
+    }
+
+    /**
+     * Ask for a path to [destinationHash] and wait for one to arrive.
+     *
+     * The callee answers this itself: a destination registered on that device
+     * responds to a path request with a path response, even if it has never
+     * announced. That is what lets telephony stay off the air until someone
+     * actually calls.
+     */
+    private suspend fun awaitPath(destinationHash: ByteArray): Boolean {
+        Transport.requestPath(destinationHash)
+        val deadline = System.currentTimeMillis() + PATH_RESOLVE_TIMEOUT_MS
+        while (System.currentTimeMillis() < deadline) {
+            if (Transport.hasPath(destinationHash)) return true
+            kotlinx.coroutines.delay(PATH_POLL_MS)
+        }
+        return false
+    }
+
+    /** Open a link and wait for it to come up, or null if it does not. */
+    private suspend fun openLink(dest: Destination): Link? {
         val link =
             Link.create(
                 destination = dest,
@@ -142,45 +224,17 @@ class NativeNetworkTransport : NetworkTransport {
                     Log.i(TAG, "Link established: rtt=${l.rtt}ms")
                 },
             )
-
         activeLink = link
-        // Install callbacks immediately after Link.create(). The callee can send
-        // STATUS_AVAILABLE as soon as the link comes up; if we wait until the
-        // established callback to attach packet handling, that first byte can be lost
-        // and the caller never identifies.
         installLinkCallbacks(link)
 
-        // Wait for link establishment (up to 15s for low-bandwidth paths)
-        val deadline = System.currentTimeMillis() + 15_000
+        val deadline = System.currentTimeMillis() + LINK_ESTABLISH_TIMEOUT_MS
         while (link.status != LinkConstants.ACTIVE &&
             link.status != LinkConstants.CLOSED &&
             System.currentTimeMillis() < deadline
         ) {
-            kotlinx.coroutines.delay(100)
+            kotlinx.coroutines.delay(PATH_POLL_MS)
         }
-
-        return if (link.status == LinkConstants.ACTIVE) {
-            Log.i(TAG, "Link active to ${destHash.toHex().take(16)}")
-
-            // Identify proactively as soon as the link becomes active.
-            // In theory the callee's STATUS_AVAILABLE should trigger this, but on real
-            // devices that first 1-byte signal can race with callback installation on
-            // either side. Sending LINKIDENTIFY immediately avoids that handshake race
-            // while remaining protocol-correct: only the initiator may identify, and
-            // Link.identify() already enforces ACTIVE status.
-            val identity = localIdentity
-            if (identity != null) {
-                val identified = link.identify(identity)
-                Log.i(TAG, "Proactive identify sent=$identified")
-            } else {
-                Log.w(TAG, "Link became active but localIdentity was null")
-            }
-            true
-        } else {
-            Log.w(TAG, "Link failed to establish (status=${link.status})")
-            activeLink = null
-            false
-        }
+        return link.takeIf { it.status == LinkConstants.ACTIVE }
     }
 
     override fun teardownLink() {

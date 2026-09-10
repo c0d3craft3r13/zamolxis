@@ -65,22 +65,6 @@ internal class NativeInboundCallAdapter(
         }
     }
 
-    fun announce(appData: ByteArray? = null) {
-        val registered = destination
-        if (registered == null) {
-            if (enabled) Log.w(TAG, "Cannot announce lxst.telephony: destination not registered")
-            return
-        }
-        runCatching { registered.announce(appData) }
-            .onSuccess {
-                Log.i(
-                    TAG,
-                    "Announced lxst.telephony ${registered.hexHash.take(16)}" +
-                        if (appData != null) " (appData=${appData.size} bytes)" else "",
-                )
-            }.onFailure { Log.e(TAG, "Failed to announce lxst.telephony", it) }
-    }
-
     fun disable() {
         if (!enabled) return
         enabled = false
@@ -96,7 +80,8 @@ internal class NativeInboundCallAdapter(
         if (enabled && destination != null) return
         enabled = true
         register()
-        announce()
+        // Registered, not announced: a path request at dial time gets the caller a
+        // route from this phone alone, where an announce told the whole mesh.
     }
 
     fun clear() {

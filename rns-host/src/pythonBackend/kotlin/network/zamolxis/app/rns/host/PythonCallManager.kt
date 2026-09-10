@@ -185,15 +185,13 @@ class PythonCallManager(
         callCoordinator.setCallEndedListener(callbackAdapter::onGenericEnded)
 
         inboundCalls.register(localIdentity)
-        inboundCalls.announce()
 
-        // Re-announce lxst.telephony whenever lxmf.delivery is (re-)announced
-        // (periodic auto-announce + network-change announce, both routed
-        // through PythonRnsCore.triggerAutoAnnounce). A one-time setup()
-        // announce alone lets the telephony path go stale, so inbound callers
-        // silently fail to reach us. announce() no-ops when the destination is
-        // deregistered (incoming disabled), so the hook is safe to leave set.
-        runtime.onLxmfReannounce = { inboundCalls.announce() }
+        // Registered but not announced. A destination that is registered answers a
+        // path request with a path response, so a caller who wants to reach this
+        // phone gets a route from this phone alone, at the moment they dial.
+        // Announcing instead published that route to the whole mesh every few
+        // hours, telling everyone within earshot that this node takes calls —
+        // paid whether anyone ever called or not.
 
         // Cold-start application of the persisted master toggle. If the
         // user turned voice calls OFF before the last :reticulum tear-down
@@ -207,11 +205,6 @@ class PythonCallManager(
         }
 
         Log.i(TAG, "Python telephony stack ready")
-    }
-
-    /** Public so callers can couple lxst.telephony announces to LXMF reannounces. */
-    fun announce(appData: ByteArray? = null) {
-        inboundCalls.announce(appData)
     }
 
     // ===== Incoming call handling =====
@@ -373,7 +366,6 @@ class PythonCallManager(
     /** Tear down the telephony stack. Mirrors `NativeCallManager.shutdown()`. */
     fun shutdown() {
         Log.i(TAG, "Shutting down PythonCallManager")
-        runtime.onLxmfReannounce = null
         if (::telephone.isInitialized && telephone.isCallActive()) {
             runCatching { telephone.hangup() }
                 .onFailure { Log.w(TAG, "Ignored error hanging up on shutdown", it) }

@@ -75,23 +75,6 @@ internal class PythonInboundCallAdapter(
         }
     }
 
-    fun announce(appData: ByteArray? = null) {
-        val registered = destination
-        if (registered == null) {
-            if (enabled) Log.w(TAG, "Cannot announce lxst.telephony: destination not registered")
-            return
-        }
-        runCatching {
-            if (appData == null) {
-                registered.callAttr("announce")
-            } else {
-                val pyData = runtime.python.builtins.callAttr("bytes", appData)
-                registered.callAttr("announce", pyData)
-            }
-        }.onSuccess { Log.i(TAG, "Announced lxst.telephony") }
-            .onFailure { Log.e(TAG, "Failed to announce lxst.telephony", it) }
-    }
-
     fun disable() {
         if (!enabled) return
         enabled = false
@@ -107,7 +90,8 @@ internal class PythonInboundCallAdapter(
         if (enabled && destination != null) return
         enabled = true
         register(localIdentity)
-        announce()
+        // Registered, not announced: a path request at dial time gets the caller a
+        // route from this phone alone, where an announce told the whole mesh.
     }
 
     fun clear() {

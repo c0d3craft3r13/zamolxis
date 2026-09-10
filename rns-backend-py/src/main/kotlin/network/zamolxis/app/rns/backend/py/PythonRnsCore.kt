@@ -284,11 +284,6 @@ class PythonRnsCore(
             // bytes through `PeerAnnounceAppData`; `PeerAnnounceAppDataConformanceTest`
             // holds both to vectors taken from this reference.
             router.callAttr("announce", destination?.get("hash"))
-
-            // Keep lxst.telephony announced on the same cadence as
-            // lxmf.delivery so inbound callers can resolve a fresh path
-            // (PythonCallManager installs this hook in setup()).
-            runtime.onLxmfReannounce?.invoke()
             Unit
         }
 

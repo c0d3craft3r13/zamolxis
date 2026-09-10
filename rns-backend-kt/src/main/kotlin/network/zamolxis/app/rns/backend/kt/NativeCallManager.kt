@@ -175,9 +175,12 @@ class NativeCallManager(
         // 6. Register lxst.telephony destination so Transport routes incoming call links here
         inboundCalls.register()
 
-        // Announce immediately so peers can resolve a path to our telephony destination
-        // even before the next coupled LXMF auto-announce fires.
-        inboundCalls.announce()
+        // Registered but not announced. A destination that is registered answers a
+        // path request with a path response, so a caller who wants to reach this
+        // phone gets a route from this phone alone, at the moment they dial.
+        // Announcing instead published that route to the whole mesh every few
+        // hours, telling everyone within earshot that this node takes calls —
+        // paid whether anyone ever called or not.
 
         // Cold-start application of the persisted master toggle. If the user
         // turned voice calls OFF before the last process tear-down (or before
@@ -189,16 +192,6 @@ class NativeCallManager(
         }
 
         Log.i(TAG, "Native telephony stack ready")
-    }
-
-    /**
-     * Announce the local `lxst.telephony` destination.
-     *
-     * Kept public so [NativeReticulumProtocol] can couple telephony announces to every
-     * `lxmf.delivery` announce/reannounce. Delegates to the reduced inbound adapter.
-     */
-    fun announce(appData: ByteArray? = null) {
-        inboundCalls.announce(appData)
     }
 
     // ===== Incoming Call Handling =====

@@ -1595,13 +1595,12 @@ class NativeRnsBackendImpl(
 
         deliveryDest.announce(appData)
 
-        // No app_data on the telephony announce. It is not an LXMF destination, so
-        // an LXMF-shaped payload on it is a shape nothing else on the mesh emits —
-        // and the two announces going out together with byte-identical contents
-        // also tied this node's voice address to its messaging one for anyone
-        // listening. The Python flavour has always announced telephony bare
-        // (`inboundCalls.announce()`); this makes the two agree.
-        callManager?.announce()
+        // Telephony is not announced at all. It used to go out beside this one,
+        // and because an announce publishes the identity's public key in the
+        // clear, the two carried the same key and tied this node's voice address
+        // to its messaging address for anyone listening. A registered destination
+        // answers a path request on its own, so a caller still finds a route —
+        // when they dial, from us, rather than from a broadcast nobody asked for.
 
         Log.i(
             TAG,
