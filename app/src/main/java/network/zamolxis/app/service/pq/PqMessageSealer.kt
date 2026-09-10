@@ -478,6 +478,35 @@ class PqMessageSealer
         }
 
         /**
+         * Try each of our key pairs until one opens the message.
+         *
+         * The live key almost always does. A retired one is reached only by a
+         * message that was already in flight when we rotated, which is exactly the
+         * case that used to be lost, and it costs one extra decapsulation on a
+         * message that was otherwise going to fail.
+         *
+         * @throws HybridKemException when none of them opens it — the caller
+         *   cannot tell a wrong key from a tampered message, and should not.
+         */
+        private suspend fun openWithAnyKey(
+            identityHash: String,
+            peerHash: String,
+            ourKeys: List<HybridKeyPair>,
+            wire: ByteArray,
+            aad: ByteArray,
+        ): ByteArray? {
+            var lastFailure: HybridKemException? = null
+            for (keyPair in ourKeys) {
+                try {
+                    return openByFormat(identityHash, peerHash, keyPair, wire, aad)
+                } catch (e: HybridKemException) {
+                    lastFailure = e
+                }
+            }
+            throw lastFailure ?: HybridKemException("No key pair available to open the message")
+        }
+
+        /**
          * Read a sealed blob in whichever format it arrived in.
          *
          * Three shapes reach here and the first byte tells them apart: an epoch
@@ -561,8 +590,13 @@ class PqMessageSealer
             hasUnsealedAttachments: Boolean,
             keyProblem: PqKeyExchange.KeyAcceptance?,
         ): Incoming {
-            val ourKeys = repository.ourKeyPair(identityHash)
-            if (ourKeys == null) {
+            // Every key a message to us might have been sealed to, live one first.
+            // A peer keeps using our old public key until it learns the new one, and
+            // a propagation node will hold a message for thirty days before
+            // delivering it — so a rotation that tried only the live key threw away
+            // a month of a contact's messages.
+            val ourKeys = repository.ourKeyPairs(identityHash)
+            if (ourKeys.isEmpty()) {
                 Log.e(TAG, "Sealed message arrived but our hybrid key pair is unavailable")
                 return Incoming("", PqProtection.UNOPENED, keyProblem = keyProblem)
             }
@@ -574,7 +608,7 @@ class PqMessageSealer
                 )
             val opened =
                 try {
-                    openByFormat(identityHash, peerHash, ourKeys, sealedContent, aad)
+                    openWithAnyKey(identityHash, peerHash, ourKeys, sealedContent, aad)
                 } catch (e: HybridKemException) {
                     Log.e(TAG, "Could not open sealed message from $peerHash", e)
                     return Incoming("", PqProtection.UNOPENED, keyProblem = keyProblem)

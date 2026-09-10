@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import network.zamolxis.app.data.db.entity.LocalPqKeyEntity
 import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
+import network.zamolxis.app.data.db.entity.RetiredPqKeyEntity
 
 /**
  * Storage for hybrid post-quantum key material.
@@ -25,6 +26,52 @@ interface PqKeyDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertLocalKey(key: LocalPqKeyEntity)
+
+    /**
+     * Pairs rotated out but still inside the retention window, newest first.
+     *
+     * Newest first because a message that will open under a retired key is most
+     * likely to open under the one most recently retired, and every miss costs a
+     * decapsulation.
+     */
+    @Query("SELECT * FROM retired_pq_keys WHERE identityHash = :identityHash ORDER BY retiredTimestamp DESC")
+    suspend fun getRetiredKeys(identityHash: String): List<RetiredPqKeyEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRetiredKey(key: RetiredPqKeyEntity)
+
+    /**
+     * Forget pairs past the retention window.
+     *
+     * This is the step that makes rotation mean anything: until the old private
+     * half is gone, it still opens every sealed message ever recorded under it.
+     */
+    @Query("DELETE FROM retired_pq_keys WHERE retiredTimestamp < :before")
+    suspend fun deleteRetiredKeysBefore(before: Long): Int
+
+    /**
+     * Rotate: retire what is stored, then install the replacement.
+     *
+     * One transaction, because the state between the two — no live key and a
+     * retired one — is a state where sealing has no key to use at all.
+     */
+    @Transaction
+    suspend fun rotateLocalKey(
+        replacement: LocalPqKeyEntity,
+        retiredAt: Long,
+    ) {
+        getLocalKey(replacement.identityHash)?.let { previous ->
+            insertRetiredKey(
+                RetiredPqKeyEntity(
+                    identityHash = previous.identityHash,
+                    publicKeyHex = previous.publicKey.joinToString("") { "%02x".format(it) },
+                    retiredTimestamp = retiredAt,
+                    encryptedKeyPair = previous.encryptedKeyPair,
+                ),
+            )
+        }
+        upsertLocalKey(replacement)
+    }
 
     // ---------------------------------------------------------- peers' keys
 

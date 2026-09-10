@@ -43,6 +43,7 @@ object ZamolxisDatabaseFactory {
             ZamolxisDatabase.MIGRATION_8_9,
             ZamolxisDatabase.MIGRATION_9_10,
             ZamolxisDatabase.MIGRATION_10_11,
+            ZamolxisDatabase.MIGRATION_11_12,
         )
 
     /**

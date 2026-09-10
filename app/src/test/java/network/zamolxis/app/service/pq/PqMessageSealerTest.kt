@@ -9,6 +9,7 @@ import network.zamolxis.app.data.db.dao.PqKeyDao
 import network.zamolxis.app.data.db.entity.LocalPqKeyEntity
 import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
+import network.zamolxis.app.data.db.entity.RetiredPqKeyEntity
 import network.zamolxis.app.data.model.PqProtection
 import network.zamolxis.app.data.db.dao.PqEpochDao
 import network.zamolxis.app.data.db.entity.PqEpochEntity
@@ -26,6 +27,7 @@ import network.zamolxis.crypto.pq.PqMode
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -754,6 +756,53 @@ class PqMessageSealerTest {
         val bobHello = bobSends("hi") as PqMessageSealer.Outgoing.Sealed
         aliceReceives(bobHello.wire.extraFields)
     }
+    // ── rotating our own key ─────────────────────────────────────────────────
+
+    /**
+     * The case that used to lose a month of someone's messages.
+     *
+     * A peer keeps sealing to the public key it holds until it learns a new one,
+     * and a propagation node will hold a message for thirty days before
+     * delivering it. Rotation replaced the stored pair outright and the receive
+     * path tried one key, so everything already in flight arrived unopenable —
+     * on the recipient's side, with nothing to say why.
+     */
+    @Test
+    fun `a message sealed before we rotated still opens after`() =
+        runTest {
+            establishBothKeys()
+            val inFlight = aliceSends("sent before bob rotated") as PqMessageSealer.Outgoing.Sealed
+
+            bobRepo.rotateOurKeyPair(bobId)
+
+            assertEquals("sent before bob rotated", bobReceives(inFlight.wire.extraFields).content)
+        }
+
+    @Test
+    fun `messages keep opening across more than one rotation`() =
+        runTest {
+            establishBothKeys()
+            val inFlight = aliceSends("still in the post") as PqMessageSealer.Outgoing.Sealed
+
+            bobRepo.rotateOurKeyPair(bobId)
+            bobRepo.rotateOurKeyPair(bobId)
+
+            assertEquals("still in the post", bobReceives(inFlight.wire.extraFields).content)
+        }
+
+    /** And the new key is genuinely in use, not just stored beside the old one. */
+    @Test
+    fun `after rotating, we hand out the new public key`() =
+        runTest {
+            establishBothKeys()
+            val before = bobRepo.ourPublicKey(bobId)
+
+            val rotated = bobRepo.rotateOurKeyPair(bobId)
+
+            assertNotNull(rotated)
+            assertNotEquals(before, rotated)
+            assertEquals(rotated, bobRepo.ourPublicKey(bobId))
+        }
 }
 
 private class FakeEncryptor : SecretBlobEncryptor {
@@ -772,6 +821,22 @@ private class FakeEncryptor : SecretBlobEncryptor {
 }
 
 private class FakePqKeyDao : PqKeyDao {
+    private val retired = mutableListOf<RetiredPqKeyEntity>()
+
+    override suspend fun getRetiredKeys(identityHash: String): List<RetiredPqKeyEntity> =
+        retired.filter { it.identityHash == identityHash }.sortedByDescending { it.retiredTimestamp }
+
+    override suspend fun insertRetiredKey(key: RetiredPqKeyEntity) {
+        retired.removeAll { it.identityHash == key.identityHash && it.publicKeyHex == key.publicKeyHex }
+        retired.add(key)
+    }
+
+    override suspend fun deleteRetiredKeysBefore(before: Long): Int {
+        val stale = retired.filter { it.retiredTimestamp < before }
+        retired.removeAll(stale)
+        return stale.size
+    }
+
     override suspend fun recordProtocolVersion(
         peerHash: String,
         version: Int,

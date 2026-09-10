@@ -2,6 +2,7 @@ package network.zamolxis.app.data.db
 
 import network.zamolxis.app.data.crypto.SecretBlobEncryptor
 import java.io.File
+import java.io.FileOutputStream
 import java.io.RandomAccessFile
 import java.security.SecureRandom
 
@@ -83,8 +84,19 @@ class DatabaseKeyStore(
         // Write via a temp file and rename: a passphrase file that was half-written
         // when the process died would be indistinguishable from a corrupt one, and
         // would take the database with it.
+        //
+        // The bytes are forced to disk before the rename, not merely handed to the
+        // page cache. Without that, a rename can land while the data behind it has
+        // not, and the file that comes back after a power loss is present and empty
+        // — which this class reads as "no key yet" and answers by generating a new
+        // one, leaving a database nothing can open again. The window is small and
+        // the consequence is the whole message history.
         val temp = File(filesDir, "$KEY_FILE_NAME.tmp")
-        temp.writeBytes(wrapped)
+        FileOutputStream(temp).use { out ->
+            out.write(wrapped)
+            out.flush()
+            out.fd.sync()
+        }
         // Clear the destination first. Reaching here means any existing file was
         // unusable (absent or empty), and `renameTo` is only defined to replace an
         // existing target on some platforms — it does on Android, it does not on
@@ -94,7 +106,28 @@ class DatabaseKeyStore(
             temp.delete()
             error("Could not store the database passphrase at ${keyFile.absolutePath}")
         }
+        syncDirectory()
         return passphrase
+    }
+
+    /**
+     * Force the rename itself to disk.
+     *
+     * Syncing the file makes its contents durable; the directory entry that points
+     * at them is a separate write. Best-effort on purpose: this needs a real
+     * filesystem, and the unit tests run on a JVM where the call is not available.
+     * Failing it is not worth failing the write over — the file sync above already
+     * covers the case that loses data silently.
+     */
+    private fun syncDirectory() {
+        runCatching {
+            val fd = android.system.Os.open(filesDir.absolutePath, android.system.OsConstants.O_RDONLY, 0)
+            try {
+                android.system.Os.fsync(fd)
+            } finally {
+                android.system.Os.close(fd)
+            }
+        }
     }
 
     private fun <T> withFileLock(block: () -> T): T =

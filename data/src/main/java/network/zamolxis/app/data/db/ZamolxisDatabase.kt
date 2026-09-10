@@ -49,6 +49,7 @@ import network.zamolxis.app.data.db.entity.PeerActivityEntity
 import network.zamolxis.app.data.db.entity.PeerActivityEventEntity
 import network.zamolxis.app.data.db.entity.LocalPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqEpochEntity
+import network.zamolxis.app.data.db.entity.RetiredPqKeyEntity
 import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
 import network.zamolxis.app.data.db.entity.PeerIconEntity
@@ -79,6 +80,7 @@ import network.zamolxis.app.data.db.entity.RmspServerEntity
         PeerActivityEventEntity::class,
         LocalPqKeyEntity::class,
         PqEpochEntity::class,
+        RetiredPqKeyEntity::class,
         PeerPqKeyEntity::class,
         PqKeyDeliveryEntity::class,
         GroupEntity::class,
@@ -86,7 +88,7 @@ import network.zamolxis.app.data.db.entity.RmspServerEntity
         GroupMessageEntity::class,
         GroupMessageStatusEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 // TooManyFunctions: a Room database class accretes one DAO accessor per table;
@@ -437,6 +439,32 @@ abstract class ZamolxisDatabase : RoomDatabase() {
                     )
                     db.execSQL(
                         "ALTER TABLE `peer_pq_keys` ADD COLUMN `protocolVersion` INTEGER NOT NULL DEFAULT 1",
+                    )
+                }
+            }
+
+        /**
+         * Somewhere to keep a rotated-out post-quantum key pair.
+         *
+         * Rotation used to overwrite the stored pair, and the receive path tries
+         * one key. A peer that had not yet learned the new public key went on
+         * sealing to the old one, and those messages arrived unopenable — for up
+         * to the thirty days a propagation node will hold mail. Purely additive:
+         * one new table, no ALTER, nothing existing rewritten.
+         */
+        val MIGRATION_11_12: Migration =
+            object : Migration(11, 12) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `retired_pq_keys` (
+                            `identityHash` TEXT NOT NULL,
+                            `publicKeyHex` TEXT NOT NULL,
+                            `retiredTimestamp` INTEGER NOT NULL,
+                            `encryptedKeyPair` BLOB NOT NULL,
+                            PRIMARY KEY(`identityHash`, `publicKeyHex`)
+                        )
+                        """.trimIndent(),
                     )
                 }
             }

@@ -330,7 +330,8 @@ class IdentityKeyProviderTest {
                 )
 
             coEvery { identityDao.getIdentity(TEST_IDENTITY_HASH) } returns identity
-            every { encryptor.verifyPassword(TEST_PASSWORD, salt, verificationHash) } returns true
+            every { encryptor.verify(TEST_PASSWORD, salt, verificationHash) } returns
+                IdentityKeyEncryptor.PasswordVerdict.CORRECT
 
             assertTrue(keyProvider.verifyPassword(TEST_IDENTITY_HASH, TEST_PASSWORD))
         }
@@ -360,7 +361,8 @@ class IdentityKeyProviderTest {
                 )
 
             coEvery { identityDao.getIdentity(TEST_IDENTITY_HASH) } returns identity
-            every { encryptor.verifyPassword(wrongPassword, salt, verificationHash) } returns false
+            every { encryptor.verify(wrongPassword, salt, verificationHash) } returns
+                IdentityKeyEncryptor.PasswordVerdict.WRONG
 
             assertFalse(keyProvider.verifyPassword(TEST_IDENTITY_HASH, wrongPassword))
         }

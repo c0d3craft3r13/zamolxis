@@ -5,6 +5,7 @@ import android.security.keystore.KeyProperties
 import android.util.Log
 import java.nio.ByteBuffer
 import java.security.KeyStore
+import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -37,7 +38,9 @@ class IdentityKeyEncryptor
 
             // Android Keystore configuration
             private const val ANDROID_KEYSTORE = "AndroidKeyStore"
-            private const val KEY_ALIAS = "zamolxis_identity_master_key"
+
+            /** Named in [KeystoreAliases], which is also what a wipe reads. */
+            private val KEY_ALIAS = KeystoreAliases.IDENTITY_MASTER
 
             // Encryption parameters
             private const val AES_KEY_SIZE = 256
@@ -390,26 +393,75 @@ class IdentityKeyEncryptor
         fun createPasswordVerificationHash(
             password: CharArray,
             salt: ByteArray,
+        ): ByteArray = derivePasswordHash(password, salt, PBKDF2_ITERATIONS)
+
+        /**
+         * The verifier as it was stored before the cost was raised.
+         *
+         * Half the iterations was chosen to make the check feel quicker. What it
+         * actually did was hand an offline attacker the cheaper of two targets:
+         * cracking the verifier recovers the password, and the password opens the
+         * key, so the weaker derivation set the price of the whole thing. New
+         * verifiers use the full cost; this exists so someone who set a password
+         * before the change is not locked out of their own identity.
+         */
+        private fun legacyPasswordVerificationHash(
+            password: CharArray,
+            salt: ByteArray,
+        ): ByteArray = derivePasswordHash(password, salt, PBKDF2_ITERATIONS / 2)
+
+        private fun derivePasswordHash(
+            password: CharArray,
+            salt: ByteArray,
+            iterations: Int,
         ): ByteArray {
             val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-            // Use half the iterations for verification hash (still secure, but faster for check)
-            val spec = PBEKeySpec(password, salt, PBKDF2_ITERATIONS / 2, AES_KEY_SIZE)
+            val spec = PBEKeySpec(password, salt, iterations, AES_KEY_SIZE)
             val hash = factory.generateSecret(spec).encoded
             spec.clearPassword()
             return hash
         }
 
+        /** What a verification found, so a stored hash can be brought up to date. */
+        enum class PasswordVerdict {
+            /** Correct, and stored at the current cost. */
+            CORRECT,
+
+            /** Correct, but the stored verifier is the old half-cost one. */
+            CORRECT_NEEDS_UPGRADE,
+
+            /** Not the password. */
+            WRONG,
+        }
+
         /**
          * Verify a password against a stored verification hash.
+         *
+         * Both comparisons are constant-time. `contentEquals` returns as soon as it
+         * finds a difference, so how long it took says how many leading bytes were
+         * right — and an attacker who can measure that recovers the hash a byte at
+         * a time instead of guessing it whole.
          */
+        fun verify(
+            password: CharArray,
+            salt: ByteArray,
+            expectedHash: ByteArray,
+        ): PasswordVerdict {
+            if (MessageDigest.isEqual(createPasswordVerificationHash(password, salt), expectedHash)) {
+                return PasswordVerdict.CORRECT
+            }
+            if (MessageDigest.isEqual(legacyPasswordVerificationHash(password, salt), expectedHash)) {
+                return PasswordVerdict.CORRECT_NEEDS_UPGRADE
+            }
+            return PasswordVerdict.WRONG
+        }
+
+        /** As [verify], for callers that only need to know whether to let the user in. */
         fun verifyPassword(
             password: CharArray,
             salt: ByteArray,
             expectedHash: ByteArray,
-        ): Boolean {
-            val computedHash = createPasswordVerificationHash(password, salt)
-            return computedHash.contentEquals(expectedHash)
-        }
+        ): Boolean = verify(password, salt, expectedHash) != PasswordVerdict.WRONG
 
         /**
          * Add password protection to device-only encrypted data.

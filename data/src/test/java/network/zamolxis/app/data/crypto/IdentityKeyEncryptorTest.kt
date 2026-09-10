@@ -247,4 +247,76 @@ class IdentityKeyEncryptorTest {
         val wrongSizeKey = ByteArray(32) // Should be 64 bytes
         encryptor.encryptForExport(wrongSizeKey, TEST_PASSWORD)
     }
+
+    // ── the password verifier ────────────────────────────────────────────────
+
+    /**
+     * The verifier used to be derived at half the cost of the key, which made it
+     * the cheaper of two ways into the same secret: crack the verifier, recover
+     * the password, open the key. New ones are derived at the full cost.
+     */
+    @Test
+    fun `a new verifier costs what the key costs`() {
+        val salt = ByteArray(32).also { SecureRandom().nextBytes(it) }
+
+        val verdict = encryptor.verify(TEST_PASSWORD, salt, encryptor.createPasswordVerificationHash(TEST_PASSWORD, salt))
+
+        assertEquals(IdentityKeyEncryptor.PasswordVerdict.CORRECT, verdict)
+    }
+
+    /**
+     * Someone who set a password before the change still has the old verifier
+     * stored. Rejecting it would lock them out of their own identity, so it is
+     * accepted — and reported as needing replacement.
+     */
+    @Test
+    fun `a verifier stored at the old cost is accepted and flagged`() {
+        val salt = ByteArray(32).also { SecureRandom().nextBytes(it) }
+        val legacy = legacyHash(TEST_PASSWORD, salt)
+
+        val verdict = encryptor.verify(TEST_PASSWORD, salt, legacy)
+
+        assertEquals(IdentityKeyEncryptor.PasswordVerdict.CORRECT_NEEDS_UPGRADE, verdict)
+        assertTrue("the user must still get in", encryptor.verifyPassword(TEST_PASSWORD, salt, legacy))
+    }
+
+    @Test
+    fun `the wrong password is refused against either cost`() {
+        val salt = ByteArray(32).also { SecureRandom().nextBytes(it) }
+        val wrong = "notThePassword".toCharArray()
+
+        assertEquals(
+            IdentityKeyEncryptor.PasswordVerdict.WRONG,
+            encryptor.verify(wrong, salt, encryptor.createPasswordVerificationHash(TEST_PASSWORD, salt)),
+        )
+        assertEquals(
+            IdentityKeyEncryptor.PasswordVerdict.WRONG,
+            encryptor.verify(wrong, salt, legacyHash(TEST_PASSWORD, salt)),
+        )
+    }
+
+    @Test
+    fun `a verifier is bound to its salt`() {
+        val salt = ByteArray(32).also { SecureRandom().nextBytes(it) }
+        val otherSalt = ByteArray(32).also { SecureRandom().nextBytes(it) }
+
+        assertFalse(
+            encryptor.verifyPassword(TEST_PASSWORD, otherSalt, encryptor.createPasswordVerificationHash(TEST_PASSWORD, salt)),
+        )
+    }
+
+    /**
+     * The old derivation, reproduced here rather than exposed on the encryptor:
+     * nothing outside this test has a reason to create one again.
+     */
+    private fun legacyHash(
+        password: CharArray,
+        salt: ByteArray,
+    ): ByteArray {
+        val factory = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val spec = javax.crypto.spec.PBEKeySpec(password, salt, 600_000 / 2, 256)
+        val hash = factory.generateSecret(spec).encoded
+        spec.clearPassword()
+        return hash
+    }
 }

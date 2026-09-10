@@ -3,6 +3,7 @@ package network.zamolxis.app.migration
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Log
+import network.zamolxis.app.data.crypto.KeystoreAliases
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -40,8 +41,12 @@ class KeystoreDeviceKeyWrapper(
         private const val TAG = "KeystoreDeviceKey"
         private const val ANDROID_KEYSTORE = "AndroidKeyStore"
 
-        /** One key for all of this install's containers; [destroy] closes every device slot at once. */
-        const val DEFAULT_ALIAS = "zamolxis_container_device_key"
+        /**
+         * One key for all of this install's containers; [destroy] closes every
+         * device slot at once. Named in [KeystoreAliases] so a duress wipe knows
+         * it exists — it did not, for a while.
+         */
+        val DEFAULT_ALIAS = KeystoreAliases.CONTAINER_DEVICE
 
         private const val GCM_TAG_BITS = 128
         private const val NONCE_BYTES = 12

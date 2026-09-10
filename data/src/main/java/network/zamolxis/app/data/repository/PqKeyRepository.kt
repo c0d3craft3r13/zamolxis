@@ -39,6 +39,29 @@ class PqKeyRepository
         private val kem: HybridKem,
     ) {
         /**
+         * Every key pair a message to us might have been sealed to: the live one
+         * first, then the ones rotated out and not yet forgotten.
+         *
+         * A peer stops using our old public key only once it has learned the new
+         * one, and a message can sit on a propagation node for thirty days before
+         * it is delivered. Trying only the live key is what made rotation lose a
+         * month of a contact's messages.
+         */
+        suspend fun ourKeyPairs(identityHash: String): List<HybridKeyPair> {
+            val live = ourKeyPair(identityHash)
+            val retired =
+                dao.getRetiredKeys(identityHash).mapNotNull { stored ->
+                    try {
+                        HybridKeyCodec.decodeKeyPair(encryptor.decryptBlobWithDeviceKey(stored.encryptedKeyPair))
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Retired hybrid key pair for $identityHash is unreadable", e)
+                        null
+                    }
+                }
+            return listOfNotNull(live) + retired
+        }
+
+        /**
          * Our key pair for [identityHash], generating and storing one on first use.
          *
          * @return the pair, or null if the stored blob cannot be unwrapped — which
@@ -278,16 +301,27 @@ class PqKeyRepository
          */
         suspend fun rotateOurKeyPair(identityHash: String): HybridPublicKey? =
             try {
+                val now = System.currentTimeMillis()
                 val generated = kem.generateKeyPair()
-                dao.upsertLocalKey(
-                    LocalPqKeyEntity(
-                        identityHash = identityHash,
-                        publicKey = HybridKeyCodec.encode(generated.publicKey),
-                        encryptedKeyPair =
-                            encryptor.encryptBlobWithDeviceKey(HybridKeyCodec.encodeKeyPair(generated)),
-                        createdTimestamp = System.currentTimeMillis(),
-                    ),
+                // Retire rather than overwrite. Peers that have not yet been told
+                // about the new key are still sealing to the old one, and until
+                // that reaches them their messages open with nothing else.
+                dao.rotateLocalKey(
+                    replacement =
+                        LocalPqKeyEntity(
+                            identityHash = identityHash,
+                            publicKey = HybridKeyCodec.encode(generated.publicKey),
+                            encryptedKeyPair =
+                                encryptor.encryptBlobWithDeviceKey(HybridKeyCodec.encodeKeyPair(generated)),
+                            createdTimestamp = now,
+                        ),
+                    retiredAt = now,
                 )
+                // And forget the ones whose window has closed. This is the half of
+                // rotation that actually takes something away: while an old private
+                // half exists it still opens every sealed message ever recorded
+                // under it, so rotation without this is a gesture.
+                dao.deleteRetiredKeysBefore(now - RETIRED_KEY_RETENTION_MS)
                 dao.clearDeliveriesFor(identityHash)
                 Log.i(TAG, "Rotated hybrid post-quantum key pair for identity $identityHash")
                 generated.publicKey
@@ -316,7 +350,17 @@ class PqKeyRepository
             }
         }
 
-        private companion object {
+        companion object {
             private const val TAG = "PqKeyRepository"
+
+            /**
+             * How long a rotated-out key pair is kept before it is destroyed.
+             *
+             * Long enough to clear the thirty days a propagation node may hold a
+             * message (`LXMRouter.MESSAGE_EXPIRY`), because anything shorter turns
+             * rotation back into a way of losing mail. Short enough that rotation
+             * eventually does what it is for.
+             */
+            const val RETIRED_KEY_RETENTION_MS = 35L * 24 * 60 * 60 * 1000
         }
     }

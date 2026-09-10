@@ -2479,20 +2479,20 @@
         <error line="8" column="1" source="standard:no-wildcard-imports" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/crypto/IdentityKeyEncryptor.kt">
-        <error line="89" column="36" source="standard:chain-method-continuation" />
-        <error line="93" column="21" source="standard:chain-method-continuation" />
-        <error line="110" column="37" source="standard:function-expression-body" />
-        <error line="141" column="30" source="standard:chain-method-continuation" />
-        <error line="297" column="30" source="standard:chain-method-continuation" />
-        <error line="486" column="65" source="standard:function-expression-body" />
-        <error line="497" column="65" source="standard:function-expression-body" />
-        <error line="542" column="30" source="standard:chain-method-continuation" />
-        <error line="606" column="29" source="standard:class-signature" />
-        <error line="606" column="46" source="standard:class-signature" />
-        <error line="606" column="70" source="standard:class-signature" />
-        <error line="611" column="30" source="standard:class-signature" />
-        <error line="611" column="47" source="standard:class-signature" />
-        <error line="611" column="71" source="standard:class-signature" />
+        <error line="92" column="36" source="standard:chain-method-continuation" />
+        <error line="96" column="21" source="standard:chain-method-continuation" />
+        <error line="113" column="37" source="standard:function-expression-body" />
+        <error line="144" column="30" source="standard:chain-method-continuation" />
+        <error line="300" column="30" source="standard:chain-method-continuation" />
+        <error line="538" column="65" source="standard:function-expression-body" />
+        <error line="549" column="65" source="standard:function-expression-body" />
+        <error line="594" column="30" source="standard:chain-method-continuation" />
+        <error line="658" column="29" source="standard:class-signature" />
+        <error line="658" column="46" source="standard:class-signature" />
+        <error line="658" column="70" source="standard:class-signature" />
+        <error line="663" column="30" source="standard:class-signature" />
+        <error line="663" column="47" source="standard:class-signature" />
+        <error line="663" column="71" source="standard:class-signature" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/crypto/IdentityKeyMigrator.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2503,13 +2503,13 @@
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/crypto/IdentityKeyProvider.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="512" column="28" source="standard:class-signature" />
-        <error line="512" column="43" source="standard:class-signature" />
+        <error line="533" column="28" source="standard:class-signature" />
+        <error line="533" column="43" source="standard:class-signature" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/db/ZamolxisDatabase.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="302" column="9" source="standard:no-consecutive-comments" />
-        <error line="371" column="9" source="standard:no-consecutive-comments" />
+        <error line="304" column="9" source="standard:no-consecutive-comments" />
+        <error line="373" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/db/dao/AnnounceDao.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2626,7 +2626,7 @@
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/repository/PqKeyRepository.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="237" column="9" source="standard:no-consecutive-comments" />
+        <error line="260" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/repository/ReceivedLocationRepository.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -2802,7 +2802,7 @@
     </file>
     <file name="data/src/test/java/network/zamolxis/app/data/repository/PqKeyRepositoryTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="399" column="77" source="standard:function-signature" />
+        <error line="464" column="77" source="standard:function-signature" />
     </file>
     <file name="data/src/test/java/network/zamolxis/app/data/repository/ReceivedLocationRepositoryTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />

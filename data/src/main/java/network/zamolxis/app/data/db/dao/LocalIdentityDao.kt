@@ -203,6 +203,25 @@ interface LocalIdentityDao {
     )
 
     /**
+     * Replace only the password verifier, leaving the key material alone.
+     *
+     * Used to bring a verifier stored at the old half cost up to the current one
+     * the first time the password proves correct. Deliberately narrow: the key
+     * data and the salt are untouched, so an upgrade cannot disturb what actually
+     * opens the identity.
+     */
+    @Query(
+        """
+        UPDATE local_identities SET passwordVerificationHash = :passwordVerificationHash
+        WHERE identityHash = :identityHash
+        """,
+    )
+    suspend fun updatePasswordVerificationHash(
+        identityHash: String,
+        passwordVerificationHash: ByteArray,
+    )
+
+    /**
      * Clear unencrypted key data after successful encryption migration.
      * This securely removes the plaintext key from the database.
      */

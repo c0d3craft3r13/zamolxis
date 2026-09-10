@@ -137,7 +137,28 @@ class IdentityKeyProvider
                 val salt = identity.passwordSalt ?: return@withContext false
                 val expectedHash = identity.passwordVerificationHash ?: return@withContext false
 
-                encryptor.verifyPassword(password, salt, expectedHash)
+                when (encryptor.verify(password, salt, expectedHash)) {
+                    IdentityKeyEncryptor.PasswordVerdict.CORRECT -> true
+
+                    IdentityKeyEncryptor.PasswordVerdict.CORRECT_NEEDS_UPGRADE -> {
+                        // The stored verifier is the old half-cost one, and the only
+                        // moment it can be replaced is now — the password is in hand
+                        // and known to be right. Left alone it would stay the cheaper
+                        // of the two things an offline attacker can go after, for the
+                        // life of the identity.
+                        runCatching {
+                            identityDao.updatePasswordVerificationHash(
+                                identityHash = identityHash,
+                                passwordVerificationHash =
+                                    encryptor.createPasswordVerificationHash(password, salt),
+                            )
+                            Log.i(TAG, "Upgraded the password verifier for ${identityHash.take(8)}…")
+                        }.onFailure { Log.w(TAG, "Could not upgrade the password verifier", it) }
+                        true
+                    }
+
+                    IdentityKeyEncryptor.PasswordVerdict.WRONG -> false
+                }
             }
 
         /**

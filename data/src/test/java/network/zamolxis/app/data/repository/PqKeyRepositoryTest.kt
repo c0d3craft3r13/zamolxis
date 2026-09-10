@@ -9,6 +9,7 @@ import network.zamolxis.app.data.db.dao.PqKeyDao
 import network.zamolxis.app.data.db.entity.LocalPqKeyEntity
 import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
+import network.zamolxis.app.data.db.entity.RetiredPqKeyEntity
 import network.zamolxis.crypto.pq.HybridKem
 import network.zamolxis.crypto.pq.HybridKeyCodec
 import network.zamolxis.crypto.pq.PeerPqSupport
@@ -392,6 +393,70 @@ class PqKeyRepositoryTest {
 
             assertEquals(otherBefore, repository.ourKeyPair("identity-b")!!.publicKey)
         }
+    // ── rotating our own key ─────────────────────────────────────────────────
+
+    /**
+     * Rotation used to overwrite the stored pair, and the receive path tries one
+     * key — so every message a peer had already sealed to the old public key
+     * arrived unopenable, for as long as thirty days.
+     */
+    @Test
+    fun `rotating keeps the old pair rather than destroying it`() =
+        runTest {
+            val identity = "rotating-identity"
+            val before = repository.ourKeyPair(identity)
+
+            repository.rotateOurKeyPair(identity)
+
+            val available = repository.ourKeyPairs(identity)
+            assertEquals("the live key and the retired one", 2, available.size)
+            assertEquals(before?.publicKey, available[1].publicKey)
+        }
+
+    @Test
+    fun `the live key comes first, so the common case costs one decapsulation`() =
+        runTest {
+            val identity = "rotating-identity"
+            repository.ourKeyPair(identity)
+
+            val rotated = repository.rotateOurKeyPair(identity)
+
+            assertEquals(rotated, repository.ourKeyPairs(identity).first().publicKey)
+        }
+
+    @Test
+    fun `every rotation adds to what can still be opened`() =
+        runTest {
+            val identity = "rotating-identity"
+            repository.ourKeyPair(identity)
+
+            repository.rotateOurKeyPair(identity)
+            repository.rotateOurKeyPair(identity)
+
+            assertEquals(3, repository.ourKeyPairs(identity).size)
+        }
+
+    /**
+     * And the other half: while an old private key exists it still opens every
+     * sealed message ever recorded under it. Rotation that never forgets is not
+     * rotation.
+     */
+    @Test
+    fun `a pair past the retention window is forgotten`() =
+        runTest {
+            val identity = "rotating-identity"
+            repository.ourKeyPair(identity)
+            repository.rotateOurKeyPair(identity)
+
+            dao.ageRetiredKeys(by = PqKeyRepository.RETIRED_KEY_RETENTION_MS + 1)
+            repository.rotateOurKeyPair(identity)
+
+            assertEquals(
+                "only the live key and the one just retired",
+                2,
+                repository.ourKeyPairs(identity).size,
+            )
+        }
 }
 
 /** Keystore stand-in: Robolectric has no real AndroidKeyStore to exercise. */
@@ -413,6 +478,29 @@ private class FakeEncryptor : SecretBlobEncryptor {
 
 /** In-memory PqKeyDao. */
 private class FakePqKeyDao : PqKeyDao {
+    private val retired = mutableListOf<RetiredPqKeyEntity>()
+
+    override suspend fun getRetiredKeys(identityHash: String): List<RetiredPqKeyEntity> =
+        retired.filter { it.identityHash == identityHash }.sortedByDescending { it.retiredTimestamp }
+
+    override suspend fun insertRetiredKey(key: RetiredPqKeyEntity) {
+        retired.removeAll { it.identityHash == key.identityHash && it.publicKeyHex == key.publicKeyHex }
+        retired.add(key)
+    }
+
+    /** Pretend time passed, so the retention window can be exercised. */
+    fun ageRetiredKeys(by: Long) {
+        val aged = retired.map { it.copy(retiredTimestamp = it.retiredTimestamp - by) }
+        retired.clear()
+        retired.addAll(aged)
+    }
+
+    override suspend fun deleteRetiredKeysBefore(before: Long): Int {
+        val stale = retired.filter { it.retiredTimestamp < before }
+        retired.removeAll(stale)
+        return stale.size
+    }
+
     override suspend fun recordProtocolVersion(
         peerHash: String,
         version: Int,

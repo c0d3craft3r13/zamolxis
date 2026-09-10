@@ -17,6 +17,8 @@ import network.zamolxis.app.BuildConfig
 internal class SentryCrashReporter : CrashReporter {
     private companion object {
         private const val TAG = "SentryCrashReporter"
+
+        private val ADDRESS_PATTERN = Regex("\b[0-9a-fA-F]{16,}\b")
     }
 
     @Volatile
@@ -112,7 +114,10 @@ internal class SentryCrashReporter : CrashReporter {
                 // ANR Detection (Application Not Responding)
                 options.isAnrEnabled = true
                 options.anrTimeoutIntervalMillis = 5000 // 5 second ANR threshold
-                options.isAttachAnrThreadDump = true
+                // Without the thread dump. Knowing the app hung is diagnostic;
+                // shipping a snapshot of every thread in a messenger is a wider
+                // disclosure than the diagnosis is worth.
+                options.isAttachAnrThreadDump = false
 
                 // Frame Tracking (slow/frozen frames)
                 options.isEnableFramesTracking = true
@@ -121,6 +126,32 @@ internal class SentryCrashReporter : CrashReporter {
                 options.isEnableActivityLifecycleBreadcrumbs = true
                 options.isEnableAppComponentBreadcrumbs = true
                 options.isEnableSystemEventBreadcrumbs = true
+
+                // Nothing leaves without passing these two.
+                //
+                // The SDK decides what to collect and it collects generously; on a
+                // messenger the difference between "a crash report" and "who this
+                // person talks to" is a destination hash that found its way into an
+                // exception message. Neither of these makes the app safe to send
+                // arbitrary data through — they make the default less generous, and
+                // they are the last thing between a stack trace and a server.
+                options.setBeforeSend { event, _ ->
+                    event.throwable?.let { /* kept: the type and stack are the diagnosis */ }
+                    event.exceptions?.forEach { it.value = it.value?.let(::redactAddresses) }
+                    event.message?.let { it.formatted = it.formatted?.let(::redactAddresses) }
+                    event
+                }
+                options.setBeforeBreadcrumb { breadcrumb, _ ->
+                    // Every tap, by view id. In a list of conversations that is a
+                    // record of who was opened and when, which is the metadata this
+                    // app exists to not produce.
+                    if (breadcrumb.category?.startsWith("ui.") == true) {
+                        null
+                    } else {
+                        breadcrumb.message = breadcrumb.message?.let(::redactAddresses)
+                        breadcrumb
+                    }
+                }
 
                 Log.d(
                     TAG,
@@ -135,6 +166,18 @@ internal class SentryCrashReporter : CrashReporter {
             Log.e(TAG, "Failed to initialize Sentry", e)
         }
     }
+
+    /**
+     * Blank out anything shaped like a Reticulum address.
+     *
+     * Destination and identity hashes are 16 bytes rendered as 32 hex characters,
+     * and they are the one piece of user data that turns up in exception text
+     * without anyone deciding to put it there — a message that names the peer it
+     * failed on is the natural thing to write. Sixteen hex characters is the
+     * threshold because that is what a truncated hash in a log line looks like;
+     * shorter runs are ordinary numbers and are left alone.
+     */
+    private fun redactAddresses(text: String): String = ADDRESS_PATTERN.replace(text, "<address>")
 
     private fun CrashReportLevel.toSentryLevel(): SentryLevel =
         when (this) {

@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import network.zamolxis.app.data.crypto.KeystoreAliases
 import network.zamolxis.app.rns.host.ReticulumService
 import java.io.File
 import java.security.KeyStore
@@ -61,8 +62,14 @@ class SecureWipe
              * Keystore aliases the app creates. Listed rather than discovered so
              * a wipe never reaches past this app into another's keys, which
              * `KeyStore.aliases()` on a shared store could otherwise do.
+             *
+             * Read from [KeystoreAliases] rather than restated, because the list
+             * being explicit is only safe while it is complete — and it was not.
+             * The container device key was added later and never added here, so a
+             * duress wipe destroyed the message database and left behind the
+             * hardware key that opens an exported copy of the same messages.
              */
-            private val KEYSTORE_ALIASES = listOf("zamolxis_identity_master_key")
+            private val KEYSTORE_ALIASES = KeystoreAliases.ALL
 
             private const val ANDROID_KEYSTORE = "AndroidKeyStore"
 
