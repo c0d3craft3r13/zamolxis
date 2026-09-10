@@ -37,6 +37,13 @@ import androidx.room.PrimaryKey
  *   message was altered in transit, which is the loudest signal this layer can
  *   produce — and the user is the only party who can check the key out of band.
  *   Leaving it in logcat means nobody ever sees it.
+ * @property protocolVersion the sealed format this peer said it can read.
+ *
+ *   Defaults to 1 — the per-message format — and stays there until the peer says
+ *   otherwise, because that is what every install shipped before the declaration
+ *   existed can open. Reading silence as capability would send someone a format
+ *   they cannot decrypt, and on their side that looks like a message that never
+ *   arrived rather than like an error.
  * @property updatedTimestamp when this row last changed
  */
 @Entity(tableName = "peer_pq_keys")
@@ -48,6 +55,7 @@ data class PeerPqKeyEntity(
     val keyChangeUnresolved: Boolean = false,
     val pendingPublicKey: ByteArray? = null,
     val fingerprintMismatchTimestamp: Long? = null,
+    val protocolVersion: Int = 1,
     val updatedTimestamp: Long,
 ) {
     override fun equals(other: Any?): Boolean {

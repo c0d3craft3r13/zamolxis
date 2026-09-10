@@ -2509,8 +2509,8 @@
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/db/ZamolxisDatabase.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="299" column="9" source="standard:no-consecutive-comments" />
-        <error line="368" column="9" source="standard:no-consecutive-comments" />
+        <error line="302" column="9" source="standard:no-consecutive-comments" />
+        <error line="371" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/db/dao/AnnounceDao.kt">
         <error line="3" column="1" source="standard:import-ordering" />

@@ -26,6 +26,7 @@ import network.zamolxis.app.data.db.dao.ReceivedLocationDao
 import network.zamolxis.app.data.db.dao.RmspServerDao
 import network.zamolxis.app.data.db.dao.CallHistoryDao
 import network.zamolxis.app.data.db.dao.CallHistoryDeletionDao
+import network.zamolxis.app.data.db.dao.PqEpochDao
 import network.zamolxis.app.data.db.dao.PqKeyDao
 import network.zamolxis.app.data.db.entity.CallHistoryDeletionEntity
 import network.zamolxis.app.data.db.entity.CallHistoryEntity
@@ -47,6 +48,7 @@ import network.zamolxis.app.data.db.entity.OfflineMapRegionEntity
 import network.zamolxis.app.data.db.entity.PeerActivityEntity
 import network.zamolxis.app.data.db.entity.PeerActivityEventEntity
 import network.zamolxis.app.data.db.entity.LocalPqKeyEntity
+import network.zamolxis.app.data.db.entity.PqEpochEntity
 import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
 import network.zamolxis.app.data.db.entity.PeerIconEntity
@@ -76,6 +78,7 @@ import network.zamolxis.app.data.db.entity.RmspServerEntity
         PeerActivityEntity::class,
         PeerActivityEventEntity::class,
         LocalPqKeyEntity::class,
+        PqEpochEntity::class,
         PeerPqKeyEntity::class,
         PqKeyDeliveryEntity::class,
         GroupEntity::class,
@@ -83,7 +86,7 @@ import network.zamolxis.app.data.db.entity.RmspServerEntity
         GroupMessageEntity::class,
         GroupMessageStatusEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 // TooManyFunctions: a Room database class accretes one DAO accessor per table;
@@ -402,6 +405,43 @@ abstract class ZamolxisDatabase : RoomDatabase() {
             }
 
         /**
+         * Post-quantum epochs, and what each peer can read.
+         *
+         * `pq_epochs` holds one row per epoch per direction. The root is stored
+         * Keystore-wrapped rather than bare, matching `local_pq_keys`: it opens
+         * every message of its epoch, so it is key material and not merely a row.
+         *
+         * `peer_pq_keys.protocolVersion` records the sealed format a peer said it
+         * can read. It defaults to 1 — the per-message format — because every
+         * install that existed before this column said nothing, and assuming
+         * more of a silent peer would send them something they cannot open.
+         */
+        val MIGRATION_10_11: Migration =
+            object : Migration(10, 11) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `pq_epochs` (
+                            `identityHash` TEXT NOT NULL,
+                            `peerHash` TEXT NOT NULL,
+                            `outbound` INTEGER NOT NULL,
+                            `epochId` TEXT NOT NULL,
+                            `encryptedRoot` BLOB NOT NULL,
+                            `nextCounter` INTEGER NOT NULL,
+                            `messageCount` INTEGER NOT NULL,
+                            `createdTimestamp` INTEGER NOT NULL,
+                            `lastUsedTimestamp` INTEGER NOT NULL,
+                            PRIMARY KEY(`identityHash`, `peerHash`, `outbound`, `epochId`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        "ALTER TABLE `peer_pq_keys` ADD COLUMN `protocolVersion` INTEGER NOT NULL DEFAULT 1",
+                    )
+                }
+            }
+
+        /**
          * v9 → v10: group chat storage.
          *
          * Purely additive — four new tables (`groups`, `group_members`,
@@ -569,6 +609,8 @@ abstract class ZamolxisDatabase : RoomDatabase() {
     abstract fun conversationDao(): ConversationDao
 
     abstract fun messageDao(): MessageDao
+
+    abstract fun pqEpochDao(): PqEpochDao
 
     abstract fun announceDao(): AnnounceDao
 
