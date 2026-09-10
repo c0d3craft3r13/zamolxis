@@ -226,6 +226,91 @@ public class HybridKem(
         val body: ByteArray,
     )
 
+    // ── shared with the epoch layer ──────────────────────────────────────────
+    //
+    // [PqEpoch] needs the same hybrid handshake but derives a long-lived epoch
+    // root from it rather than a single message key. These expose the two halves
+    // of that handshake without duplicating the construction: one wrong copy of a
+    // KEM combiner is one too many, and a second implementation is exactly how
+    // that happens.
+
+    internal class Encapsulation(
+        val ephemeralPublic: ByteArray,
+        val kemCiphertext: ByteArray,
+        val secret: ByteArray,
+    )
+
+    /**
+     * Encapsulate to [recipient] and derive [SECRET_BYTES] under [salt].
+     *
+     * [salt] is the domain separator. The message layer keeps [HKDF_SALT]; the
+     * epoch layer passes its own, so a secret derived for one can never be a
+     * valid secret for the other even against an identical transcript.
+     */
+    internal fun encapsulate(
+        recipient: HybridPublicKey,
+        salt: ByteArray,
+    ): Encapsulation {
+        val kemPublic = MLKEMPublicKeyParameters(MLKEMParameters.ml_kem_768, recipient.mlKem)
+        val encapsulated = MLKEMGenerator(random).generateEncapsulated(kemPublic)
+        val kemSecret = encapsulated.secret
+
+        val ephemeralPrivate = X25519PrivateKeyParameters(random)
+        val ephemeralPublic = ephemeralPrivate.generatePublicKey().encoded
+        val x25519Secret = agree(ephemeralPrivate, X25519PublicKeyParameters(recipient.x25519, 0))
+
+        return try {
+            Encapsulation(
+                ephemeralPublic = ephemeralPublic,
+                kemCiphertext = encapsulated.encapsulation,
+                secret =
+                    deriveSecret(
+                        x25519Secret = x25519Secret,
+                        kemSecret = kemSecret,
+                        ephemeralPublic = ephemeralPublic,
+                        kemCiphertext = encapsulated.encapsulation,
+                        recipient = recipient,
+                        salt = salt,
+                    ),
+            )
+        } finally {
+            x25519Secret.fill(0)
+            kemSecret.fill(0)
+        }
+    }
+
+    /** The receiving half of [encapsulate]. */
+    internal fun decapsulate(
+        keyPair: HybridKeyPair,
+        ephemeralPublic: ByteArray,
+        kemCiphertext: ByteArray,
+        salt: ByteArray,
+    ): ByteArray {
+        val kemSecret =
+            MLKEMExtractor(
+                MLKEMPrivateKeyParameters(MLKEMParameters.ml_kem_768, keyPair.mlKemPrivate),
+            ).extractSecret(kemCiphertext)
+        val x25519Secret =
+            agree(
+                X25519PrivateKeyParameters(keyPair.x25519Private, 0),
+                X25519PublicKeyParameters(ephemeralPublic, 0),
+            )
+
+        return try {
+            deriveSecret(
+                x25519Secret = x25519Secret,
+                kemSecret = kemSecret,
+                ephemeralPublic = ephemeralPublic,
+                kemCiphertext = kemCiphertext,
+                recipient = keyPair.publicKey,
+                salt = salt,
+            )
+        } finally {
+            x25519Secret.fill(0)
+            kemSecret.fill(0)
+        }
+    }
+
     private fun agree(
         privateKey: X25519PrivateKeyParameters,
         publicKey: X25519PublicKeyParameters,
@@ -246,6 +331,22 @@ public class HybridKem(
         ephemeralPublic: ByteArray,
         kemCiphertext: ByteArray,
         recipient: HybridPublicKey,
+    ): ByteArray = deriveSecret(x25519Secret, kemSecret, ephemeralPublic, kemCiphertext, recipient, HKDF_SALT)
+
+    /**
+     * The derivation itself, with the domain separator left to the caller.
+     *
+     * `info` binds the whole transcript, so components lifted from different
+     * sessions cannot be recombined; `salt` separates what the derived bytes are
+     * *for*. Both layers go through here so there is one combiner, not two.
+     */
+    private fun deriveSecret(
+        x25519Secret: ByteArray,
+        kemSecret: ByteArray,
+        ephemeralPublic: ByteArray,
+        kemCiphertext: ByteArray,
+        recipient: HybridPublicKey,
+        salt: ByteArray,
     ): ByteArray {
         val info =
             byteArrayOf(WIRE_VERSION) +
@@ -253,9 +354,9 @@ public class HybridKem(
                 kemCiphertext +
                 recipient.x25519 +
                 recipient.mlKem
-        val output = ByteArray(AES_KEY_BYTES)
+        val output = ByteArray(SECRET_BYTES)
         HKDFBytesGenerator(SHA256Digest()).apply {
-            init(HKDFParameters(x25519Secret + kemSecret, HKDF_SALT, info))
+            init(HKDFParameters(x25519Secret + kemSecret, salt, info))
             generateBytes(output, 0, output.size)
         }
         return output
@@ -284,6 +385,9 @@ public class HybridKem(
 
         internal const val NONCE_BYTES: Int = 12
         internal const val AES_KEY_BYTES: Int = 32
+
+        /** Bytes the hybrid handshake yields — one AES key, or one epoch root. */
+        internal const val SECRET_BYTES: Int = 32
         internal const val GCM_TAG_BITS: Int = 128
         internal const val WIRE_VERSION: Byte = 1
 
@@ -300,5 +404,8 @@ public class HybridKem(
          * inputs derives a different key, so secrets cannot cross protocols.
          */
         private val HKDF_SALT: ByteArray = "zamolxis/hybrid-kem/v1".toByteArray(Charsets.US_ASCII)
+
+        /** Domain separator for [PqEpoch]'s root. Never the same bytes as [HKDF_SALT]. */
+        internal val EPOCH_SALT: ByteArray = "zamolxis/pq-epoch-root/v1".toByteArray(Charsets.US_ASCII)
     }
 }

@@ -220,4 +220,16 @@ class HybridKemTest {
 
         assertTrue(HybridKem(SecureRandom()).open(bob, sealed).isNotEmpty())
     }
+
+    /**
+     * The per-message key length and the epoch root length are the same
+     * derivation output, and the message layer's is what every install already
+     * on the network derives. If these ever diverge, a build talking to 2.3.0
+     * would derive a different key from an identical transcript and every
+     * message between them would fail to open — silently, and only in the field.
+     */
+    @Test
+    fun `the derivation output length is the one already on the network`() {
+        assertEquals(HybridKem.AES_KEY_BYTES, HybridKem.SECRET_BYTES)
+    }
 }

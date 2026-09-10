@@ -146,4 +146,57 @@ class PqEnvelopeTest {
         assertNull(atBob.senderKey)
         assertArrayEquals("sealed onward".toByteArray(), kem.open(bob, atBob.sealedContent))
     }
+
+    // ── what each side can read ──────────────────────────────────────────────
+
+    /**
+     * Stated on every message this layer produces, not just the first. A
+     * conversation that had already exchanged keys before this field existed
+     * would otherwise never mention it again, and both ends would stay on the
+     * expensive format for good.
+     */
+    @Test
+    fun `every sealed message states what we can read`() {
+        val fields = PqEnvelope.fieldsFor(sealedContent = byteArrayOf(1, 2, 3), ourKey = null)
+
+        assertEquals(PqEnvelope.PROTOCOL_EPOCH, PqEnvelope.protocolFrom(fields))
+    }
+
+    @Test
+    fun `the first-contact message states it too`() {
+        val fields = PqEnvelope.keyOnlyFields(HybridKem().generateKeyPair().publicKey)
+
+        assertEquals(PqEnvelope.PROTOCOL_EPOCH, PqEnvelope.protocolFrom(fields))
+    }
+
+    /**
+     * The direction that must never be guessed generously: a build that predates
+     * the field says nothing, and sending it an epoch would strand every message.
+     */
+    @Test
+    fun `a peer that says nothing is read as the older format`() {
+        assertEquals(PqEnvelope.PROTOCOL_PER_MESSAGE, PqEnvelope.protocolFrom(emptyMap()))
+    }
+
+    @Test
+    fun `an unrecognised or empty declaration is read as the older format`() {
+        for (declared in listOf(byteArrayOf(), byteArrayOf(0), byteArrayOf(2), byteArrayOf(99))) {
+            assertEquals(
+                "declaration ${declared.toList()} must not be read as epoch-capable",
+                PqEnvelope.PROTOCOL_PER_MESSAGE,
+                PqEnvelope.protocolFrom(mapOf(PqEnvelope.FIELD_PROTOCOL to declared)),
+            )
+        }
+    }
+
+    /** The field is additive: a build that ignores it still finds the sealed content. */
+    @Test
+    fun `declaring it does not disturb the fields that carry the message`() {
+        val key = HybridKem().generateKeyPair().publicKey
+        val fields = PqEnvelope.fieldsFor(sealedContent = byteArrayOf(9), ourKey = key)
+
+        assertTrue(PqEnvelope.isSealed(fields))
+        assertArrayEquals(byteArrayOf(9), PqEnvelope.parse(fields)?.sealedContent)
+        assertEquals(key, PqEnvelope.senderKeyFrom(fields))
+    }
 }

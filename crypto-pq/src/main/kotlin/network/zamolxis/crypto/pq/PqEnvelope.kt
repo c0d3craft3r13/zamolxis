@@ -18,8 +18,39 @@ public object PqEnvelope {
     /** Sender's own hybrid public key, encoded by [HybridKeyCodec.encode]. */
     public const val FIELD_SENDER_KEY: Int = 0x50
 
-    /** Sealed content, produced by [HybridKem.seal]. */
+    /** Sealed content, produced by [HybridKem.seal] or by [PqEpoch]. */
     public const val FIELD_SEALED_CONTENT: Int = 0x51
+
+    /**
+     * One byte: the highest sealed-wire version the sender can read.
+     *
+     * Sealing a run of messages under one handshake ([PqEpoch]) cuts the
+     * per-message cost from 1149 bytes to 29, which is the difference between a
+     * message that needs a link and a multi-packet transfer and one that fits in
+     * a single packet like everyone else's. But a build that predates the epoch
+     * format cannot open one, and there is no way to discover that from a
+     * destination hash.
+     *
+     * So each side states what it can read. This is an ordinary LXMF field
+     * inside the encrypted payload: a build that does not know it ignores it,
+     * exactly as it ignores any field number it was not written for, and keeps
+     * receiving the per-message format. Nothing about it reaches the air in the
+     * clear.
+     *
+     * Absent means [PROTOCOL_PER_MESSAGE] — that is what every install shipped
+     * before this field existed can read, and assuming anything more of a silent
+     * peer would strand their messages.
+     */
+    public const val FIELD_PROTOCOL: Int = 0x52
+
+    /** A peer that can only read [HybridKem]'s per-message format. */
+    public const val PROTOCOL_PER_MESSAGE: Int = 1
+
+    /** A peer that can also read [PqEpoch] openings and continuations. */
+    public const val PROTOCOL_EPOCH: Int = 3
+
+    /** What this build can read. Sent on every message this layer produces. */
+    public const val PROTOCOL_SUPPORTED: Int = PROTOCOL_EPOCH
 
     /**
      * What a received message carries for this layer.
@@ -46,6 +77,7 @@ public object PqEnvelope {
     ): Map<Int, ByteArray> =
         buildMap {
             put(FIELD_SEALED_CONTENT, sealedContent)
+            put(FIELD_PROTOCOL, byteArrayOf(PROTOCOL_SUPPORTED.toByte()))
             if (ourKey != null) put(FIELD_SENDER_KEY, HybridKeyCodec.encode(ourKey))
         }
 
@@ -56,7 +88,24 @@ public object PqEnvelope {
      * cannot be sealed, because the recipient's key is unknown, but it can still
      * hand over ours so their reply can be.
      */
-    public fun keyOnlyFields(ourKey: HybridPublicKey): Map<Int, ByteArray> = mapOf(FIELD_SENDER_KEY to HybridKeyCodec.encode(ourKey))
+    public fun keyOnlyFields(ourKey: HybridPublicKey): Map<Int, ByteArray> =
+        mapOf(
+            FIELD_SENDER_KEY to HybridKeyCodec.encode(ourKey),
+            FIELD_PROTOCOL to byteArrayOf(PROTOCOL_SUPPORTED.toByte()),
+        )
+
+    /**
+     * What the sender of [fields] said it can read.
+     *
+     * Absent, empty or unrecognised all mean [PROTOCOL_PER_MESSAGE]. Reading a
+     * number we do not understand as "at least as capable as us" would be the
+     * optimistic mistake: it would send them a format they cannot open, and the
+     * failure would look to their user like a message that never arrived.
+     */
+    public fun protocolFrom(fields: Map<Int, ByteArray>): Int {
+        val declared = fields[FIELD_PROTOCOL]?.firstOrNull()?.toInt() ?: return PROTOCOL_PER_MESSAGE
+        return if (declared == PROTOCOL_EPOCH) PROTOCOL_EPOCH else PROTOCOL_PER_MESSAGE
+    }
 
     /**
      * Whether a received field map carries a sealed payload.
