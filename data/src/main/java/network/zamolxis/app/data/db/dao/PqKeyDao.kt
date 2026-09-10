@@ -38,6 +38,24 @@ interface PqKeyDao {
     suspend fun upsertPeerKey(key: PeerPqKeyEntity)
 
     /**
+     * Record the sealed format a peer says it can read.
+     *
+     * A targeted UPDATE rather than a row replace, for the same reason
+     * [recordAnnouncedFingerprint] is: this arrives on every message, and letting
+     * it rewrite the whole row would give a malformed one a way to blank a key we
+     * already accepted.
+     *
+     * No row means nothing to record. The declaration is only ever useful
+     * alongside a key, and the key's own arrival creates the row.
+     */
+    @Query("UPDATE peer_pq_keys SET protocolVersion = :version, updatedTimestamp = :now WHERE peerHash = :peerHash")
+    suspend fun recordProtocolVersion(
+        peerHash: String,
+        version: Int,
+        now: Long,
+    )
+
+    /**
      * Record the fingerprint from an announce without disturbing a key we
      * already hold.
      *

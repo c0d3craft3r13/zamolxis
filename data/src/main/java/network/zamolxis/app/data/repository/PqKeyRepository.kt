@@ -15,6 +15,7 @@ import network.zamolxis.crypto.pq.HybridKemException
 import network.zamolxis.crypto.pq.HybridKeyCodec
 import network.zamolxis.crypto.pq.HybridKeyPair
 import network.zamolxis.crypto.pq.HybridPublicKey
+import network.zamolxis.crypto.pq.PqEnvelope
 import network.zamolxis.crypto.pq.PeerPqSupport
 import network.zamolxis.crypto.pq.PqKeyExchange
 
@@ -74,12 +75,10 @@ class PqKeyRepository
         }
 
         /** Our public key, for announcing a fingerprint or attaching to a message. */
-        suspend fun ourPublicKey(identityHash: String): HybridPublicKey? =
-            ourKeyPair(identityHash)?.publicKey
+        suspend fun ourPublicKey(identityHash: String): HybridPublicKey? = ourKeyPair(identityHash)?.publicKey
 
         /** The 16-byte fingerprint to advertise in announces. */
-        suspend fun ourFingerprint(identityHash: String): ByteArray? =
-            ourPublicKey(identityHash)?.let(HybridKeyCodec::fingerprint)
+        suspend fun ourFingerprint(identityHash: String): ByteArray? = ourPublicKey(identityHash)?.let(HybridKeyCodec::fingerprint)
 
         // ------------------------------------------------------------ peer state
 
@@ -121,6 +120,24 @@ class PqKeyRepository
         }
 
         // ------------------------------------------------------ incoming updates
+
+        /**
+         * The sealed format [peerHash] said it can read.
+         *
+         * Defaults to the per-message format for a peer we have never heard a
+         * declaration from. That is the whole point of the default: a build that
+         * predates the declaration says nothing, and sealing it a format it cannot
+         * open would look, on its side, like a message that never arrived.
+         */
+        suspend fun peerProtocol(peerHash: String): Int = dao.getPeerKey(peerHash)?.protocolVersion ?: PqEnvelope.PROTOCOL_PER_MESSAGE
+
+        /** Record what a peer said it can read, if we hold a row for them at all. */
+        suspend fun recordPeerProtocol(
+            peerHash: String,
+            version: Int,
+        ) {
+            dao.recordProtocolVersion(peerHash, version, System.currentTimeMillis())
+        }
 
         /** Record the fingerprint from a peer's announce. Never clears a stored key. */
         suspend fun recordAnnouncedFingerprint(
@@ -200,12 +217,10 @@ class PqKeyRepository
         }
 
         /** Peers whose key changed without explanation, for the UI to raise. */
-        fun observeUnresolvedKeyChanges(): Flow<List<String>> =
-            dao.observeUnresolvedKeyChanges().map { rows -> rows.map { it.peerHash } }
+        fun observeUnresolvedKeyChanges(): Flow<List<String>> = dao.observeUnresolvedKeyChanges().map { rows -> rows.map { it.peerHash } }
 
         /** Whether this peer currently has a key change awaiting a decision. */
-        suspend fun hasUnresolvedKeyChange(peerHash: String): Boolean =
-            dao.getPeerKey(peerHash)?.keyChangeUnresolved == true
+        suspend fun hasUnresolvedKeyChange(peerHash: String): Boolean = dao.getPeerKey(peerHash)?.keyChangeUnresolved == true
 
         /**
          * The fingerprints either side of a pending key change, for the user to
@@ -239,8 +254,7 @@ class PqKeyRepository
         }
 
         /** Whether this peer has an unacknowledged fingerprint mismatch. */
-        suspend fun hasFingerprintMismatch(peerHash: String): Boolean =
-            dao.getPeerKey(peerHash)?.fingerprintMismatchTimestamp != null
+        suspend fun hasFingerprintMismatch(peerHash: String): Boolean = dao.getPeerKey(peerHash)?.fingerprintMismatchTimestamp != null
 
         /** Mark the mismatch as seen, once the user has been shown it. */
         suspend fun acknowledgeFingerprintMismatch(peerHash: String) {

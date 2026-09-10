@@ -314,10 +314,6 @@ class SettingsViewModelTest {
             contactRepository = contactRepository,
             updateChecker = updateChecker,
             crashReportManager = crashReportManager,
-            pqAnnounceFingerprint =
-                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                    coEvery { it.current() } returns null
-                },
             pqKeyRepository =
                 mockk<PqKeyRepository>().also {
                     coEvery { it.rotateOurKeyPair(any()) } returns null
@@ -1698,7 +1694,7 @@ class SettingsViewModelTest {
             val serviceRnsCore =
                 mockk<RnsCore>(relaxed = true) {
                     every { networkStatus } returns networkStatusFlow
-                    coEvery { triggerAutoAnnounce(any(), any()) } returns Result.success(Unit)
+                    coEvery { triggerAutoAnnounce(any()) } returns Result.success(Unit)
                 }
 
             viewModel =
@@ -1720,10 +1716,6 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
-                    pqAnnounceFingerprint =
-                        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                            coEvery { it.current() } returns null
-                        },
                     pqKeyRepository =
                         mockk<PqKeyRepository>().also {
                             coEvery { it.rotateOurKeyPair(any()) } returns null
@@ -1753,7 +1745,7 @@ class SettingsViewModelTest {
             }
 
             // Verify announce was called and timestamp was saved
-            coVerify { serviceRnsCore.triggerAutoAnnounce(any(), any()) }
+            coVerify { serviceRnsCore.triggerAutoAnnounce(any()) }
             coVerify { settingsRepository.saveLastAutoAnnounceTime(any()) }
         }
 
@@ -1764,7 +1756,7 @@ class SettingsViewModelTest {
             val serviceRnsCore =
                 mockk<RnsCore>(relaxed = true) {
                     every { networkStatus } returns networkStatusFlow
-                    coEvery { triggerAutoAnnounce(any(), any()) } returns Result.failure(RuntimeException("Announce failed"))
+                    coEvery { triggerAutoAnnounce(any()) } returns Result.failure(RuntimeException("Announce failed"))
                 }
 
             viewModel =
@@ -1786,10 +1778,6 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
-                    pqAnnounceFingerprint =
-                        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                            coEvery { it.current() } returns null
-                        },
                     pqKeyRepository =
                         mockk<PqKeyRepository>().also {
                             coEvery { it.rotateOurKeyPair(any()) } returns null
@@ -2462,10 +2450,6 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
-                    pqAnnounceFingerprint =
-                        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                            coEvery { it.current() } returns null
-                        },
                     pqKeyRepository =
                         mockk<PqKeyRepository>().also {
                             coEvery { it.rotateOurKeyPair(any()) } returns null
@@ -2644,10 +2628,6 @@ class SettingsViewModelTest {
                     contactRepository = contactRepository,
                     updateChecker = updateChecker,
                     crashReportManager = crashReportManager,
-                    pqAnnounceFingerprint =
-                        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                            coEvery { it.current() } returns null
-                        },
                     pqKeyRepository =
                         mockk<PqKeyRepository>().also {
                             coEvery { it.rotateOurKeyPair(any()) } returns null

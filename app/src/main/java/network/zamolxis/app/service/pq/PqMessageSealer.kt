@@ -4,15 +4,18 @@ import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 import network.zamolxis.app.data.model.PqProtection
+import network.zamolxis.app.data.repository.PqEpochRepository
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.crypto.pq.HybridKem
 import network.zamolxis.crypto.pq.HybridKemException
+import network.zamolxis.crypto.pq.HybridKeyPair
 import network.zamolxis.crypto.pq.HybridPublicKey
 import network.zamolxis.crypto.pq.LinkCost
 import network.zamolxis.crypto.pq.PlainReason
 import network.zamolxis.crypto.pq.PqAad
 import network.zamolxis.crypto.pq.PqDecision
 import network.zamolxis.crypto.pq.PqEnvelope
+import network.zamolxis.crypto.pq.PqEpoch
 import network.zamolxis.crypto.pq.PqKeyExchange
 import network.zamolxis.crypto.pq.PqMode
 import network.zamolxis.crypto.pq.PqPolicy
@@ -54,6 +57,7 @@ class PqMessageSealer
     @Inject
     constructor(
         private val repository: PqKeyRepository,
+        private val epochs: PqEpochRepository,
         private val kem: HybridKem,
     ) {
         /**
@@ -163,6 +167,7 @@ class PqMessageSealer
                 PqDecision.Seal ->
                     sealOrFallBack(
                         state = state,
+                        identityHash = identityHash,
                         ourDestinationHash = ourDestinationHash,
                         peerHash = peerHash,
                         payload = payload,
@@ -221,8 +226,9 @@ class PqMessageSealer
         // sealed result are four different outcomes, and each one is decided by its
         // own condition. Nesting them would hide which is which.
         @Suppress("LongParameterList", "ReturnCount")
-        private fun sealOrFallBack(
+        private suspend fun sealOrFallBack(
             state: PqKeyExchange.PeerState,
+            identityHash: String,
             ourDestinationHash: String,
             peerHash: String,
             payload: SealedPayload,
@@ -244,7 +250,7 @@ class PqMessageSealer
                 if (mode == PqMode.REQUIRED) {
                     return Outgoing.Refused(PlainReason.ATTACHMENT_NOT_SEALABLE)
                 }
-                return sealTextOnly(state, ourDestinationHash, peerHash, payload, ourKey, mode)
+                return sealTextOnly(state, identityHash, ourDestinationHash, peerHash, payload, ourKey, mode)
             }
 
             val peerKey =
@@ -263,7 +269,7 @@ class PqMessageSealer
                             extraFields =
                                 PqEnvelope.fieldsFor(
                                     sealedContent =
-                                        seal(peerKey, ourDestinationHash, peerHash, payload),
+                                        seal(identityHash, peerKey, ourDestinationHash, peerHash, payload),
                                     ourKey = ourKey,
                                 ),
                         ),
@@ -284,8 +290,9 @@ class PqMessageSealer
          * reassuring simplification that gets someone hurt.
          */
         @Suppress("LongParameterList")
-        private fun sealTextOnly(
+        private suspend fun sealTextOnly(
             state: PqKeyExchange.PeerState,
+            identityHash: String,
             ourDestinationHash: String,
             peerHash: String,
             payload: SealedPayload,
@@ -311,7 +318,7 @@ class PqMessageSealer
                             extraFields =
                                 PqEnvelope.fieldsFor(
                                     sealedContent =
-                                        seal(peerKey, ourDestinationHash, peerHash, textOnly),
+                                        seal(identityHash, peerKey, ourDestinationHash, peerHash, textOnly),
                                     ourKey = ourKey,
                                 ),
                         ),
@@ -323,21 +330,71 @@ class PqMessageSealer
             }
         }
 
-        private fun seal(
+        /**
+         * Seal one payload, under an epoch where the peer can read one.
+         *
+         * A peer that has not said it understands epochs gets the per-message
+         * format it has always got. That check is the whole compatibility story:
+         * silence means the older format, and an epoch sent to a build that cannot
+         * parse it would arrive as a message its owner can never open.
+         */
+        private suspend fun seal(
+            identityHash: String,
             recipient: HybridPublicKey,
             ourDestinationHash: String,
             peerHash: String,
             payload: SealedPayload,
-        ): ByteArray =
-            kem.seal(
-                recipient = recipient,
-                plaintext = PqSealedPayloadCodec.encode(payload),
-                aad =
-                    PqAad.forDirection(
-                        senderDestinationHash = ourDestinationHash,
-                        recipientDestinationHash = peerHash,
-                    ),
+        ): ByteArray {
+            val plaintext = PqSealedPayloadCodec.encode(payload)
+            val aad =
+                PqAad.forDirection(
+                    senderDestinationHash = ourDestinationHash,
+                    recipientDestinationHash = peerHash,
+                )
+
+            if (repository.peerProtocol(peerHash) < PqEnvelope.PROTOCOL_EPOCH) {
+                return kem.seal(recipient = recipient, plaintext = plaintext, aad = aad)
+            }
+            return sealInEpoch(identityHash, recipient, peerHash, plaintext, aad)
+        }
+
+        /**
+         * Continue the epoch in use with this peer, or open a fresh one.
+         *
+         * The counter is reserved before the message is sealed, never after. If
+         * anything then goes wrong the counter is simply skipped, and a gap costs
+         * nothing — every message key comes from its own counter, so a missing one
+         * is not a missing step. The other order has a crash leave the counter
+         * looking unused, and the next message would take it again: two messages
+         * under one key and one nonce, which is the end of AES-GCM's guarantees.
+         */
+        private suspend fun sealInEpoch(
+            identityHash: String,
+            recipient: HybridPublicKey,
+            peerHash: String,
+            plaintext: ByteArray,
+            aad: ByteArray,
+        ): ByteArray {
+            epochs.reserveOutbound(identityHash, peerHash)?.let { current ->
+                return PqEpoch.seal(
+                    root = current.root,
+                    counter = current.counter,
+                    plaintext = plaintext,
+                    aad = aad,
+                )
+            }
+
+            val started = PqEpoch.start(recipient = recipient, plaintext = plaintext, aad = aad)
+            epochs.startOutbound(
+                identityHash = identityHash,
+                peerHash = peerHash,
+                epochId = started.epochId.toHex(),
+                root = started.root,
             )
+            return started.wire
+        }
+
+        private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
         /**
          * In [PqMode.REQUIRED] a failure to seal must stop the send. Anything else
@@ -396,6 +453,13 @@ class PqMessageSealer
         ): Incoming {
             val keyProblem = takeInSenderKey(identityHash, peerHash, fields)
 
+            // Every message states what its sender can read, so this is refreshed
+            // on every message rather than only on the first. A conversation that
+            // had already exchanged keys before epochs existed would otherwise
+            // never learn the other side had gained them, and both ends would keep
+            // paying 1149 bytes a message for good.
+            repository.recordPeerProtocol(peerHash, PqEnvelope.protocolFrom(fields))
+
             // Read the sealed payload directly rather than through PqEnvelope.parse:
             // the payload is sealed to *our* key, so a broken sender key must not
             // stop us opening it. The two concerns are independent.
@@ -411,6 +475,54 @@ class PqMessageSealer
                 hasUnsealedAttachments = hasUnsealedAttachments,
                 keyProblem = keyProblem,
             )
+        }
+
+        /**
+         * Read a sealed blob in whichever format it arrived in.
+         *
+         * Three shapes reach here and the first byte tells them apart: an epoch
+         * opening, a message inside an epoch already open, and the per-message
+         * format every build understood before epochs existed. Dispatching on the
+         * wire rather than on what we believe the peer supports means a peer that
+         * downgrades — or a message that overtook the one that would have told us
+         * — still reads.
+         *
+         * @return null when the message names an epoch we do not hold. That is an
+         *   ordinary outcome, not a fault: the opening may never have arrived, or
+         *   arrived on a device this one was not restored from. The ciphertext
+         *   stays stored and the conversation recovers when the peer opens its next
+         *   epoch.
+         */
+        private suspend fun openByFormat(
+            identityHash: String,
+            peerHash: String,
+            ourKeys: HybridKeyPair,
+            wire: ByteArray,
+            aad: ByteArray,
+        ): ByteArray? {
+            if (PqEpoch.isOpening(wire)) {
+                val accepted = PqEpoch.accept(keyPair = ourKeys, wire = wire, aad = aad)
+                epochs.acceptInbound(
+                    identityHash = identityHash,
+                    peerHash = peerHash,
+                    epochId = accepted.epochId.toHex(),
+                    root = accepted.root,
+                )
+                return accepted.plaintext
+            }
+
+            val epochId =
+                PqEpoch.epochIdOf(wire)
+                    ?: return kem.open(keyPair = ourKeys, wire = wire, aad = aad)
+
+            val root = epochs.inboundRoot(identityHash, peerHash, epochId.toHex())
+            if (root == null) {
+                Log.w(
+                    TAG,
+                    "Message from $peerHash names epoch ${epochId.toHex()}, which this device does not hold",
+                )
+            }
+            return root?.let { PqEpoch.open(root = it, wire = wire, aad = aad) }
         }
 
         /**
@@ -455,21 +567,19 @@ class PqMessageSealer
                 return Incoming("", PqProtection.UNOPENED, keyProblem = keyProblem)
             }
 
+            val aad =
+                PqAad.forDirection(
+                    senderDestinationHash = peerHash,
+                    recipientDestinationHash = ourDestinationHash,
+                )
             val opened =
                 try {
-                    kem.open(
-                        keyPair = ourKeys,
-                        wire = sealedContent,
-                        aad =
-                            PqAad.forDirection(
-                                senderDestinationHash = peerHash,
-                                recipientDestinationHash = ourDestinationHash,
-                            ),
-                    )
+                    openByFormat(identityHash, peerHash, ourKeys, sealedContent, aad)
                 } catch (e: HybridKemException) {
                     Log.e(TAG, "Could not open sealed message from $peerHash", e)
                     return Incoming("", PqProtection.UNOPENED, keyProblem = keyProblem)
                 }
+                    ?: return Incoming("", PqProtection.UNOPENED, keyProblem = keyProblem)
 
             val payload =
                 try {

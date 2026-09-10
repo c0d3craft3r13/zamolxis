@@ -413,6 +413,14 @@ private class FakeEncryptor : SecretBlobEncryptor {
 
 /** In-memory PqKeyDao. */
 private class FakePqKeyDao : PqKeyDao {
+    override suspend fun recordProtocolVersion(
+        peerHash: String,
+        version: Int,
+        now: Long,
+    ) {
+        peerKeys[peerHash]?.let { peerKeys[peerHash] = it.copy(protocolVersion = version, updatedTimestamp = now) }
+    }
+
     val localKeys = mutableMapOf<String, LocalPqKeyEntity>()
     val peerKeys = mutableMapOf<String, PeerPqKeyEntity>()
     private val deliveries = mutableSetOf<Pair<String, String>>()

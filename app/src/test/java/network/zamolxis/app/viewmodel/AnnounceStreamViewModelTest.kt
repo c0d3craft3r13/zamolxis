@@ -100,13 +100,6 @@ class AnnounceStreamViewModelTest {
             isActive = true,
         )
 
-    // Announces carry the identity's post-quantum fingerprint; these tests cover
-    // announce plumbing, not capability discovery, so it is absent throughout.
-    private val pqAnnounceFingerprint: network.zamolxis.app.service.pq.PqAnnounceFingerprint =
-        mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-            coEvery { it.current() } returns null
-        }
-
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
@@ -157,7 +150,7 @@ class AnnounceStreamViewModelTest {
         coEvery { serviceReticulumProtocol.shutdown() } returns Result.success(Unit)
         coEvery { serviceReticulumProtocol.getPathTableHashes() } returns emptyList()
         // Note: Result is an inline class, use runCatching to create it properly
-        coEvery { serviceReticulumProtocol.triggerAutoAnnounce(any(), any()) } returns runCatching { }
+        coEvery { serviceReticulumProtocol.triggerAutoAnnounce(any()) } returns runCatching { }
     }
 
     @After
@@ -204,7 +197,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
 
             // Status starts as SHUTDOWN - should wait
@@ -234,7 +226,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
 
             viewModel.initializationStatus.test {
@@ -265,7 +256,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
 
             // Fast-forward past the 10 second timeout
@@ -297,7 +287,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -345,7 +334,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -392,7 +380,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -423,7 +410,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -455,7 +441,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
 
             viewModel.initializationStatus.test {
@@ -491,7 +476,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -534,7 +518,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -563,7 +546,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -606,7 +588,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -638,7 +619,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             runCurrent()
 
@@ -687,7 +667,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -724,7 +703,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -760,7 +738,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -778,7 +755,7 @@ class AnnounceStreamViewModelTest {
 
             // Verify methods were called
             coVerify { identityRepository.getActiveIdentitySync() }
-            coVerify { serviceReticulumProtocol.triggerAutoAnnounce("TestUser", any()) }
+            coVerify { serviceReticulumProtocol.triggerAutoAnnounce("TestUser") }
 
             // Verify success state (before auto-dismiss kicks in)
             assertFalse("Expected isAnnouncing=false", viewModel.isAnnouncing.value)
@@ -790,7 +767,7 @@ class AnnounceStreamViewModelTest {
     fun `triggerAnnounce fails when NativeReticulumProtocol returns error`() =
         runTest {
             networkStatusFlow.value = NetworkStatus.READY
-            coEvery { serviceReticulumProtocol.triggerAutoAnnounce(any(), any()) } returns Result.failure(Exception("Network error"))
+            coEvery { serviceReticulumProtocol.triggerAutoAnnounce(any()) } returns Result.failure(Exception("Network error"))
 
             viewModel =
                 AnnounceStreamViewModel(
@@ -801,7 +778,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -832,7 +808,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -860,7 +835,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -874,7 +848,7 @@ class AnnounceStreamViewModelTest {
             assertTrue("Announce should succeed", viewModel.announceSuccess.value)
 
             // Verify triggerAutoAnnounce was called with "Unknown"
-            coVerify { serviceReticulumProtocol.triggerAutoAnnounce("Unknown", any()) }
+            coVerify { serviceReticulumProtocol.triggerAutoAnnounce("Unknown") }
         }
 
     @Test
@@ -891,7 +865,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -931,7 +904,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -954,7 +926,7 @@ class AnnounceStreamViewModelTest {
     fun `clearAnnounceStatus resets error state`() =
         runTest {
             networkStatusFlow.value = NetworkStatus.READY
-            coEvery { serviceReticulumProtocol.triggerAutoAnnounce(any(), any()) } returns Result.failure(Exception("Test error"))
+            coEvery { serviceReticulumProtocol.triggerAutoAnnounce(any()) } returns Result.failure(Exception("Test error"))
 
             viewModel =
                 AnnounceStreamViewModel(
@@ -965,7 +937,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -999,7 +970,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1028,7 +998,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1053,7 +1022,7 @@ class AnnounceStreamViewModelTest {
     fun `announce error auto-dismisses after delay`() =
         runTest {
             networkStatusFlow.value = NetworkStatus.READY
-            coEvery { serviceReticulumProtocol.triggerAutoAnnounce(any(), any()) } returns Result.failure(Exception("Network error"))
+            coEvery { serviceReticulumProtocol.triggerAutoAnnounce(any()) } returns Result.failure(Exception("Network error"))
 
             viewModel =
                 AnnounceStreamViewModel(
@@ -1064,7 +1033,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1099,7 +1067,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1125,7 +1092,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1147,7 +1113,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1176,7 +1141,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1213,7 +1177,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1243,7 +1206,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1284,7 +1246,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1313,7 +1274,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1346,7 +1306,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1374,7 +1333,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1408,7 +1366,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             advanceUntilIdle()
 
@@ -1450,7 +1407,6 @@ class AnnounceStreamViewModelTest {
                     identityRepository,
                     mockk(),
                     identityResolutionManager,
-                    pqAnnounceFingerprint,
                 )
             try {
                 // The production code performs the path-table query on Dispatchers.IO.

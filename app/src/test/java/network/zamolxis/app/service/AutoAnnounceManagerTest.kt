@@ -6,7 +6,6 @@ import network.zamolxis.app.data.repository.IdentityRepository
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.api.RnsCore
 import io.mockk.clearAllMocks
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +43,6 @@ class AutoAnnounceManagerTest {
     private lateinit var mockSettingsRepository: SettingsRepository
     private lateinit var mockIdentityRepository: IdentityRepository
     private lateinit var mockRnsCore: RnsCore
-    private lateinit var mockPqAnnounceFingerprint: network.zamolxis.app.service.pq.PqAnnounceFingerprint
     private lateinit var manager: AutoAnnounceManager
 
     @Before
@@ -61,15 +59,12 @@ class AutoAnnounceManagerTest {
         every { mockSettingsRepository.autoAnnounceIntervalHoursFlow } returns flowOf(3)
         every { mockSettingsRepository.networkChangeAnnounceTimeFlow } returns flowOf(null)
         every { mockIdentityRepository.activeIdentity } returns flowOf(null)
-        mockPqAnnounceFingerprint = mockk()
-        coEvery { mockPqAnnounceFingerprint.current() } returns null
 
         manager =
             AutoAnnounceManager(
                 mockSettingsRepository,
                 mockIdentityRepository,
                 mockRnsCore,
-                mockPqAnnounceFingerprint,
                 testScope,
             )
     }
@@ -289,7 +284,6 @@ class AutoAnnounceManagerTest {
                     mockSettingsRepository,
                     mockIdentityRepository,
                     mockRnsCore,
-                    mockPqAnnounceFingerprint,
                     testScope,
                 )
 

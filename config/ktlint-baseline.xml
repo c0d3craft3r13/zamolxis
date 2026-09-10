@@ -2342,7 +2342,6 @@
     </file>
     <file name="app/src/test/java/network/zamolxis/app/viewmodel/DebugViewModelEventDrivenTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="230" column="1" source="standard:no-trailing-spaces" />
     </file>
     <file name="app/src/test/java/network/zamolxis/app/viewmodel/DebugViewModelFetchTest.kt">
         <error line="5" column="1" source="standard:import-ordering" />
@@ -2627,12 +2626,7 @@
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/repository/PqKeyRepository.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="77" column="75" source="standard:function-signature" />
-        <error line="81" column="71" source="standard:function-signature" />
-        <error line="203" column="64" source="standard:function-signature" />
-        <error line="207" column="72" source="standard:function-signature" />
-        <error line="222" column="9" source="standard:no-consecutive-comments" />
-        <error line="242" column="72" source="standard:function-signature" />
+        <error line="237" column="9" source="standard:no-consecutive-comments" />
     </file>
     <file name="data/src/main/java/network/zamolxis/app/data/repository/ReceivedLocationRepository.kt">
         <error line="3" column="1" source="standard:import-ordering" />

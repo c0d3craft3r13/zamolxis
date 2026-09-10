@@ -10,6 +10,9 @@ import network.zamolxis.app.data.db.entity.LocalPqKeyEntity
 import network.zamolxis.app.data.db.entity.PeerPqKeyEntity
 import network.zamolxis.app.data.db.entity.PqKeyDeliveryEntity
 import network.zamolxis.app.data.model.PqProtection
+import network.zamolxis.app.data.db.dao.PqEpochDao
+import network.zamolxis.app.data.db.entity.PqEpochEntity
+import network.zamolxis.app.data.repository.PqEpochRepository
 import network.zamolxis.app.data.repository.PqKeyRepository
 import network.zamolxis.app.rns.api.util.LxmfFields
 import network.zamolxis.crypto.pq.HybridKem
@@ -17,6 +20,7 @@ import network.zamolxis.crypto.pq.HybridKeyCodec
 import network.zamolxis.crypto.pq.LinkCost
 import network.zamolxis.crypto.pq.PlainReason
 import network.zamolxis.crypto.pq.PqEnvelope
+import network.zamolxis.crypto.pq.PqEpoch
 import network.zamolxis.crypto.pq.PqKeyExchange
 import network.zamolxis.crypto.pq.PqMode
 import org.junit.Assert.assertArrayEquals
@@ -42,6 +46,8 @@ class PqMessageSealerTest {
     private lateinit var bob: PqMessageSealer
     private lateinit var aliceRepo: PqKeyRepository
     private lateinit var bobRepo: PqKeyRepository
+    private lateinit var aliceEpochs: PqEpochRepository
+    private lateinit var bobEpochs: PqEpochRepository
 
     private val aliceId = "alice-identity"
     private val bobId = "bob-identity"
@@ -52,8 +58,10 @@ class PqMessageSealerTest {
         bobDao = FakePqKeyDao()
         aliceRepo = PqKeyRepository(aliceDao, FakeEncryptor(), kem)
         bobRepo = PqKeyRepository(bobDao, FakeEncryptor(), kem)
-        alice = PqMessageSealer(aliceRepo, kem)
-        bob = PqMessageSealer(bobRepo, kem)
+        aliceEpochs = PqEpochRepository(FakePqEpochDao(), FakeEncryptor())
+        bobEpochs = PqEpochRepository(FakePqEpochDao(), FakeEncryptor())
+        alice = PqMessageSealer(aliceRepo, aliceEpochs, kem)
+        bob = PqMessageSealer(bobRepo, bobEpochs, kem)
     }
 
     // Named wrappers so every call site reads as the conversation direction it is,
@@ -615,6 +623,137 @@ class PqMessageSealerTest {
         bob.onSendSucceeded(bobId, aliceId, second)
         aliceReceives(second.wire.extraFields, fallback = second.wire.content)
     }
+    // ── epochs ───────────────────────────────────────────────────────────────
+
+    /**
+     * The exchange this whole layer exists for. The first sealed message opens an
+     * epoch and costs what a handshake has always cost; the second rides inside it
+     * and costs 29 bytes, which is the difference between a message that needs a
+     * link and a multi-packet transfer and one that fits in a single packet like
+     * everyone else's.
+     */
+    @Test
+    fun `the second sealed message is small enough to look ordinary`() =
+        runTest {
+            establishBothKeys()
+
+            val opening = (aliceSends("first") as PqMessageSealer.Outgoing.Sealed).sealedBytes()
+            val second = (aliceSends("second") as PqMessageSealer.Outgoing.Sealed).sealedBytes()
+
+            assertTrue("the opening carries a handshake", opening.size > 1100)
+            assertTrue(
+                "a continuation of ${second.size} bytes must fit a single Reticulum packet",
+                second.size < 295,
+            )
+        }
+
+    @Test
+    fun `both the opening and what follows it read back`() =
+        runTest {
+            establishBothKeys()
+
+            val opening = aliceSends("first") as PqMessageSealer.Outgoing.Sealed
+            val second = aliceSends("second") as PqMessageSealer.Outgoing.Sealed
+
+            assertEquals("first", bobReceives(opening.wire.extraFields).content)
+            assertEquals("second", bobReceives(second.wire.extraFields).content)
+        }
+
+    /** Out of order is the normal case on a mesh, not an edge case. */
+    @Test
+    fun `a later message reads before the one before it`() =
+        runTest {
+            establishBothKeys()
+
+            val opening = aliceSends("first") as PqMessageSealer.Outgoing.Sealed
+            val second = aliceSends("second") as PqMessageSealer.Outgoing.Sealed
+            val third = aliceSends("third") as PqMessageSealer.Outgoing.Sealed
+
+            // Bob has to see the opening to hold the epoch at all; after that,
+            // order is nothing to him.
+            assertEquals("first", bobReceives(opening.wire.extraFields).content)
+            assertEquals("third", bobReceives(third.wire.extraFields).content)
+            assertEquals("second", bobReceives(second.wire.extraFields).content)
+        }
+
+    /**
+     * The compatibility case, and the one that costs a user their message if it is
+     * got wrong. A peer that has never said it understands epochs keeps getting the
+     * format it has always understood.
+     */
+    @Test
+    fun `a peer that never declared epochs keeps the older format`() =
+        runTest {
+            establishBothKeys()
+            bobDao.peerKeys[bobId]?.let { bobDao.peerKeys[bobId] = it }
+            aliceDao.peerKeys[bobId] =
+                aliceDao.peerKeys.getValue(bobId).copy(protocolVersion = PqEnvelope.PROTOCOL_PER_MESSAGE)
+
+            val first = (aliceSends("first") as PqMessageSealer.Outgoing.Sealed).sealedBytes()
+            val second = (aliceSends("second") as PqMessageSealer.Outgoing.Sealed).sealedBytes()
+
+            assertFalse("must not be an epoch", PqEpoch.isEpochWire(first))
+            assertTrue("every message pays the handshake again", second.size > 1100)
+            assertEquals("second", bobReceives(mapOf(PqEnvelope.FIELD_SEALED_CONTENT to second)).content)
+        }
+
+    /**
+     * A message naming an epoch this device never held. The opening may have been
+     * lost, or arrived on a phone this one was not restored from. It is unreadable
+     * and says so, rather than crashing or being silently dropped.
+     */
+    @Test
+    fun `a message from an epoch we do not hold is unreadable, not fatal`() =
+        runTest {
+            establishBothKeys()
+
+            aliceSends("opening never reaches bob")
+            val orphan = aliceSends("second") as PqMessageSealer.Outgoing.Sealed
+
+            val received = bobReceives(orphan.wire.extraFields)
+
+            assertEquals(PqProtection.UNOPENED, received.protection)
+            assertEquals("", received.content)
+        }
+
+    /** What each side can read is refreshed on every message, not only the first. */
+    @Test
+    fun `receiving a message records what its sender can read`() =
+        runTest {
+            establishBothKeys()
+
+            assertEquals(PqEnvelope.PROTOCOL_EPOCH, aliceRepo.peerProtocol(bobId))
+        }
+
+    /**
+     * Alice and Bob each seal under their own epoch. Nothing is negotiated, so two
+     * ends opening at the same moment is not a race — it is two epochs.
+     */
+    @Test
+    fun `each direction runs its own epoch`() =
+        runTest {
+            establishBothKeys()
+
+            val fromAlice = aliceSends("to bob") as PqMessageSealer.Outgoing.Sealed
+            val fromBob = bobSends("to alice") as PqMessageSealer.Outgoing.Sealed
+
+            assertEquals("to bob", bobReceives(fromAlice.wire.extraFields).content)
+            assertEquals("to alice", aliceReceives(fromBob.wire.extraFields).content)
+        }
+
+    private fun PqMessageSealer.Outgoing.Sealed.sealedBytes(): ByteArray = wire.extraFields.getValue(PqEnvelope.FIELD_SEALED_CONTENT)
+
+    /**
+     * Walk both sides through first contact so each holds the other's key and each
+     * knows the other understands epochs. Everything above starts from here,
+     * because an epoch cannot be opened to a peer whose key is unknown.
+     */
+    private suspend fun establishBothKeys() {
+        val aliceHello = aliceSends("hello") as PqMessageSealer.Outgoing.Plain
+        bobReceives(aliceHello.wire.extraFields, fallback = "hello")
+        val bobHello = bobSends("hi") as PqMessageSealer.Outgoing.Sealed
+        aliceReceives(bobHello.wire.extraFields)
+    }
 }
 
 private class FakeEncryptor : SecretBlobEncryptor {
@@ -633,6 +772,14 @@ private class FakeEncryptor : SecretBlobEncryptor {
 }
 
 private class FakePqKeyDao : PqKeyDao {
+    override suspend fun recordProtocolVersion(
+        peerHash: String,
+        version: Int,
+        now: Long,
+    ) {
+        peerKeys[peerHash]?.let { peerKeys[peerHash] = it.copy(protocolVersion = version, updatedTimestamp = now) }
+    }
+
     val localKeys = mutableMapOf<String, LocalPqKeyEntity>()
     val peerKeys = mutableMapOf<String, PeerPqKeyEntity>()
     private val deliveries = mutableSetOf<Pair<String, String>>()
@@ -720,4 +867,83 @@ private class FakePqKeyDao : PqKeyDao {
     override suspend fun clearDeliveriesFor(identityHash: String) {
         deliveries.removeAll { it.first == identityHash }
     }
+}
+
+/**
+ * An in-memory stand-in for the epoch table.
+ *
+ * Mirrors the two behaviours the real DAO exists to guarantee — one outbound
+ * epoch per peer, and a counter that is reserved before it is used — because a
+ * fake that let those slip would let a test pass on a version of the world that
+ * cannot happen.
+ */
+private class FakePqEpochDao : PqEpochDao {
+    private val rows = mutableMapOf<String, PqEpochEntity>()
+
+    private fun key(e: PqEpochEntity) = "${e.identityHash}|${e.peerHash}|${e.outbound}|${e.epochId}"
+
+    override suspend fun currentOutbound(
+        identityHash: String,
+        peerHash: String,
+    ): PqEpochEntity? =
+        rows.values
+            .filter { it.identityHash == identityHash && it.peerHash == peerHash && it.outbound }
+            .maxByOrNull { it.createdTimestamp }
+
+    override suspend fun inbound(
+        identityHash: String,
+        peerHash: String,
+        epochId: String,
+    ): PqEpochEntity? =
+        rows.values.firstOrNull {
+            it.identityHash == identityHash && it.peerHash == peerHash && !it.outbound && it.epochId == epochId
+        }
+
+    override suspend fun upsert(epoch: PqEpochEntity) {
+        rows[key(epoch)] = epoch
+    }
+
+    override suspend fun deleteOutbound(
+        identityHash: String,
+        peerHash: String,
+    ) {
+        rows.values
+            .filter { it.identityHash == identityHash && it.peerHash == peerHash && it.outbound }
+            .forEach { rows.remove(key(it)) }
+    }
+
+    override suspend fun advance(
+        identityHash: String,
+        peerHash: String,
+        epochId: String,
+        now: Long,
+    ) {
+        val existing =
+            rows.values.firstOrNull {
+                it.identityHash == identityHash && it.peerHash == peerHash && it.outbound && it.epochId == epochId
+            } ?: return
+        rows[key(existing)] =
+            existing.copy(
+                nextCounter = existing.nextCounter + 1,
+                messageCount = existing.messageCount + 1,
+                lastUsedTimestamp = now,
+            )
+    }
+
+    override suspend fun touchInbound(
+        identityHash: String,
+        peerHash: String,
+        epochId: String,
+        now: Long,
+    ) {
+        inbound(identityHash, peerHash, epochId)?.let { rows[key(it)] = it.copy(lastUsedTimestamp = now) }
+    }
+
+    override suspend fun deleteOlderThan(before: Long): Int {
+        val stale = rows.values.filter { it.lastUsedTimestamp < before }
+        stale.forEach { rows.remove(key(it)) }
+        return stale.size
+    }
+
+    override suspend fun count(): Int = rows.size
 }

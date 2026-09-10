@@ -32,6 +32,7 @@ import network.zamolxis.app.data.db.dao.OfflineMapRegionDao
 import network.zamolxis.app.data.db.dao.PeerActivityDao
 import network.zamolxis.app.data.db.dao.PeerIconDao
 import network.zamolxis.app.data.db.dao.PeerIdentityDao
+import network.zamolxis.app.data.db.dao.PqEpochDao
 import network.zamolxis.app.data.db.dao.PqKeyDao
 import network.zamolxis.app.data.db.dao.ReceivedLocationDao
 import network.zamolxis.app.data.db.dao.RmspServerDao
@@ -96,6 +97,9 @@ object DatabaseModule {
 
     @Provides
     fun providePqKeyDao(database: ZamolxisDatabase): PqKeyDao = database.pqKeyDao()
+
+    @Provides
+    fun providePqEpochDao(database: ZamolxisDatabase): PqEpochDao = database.pqEpochDao()
 
     @Provides
     fun provideGroupDao(database: ZamolxisDatabase): GroupDao = database.groupDao()

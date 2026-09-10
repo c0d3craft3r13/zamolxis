@@ -275,10 +275,6 @@ class SettingsViewModelIncomingMessageLimitTest {
             contactRepository = contactRepository,
             updateChecker = updateChecker,
             crashReportManager = crashReportManager,
-            pqAnnounceFingerprint =
-                mockk<network.zamolxis.app.service.pq.PqAnnounceFingerprint>().also {
-                    coEvery { it.current() } returns null
-                },
             pqKeyRepository =
                 mockk<PqKeyRepository>().also {
                     coEvery { it.rotateOurKeyPair(any()) } returns null

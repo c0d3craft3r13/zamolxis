@@ -103,6 +103,30 @@ interface PqEpochDao {
         now: Long,
     )
 
+    /**
+     * Take the next counter of the current outbound epoch, and move it on.
+     *
+     * Returns the row as it was *before* the increment, so the caller seals with
+     * the counter this call reserved and nobody else can be handed it.
+     *
+     * Reserving before sealing rather than after is deliberate. If the send then
+     * fails, the counter is simply skipped — a gap costs nothing, because every
+     * message key is derived from its own counter and a missing one is not a
+     * missing step. Sealing first and recording afterwards has the opposite
+     * failure: a crash in between leaves the counter looking unused, the next
+     * message takes it again, and two messages share a key and a nonce.
+     */
+    @Transaction
+    suspend fun reserveNext(
+        identityHash: String,
+        peerHash: String,
+        now: Long,
+    ): PqEpochEntity? {
+        val current = currentOutbound(identityHash, peerHash) ?: return null
+        advance(identityHash, peerHash, current.epochId, now)
+        return current
+    }
+
     @Query(
         """
         UPDATE pq_epochs SET lastUsedTimestamp = :now
