@@ -2,6 +2,7 @@ package network.zamolxis.app.rns.host.emission
 
 import network.zamolxis.app.rns.api.model.EmissionMedium
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -16,11 +17,37 @@ import org.junit.Test
 class AmbientCoverTest {
     @Test
     fun `nothing measured yet is treated as no company`() {
-        val nothing = AmbientCover.NONE
-
         EmissionMedium.entries.forEach { medium ->
-            assertFalse("$medium must not pad before anything is measured", medium.hasCover(nothing))
+            assertFalse(
+                "$medium must not pad before anything is measured",
+                medium.hasCover(AmbientCover.UNKNOWN),
+            )
         }
+    }
+
+    /**
+     * The distinction the meters go to some trouble to preserve. A scan the
+     * system suspended and a genuinely empty room both yield no radios; only the
+     * first is unmeasurable. Neither may start padding, but conflating them
+     * would have thrown away the only signal that says which one happened.
+     */
+    @Test
+    fun `an unmeasurable window is no company, not an empty one`() {
+        val couldNotListen = AmbientCover(nearbyRadios = null, foreignBytes = null)
+        val listenedAndHeardNobody = AmbientCover(nearbyRadios = 0, foreignBytes = 0)
+
+        assertFalse(EmissionMedium.BLUETOOTH_LE.hasCover(couldNotListen))
+        assertFalse(EmissionMedium.BLUETOOTH_LE.hasCover(listenedAndHeardNobody))
+        assertNotEquals(couldNotListen, listenedAndHeardNobody)
+    }
+
+    /** One medium failing to measure must not silence the other. */
+    @Test
+    fun `a phone that cannot scan can still see its own line is busy`() {
+        val blindButBusy = AmbientCover(nearbyRadios = null, foreignBytes = CoverThresholds.FOREIGN_BYTES)
+
+        assertFalse(EmissionMedium.BLUETOOTH_LE.hasCover(blindButBusy))
+        assertTrue(EmissionMedium.NETWORK.hasCover(blindButBusy))
     }
 
     @Test

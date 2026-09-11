@@ -69,14 +69,14 @@ class BluetoothCoverMeter(
     private val isScreenAwake: () -> Boolean = {
         (context.getSystemService(Context.POWER_SERVICE) as? PowerManager)?.isInteractive == true
     },
-) {
+) : RadioCounter {
     /**
      * Distinct radios heard during [windowMs], or null if listening is not possible.
      *
      * The window is short deliberately — see [CoverThresholds.WINDOW_MS] for why
      * a longer one counts a single phone several times over.
      */
-    suspend fun countNearbyRadios(windowMs: Long = CoverThresholds.WINDOW_MS): Int? {
+    override suspend fun countNearbyRadios(windowMs: Long): Int? {
         val scanner = usableScanner() ?: return null
 
         val heard = Collections.synchronizedSet(mutableSetOf<String>())

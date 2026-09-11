@@ -46,7 +46,7 @@ class PlatformTxCounters(
  */
 class NetworkCoverMeter(
     private val counters: TxCounters = PlatformTxCounters(),
-) {
+) : ForeignTrafficCounter {
     private var previousForeign: Long? = null
 
     /**
@@ -62,7 +62,7 @@ class NetworkCoverMeter(
      * the same way: re-baseline, report nothing. Both cases fail towards no
      * cover, which is the direction that keeps a quiet device quiet.
      */
-    fun foreignBytesSinceLastCall(): Long? {
+    override fun foreignBytesSinceLastCall(): Long? {
         val foreign = foreignTotal() ?: return null
         val previous = previousForeign
         previousForeign = foreign

@@ -9,16 +9,24 @@ import network.zamolxis.app.rns.api.model.EmissionMedium
  * counting who else is advertising costs no transmission, and reading how much
  * the phone itself has sent costs nothing at all.
  *
- * @param nearbyRadios distinct radios heard advertising during the window.
- * @param foreignBytes bytes this device sent during the window that were not ours.
+ * Either may be null, meaning the window could not be measured — a permission
+ * that is not held, Bluetooth switched off, a screen dark enough that the system
+ * suspends the scan. That is deliberately not the same value as zero. A
+ * suspended scan and an empty room both produce no results, and reading the
+ * first as the second is how a device concludes it is alone in a room holding
+ * twenty other radios.
+ *
+ * @param nearbyRadios distinct radios heard during the window, or null if unmeasurable.
+ * @param foreignBytes bytes this device sent during the window that were not ours,
+ *   or null if unmeasurable.
  */
 data class AmbientCover(
-    val nearbyRadios: Int,
-    val foreignBytes: Long,
+    val nearbyRadios: Int?,
+    val foreignBytes: Long?,
 ) {
     companion object {
-        /** Nothing heard, nothing sent — the state to assume before anything is measured. */
-        val NONE = AmbientCover(nearbyRadios = 0, foreignBytes = 0)
+        /** Nothing measured yet. Not a claim that nobody is there. */
+        val UNKNOWN = AmbientCover(nearbyRadios = null, foreignBytes = null)
     }
 }
 
@@ -70,6 +78,9 @@ object CoverThresholds {
  * observer watches this subscriber rather than the internet, so cover is the
  * other traffic from this same device — nobody else's traffic can hide ours.
  *
+ * A window that could not be measured is treated as no company, which is the
+ * reading that keeps a quiet device quiet.
+ *
  * On LoRa there is no answer that makes padding worth it. Company does not help:
  * finding a transmitter works on the signal itself whatever else is in the band,
  * and every padded byte comes out of a firmware-enforced airtime budget that a
@@ -79,6 +90,6 @@ fun EmissionMedium.hasCover(cover: AmbientCover): Boolean =
     when (this) {
         EmissionMedium.LORA_CARRIED -> false
         EmissionMedium.LORA_REMOTE -> false
-        EmissionMedium.BLUETOOTH_LE -> cover.nearbyRadios >= CoverThresholds.NEARBY_RADIOS
-        EmissionMedium.NETWORK -> cover.foreignBytes >= CoverThresholds.FOREIGN_BYTES
+        EmissionMedium.BLUETOOTH_LE -> (cover.nearbyRadios ?: 0) >= CoverThresholds.NEARBY_RADIOS
+        EmissionMedium.NETWORK -> (cover.foreignBytes ?: 0) >= CoverThresholds.FOREIGN_BYTES
     }
