@@ -3,6 +3,34 @@
    <configuration>
       <verify-metadata>true</verify-metadata>
       <verify-signatures>false</verify-signatures>
+      <!--
+         Sources and javadoc archives are trusted by pattern rather than by
+         checksum. Nothing in the build reads them: Gradle does not put them on a
+         classpath, AGP does not package them, and the app never sees them. They
+         exist so an IDE can show a library's source when someone navigates into
+         it.
+
+         Without this the project cannot be opened in Android Studio at all. The
+         IDE resolves sources alongside every dependency, none of them are listed
+         here, and the sync fails before a single module is configured — while
+         the command line stays green, because it never asks for them. That is
+         the worst shape a problem can have: invisible to CI and total for anyone
+         trying to work on the code.
+
+         Listing their checksums instead would work until the next dependency
+         bump and then break the IDE again, for artifacts that are not part of
+         what ships. Verification stays exact for everything that actually runs.
+      -->
+      <trusted-artifacts>
+         <trust file=".*-sources[.]jar" regex="true"/>
+         <trust file=".*-javadoc[.]jar" regex="true"/>
+         <!--
+            Gradle's own distribution sources, fetched by the IDE for the same
+            reason and used the same way — read, never run. Scoped to the one
+            coordinate rather than every archive ending in -src.zip.
+         -->
+         <trust group="gradle" name="gradle" file=".*-src[.]zip" regex="true"/>
+      </trusted-artifacts>
    </configuration>
    <components>
       <component group="androidx.activity" name="activity" version="1.0.0">
