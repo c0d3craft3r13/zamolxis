@@ -3,6 +3,7 @@ package network.zamolxis.app.service
 import android.app.Application
 import app.cash.turbine.test
 import network.zamolxis.app.data.repository.IdentityRepository
+import network.zamolxis.app.repository.InterfaceRepository
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.api.RnsCore
 import io.mockk.clearAllMocks
@@ -43,6 +44,7 @@ class AutoAnnounceManagerTest {
     private lateinit var mockSettingsRepository: SettingsRepository
     private lateinit var mockIdentityRepository: IdentityRepository
     private lateinit var mockRnsCore: RnsCore
+    private lateinit var mockInterfaceRepository: InterfaceRepository
     private lateinit var manager: AutoAnnounceManager
 
     @Before
@@ -53,18 +55,21 @@ class AutoAnnounceManagerTest {
         mockSettingsRepository = mockk()
         mockIdentityRepository = mockk()
         mockRnsCore = mockk()
+        mockInterfaceRepository = mockk()
 
         // Default mock behaviors - stub all flows used by AutoAnnounceManager
         every { mockSettingsRepository.autoAnnounceEnabledFlow } returns flowOf(false)
         every { mockSettingsRepository.autoAnnounceIntervalHoursFlow } returns flowOf(3)
         every { mockSettingsRepository.networkChangeAnnounceTimeFlow } returns flowOf(null)
         every { mockIdentityRepository.activeIdentity } returns flowOf(null)
+        every { mockInterfaceRepository.enabledInterfaces } returns flowOf(emptyList())
 
         manager =
             AutoAnnounceManager(
                 mockSettingsRepository,
                 mockIdentityRepository,
                 mockRnsCore,
+                mockInterfaceRepository,
                 testScope,
             )
     }
@@ -284,6 +289,7 @@ class AutoAnnounceManagerTest {
                     mockSettingsRepository,
                     mockIdentityRepository,
                     mockRnsCore,
+                    mockInterfaceRepository,
                     testScope,
                 )
 

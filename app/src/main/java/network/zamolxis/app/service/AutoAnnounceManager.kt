@@ -3,8 +3,10 @@ package network.zamolxis.app.service
 import android.util.Log
 import network.zamolxis.app.data.repository.IdentityRepository
 import network.zamolxis.app.di.ApplicationScope
+import network.zamolxis.app.repository.InterfaceRepository
 import network.zamolxis.app.repository.SettingsRepository
 import network.zamolxis.app.rns.api.RnsCore
+import network.zamolxis.app.rns.host.emission.SafestInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -32,6 +34,7 @@ class AutoAnnounceManager
         private val settingsRepository: SettingsRepository,
         private val identityRepository: IdentityRepository,
         private val rnsCore: RnsCore,
+        private val interfaceRepository: InterfaceRepository,
         @ApplicationScope private val scope: CoroutineScope,
     ) {
         companion object {
@@ -128,8 +131,12 @@ class AutoAnnounceManager
                     val effectiveDisplayName = displayName ?: "Anonymous Peer"
                     Log.d(TAG, "Triggering auto-announce...")
 
+                    // Least revealing interface this device has, not whichever the
+                    // stack reaches for. An announce publishes the identity's public
+                    // key in the clear, so the interface decides who is handed it.
+                    val over = SafestInterface.among(interfaceRepository.enabledInterfaces.first())
                     val result =
-                        rnsCore.triggerAutoAnnounce(effectiveDisplayName)
+                        rnsCore.triggerAutoAnnounce(effectiveDisplayName, over)
 
                     if (result.isSuccess) {
                         // Update last announce timestamp
