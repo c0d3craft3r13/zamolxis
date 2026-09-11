@@ -10,7 +10,7 @@ interface RadioCounter {
 }
 
 /** Counts bytes this device sent that were not ours. Implemented by [NetworkCoverMeter]. */
-interface ForeignTrafficCounter {
+fun interface ForeignTrafficCounter {
     fun foreignBytesSinceLastCall(): Long?
 }
 

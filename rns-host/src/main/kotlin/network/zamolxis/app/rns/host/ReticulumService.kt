@@ -19,6 +19,7 @@ import network.zamolxis.app.rns.host.binder.ReticulumServiceBinder
 import network.zamolxis.app.rns.host.di.ServiceModule
 import network.zamolxis.app.rns.host.persistence.BackendInitializer
 import network.zamolxis.app.rns.host.persistence.PeerActivityCollector
+import network.zamolxis.app.rns.host.emission.CoverTrafficStarter
 import network.zamolxis.app.rns.host.persistence.PeerIdentityPrimer
 import network.zamolxis.app.rns.host.rnode.KotlinRNodeBridge
 import network.zamolxis.app.rns.host.rnode.RNodeOnlineStatusListener
@@ -81,6 +82,12 @@ class ReticulumService : Service() {
      * all, and an unchecked message is one anyone can put a contact's name on.
      */
     @Inject lateinit var peerIdentityPrimer: PeerIdentityPrimer
+
+    /**
+     * Sends messages that say nothing, to contacts, where there is enough other
+     * traffic for them to be lost in — never over a radio, never under silence.
+     */
+    @Inject lateinit var coverTraffic: CoverTrafficStarter
 
     // Coroutine scope for background tasks
     // Uses Dispatchers.Default for CPU-bound work (JSON parsing, orchestration)
@@ -150,6 +157,11 @@ class ReticulumService : Service() {
         // above: the status transition it waits on must not be able to fire
         // before the watcher is attached.
         peerIdentityPrimer.start(rnsBackend, serviceScope)
+
+        // Cover traffic measures before it decides and asks the emission policy
+        // before it measures, so starting it here — before the stack is up —
+        // costs nothing: until a path exists there is nowhere it may send.
+        coverTraffic.start(rnsBackend, serviceScope)
 
         // Create notification channel
         managers.notificationManager.createNotificationChannel()
