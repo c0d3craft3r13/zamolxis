@@ -128,9 +128,12 @@ internal class BoundRnsCore(
     override suspend fun announceDestination(destination: Destination, appData: ByteArray?): Result<Unit> =
         awaitBound().core.announceDestination(destination, appData)
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        interfaceName: String?,
+    ): Result<Unit> =
         if (emissions.mayEmit()) {
-            awaitBound().core.triggerAutoAnnounce(displayName)
+            awaitBound().core.triggerAutoAnnounce(displayName, interfaceName)
         } else {
             // An announce is the loudest thing this app says, and it says it
             // whether or not anyone was listening for it.

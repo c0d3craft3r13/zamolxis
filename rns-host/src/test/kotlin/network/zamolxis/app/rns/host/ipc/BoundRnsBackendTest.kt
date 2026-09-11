@@ -304,7 +304,10 @@ class BoundRnsBackendTest {
             appName: String, aspects: List<String>,
         ): Result<Destination> = error("not used")
         override suspend fun announceDestination(destination: Destination, appData: ByteArray?) = Result.success(Unit)
-        override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> {
+        override suspend fun triggerAutoAnnounce(
+            displayName: String,
+            interfaceName: String?,
+        ): Result<Unit> {
             announceCalls++
             return Result.success(Unit)
         }

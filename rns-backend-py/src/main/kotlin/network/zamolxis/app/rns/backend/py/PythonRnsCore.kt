@@ -271,7 +271,29 @@ class PythonRnsCore(
             Unit
         }
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
+    /**
+     * The live interface carrying [name], or null when it is unknown.
+     *
+     * A name that matches nothing is not an error. Interfaces come and go —
+     * Wi-Fi drops, an RNode is unplugged — and a node that refuses to announce
+     * because its preferred interface vanished is a node nobody can reach. Null
+     * means "announce the way the stack would anyway".
+     */
+    private fun liveInterfaceNamed(name: String?): com.chaquo.python.PyObject? {
+        if (name.isNullOrBlank()) return null
+        val interfaces = transport()["interfaces"] ?: return null
+        return runCatching {
+            runtime.python.builtins
+                .callAttr("list", interfaces)
+                .asList()
+                .firstOrNull { iface -> runCatching { iface["name"]?.toString() }.getOrNull() == name }
+        }.getOrNull()
+    }
+
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        interfaceName: String?,
+    ): Result<Unit> =
         pyResult {
             val router = runtime.lxmRouter
                 ?: throw RnsException(RnsError.BackendNotReady)
@@ -283,7 +305,10 @@ class PythonRnsCore(
             // being exactly that is the point. The Kotlin flavour reaches the same
             // bytes through `PeerAnnounceAppData`; `PeerAnnounceAppDataConformanceTest`
             // holds both to vectors taken from this reference.
-            router.callAttr("announce", destination?.get("hash"))
+            // `attached_interface` is upstream LXMRouter.announce's second parameter and
+            // is passed straight through to the delivery destination, so the app_data still
+            // comes from `get_announce_app_data` — the bytes the conformance test pins.
+            router.callAttr("announce", destination?.get("hash"), liveInterfaceNamed(interfaceName))
             Unit
         }
 

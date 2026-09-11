@@ -130,8 +130,9 @@ internal class ServerRnsCore(
 
     override fun triggerAutoAnnounce(
         displayName: String,
+        interfaceName: String?,
         cb: IRnsResultCallback,
-    ) = dispatch(cb, scope) { impl.triggerAutoAnnounce(displayName).bundleOrThrow() }
+    ) = dispatch(cb, scope) { impl.triggerAutoAnnounce(displayName, interfaceName).bundleOrThrow() }
 
     override fun sendPacket(
         destination: Destination,

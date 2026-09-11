@@ -23,7 +23,9 @@ import network.zamolxis.app.rns.host.persistence.PeerActivityCollector
 import network.zamolxis.app.rns.host.emission.CoverTrafficStarter
 import network.zamolxis.app.rns.host.emission.EmissionPolicy
 import network.zamolxis.app.rns.host.emission.NetworkChangeAnnouncer
+import network.zamolxis.app.rns.host.emission.SafestInterface
 import network.zamolxis.app.rns.host.persistence.PeerIdentityPrimer
+import network.zamolxis.app.rns.host.persistence.ReticulumConfigSnapshot
 import network.zamolxis.app.rns.host.rnode.KotlinRNodeBridge
 import network.zamolxis.app.rns.host.rnode.RNodeOnlineStatusListener
 import network.zamolxis.app.rns.host.usb.KotlinUSBBridge
@@ -330,7 +332,15 @@ class ReticulumService : Service() {
         NetworkChangeAnnouncer(
             emissions = EmissionPolicy(this),
             displayName = { identityRepository.getActiveIdentitySync()?.displayName },
-            announce = { name -> rnsBackend.core.triggerAutoAnnounce(name) },
+            announce = { name ->
+                // Safest interface this device has, not simply whichever is first.
+                // An announce publishes the identity's public key in the clear, so
+                // the interface decides who is handed it.
+                val snapshot = ReticulumConfigSnapshot.read(this)
+                val configured = snapshot?.configWithoutKey?.enabledInterfaces
+                val over = SafestInterface.among(configured.orEmpty())
+                rnsBackend.core.triggerAutoAnnounce(name, over)
+            },
             recordAnnounced = { at ->
                 // Tell the app process's AutoAnnounceManager to reset its timer —
                 // only now that something actually went out.

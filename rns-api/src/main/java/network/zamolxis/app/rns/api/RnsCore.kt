@@ -100,20 +100,28 @@ interface RnsCore {
     ): Result<Unit>
 
     /**
-     * Convenience wrapper that constructs the standard LXMF delivery
-     * destination from [displayName] and announces it. Implementations are
-     * free to short-circuit to the cached LXMF identity rather than
-     * re-deriving on every call.
-     */
-    /**
      * Announce this identity's LXMF destinations.
+     *
+     * Constructs the standard LXMF delivery destination from [displayName] and
+     * announces it; implementations are free to short-circuit to the cached
+     * LXMF identity rather than re-deriving on every call.
      *
      * Carries nothing but the display name. An announce is broadcast in the
      * clear and rebroadcast by every transport node that hears it, so anything
      * added here is a public statement about what this node is running — see
      * [network.zamolxis.app.rns.api.util.PeerAnnounceAppData].
+     *
+     * @param interfaceName pin the announce to this interface, or null to let the
+     *   stack announce the way it otherwise would. An announce publishes the
+     *   identity's public key in the clear, so which interface carries it decides
+     *   who is handed that key — a network peer, or anyone with a receiver near
+     *   the operator. A name that matches no live interface is ignored rather
+     *   than treated as an error: a node that cannot announce is unreachable.
      */
-    suspend fun triggerAutoAnnounce(displayName: String): Result<Unit>
+    suspend fun triggerAutoAnnounce(
+        displayName: String,
+        interfaceName: String? = null,
+    ): Result<Unit>
 
     // ==================== Packet operations ====================
 

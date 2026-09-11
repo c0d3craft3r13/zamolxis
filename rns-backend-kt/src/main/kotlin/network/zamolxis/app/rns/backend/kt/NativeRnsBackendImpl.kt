@@ -1588,12 +1588,20 @@ class NativeRnsBackendImpl(
     private fun announceLocalPeerDestinations(
         appData: ByteArray?,
         reason: String,
+        interfaceName: String? = null,
     ) {
         val deliveryDest =
             deliveryDestination
                 ?: error("Delivery destination not initialized")
 
-        deliveryDest.announce(appData)
+        // A name matching no live interface is ignored rather than refused:
+        // interfaces come and go, and a node that will not announce because its
+        // preferred one vanished is a node nobody can reach.
+        val attached =
+            interfaceName?.let { wanted ->
+                Transport.getInterfaces().firstOrNull { it.name == wanted }
+            }
+        deliveryDest.announce(appData, attachedInterface = attached)
 
         // Telephony is not announced at all. It used to go out beside this one,
         // and because an announce publishes the identity's public key in the
@@ -1609,11 +1617,14 @@ class NativeRnsBackendImpl(
         )
     }
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> =
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        interfaceName: String?,
+    ): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val appData = Companion.buildPeerAnnounceAppData(displayName)
-                announceLocalPeerDestinations(appData, "auto-announce '$displayName'")
+                announceLocalPeerDestinations(appData, "auto-announce '$displayName'", interfaceName)
                 Unit
             }
         }

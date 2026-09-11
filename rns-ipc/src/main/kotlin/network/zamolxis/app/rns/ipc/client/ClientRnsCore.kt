@@ -163,8 +163,11 @@ internal class ClientRnsCore(
         Unit
     }
 
-    override suspend fun triggerAutoAnnounce(displayName: String): Result<Unit> = runCatching {
-        awaitResult { cb -> remote.triggerAutoAnnounce(displayName, cb) }
+    override suspend fun triggerAutoAnnounce(
+        displayName: String,
+        interfaceName: String?,
+    ): Result<Unit> = runCatching {
+        awaitResult { cb -> remote.triggerAutoAnnounce(displayName, interfaceName, cb) }
         Unit
     }
 

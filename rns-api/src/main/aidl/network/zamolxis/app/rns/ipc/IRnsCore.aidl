@@ -84,7 +84,9 @@ oneway interface IRnsCore {
     // The announce carries the display name and upstream LXMF's capability flags,
     // and nothing else: app_data travels in the clear and the whole mesh
     // rebroadcasts it, so anything extra labels this node.
-    void triggerAutoAnnounce(String displayName, in IRnsResultCallback cb);
+    // interfaceName pins the announce to one interface when the caller knows
+    // which is safest to be heard on; null announces the way the stack would.
+    void triggerAutoAnnounce(String displayName, @nullable String interfaceName, in IRnsResultCallback cb);
 
     // ==================== Packet operations ====================
 
