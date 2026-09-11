@@ -12,6 +12,7 @@ import network.zamolxis.app.rns.api.RnsLxmf
 import network.zamolxis.app.test.TestFactories
 import io.mockk.Runs
 import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -146,7 +147,7 @@ class PropagationNodeManagerTest {
                 contactRepository = contactRepository,
                 announceRepository = announceRepository,
                 rnsCore = rnsCore,
-                    rnsLxmf = rnsLxmf,
+                rnsLxmf = rnsLxmf,
                 scope = testScope.backgroundScope,
                 defaultDispatcher = testDispatcher,
             )
@@ -407,10 +408,16 @@ class PropagationNodeManagerTest {
 
     // ========== selectBestRelay Tests (via enableAutoSelect) ==========
 
+    /**
+     * Hop count carries no weight any more. The nearest propagation node is the
+     * one nearest *this device*, so always taking it tells whoever runs it
+     * roughly where its user is, and tells them again every time — the same
+     * place picks the same relay. The choice is randomised precisely so there is
+     * nothing in it to read, which means a far node must be a legitimate answer.
+     */
     @Test
-    fun `selectBestRelay - picks nearest by hop count`() =
+    fun `selectBestRelay - does not always take the nearest node`() =
         runTest {
-            // Given: Multiple propagation nodes with different hop counts
             val nearNode =
                 TestFactories.createAnnounce(
                     destinationHash = testDestHash,
@@ -426,14 +433,21 @@ class PropagationNodeManagerTest {
             every { announceRepository.getAnnouncesByTypes(listOf("PROPAGATION_NODE")) } returns
                 flowOf(listOf(farNode, nearNode))
 
-            // When: enableAutoSelect triggers selectBestRelay
-            manager.enableAutoSelect()
-            advanceUntilIdle()
+            val chosen = mutableSetOf<String>()
+            repeat(40) {
+                clearMocks(contactRepository, answers = false, recordedCalls = true, verificationMarks = true)
+                manager.enableAutoSelect()
+                advanceUntilIdle()
+                val hashSlot = slot<String>()
+                coVerify { contactRepository.setAsMyRelay(capture(hashSlot), clearOther = true) }
+                chosen += hashSlot.captured
+            }
 
-            // Then: Should select nearest relay (1 hop), not the far one
-            val hashSlot = slot<String>()
-            coVerify { contactRepository.setAsMyRelay(capture(hashSlot), clearOther = true) }
-            assertEquals(testDestHash, hashSlot.captured)
+            assertEquals(
+                "both nodes must be reachable choices, or the pick is still readable",
+                setOf(testDestHash, testDestHash2),
+                chosen,
+            )
         }
 
     @Test
@@ -737,7 +751,7 @@ class PropagationNodeManagerTest {
         }
 
     @Test
-    fun `enableAutoSelect - selects nearest node`() =
+    fun `enableAutoSelect - selects one of the available nodes`() =
         runTest {
             // Given: Multiple propagation nodes available
             val nearNode =
@@ -760,9 +774,14 @@ class PropagationNodeManagerTest {
             val result = runCatching { manager.enableAutoSelect() }
             advanceUntilIdle()
 
-            // Then: Should set nearest as relay in database
+            // Then: some available node becomes the relay — which one is deliberately not fixed
             assertTrue("enableAutoSelect() should complete successfully", result.isSuccess)
-            coVerify { contactRepository.setAsMyRelay(testDestHash, clearOther = true) }
+            val hashSlot = slot<String>()
+            coVerify { contactRepository.setAsMyRelay(capture(hashSlot), clearOther = true) }
+            assertTrue(
+                "the relay must be one of the announced nodes, got ${hashSlot.captured}",
+                hashSlot.captured in setOf(testDestHash, testDestHash2),
+            )
         }
 
     @Test
@@ -1892,7 +1911,7 @@ class PropagationNodeManagerTest {
     // ========== getAlternativeRelay Tests ==========
 
     @Test
-    fun `getAlternativeRelay - returns nearest excluding current`() =
+    fun `getAlternativeRelay - never returns the relay being rotated away from`() =
         runTest {
             // Given: Multiple propagation nodes, one is current (should be excluded)
             val currentNode =
@@ -1915,7 +1934,7 @@ class PropagationNodeManagerTest {
             // When
             val result = manager.getAlternativeRelay(excludeHashes = listOf(testDestHash))
 
-            // Then: Should return the alternative (not excluded)
+            // Then: the only candidate left — exclusion is honoured whatever the pick
             assert(result != null) { "Should return an alternative relay" }
             assert(result!!.destinationHash == testDestHash2) {
                 "Should return testDestHash2, got ${result.destinationHash}"
@@ -1977,10 +1996,16 @@ class PropagationNodeManagerTest {
             assert(result == null) { "Should return null when all nodes excluded" }
         }
 
+    /**
+     * Exclusion is absolute; hop count is not a tie-breaker any more. The node
+     * with the fewest hops is excluded here precisely so that a selection which
+     * still secretly preferred the nearest would have to reach past the
+     * exclusion to show it — and the two that remain must both be reachable
+     * answers, or the pick is still readable.
+     */
     @Test
-    fun `getAlternativeRelay - selects by hop count among available`() =
+    fun `getAlternativeRelay - picks freely among whatever is not excluded`() =
         runTest {
-            // Given: Multiple alternatives available with different hop counts
             val farNode =
                 TestFactories.createAnnounce(
                     destinationHash = testDestHash,
@@ -2002,15 +2027,12 @@ class PropagationNodeManagerTest {
             every { announceRepository.getAnnouncesByTypes(listOf("PROPAGATION_NODE")) } returns
                 flowOf(listOf(farNode, nearNode, excludedNode))
 
-            // When
-            val result = manager.getAlternativeRelay(excludeHashes = listOf(testDestHash3))
-
-            // Then: Should return nearest non-excluded (nearNode at 2 hops)
-            assert(result != null) { "Should return an alternative relay" }
-            assert(result!!.destinationHash == testDestHash2) {
-                "Should return testDestHash2 (nearest), got ${result.destinationHash}"
+            val seen = mutableSetOf<String>()
+            repeat(40) {
+                seen += manager.getAlternativeRelay(excludeHashes = listOf(testDestHash3))!!.destinationHash
             }
-            assert(result.hops == 2) { "Should have 2 hops, got ${result.hops}" }
+
+            assertEquals(setOf(testDestHash, testDestHash2), seen)
         }
 
     @Test
@@ -2028,9 +2050,8 @@ class PropagationNodeManagerTest {
         }
 
     @Test
-    fun `getAlternativeRelay - with empty exclude list returns nearest`() =
+    fun `getAlternativeRelay - with nothing excluded any known node may answer`() =
         runTest {
-            // Given: Multiple propagation nodes
             val farNode =
                 TestFactories.createAnnounce(
                     destinationHash = testDestHash,
@@ -2046,14 +2067,14 @@ class PropagationNodeManagerTest {
             every { announceRepository.getAnnouncesByTypes(listOf("PROPAGATION_NODE")) } returns
                 flowOf(listOf(farNode, nearNode))
 
-            // When: No exclusions
-            val result = manager.getAlternativeRelay(excludeHashes = emptyList())
-
-            // Then: Should return nearest (nearNode)
-            assert(result != null) { "Should return a relay" }
-            assert(result!!.destinationHash == testDestHash2) {
-                "Should return nearest relay, got ${result.destinationHash}"
+            // A retry that always falls to the nearest untried node walks the same
+            // ordered list every time — as readable a pattern as never rotating at all.
+            val seen = mutableSetOf<String>()
+            repeat(40) {
+                seen += manager.getAlternativeRelay(excludeHashes = emptyList())!!.destinationHash
             }
+
+            assertEquals(setOf(testDestHash, testDestHash2), seen)
         }
 
     // ========== setManualRelayByHash Tests ==========

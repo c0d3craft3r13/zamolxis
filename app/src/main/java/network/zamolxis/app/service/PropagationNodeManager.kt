@@ -559,25 +559,27 @@ class PropagationNodeManager
                     .getAnnouncesByTypes(listOf("PROPAGATION_NODE"))
                     .first()
 
-            val candidates =
-                if (excludeHash != null) {
-                    propagationNodes.filter { it.destinationHash != excludeHash }
-                } else {
-                    propagationNodes
-                }
-            val nearest = candidates.minByOrNull { it.hops }
+            val chosen =
+                RelayRotation.pick(
+                    candidates = propagationNodes,
+                    exclude = listOfNotNull(excludeHash),
+                )
 
-            if (nearest != null) {
-                Log.i(TAG, "Auto-selecting relay: ${nearest.destinationHash.take(12)} at ${nearest.hops} hops")
-                if (!contactRepository.hasContact(nearest.destinationHash)) {
-                    val result = contactRepository.addContactFromAnnounce(nearest.destinationHash, nearest.publicKey)
+            if (chosen != null) {
+                // Deliberately without the hash or the hop count: which relay this
+                // device picked, and how far away it was, are the two things the
+                // choice is randomised to withhold. Writing them to the log puts
+                // them back on the device for anyone who later reads it.
+                Log.i(TAG, "Auto-selecting a relay from ${propagationNodes.size} known node(s)")
+                if (!contactRepository.hasContact(chosen.destinationHash)) {
+                    val result = contactRepository.addContactFromAnnounce(chosen.destinationHash, chosen.publicKey)
                     if (result.isFailure) {
                         Log.e(TAG, "Failed to create contact for auto-selected relay: ${result.exceptionOrNull()?.message}")
                         return
                     }
                 }
                 // Idempotent — skips write if already set (COLUMBA-3 defense-in-depth)
-                contactRepository.setAsMyRelay(nearest.destinationHash, clearOther = true)
+                contactRepository.setAsMyRelay(chosen.destinationHash, clearOther = true)
             } else {
                 Log.d(TAG, "No propagation nodes available for auto-selection")
             }
@@ -711,21 +713,19 @@ class PropagationNodeManager
                     node.destinationHash !in excludeHashes
                 }
 
-            // Find the nearest available relay by hop count
-            val nearest = availableNodes.minByOrNull { it.hops }
+            // Randomly, not by hop count: a retry that always falls to the nearest
+            // untried node walks the same ordered list every time, which is as
+            // readable a pattern as always using the nearest in the first place.
+            val chosen = RelayRotation.pick(candidates = availableNodes)
 
-            return if (nearest != null) {
-                Log.i(
-                    TAG,
-                    "Found alternative relay: ${nearest.peerName} (${nearest.destinationHash}) at ${nearest.hops} hops " +
-                        "(excluded ${excludeHashes.size} relays)",
-                )
+            return if (chosen != null) {
+                Log.i(TAG, "Found an alternative relay (${excludeHashes.size} already tried)")
                 RelayInfo(
-                    destinationHash = nearest.destinationHash,
-                    displayName = nearest.peerName,
-                    hops = nearest.hops,
+                    destinationHash = chosen.destinationHash,
+                    displayName = chosen.peerName,
+                    hops = chosen.hops,
                     isAutoSelected = true,
-                    lastSeenTimestamp = nearest.lastSeenTimestamp,
+                    lastSeenTimestamp = chosen.lastSeenTimestamp,
                 )
             } else {
                 Log.w(TAG, "No alternative relays available (excluded ${excludeHashes.size} relays)")
@@ -772,6 +772,34 @@ class PropagationNodeManager
         }
 
         /**
+         * Point the stack at a different relay for this sync, and write nothing down.
+         *
+         * Staying on one propagation node makes that node a fixed observer of when
+         * this device wakes, how often, and for how long. Moving between them costs
+         * nothing in delivery — nodes peer with each other and hold mail for thirty
+         * days — and leaves no single operator holding the whole pattern.
+         *
+         * The change goes straight to the stack rather than through the relay record
+         * in the database. That record needs a contact row, and a contact row carries
+         * the time it was added: rotating through it would build a dated list of every
+         * relay this device has used, which is the log the rotation exists to avoid.
+         * Only the first pick, when there is no relay at all, is written down.
+         *
+         * Left alone entirely when the operator chose the relay themselves. A relay
+         * someone picked on purpose is a decision, not a default.
+         */
+        private suspend fun rotateRelayForThisSync(currentHash: String) {
+            if (!settingsRepository.getAutoSelectPropagationNode()) return
+
+            val known = announceRepository.getAnnouncesByTypes(listOf("PROPAGATION_NODE")).first()
+            val next = RelayRotation.pick(candidates = known, exclude = listOf(currentHash)) ?: return
+
+            rnsLxmf
+                .setOutboundPropagationNode(next.destinationHash.hexToByteArray())
+                .onFailure { Log.w(TAG, "Could not rotate relay for this sync: ${it.message}") }
+        }
+
+        /**
          * Sync messages from the propagation node (periodic/automatic sync).
          * This requests any waiting messages from the configured propagation node.
          *
@@ -804,7 +832,9 @@ class PropagationNodeManager
                 return
             }
 
-            Log.d(TAG, "📡 Periodic sync with propagation node: ${relay.destinationHash.take(16)}")
+            rotateRelayForThisSync(relay.destinationHash)
+
+            Log.d(TAG, "📡 Periodic sync with propagation node")
             // Cancel any still-alive poll loop from a previous sync so it can't wake up
             // mid-delay and start observing this sync's _isSyncing flag.
             activePollJob?.cancel()
