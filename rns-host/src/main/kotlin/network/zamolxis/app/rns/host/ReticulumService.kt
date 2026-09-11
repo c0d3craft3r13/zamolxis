@@ -14,12 +14,15 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import network.zamolxis.app.data.repository.IdentityRepository
 import network.zamolxis.app.rns.api.RnsBackend
 import network.zamolxis.app.rns.host.binder.ReticulumServiceBinder
 import network.zamolxis.app.rns.host.di.ServiceModule
 import network.zamolxis.app.rns.host.persistence.BackendInitializer
 import network.zamolxis.app.rns.host.persistence.PeerActivityCollector
 import network.zamolxis.app.rns.host.emission.CoverTrafficStarter
+import network.zamolxis.app.rns.host.emission.EmissionPolicy
+import network.zamolxis.app.rns.host.emission.NetworkChangeAnnouncer
 import network.zamolxis.app.rns.host.persistence.PeerIdentityPrimer
 import network.zamolxis.app.rns.host.rnode.KotlinRNodeBridge
 import network.zamolxis.app.rns.host.rnode.RNodeOnlineStatusListener
@@ -88,6 +91,9 @@ class ReticulumService : Service() {
      * traffic for them to be lost in — never over a radio, never under silence.
      */
     @Inject lateinit var coverTraffic: CoverTrafficStarter
+
+    /** Supplies the name a network-change announce goes out under. */
+    @Inject lateinit var identityRepository: IdentityRepository
 
     // Coroutine scope for background tasks
     // Uses Dispatchers.Default for CPU-bound work (JSON parsing, orchestration)
@@ -313,15 +319,38 @@ class ReticulumService : Service() {
     }
 
     /**
+     * Announce because the network changed — really announce, this time.
+     *
+     * The binder method this used to call is a no-op left over from when
+     * announces moved out of the service, so nothing was emitted while the
+     * timestamps were written regardless. Going through the backend the service
+     * already holds is what the binder's own comment says should happen.
+     */
+    private fun networkChangeAnnouncer() =
+        NetworkChangeAnnouncer(
+            emissions = EmissionPolicy(this),
+            displayName = { identityRepository.getActiveIdentitySync()?.displayName },
+            announce = { name -> rnsBackend.core.triggerAutoAnnounce(name) },
+            recordAnnounced = { at ->
+                // Tell the app process's AutoAnnounceManager to reset its timer —
+                // only now that something actually went out.
+                managers.settingsAccessor.saveNetworkChangeAnnounceTime(at)
+                managers.settingsAccessor.saveLastAutoAnnounceTime(at)
+            },
+        )
+
+    /**
      * Hot-add new interfaces and re-announce when the network changes.
      *
      * Runs on `serviceScope` rather than the callback thread: blocking a
      * ConnectivityManager callback invites Android's watchdog to kill the
      * service, which surfaces later as "Service not bound".
      *
-     * The interface hot-add happens first so the announce that follows goes out
-     * over the interface that just appeared — without it, starting with no Wi-Fi
-     * and connecting later never discovered an AutoInterface peer.
+     * The hot-add call that used to run first is a no-op: `restartAutoInterface`
+     * was hollowed out when interface handling left the service, and the comment
+     * that once described it outlived the behaviour. It is kept only so the
+     * ordering is obvious if it is ever filled back in — the announce below is
+     * what actually happens now.
      */
     private fun onNetworkChanged() {
         Log.d(TAG, "Network changed - restarting AutoInterface and triggering LXMF announce")
@@ -330,23 +359,15 @@ class ReticulumService : Service() {
             return
         }
         serviceScope.launch {
-            // Checked here as well as at the UI seam, because this announce is the
-            // service's own idea. Nothing in the app process asked for it, so
-            // nothing there can hold it back — and a network change is exactly the
-            // moment a device has moved.
-            if (managers.settingsAccessor.getRadioSilence()) {
-                Log.i(TAG, "Network changed; staying silent as asked")
-                return@launch
-            }
             try {
-                withTimeout(NETWORK_CHANGE_ANNOUNCE_TIMEOUT_MS) {
-                    binder.restartAutoInterface()
-                    binder.announceLxmfDestination()
+                val announced =
+                    withTimeout(NETWORK_CHANGE_ANNOUNCE_TIMEOUT_MS) {
+                        binder.restartAutoInterface()
+                        networkChangeAnnouncer().announceOnNetworkChange()
+                    }
+                if (!announced) {
+                    Log.i(TAG, "Network changed; no announce went out")
                 }
-                // Tell the app process's AutoAnnounceManager to reset its timer.
-                val now = System.currentTimeMillis()
-                managers.settingsAccessor.saveNetworkChangeAnnounceTime(now)
-                managers.settingsAccessor.saveLastAutoAnnounceTime(now)
             } catch (_: TimeoutCancellationException) {
                 Log.w(TAG, "LXMF announce timed out on network change")
             } catch (e: Exception) {
