@@ -26,6 +26,23 @@ that only the recipient holds, and that seal is what confidentiality rests on.
 The consequence to keep in mind: Reticulum's transport-layer encryption must
 never be counted as a second line of defence between the pair. It is not one.
 
+## A process that is about to exit has to wait for its packets
+
+``RNS.Packet.send()`` returning is not the packet leaving. On Linux and Android
+the local interface queues frames in a transmit buffer a separate loop writes
+out; everywhere, Reticulum detaches that interface at exit with
+``shutdown(SHUT_RDWR)``, which discards whatever the other end has not yet read.
+A process that sends and exits at once loses its last packets.
+
+Measured rather than assumed, with ``mayak send`` against a listener on the same
+machine, three tries each: exiting at once delivered **0 of 3**; staying 0.25 s
+delivered 3 of 3, and so did 0.5 s and 1 s. It had been happening all along —
+it is the likeliest cause of an earlier end-to-end run that lost a message in
+three — and became certain once a key update added four frames to the first send.
+
+:func:`drain` waits for the transmit buffers to empty and then for
+:data:`SETTLE_BEFORE_EXIT_SECONDS`. A long-running process never needs it.
+
 ## Never announced
 
 Destinations are registered and never announced. A registered destination
@@ -65,6 +82,16 @@ PATH_TIMEOUT_SECONDS = 10.0
 
 #: How often to re-check while waiting for a path to appear.
 _PATH_POLL_SECONDS = 0.1
+
+#: How long a process about to exit waits once its buffers are empty.
+#:
+#: Four times the measured threshold on a laptop — 0.25 s delivered every message,
+#: no wait delivered none — because a phone is slower and a second is cheap next
+#: to a message that silently never left.
+SETTLE_BEFORE_EXIT_SECONDS = 1.0
+
+#: How long :func:`drain` waits for buffers to empty before giving up.
+DRAIN_TIMEOUT_SECONDS = 10.0
 
 #: The largest frame that fits in one encrypted Reticulum packet.
 #:
@@ -252,6 +279,34 @@ class RnsTransport:
             return
         if message is not None:
             receiver(message)
+
+
+def drain(timeout: float = DRAIN_TIMEOUT_SECONDS, settle: float = SETTLE_BEFORE_EXIT_SECONDS) -> bool:
+    """Wait until Reticulum has written everything queued, then a little longer.
+
+    Call before a process exits, and only then — see the module docstring.
+    Returns False if the buffers did not empty within ``timeout``, which a caller
+    should report rather than exit quietly on: those packets are about to be lost.
+    """
+    deadline = time.monotonic() + timeout
+    while any(_pending(interface) for interface in list(RNS.Transport.interfaces)):
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.05)
+    time.sleep(settle)
+    return True
+
+
+def _pending(interface: object) -> int:
+    """Bytes an interface has accepted and not yet handed to the kernel."""
+    pending = 0
+    if getattr(interface, "epoll_backend", False):
+        buffer = getattr(interface, "transmit_buffer", None)
+        if buffer is not None:
+            pending += len(buffer)
+    if getattr(interface, "writing", False):
+        pending += 1
+    return pending
 
 
 def _identity_from(address_seed: bytes) -> RNS.Identity:

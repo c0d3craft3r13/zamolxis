@@ -34,10 +34,49 @@ counter 41.
 
 Compromising the root exposes every message in that epoch, past and future,
 because every key in the epoch derives from it. Epochs are therefore bounded
-both by message count and by age, and a root is discarded when its epoch ends.
-What this buys is that a root taken today does not open last week's traffic. It
-does not protect the current epoch — nothing that keeps a usable session open
-can.
+both by message count and by age, on both ends.
+
+The sender rolls over when either bound is reached. The receiver forgets a root
+once it is older than the epoch's lifetime plus :data:`RECEIVE_GRACE_SECONDS`,
+keeps at most :data:`MAX_LIVE_EPOCHS` at once, and refuses a counter no honest
+sender could have reached. It used to do none of this: the docstring promised
+roots were discarded and the receiving side kept every root it had ever learned
+for as long as the process lived.
+
+What forgetting buys is exact and narrow: roots extracted from a running
+process's memory open only the epochs still live. It does **not** protect
+recorded traffic against someone who takes the device itself. The long-term
+encapsulation private key is in the device file, and it re-derives the root of
+any opening that was recorded. Forward secrecy against seizure needs that key to
+change and the old one to be destroyed — see :mod:`mayak.contacts` — and nothing
+in this module can provide it.
+
+## A forgotten epoch stays forgotten
+
+The receiver keeps a short record of epochs it retired. Without it, replaying a
+captured opening would decapsulate again, rebuild the root, and hand back a
+fresh replay window — so every captured message of that epoch could be
+delivered a second time. The record lasts as long as a replayed opening could
+still pass address binding, which is three address epochs, and is bounded in
+size.
+
+## What the receiving side keeps across a restart, and what the sending side does not
+
+A receiver that restarted used to lose every live root, and with them every
+continuation of an epoch opened before the restart — a contact mid-epoch could
+not reach a device that had merely been switched off and on, for up to a week.
+So the receiving side can be exported as :class:`EpochRecord` values and
+restored: roots, replay windows, and the record of retired epochs.
+
+Keeping those on disk costs nothing that was not already paid. A receiving root
+can be rebuilt from its recorded opening by the key that opened it, and that key
+is on disk for exactly as long as the root is live; when the key is destroyed,
+its epochs are retired with it and leave the file at the next save.
+
+The sending side is not exported, deliberately. Our outgoing roots are sealed to
+the contact's key, not ours: nothing on this device can rebuild them, so writing
+them down would give a seized device the one thing it otherwise cannot open —
+what this device itself sent. A sender that restarts opens a new epoch instead.
 
 ## Replay, and why a window rather than a counter
 
@@ -50,8 +89,10 @@ never twice, anything below it is refused as too old to judge.
 
 from __future__ import annotations
 
+import hashlib
 import struct
 import time
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from cryptography.exceptions import InvalidTag
@@ -91,6 +132,33 @@ EPOCH_LIFETIME_SECONDS = 7 * 24 * 60 * 60
 
 #: How far behind the highest counter a late message may still arrive.
 REPLAY_WINDOW = 64
+
+#: How long past its lifetime the receiver keeps a root.
+#:
+#: A sender may hold a sealed message for up to :data:`mayak.outbox.MAX_AGE_SECONDS`
+#: before giving up on it, so a root has to outlive its epoch by at least that
+#: much or held messages would arrive to find it gone. A day covers that and a
+#: clock that disagrees by a few hours. A test holds the two constants together.
+RECEIVE_GRACE_SECONDS = 24 * 60 * 60
+
+#: Most roots one conversation keeps at once.
+#:
+#: Every process that sends opens its own epoch, so a contact who runs a
+#: short-lived sender several times a day opens several. Four keeps late
+#: messages from the last few of them readable and bounds what memory extraction
+#: can yield. The oldest goes first.
+MAX_LIVE_EPOCHS = 4
+
+#: How long a retired epoch is remembered, so a replayed opening cannot revive it.
+#:
+#: Openings are bound to an address, and an address is live for at most three
+#: address epochs — previous, current and next. After that no replay of the
+#: opening can pass binding, and the record has nothing left to guard.
+RETIRED_MEMORY_SECONDS = 3 * 24 * 60 * 60
+
+#: Most retired epochs remembered at once. Only the real contact can create
+#: epochs, so reaching this means a very busy contact, not an attack.
+MAX_RETIRED_EPOCHS = 256
 
 _ROOT_INFO = b"mayak/epoch/root/v1"
 _ID_INFO = b"mayak/epoch/id/v1"
@@ -134,9 +202,30 @@ class Epoch:
     next_counter: int = 0
     messages: int = 0
 
+    #: Which receiving key opened it, as a tag rather than the key itself — an
+    #: epoch that held its key would keep a destroyed key alive in memory.
+    opened_with: bytes = b""
+
     def exhausted(self, now: float) -> bool:
         """Whether this root has protected as much as it should."""
         return self.messages >= MESSAGES_PER_EPOCH or (now - self.created) >= EPOCH_LIFETIME_SECONDS
+
+
+@dataclass(frozen=True)
+class EpochRecord:
+    """One receiving epoch as it is kept between runs."""
+
+    identifier: bytes
+    root: bytes
+    created: float
+    opened_with: bytes
+    highest: int
+    seen: int
+
+
+def key_tag(private_key: bytes) -> bytes:
+    """A short name for a private key that does not contain it."""
+    return hashlib.sha256(b"mayak/epoch/key-tag/v1" + private_key).digest()[:8]
 
 
 @dataclass
@@ -246,6 +335,19 @@ class Sealer:
 
         return bytes([CONTINUATION]) + epoch.identifier + struct.pack(">I", counter) + sealed
 
+    def retarget(self, recipient_kem_public: bytes) -> None:
+        """Seal to a new key from now on, starting a new epoch under it.
+
+        The current epoch is abandoned rather than finished: its root was
+        encapsulated to the old key, and the point of the contact replacing that
+        key is that nothing more should depend on it.
+        """
+        if recipient_kem_public == self._recipient:
+            return
+        self._recipient = recipient_kem_public
+        self._epoch = None
+        self._pending_encapsulation = None
+
     def _open_epoch(self, now: float) -> None:
         try:
             encapsulation = self._kem.encapsulate(self._recipient)
@@ -263,20 +365,38 @@ class Opener:
     def __init__(
         self,
         kem: Kem,
-        kem_private_key: bytes,
+        kem_private_key: bytes | Callable[[], Sequence[bytes]],
         *,
         clock=time.time,
         allow_classical_only: bool = False,
+        on_opening: Callable[[bytes], None] | None = None,
     ) -> None:
+        """
+        :param kem_private_key: one private key, or a callable returning every
+            key still live, newest first. An opening names no key on the wire —
+            a key identifier would be a label an observer could follow — so
+            each is tried in turn.
+        :param on_opening: told which key an opening decapsulated under. That is
+            the only proof a contact has a key, and what lets older ones be
+            destroyed.
+        """
         if not getattr(kem, "post_quantum", False) and not allow_classical_only:
             raise DowngradeRefused(
                 f"{kem.name} offers no post-quantum resistance; pass allow_classical_only=True to mean it",
             )
         self._kem = kem
-        self._private = kem_private_key
+        self._private_keys = kem_private_key if callable(kem_private_key) else (lambda: [kem_private_key])
+        self._on_opening = on_opening
         self._clock = clock
         self._epochs: dict[bytes, Epoch] = {}
         self._windows: dict[bytes, ReplayWindow] = {}
+        #: identifier -> when it was retired.
+        self._retired: dict[bytes, float] = {}
+
+        #: The last opening's ciphertext and what each key made of it. An opening
+        #: is tried against every live address in turn, and without this each try
+        #: would decapsulate under every key again.
+        self._decapsulated: tuple[bytes, list[tuple[bytes, bytes]]] | None = None
 
     @property
     def known_epochs(self) -> int:
@@ -292,6 +412,8 @@ class Opener:
         if not sealed:
             raise EpochError("the message could not be opened")
 
+        self._expire(self._clock())
+
         kind = sealed[0]
         if kind == OPENING:
             return self._open_opening(sealed, context)
@@ -300,37 +422,155 @@ class Opener:
         raise EpochError("the message could not be opened")
 
     def forget(self, identifier: bytes) -> None:
-        """Drop a root. What it protected can no longer be read here."""
+        """Drop a root. What it protected can no longer be read here, even replayed."""
+        self._retire(identifier, self._clock())
+
+    def records(self) -> list[EpochRecord]:
+        """The live receiving epochs, for keeping across a restart.
+
+        Copied before it is walked: a save can run on the caller's thread while a
+        frame arriving on the transport's thread changes the epochs underneath.
+        """
+        windows = dict(self._windows)
+        return [
+            EpochRecord(
+                identifier=identifier,
+                root=epoch.root,
+                created=epoch.created,
+                opened_with=epoch.opened_with,
+                highest=windows.get(identifier, ReplayWindow()).highest,
+                seen=windows.get(identifier, ReplayWindow()).seen,
+            )
+            for identifier, epoch in list(self._epochs.items())
+        ]
+
+    def retired_records(self) -> dict[bytes, float]:
+        """Epochs retired recently enough that a replayed opening must still be refused."""
+        return dict(self._retired)
+
+    def restore(self, records: list[EpochRecord], retired: dict[bytes, float]) -> None:
+        """Take back what :meth:`records` and :meth:`retired_records` gave.
+
+        Records past their lifetime are dropped here rather than restored and
+        expired later, so a device that was off for a month does not hold
+        a month-old root for even one call.
+        """
+        now = self._clock()
+        limit = EPOCH_LIFETIME_SECONDS + RECEIVE_GRACE_SECONDS
+        for record in records:
+            if now - record.created > limit or record.identifier in retired:
+                continue
+            self._epochs[record.identifier] = Epoch(
+                root=record.root,
+                identifier=record.identifier,
+                created=record.created,
+                opened_with=record.opened_with,
+            )
+            self._windows[record.identifier] = ReplayWindow(highest=record.highest, seen=record.seen)
+        self._retired.update(
+            {identifier: when for identifier, when in retired.items() if now - when <= RETIRED_MEMORY_SECONDS},
+        )
+
+    def forget_opened_with(self, private_key: bytes) -> int:
+        """Retire every epoch a destroyed key opened. Returns how many.
+
+        Destroying a key is only half the job while roots it produced are still
+        live in memory: they open the rest of their epochs whether the key exists
+        or not.
+        """
+        tag = key_tag(private_key)
+        now = self._clock()
+        doomed = [identifier for identifier, epoch in self._epochs.items() if epoch.opened_with == tag]
+        for identifier in doomed:
+            self._retire(identifier, now)
+        self._decapsulated = None
+        return len(doomed)
+
+    def _retire(self, identifier: bytes, now: float) -> None:
         self._epochs.pop(identifier, None)
         self._windows.pop(identifier, None)
+        self._retired[identifier] = now
+        while len(self._retired) > MAX_RETIRED_EPOCHS:
+            del self._retired[min(self._retired, key=self._retired.__getitem__)]
+
+    def _expire(self, now: float) -> None:
+        """Forget roots past their lifetime, and the records of long-retired ones."""
+        limit = EPOCH_LIFETIME_SECONDS + RECEIVE_GRACE_SECONDS
+        for identifier in [key for key, epoch in self._epochs.items() if now - epoch.created > limit]:
+            self._retire(identifier, now)
+        for identifier in [key for key, when in self._retired.items() if now - when > RETIRED_MEMORY_SECONDS]:
+            del self._retired[identifier]
 
     def _open_opening(self, sealed: bytes, context: bytes) -> bytes:
         head = 1 + self._kem.ciphertext_length
         if len(sealed) < head + TAG_LENGTH:
             raise EpochError("the message could not be opened")
 
-        try:
-            shared_secret = self._kem.decapsulate(self._private, sealed[1:head])
-            root = _root_from(shared_secret, self._kem.name)
-            key, nonce = _message_key(root, 0, context)
-            plaintext = AESGCM(key).decrypt(nonce, sealed[head:], context)
-        except (KemError, InvalidTag, ValueError) as refused:
-            raise EpochError("the message could not be opened") from refused
+        opened = self._try_keys(sealed[1:head], sealed[head:], context)
+        if opened is None:
+            raise EpochError("the message could not be opened")
+        private, root, plaintext = opened
 
         # Replay is checked after the tag, and against the window this epoch
         # already has rather than a fresh one. Building a new window here let a
         # captured opening be delivered over and over: each delivery derived the
         # same root and then wiped the record of the first.
         identifier = _identifier_of(root)
+        if identifier in self._retired:
+            # Genuine, authenticated, and already finished with. Rebuilding it
+            # would hand every captured message of the epoch a clean window.
+            raise EpochError("the message could not be opened")
+
         window = self._windows.setdefault(identifier, ReplayWindow())
         if not window.accept(0):
             raise EpochError("the message could not be opened")
 
-        self._epochs.setdefault(
-            identifier,
-            Epoch(root=root, identifier=identifier, created=self._clock(), next_counter=1, messages=1),
-        )
+        now = self._clock()
+        if identifier not in self._epochs:
+            self._epochs[identifier] = Epoch(
+                root=root,
+                identifier=identifier,
+                created=now,
+                next_counter=1,
+                messages=1,
+                opened_with=key_tag(private),
+            )
+            while len(self._epochs) > MAX_LIVE_EPOCHS:
+                oldest = min(
+                    (key for key in self._epochs if key != identifier),
+                    key=lambda key: self._epochs[key].created,
+                )
+                self._retire(oldest, now)
+
+        if self._on_opening is not None:
+            self._on_opening(private)
         return plaintext
+
+    def _try_keys(self, ciphertext: bytes, sealed: bytes, context: bytes) -> tuple[bytes, bytes, bytes] | None:
+        """Find the live key this opening was sealed to, if any.
+
+        ML-KEM does not fail under the wrong key — it returns a different secret —
+        so the only test is whether the resulting root opens the tag.
+        """
+        if self._decapsulated is None or self._decapsulated[0] != ciphertext:
+            candidates = []
+            for private in self._private_keys():
+                try:
+                    shared_secret = self._kem.decapsulate(private, ciphertext)
+                except KemError:
+                    continue
+                candidates.append((private, _root_from(shared_secret, self._kem.name)))
+            self._decapsulated = (ciphertext, candidates)
+
+        for private, root in self._decapsulated[1]:
+            key, nonce = _message_key(root, 0, context)
+            try:
+                plaintext = AESGCM(key).decrypt(nonce, sealed, context)
+            except (InvalidTag, ValueError):
+                continue
+            self._decapsulated = None
+            return private, root, plaintext
+        return None
 
     def _open_continuation(self, sealed: bytes, context: bytes) -> bytes:
         head = 1 + EPOCH_ID_LENGTH + _COUNTER_LENGTH
@@ -340,7 +580,10 @@ class Opener:
         identifier = sealed[1 : 1 + EPOCH_ID_LENGTH]
         (counter,) = struct.unpack(">I", sealed[1 + EPOCH_ID_LENGTH : head])
         epoch = self._epochs.get(identifier)
-        if epoch is None:
+        if epoch is None or counter >= MESSAGES_PER_EPOCH:
+            # A sender rolls over before sealing message MESSAGES_PER_EPOCH, so a
+            # counter that high did not come from one. Refused before any key is
+            # derived for it.
             raise EpochError("the message could not be opened")
 
         # Authenticate first, then record. The other order looks equivalent and

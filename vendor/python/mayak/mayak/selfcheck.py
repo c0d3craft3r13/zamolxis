@@ -12,6 +12,10 @@ It is deliberately the same function on both: the desktop suite calls it, and so
 does the instrumented test on the phone. A self-check that differed between them
 would be checking two things and reporting one.
 
+It also covers the two things most likely to differ on a phone and least likely
+to be exercised by a quick try: a conversation moving off its invitation keys,
+and a device restarting part-way through a contact's epoch.
+
 ## What it does not touch
 
 The network. The transport is the in-process loopback, so this says nothing
@@ -115,18 +119,31 @@ def _conversation(kem: Kem, workspace: Path) -> None:
     if inbox["alice"] != [b"understood"]:
         raise SelfCheckFailed("the reply did not arrive")
 
-    # A store that cannot be reopened is a store that loses every contact.
+    status = alice.key_status(bob_keys.public_key)
+    if not (status.invitation_key_retired and status.newest_confirmed):
+        raise SelfCheckFailed("the conversation did not move off its invitation keys")
+
+    # Bob restarts while alice is part-way through her epoch. A store that cannot
+    # be reopened loses every contact; a conversation that cannot be resumed
+    # loses a week of messages.
+    bob.stop()
     reopened = Node(
         kem,
         bob_keys,
         lambda: LoopbackTransport(switchboard),
         _BODY,
         EncryptedStore(workspace / "bob.mayak", passphrase),
-        lambda contact, message: None,
+        lambda contact, message: inbox["bob"].append(message.content),
+        store_keys=True,
     )
     if [contact.name for contact in reopened.contacts] != ["Alice"]:
         raise SelfCheckFailed("the encrypted store did not survive being reopened")
+    reopened.listen()
+    alice.send(bob_keys.public_key, b"after bob restarted")
+    if inbox["bob"][-1:] != [b"after bob restarted"]:
+        raise SelfCheckFailed("a restarted device could not read a contact part-way through an epoch")
 
+    bob = reopened
     bob.wipe()
     if (workspace / "bob.mayak").exists():
         raise SelfCheckFailed("wiping left the store behind")

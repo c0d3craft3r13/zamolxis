@@ -35,6 +35,22 @@ worth guessing at: copying a keystore-held private key into a file as a side
 effect of adding a contact is exactly the kind of quiet leak nobody goes looking
 for.
 
+## A conversation has to survive a restart
+
+Each conversation replaces the key it receives on — see :mod:`mayak.keyring` —
+and learns epoch roots as openings arrive — see :mod:`mayak.epoch`. The node
+keeps both in the device file and saves whenever a conversation says something
+changed that a crash must not lose: a new key before it is announced, a new
+epoch as it is learned, a replay window before its message is shown.
+
+Before this, a restarted device could not read a contact who was part-way
+through an epoch until that contact opened another — up to a week. A restart
+test found it.
+
+Saves can now come from two threads — a message arriving on the transport's
+thread can confirm a key while the caller is adding a contact — so saving is
+serialised. Two unsynchronised saves would race on the store's temporary file.
+
 ## Wiping is the operation the rest of the design exists for
 
 :meth:`wipe` destroys the store and drops every key held in memory. What is left
@@ -45,6 +61,7 @@ erase flash on request, and it is stated rather than dressed up.
 
 from __future__ import annotations
 
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -52,7 +69,9 @@ from dataclasses import dataclass
 from mayak import device as device_format
 from mayak.contacts import Contact, ContactBook, ContactError, Trust
 from mayak.envelope import Inbound
+from mayak.epoch import EpochRecord
 from mayak.kem import Kem
+from mayak.keyring import ReceiveKey, ReceiveKeyring
 from mayak.session import Peer, Session, Us
 from mayak.store import Store
 from mayak.transport import Transport
@@ -68,6 +87,23 @@ TransportFactory = Callable[[], Transport]
 
 class NodeError(ValueError):
     """The node was asked for something it cannot do."""
+
+
+@dataclass(frozen=True)
+class KeyStatus:
+    """What an interface may show about a conversation's keys, without the keys."""
+
+    #: Receiving keys this conversation still holds.
+    held: int
+
+    #: Whether the contact has used the newest one.
+    newest_confirmed: bool
+
+    #: Whether the conversation has moved off the device's invitation key.
+    invitation_key_retired: bool
+
+    #: How long ago the newest key was created.
+    newest_age_seconds: float
 
 
 @dataclass(frozen=True)
@@ -112,6 +148,19 @@ class Node:
             raise NodeError("this store holds another identity's keys")
         self._book = saved.book if saved is not None else ContactBook()
         self._sessions: dict[bytes, Session] = {}
+        stored = saved.conversations if saved is not None else {}
+        self._keyrings: dict[bytes, ReceiveKeyring] = {
+            identity: self._keyring_from(conversation.keys)
+            for identity, conversation in stored.items()
+            if identity in self._book
+        }
+        #: Receiving epochs from the last run, for conversations not yet reopened.
+        self._receiving: dict[bytes, tuple[list[EpochRecord], dict[bytes, float]]] = {
+            identity: (conversation.epochs, conversation.retired)
+            for identity, conversation in stored.items()
+            if identity in self._book
+        }
+        self._save_lock = threading.RLock()
         self._wiped = False
 
     @classmethod
@@ -177,13 +226,29 @@ class Node:
         return contact
 
     def forget_contact(self, identity_key: bytes) -> None:
-        """Remove a contact, close the conversation, and save."""
+        """Remove a contact, close the conversation, destroy its keys, and save."""
         self._require_usable()
-        session = self._sessions.pop(identity_key, None)
-        if session is not None:
-            session.stop()
-        self._book.forget(identity_key)
-        self.save()
+        with self._save_lock:
+            session = self._sessions.pop(identity_key, None)
+            if session is not None:
+                session.stop()
+            self._keyrings.pop(identity_key, None)
+            self._receiving.pop(identity_key, None)
+            self._book.forget(identity_key)
+            self.save()
+
+    def key_status(self, identity_key: bytes) -> KeyStatus:
+        """How a conversation's keys stand, for showing to a person."""
+        self._require_usable()
+        self._require_contact(identity_key)
+        ring = self._keyring_for(identity_key)
+        newest = ring.newest
+        return KeyStatus(
+            held=len(ring.keys),
+            newest_confirmed=newest.confirmed,
+            invitation_key_retired=all(key.introduction is False or key.superseded is not None for key in ring.keys),
+            newest_age_seconds=self._clock() - newest.created,
+        )
 
     # ------------------------------------------------------------ messaging
 
@@ -254,10 +319,22 @@ class Node:
         send again.
         """
         self._require_usable()
-        device_format.save(
-            self._store,
-            device_format.Device(us=self._us if self._store_keys else None, book=self._book),
-        )
+        with self._save_lock:
+            device_format.save(
+                self._store,
+                device_format.Device(
+                    us=self._us if self._store_keys else None,
+                    book=self._book,
+                    conversations={
+                        identity: device_format.StoredConversation(
+                            keys=_stored(ring),
+                            epochs=self._receiving_of(identity)[0],
+                            retired=self._receiving_of(identity)[1],
+                        )
+                        for identity, ring in list(self._keyrings.items())
+                    },
+                ),
+            )
 
     def wipe(self) -> None:
         """Destroy the store and drop every key held in memory.
@@ -271,8 +348,12 @@ class Node:
         answering would be a node that quietly rebuilt what was just destroyed.
         """
         self.stop()
-        self._store.wipe()
+        with self._save_lock:
+            self._wiped = True
+            self._store.wipe()
         self._sessions.clear()
+        self._keyrings.clear()
+        self._receiving.clear()
         self._book = ContactBook()
         self._us = Us(private_key=b"", public_key=b"", kem_private_key=b"", kem_public_key=b"")
         self._wiped = True
@@ -284,22 +365,77 @@ class Node:
     # ------------------------------------------------------------- internal
 
     def _session_for(self, contact: Contact) -> Session:
+        # Under the save lock: a save from the transport's thread walks the
+        # conversations this adds to.
+        with self._save_lock:
+            return self._open_session(contact)
+
+    def _open_session(self, contact: Contact) -> Session:
         session = self._sessions.get(contact.identity_key)
         if session is not None:
             return session
 
+        identity = contact.identity_key
         session = Session(
             self._kem,
             self._us,
-            Peer(public_key=contact.identity_key, kem_public_key=contact.kem_key),
+            Peer(public_key=identity, kem_public_key=contact.kem_key),
             self._transport_factory(),
             self._body_length,
             lambda message, sender=contact: self._deliver(sender, message),
             clock=self._clock,
             allow_classical_only=self._allow_classical_only,
+            keyring=self._keyring_for(identity),
+            receiving_state=self._receiving.pop(identity, None),
+            on_peer_key=lambda key, who=identity: self._peer_rotated(who, key),
+            on_state_changed=self._save_from_a_conversation,
         )
-        self._sessions[contact.identity_key] = session
+        self._sessions[identity] = session
         return session
+
+    def _receiving_of(self, identity: bytes) -> tuple[list[EpochRecord], dict[bytes, float]]:
+        session = self._sessions.get(identity)
+        if session is not None:
+            return session.receiving_state
+        return self._receiving.get(identity, ([], {}))
+
+    def _keyring_for(self, identity: bytes) -> ReceiveKeyring:
+        ring = self._keyrings.get(identity)
+        if ring is None:
+            ring = ReceiveKeyring.introduced(self._us.kem_private_key, self._us.kem_public_key, clock=self._clock)
+            self._keyrings[identity] = ring
+        return ring
+
+    def _keyring_from(self, stored: list[device_format.StoredKey]) -> ReceiveKeyring:
+        keys = [
+            ReceiveKey(
+                # The invitation key is never in a keyring on disk; it is the
+                # device's own, filled in here from wherever that is kept.
+                private=self._us.kem_private_key if entry.introduction else entry.private,
+                public=self._us.kem_public_key if entry.introduction else entry.public,
+                created=entry.created,
+                confirmed=entry.confirmed,
+                superseded=entry.superseded,
+                introduction=entry.introduction,
+            )
+            for entry in stored
+        ]
+        return ReceiveKeyring(keys, clock=self._clock)
+
+    def _peer_rotated(self, identity: bytes, key: bytes) -> None:
+        # Authenticated by the conversation it arrived in, so trust is untouched.
+        if identity not in self._book:
+            return
+        self._book.rotate_key(identity, key)
+        self._save_from_a_conversation()
+
+    def _save_from_a_conversation(self) -> None:
+        # Called from whichever thread delivered the frame. A wiped node has
+        # nothing to save and must not raise into the transport's thread.
+        with self._save_lock:
+            if self._wiped:
+                return
+            self.save()
 
     def _deliver(self, contact: Contact, message: Inbound) -> None:
         # The contact is looked up again rather than captured, so a message that
@@ -316,6 +452,20 @@ class Node:
     def _require_usable(self) -> None:
         if self._wiped:
             raise NodeError("this node has been wiped")
+
+
+def _stored(ring: ReceiveKeyring) -> list[device_format.StoredKey]:
+    return [
+        device_format.StoredKey(
+            private=b"" if key.introduction else key.private,
+            public=b"" if key.introduction else key.public,
+            created=key.created,
+            confirmed=key.confirmed,
+            superseded=key.superseded,
+            introduction=key.introduction,
+        )
+        for key in ring.keys
+    ]
 
 
 def trust_of(node: Node, identity_key: bytes) -> Trust:

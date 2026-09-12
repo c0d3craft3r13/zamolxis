@@ -88,7 +88,7 @@ from mayak.envelope import Inbound
 from mayak.kem import HybridKem, Kem, X25519Kem
 from mayak.mechanisms import post_quantum_mechanism
 from mayak.node import Node, NodeError
-from mayak.rns_transport import RnsTransport, body_length_for
+from mayak.rns_transport import RnsTransport, body_length_for, drain
 from mayak.store import EncryptedStore, StoreError
 from mayak.transport import TransportError
 
@@ -390,6 +390,11 @@ def command_send(arguments: argparse.Namespace) -> int:
         # they are all the same thing: a line saying what went wrong.
         raise CliError(str(refused)) from refused
 
+    # This command exits next, and a process that exits straight after sending
+    # loses its last packets — see mayak.rns_transport.drain.
+    if not drain():
+        say("warning: Reticulum had not written everything out when this command stopped waiting", error=True)
+
     if handed_over:
         say(f"sent to {contact.name}")
         return 0
@@ -492,6 +497,7 @@ def command_listen(arguments: argparse.Namespace) -> int:
         pass
     finally:
         node.stop()
+        drain()
     if node.waiting:
         say(f"{node.waiting} message(s) were still waiting and are gone.", error=True)
     return 0

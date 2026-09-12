@@ -14,8 +14,14 @@ This is the join, and it is deliberately the only place that knows both.
 
 Length-prefixed fields, fixed order, no delimiters:
 
-    count (2)
+    version (1) || count (2)
     per contact:  name (2 + bytes) || identity (2 + bytes) || kem (2 + bytes) || trust (1)
+                  || introduced kem (2 + bytes)            -- layout 2 only
+
+Layout 2 added the key a contact was introduced with, which the fingerprint
+covers now that the key in use rotates. A layout 1 book still opens: every
+contact in it was introduced with the key it holds, because nothing rotated
+before layout 2 existed.
 
 No JSON, no pickle, no key-value text. Pickle executes what it reads, which on a
 file an adversary can edit is a remote code execution waiting for a passphrase
@@ -44,7 +50,10 @@ from mayak.store import Store
 
 #: Format marker, separate from the store's own: the store says "this is a
 #: Mayak file", this says "the contents are a contact book of this shape".
-LAYOUT_VERSION = 1
+LAYOUT_VERSION = 2
+
+#: Layouts this build can read. Only :data:`LAYOUT_VERSION` is written.
+READABLE_LAYOUTS = (1, 2)
 
 _MAX_FIELD = 0xFFFF
 
@@ -85,6 +94,7 @@ def serialise(book: ContactBook) -> bytes:
         out += _field(contact.identity_key)
         out += _field(contact.kem_key)
         out += bytes([_TRUST_TO_BYTE[contact.trust]])
+        out += _field(contact.introduced_kem_key)
     return bytes(out)
 
 
@@ -101,8 +111,8 @@ def deserialise(raw: bytes) -> ContactBook:
         raise BookFormatError("too short to be a contact book")
 
     version, count = struct.unpack(">BH", raw[:3])
-    if version != LAYOUT_VERSION:
-        raise BookFormatError(f"contact book layout {version} is not layout {LAYOUT_VERSION}")
+    if version not in READABLE_LAYOUTS:
+        raise BookFormatError(f"contact book layout {version} is not one this build reads {READABLE_LAYOUTS}")
 
     book = ContactBook()
     at = 3
@@ -118,6 +128,10 @@ def deserialise(raw: bytes) -> ContactBook:
         if trust_value not in _BYTE_TO_TRUST:
             raise BookFormatError(f"unknown trust value {trust_value}")
 
+        introduced = kem
+        if version >= 2:
+            introduced, at = _take_field(raw, at)
+
         try:
             book.add(
                 Contact(
@@ -125,6 +139,7 @@ def deserialise(raw: bytes) -> ContactBook:
                     identity_key=identity,
                     kem_key=kem,
                     trust=_BYTE_TO_TRUST[trust_value],
+                    introduced_kem_key=introduced,
                 ),
             )
         except (ContactError, UnicodeDecodeError) as broken:

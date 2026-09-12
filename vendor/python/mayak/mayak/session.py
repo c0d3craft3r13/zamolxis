@@ -81,6 +81,47 @@ it again, so a single dropped packet would silence a conversation until the
 epoch expired. The copy costs one frame of airtime and is refused by the
 receiver's replay window, which is exactly what that window is for.
 
+## Each conversation replaces the key it receives on
+
+So that a device taken later does not open what was recorded earlier — see
+:mod:`mayak.keyring` for the life of a key. The session does the moving parts:
+before sending, it creates a new key when one is due and tells the contact in a
+control frame; when an epoch opening decapsulates under a newer key, older ones
+are superseded and in time destroyed, and the epochs they opened are retired
+with them. A contact's key update makes this session seal to the new key from
+its next frame, in a fresh epoch.
+
+Rotation rides on sends — messages and cover — and never on a timer, for the
+same reason retries do not: what goes on the air is the caller's decision. A
+conversation that sends nothing does not rotate; destruction of old keys still
+happens as frames arrive.
+
+The first send of a new conversation replaces the invitation key at once, so the
+exposure a seized device carries is the first exchange, not the history.
+
+## What is saved, and when
+
+A conversation reports :attr:`on_state_changed` at three moments, and each is
+the last moment it can safely be reported:
+
+- **A new receiving key**, before it is announced. A key the contact was told
+  about and this device then forgot is a conversation nobody can reach.
+- **A new epoch learned** from an opening. A root lost in a crash leaves every
+  continuation of its epoch unreadable until the contact happens to open another.
+- **A message or control about to be acted on**, after its replay window has
+  moved. So nothing a person has been shown can be delivered to them again by a
+  replay after a crash — what was not yet saved was not yet shown.
+
+Cover moves the window too and is not reported: a replayed cover frame is
+dropped exactly like the first one was.
+
+## Control frames never reach a person
+
+A frame of kind CONTROL is protocol housekeeping. It is reassembled on its own —
+never into the same transfer as a message — handled here, and dropped. Before
+key updates existed nothing sent one, and nothing stopped one either: it would
+have been delivered to a person as a message.
+
 ## An unreachable contact is held, not lost
 
 A mesh has no uptime guarantee, so a send that cannot be handed over is kept and
@@ -116,15 +157,22 @@ from dataclasses import dataclass, replace
 
 from mayak.addressing import EPOCH_SECONDS, EpochAddress, addresses_in_flight, epoch_at, pairwise_secret
 from mayak.envelope import EnvelopeError, Inbound, content_capacity, open_message, prepare
-from mayak.epoch import Opener, Sealer
+from mayak.epoch import EpochRecord, Opener, Sealer
 from mayak.fragment import WHOLE, WHOLE_HEADER, FragmentError, Reassembler, split
 from mayak.frame import Kind
-from mayak.kem import Kem
+from mayak.kem import Kem, KemError
+from mayak.keyring import ReceiveKeyring
 from mayak.outbox import Outbox
 from mayak.transport import Transport, TransportError
 
 #: Called with a message a person should see. Cover never reaches it.
 MessageHandler = Callable[[Inbound], None]
+
+#: Called with a contact's new encapsulation key, so it can be kept.
+PeerKeyHandler = Callable[[bytes], None]
+
+#: The first byte of a control frame's content: what kind of housekeeping it is.
+CONTROL_KEY_UPDATE = 0x01
 
 #: How many copies of the frame that opens an epoch are sent.
 #:
@@ -172,7 +220,22 @@ class Session:
         *,
         clock: Callable[[], float] = time.time,
         allow_classical_only: bool = False,
+        keyring: ReceiveKeyring | None = None,
+        receiving_state: tuple[list[EpochRecord], dict[bytes, float]] | None = None,
+        on_peer_key: PeerKeyHandler | None = None,
+        on_state_changed: Callable[[], None] | None = None,
     ) -> None:
+        """
+        :param keyring: the keys this conversation receives on. A new
+            conversation starts with the device's invitation key alone.
+        :param on_peer_key: told when the contact sends a new key, so it
+            survives a restart.
+        :param receiving_state: live receiving epochs and retired ones, as a
+            previous run left them — see :attr:`receiving_state`.
+        :param on_state_changed: told when something that must survive a crash
+            has changed — see the module docstring for exactly when.
+        """
+        self._kem = kem
         self._us = us
         self._peer = peer
         self._transport = transport
@@ -184,10 +247,15 @@ class Session:
 
         self._outbox = Outbox(clock=clock)
 
-        #: Pieces of messages too long for one frame. Fed only with content that
-        #: has already been opened and authenticated, so nothing a stranger
-        #: sends can enter a transfer.
-        self._pieces = Reassembler(clock=clock)
+        #: Pieces of frames too long for one, per kind: a control transfer and a
+        #: message transfer never share a reassembly. Fed only with content that
+        #: has already been opened and authenticated, so nothing a stranger sends
+        #: can enter a transfer.
+        self._pieces = {Kind.MESSAGE: Reassembler(clock=clock), Kind.CONTROL: Reassembler(clock=clock)}
+
+        self._keyring = keyring or ReceiveKeyring.introduced(us.kem_private_key, us.kem_public_key, clock=clock)
+        self._on_peer_key = on_peer_key
+        self._on_state_changed = on_state_changed
 
         self._sealer = Sealer(
             kem,
@@ -197,10 +265,13 @@ class Session:
         )
         self._opener = Opener(
             kem,
-            us.kem_private_key,
+            self._keyring.private_keys,
             clock=clock,
             allow_classical_only=allow_classical_only,
+            on_opening=self._opened_under,
         )
+        if receiving_state is not None:
+            self._opener.restore(*receiving_state)
 
         #: Frames that arrived and did not open. Not an error to be raised — a
         #: destination anyone can send to will receive noise, and a session that
@@ -211,6 +282,10 @@ class Session:
         #: they arrived and still did not reach the caller.
         self.cover_received = 0
 
+        #: Control frames from the contact that this build could not act on — an
+        #: unknown kind from a newer build, or a key that was not a usable key.
+        self.control_refused = 0
+
         #: Messages this session could not hand to the network and kept instead.
         #: Exposed so a caller can tell "sent" from "held" without reaching into
         #: the outbox — the difference is the whole of what a user is told.
@@ -220,6 +295,25 @@ class Session:
     def waiting(self) -> int:
         """Messages held for a contact who could not be reached."""
         return len(self._outbox)
+
+    @property
+    def keyring(self) -> ReceiveKeyring:
+        """The keys this conversation receives on."""
+        return self._keyring
+
+    @property
+    def receiving_state(self) -> tuple[list[EpochRecord], dict[bytes, float]]:
+        """What this conversation must remember across a restart to keep receiving.
+
+        The receiving epochs only. Outgoing roots are never exported — see
+        :mod:`mayak.epoch` for why a seized device must not hold them.
+        """
+        return self._opener.records(), self._opener.retired_records()
+
+    @property
+    def peer_kem_key(self) -> bytes:
+        """The contact's encapsulation key this session seals to now."""
+        return self._peer.kem_public_key
 
     @property
     def capacity(self) -> int:
@@ -278,7 +372,28 @@ class Session:
         return len(self._outbox.attempt(self._transport.send).sent)
 
     def _send(self, kind: Kind, content: bytes) -> EpochAddress:
-        """Seal a message into one frame, or into as many as it takes.
+        """Keep the keys moving, then send what was asked for."""
+        self._destroy_expired_keys()
+        self._rotate_and_announce()
+        return self._send_frames(kind, content)
+
+    def _rotate_and_announce(self) -> None:
+        """Create a receiving key when one is due, and tell the contact about it.
+
+        The new key is handed to :attr:`on_keys_changed` — saved — *before* it is
+        announced. The other order loses the conversation if the process dies in
+        between: the contact would seal to a key that no longer exists anywhere.
+        """
+        if self._keyring.needs_rotation():
+            self._keyring.rotate(self._kem)
+            self._state_changed()
+
+        if self._keyring.announcement_due():
+            self._send_frames(Kind.CONTROL, bytes([CONTROL_KEY_UPDATE]) + self._keyring.newest.public)
+            self._keyring.announced()
+
+    def _send_frames(self, kind: Kind, content: bytes) -> EpochAddress:
+        """Seal content into one frame, or into as many as it takes.
 
         Returns the address the first frame went to. The rest go to the same
         one — an epoch that rolled over between two pieces of one message would
@@ -354,7 +469,62 @@ class Session:
             self.held += 1
         return outbound.address
 
+    def _opened_under(self, private_key: bytes) -> None:
+        """An epoch opening decapsulated under this key: the contact has it.
+
+        Reported whether or not the key's state moved, because a new epoch was
+        learned either way and its root has to survive a crash.
+        """
+        self._keyring.confirm(private_key)
+        self._state_changed()
+
+    def _destroy_expired_keys(self) -> None:
+        destroyed = self._keyring.expire()
+        for key in destroyed:
+            # The key alone is not enough: roots it produced would keep opening
+            # their epochs from memory.
+            self._opener.forget_opened_with(key.private)
+        if destroyed:
+            self._state_changed()
+
+    def _state_changed(self) -> None:
+        if self._on_state_changed is not None:
+            self._on_state_changed()
+
+    def _on_control(self, content: bytes) -> None:
+        if not content:
+            self.control_refused += 1
+            return
+
+        if content[0] != CONTROL_KEY_UPDATE:
+            # A kind a newer build knows about. Ignored, counted, and never
+            # shown to anyone.
+            self.control_refused += 1
+            return
+
+        key = content[1:]
+        if len(key) != self._kem.public_key_length:
+            self.control_refused += 1
+            return
+        if key == self._peer.kem_public_key:
+            # A repeat — updates are re-sent until the contact uses them.
+            return
+        try:
+            # Proven usable before anything depends on it. A key that fails the
+            # mechanism's own checks would otherwise surface as a send that
+            # raises, long after the frame that carried it.
+            self._kem.encapsulate(key)
+        except KemError:
+            self.control_refused += 1
+            return
+
+        self._peer = Peer(public_key=self._peer.public_key, kem_public_key=key)
+        self._sealer.retarget(key)
+        if self._on_peer_key is not None:
+            self._on_peer_key(key)
+
     def _receive(self, wire: bytes) -> None:
+        self._destroy_expired_keys()
         try:
             inbound = open_message(
                 self._opener,
@@ -375,8 +545,13 @@ class Session:
             self.cover_received += 1
             return
 
+        reassembler = self._pieces.get(inbound.kind)
+        if reassembler is None:
+            self.unopened += 1
+            return
+
         try:
-            content = self._pieces.accept(inbound.content)
+            content = reassembler.accept(inbound.content)
         except FragmentError:
             # The seal held, so this came from the contact — but it is not a
             # piece of anything. A build that sent something this one cannot
@@ -385,6 +560,13 @@ class Session:
             return
 
         if content is None:
+            return
+
+        # Saved before anything is acted on — see the module docstring.
+        self._state_changed()
+
+        if inbound.kind is Kind.CONTROL:
+            self._on_control(content)
             return
 
         self._on_message(replace(inbound, content=content))

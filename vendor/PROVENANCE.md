@@ -203,7 +203,7 @@ fixture to regenerate.
 
 | Directory | Source | Commit | License |
 |---|---|---|---|
-| `python/mayak` | ProjectBeta (this project's own repository) | `b608759460031af8913d5ed4ded24c2c2fa349b2` | same as this repository |
+| `python/mayak` | ProjectBeta (this project's own repository) | `ef4b49552a8a4ea10498429c0b82f6af947d6dec` | same as this repository |
 
 **The one thing under `vendor/` this project wrote.** Mayak — the messaging protocol that
 replaces LXMF — is developed and tested in its own repository, and reaches the app the
@@ -234,13 +234,22 @@ native ML-KEM and `argon2-cffi` while holding a conversation: a Cyrillic message
 across frames, a reply, an encrypted store reopened and wiped. Loopback only; nothing on
 the air.
 
+**Since `ef4b4955`: keys rotate and conversations survive a restart.** Each
+conversation replaces the key it receives on and destroys the old one once the contact
+has moved on, so recorded history does not open with a seized device; the receiving side
+of each conversation is saved before a message is shown. `MayakOnDeviceInstrumentedTest`
+covers both on the phone — `mayak.selfcheck` moves a conversation off its invitation keys
+and restarts a device part-way through a contact's epoch. Whole module on the moto g54 5G:
+OK (12 tests).
+
 **And between two devices.** `MayakPhoneToLaptopInstrumentedTest`, driven from a laptop
 by ProjectBeta's `tools/phone_link_check.py`, sends a Mayak message from the phone to
 `mayak listen` on the laptop over real Reticulum and receives a Cyrillic reply. The link
 is a TCP interface forwarded over USB with `adb reverse` — no Wi-Fi, nothing on the air.
 The two ends use different implementations of both primitives at once: native ML-KEM and
 argon2-cffi on the phone, `cryptography` on the laptop, and the phone opens a device file
-the laptop sealed. Passed on two consecutive runs (3.8 s and 3.9 s on the phone). Without
+the laptop sealed. Passed on two consecutive runs (3.8 s and 3.9 s on the phone), and on two
+more after key rotation arrived (2.6 s and 2.5 s). Without
 the laptop's arguments the test is skipped by assumption, so the module's ordinary run
 does not need one.
 

@@ -17,6 +17,23 @@ when a device is re-keyed, and replacing it does not disturb the addresses.
 Conflating them would tie each to the other's calendar and make the cheap
 operation as disruptive as the expensive one.
 
+## A key that changes inside a conversation is not a key that changed hands
+
+The encapsulation key a contact receives on is replaced on a schedule — see
+:mod:`mayak.keyring` — so that a seized device does not open their recorded
+history. The new key arrives inside the conversation, on an address only the two
+of them can derive, which authenticates it as firmly as the conversation itself.
+:meth:`ContactBook.rotate_key` takes such a key and leaves trust alone.
+
+:meth:`ContactBook.offer_keys` is the other case: a key that arrived from outside
+— a new invitation, a relay, someone's word. That one could be a substitution,
+and a verified contact becomes :attr:`Trust.CHANGED`.
+
+The fingerprint is computed over the key a contact was *introduced* with, not
+the one in use today. Otherwise every rotation would change the number two people
+read aloud, and a fingerprint that changes weekly teaches people to stop
+comparing it.
+
 ## Verification is a property of the contact, not a ceremony elsewhere
 
 A key obtained over the air is a key somebody may have substituted. A key read
@@ -85,8 +102,15 @@ class Contact:
 
     name: str
     identity_key: bytes
+
+    #: The encapsulation key to seal to now. Replaced when the contact rotates.
     kem_key: bytes
+
     trust: Trust = Trust.UNVERIFIED
+
+    #: The encapsulation key the contact was introduced with — what the
+    #: fingerprint covers. Defaults to :attr:`kem_key`.
+    introduced_kem_key: bytes = b""
 
     def __post_init__(self) -> None:
         if len(self.identity_key) != IDENTITY_KEY_LENGTH:
@@ -95,6 +119,8 @@ class Contact:
             raise ContactError("a contact with no encapsulation key cannot be written to")
         if not self.name.strip():
             raise ContactError("a contact needs a name somebody can recognise")
+        if not self.introduced_kem_key:
+            object.__setattr__(self, "introduced_kem_key", self.kem_key)
 
     @property
     def fingerprint(self) -> str:
@@ -104,8 +130,12 @@ class Contact:
         an encapsulation key be substituted while the comparison still matched,
         which is the substitution that matters — it is the one that decides who
         can read the messages.
+
+        The encapsulation key it covers is the one the contact was introduced
+        with. Keys rotated inside the conversation are authenticated by it and
+        do not change what two people compare.
         """
-        digest = hashlib.sha256(b"mayak/contact/v1" + self.identity_key + self.kem_key).hexdigest()
+        digest = hashlib.sha256(b"mayak/contact/v1" + self.identity_key + self.introduced_kem_key).hexdigest()
         return digest[:SPOKEN_FINGERPRINT_CHARACTERS]
 
     @property
@@ -190,7 +220,26 @@ class ContactBook:
             return contact
 
         trust = Trust.CHANGED if contact.trust in (Trust.VERIFIED, Trust.CHANGED) else Trust.UNVERIFIED
-        updated = replace(contact, kem_key=kem_key, trust=trust)
+        # A key from outside is a new introduction: the fingerprint follows it,
+        # so the two people can compare again and find out which case this was.
+        updated = replace(contact, kem_key=kem_key, introduced_kem_key=kem_key, trust=trust)
+        self._contacts[identity_key] = updated
+        return updated
+
+    def rotate_key(self, identity_key: bytes, kem_key: bytes) -> Contact:
+        """Take a key the contact sent inside the conversation.
+
+        Authenticated by the conversation — only the two ends can derive the
+        address it arrived on — so trust is left exactly as it was and the
+        fingerprint does not move. Anything that did not arrive that way belongs
+        in :meth:`offer_keys`.
+        """
+        contact = self._require(identity_key)
+        if not kem_key:
+            raise ContactError("a contact with no encapsulation key cannot be written to")
+        if kem_key == contact.kem_key:
+            return contact
+        updated = replace(contact, kem_key=kem_key)
         self._contacts[identity_key] = updated
         return updated
 

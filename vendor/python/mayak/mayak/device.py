@@ -30,6 +30,34 @@ from.
     if present:  identity private (2 + n) || identity public (2 + n)
               || kem private (2 + n)      || kem public (2 + n)
     book length (4) || book bytes
+    -- layout 2 only:
+    conversation count (2)
+    per conversation:  contact identity (2 + n)
+      key count (1)
+      per key:     flags (1) || created (8) || superseded (8, if flagged)
+                   || private (2 + n) || public (2 + n)    -- not for the invitation key
+      epoch count (1)
+      per epoch:   identifier (2 + n) || root (2 + n) || created (8)
+                   || opened with (2 + n) || highest counter (4) || seen (8)
+      retired count (2)
+      per retired: identifier (2 + n) || when (8)
+
+Layout 2 added what a conversation needs to keep receiving across a restart:
+its receiving keys — see :mod:`mayak.keyring` — and its receiving epochs, with
+their replay windows and the record of retired ones — see :mod:`mayak.epoch`.
+Without the keys, no contact could reach a restarted device until introduced
+again; without the epochs, not until the contact happened to open a new one, up
+to a week later. That second one was not hypothetical: a restart test found it.
+
+Outgoing epochs are never here. See :mod:`mayak.epoch` for why.
+
+The invitation key's entry carries a flag and no key material. That key is
+already in the file once, as the device's own — or it is not in the file at all,
+because a platform keystore holds it, and a keyring must not be the side door
+that copies it out.
+
+A layout 1 file still opens, with no keyrings: every conversation in it starts
+again from the invitation key, which is exactly what they were using.
 
 The book is delegated to :mod:`mayak.book` rather than re-parsed here, and it is
 length-prefixed so that module can keep refusing trailing bytes — it is handed
@@ -43,28 +71,70 @@ duplication is a cheaper price than that.
 
 from __future__ import annotations
 
+import math
 import struct
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 from mayak import book as book_format
 from mayak.book import BookFormatError
 from mayak.contacts import ContactBook
+from mayak.epoch import EpochRecord
 from mayak.kem import Kem
 from mayak.session import Us
 from mayak.store import Store
 
 #: This module's own format marker, separate from the store's and the book's.
-LAYOUT_VERSION = 1
+LAYOUT_VERSION = 2
+
+#: Layouts this build reads. Only :data:`LAYOUT_VERSION` is written.
+READABLE_LAYOUTS = (1, 2)
 
 _MAX_FIELD = 0xFFFF
 _KEYS_ABSENT = 0
 _KEYS_PRESENT = 1
 
+_FLAG_INTRODUCTION = 0x01
+_FLAG_CONFIRMED = 0x02
+_FLAG_SUPERSEDED = 0x04
+_KNOWN_FLAGS = _FLAG_INTRODUCTION | _FLAG_CONFIRMED | _FLAG_SUPERSEDED
+_MAX_KEYS_PER_RING = 255
+_MAX_EPOCHS_PER_CONVERSATION = 255
+
 
 class DeviceFormatError(ValueError):
     """The saved bytes are not a device this build can read."""
+
+
+@dataclass(frozen=True)
+class StoredKey:
+    """A conversation's receiving key as the file holds it.
+
+    For the invitation key, :attr:`private` and :attr:`public` are empty: the
+    caller fills them in from the device's own keys.
+    """
+
+    private: bytes
+    public: bytes
+    created: float
+    confirmed: bool = False
+    superseded: float | None = None
+    introduction: bool = False
+
+
+@dataclass(frozen=True)
+class StoredConversation:
+    """What one conversation needs to keep receiving after a restart."""
+
+    #: Receiving keys, oldest first.
+    keys: list[StoredKey]
+
+    #: Live receiving epochs.
+    epochs: list[EpochRecord] = field(default_factory=list)
+
+    #: Recently retired epoch identifiers, and when.
+    retired: dict[bytes, float] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -74,6 +144,9 @@ class Device:
     #: None when the keys are held somewhere this file does not reach.
     us: Us | None
     book: ContactBook
+
+    #: Contact identity key -> that conversation's receiving side.
+    conversations: dict[bytes, StoredConversation] = field(default_factory=dict)
 
 
 def new_keys(kem: Kem) -> Us:
@@ -127,7 +200,141 @@ def serialise(device: Device) -> bytes:
 
     book = book_format.serialise(device.book)
     out += struct.pack(">I", len(book)) + book
+
+    if len(device.conversations) > _MAX_FIELD:
+        raise DeviceFormatError(f"{len(device.conversations)} conversations exceeds the {_MAX_FIELD} allowed")
+    out += struct.pack(">H", len(device.conversations))
+    for identity, conversation in device.conversations.items():
+        keys, epochs, retired = conversation.keys, conversation.epochs, conversation.retired
+        if not keys or len(keys) > _MAX_KEYS_PER_RING:
+            raise DeviceFormatError(f"a keyring of {len(keys)} keys cannot be written")
+        if len(epochs) > _MAX_EPOCHS_PER_CONVERSATION or len(retired) > _MAX_FIELD:
+            raise DeviceFormatError("a conversation holds more epochs than the format allows")
+        out += _field(identity)
+        out.append(len(keys))
+        for key in keys:
+            out += _stored_key(key)
+        out.append(len(epochs))
+        for epoch in epochs:
+            out += _field(epoch.identifier) + _field(epoch.root) + struct.pack(">d", epoch.created)
+            out += _field(epoch.opened_with) + struct.pack(">iQ", epoch.highest, epoch.seen)
+        out += struct.pack(">H", len(retired))
+        for identifier, when in retired.items():
+            out += _field(identifier) + struct.pack(">d", when)
     return bytes(out)
+
+
+def _stored_key(key: StoredKey) -> bytes:
+    flags = (
+        (_FLAG_INTRODUCTION if key.introduction else 0)
+        | (_FLAG_CONFIRMED if key.confirmed else 0)
+        | (_FLAG_SUPERSEDED if key.superseded is not None else 0)
+    )
+    out = bytearray([flags]) + struct.pack(">d", key.created)
+    if key.superseded is not None:
+        out += struct.pack(">d", key.superseded)
+    if not key.introduction:
+        if not key.private or not key.public:
+            raise DeviceFormatError("a rotated key with no key material cannot be written")
+        out += _field(key.private) + _field(key.public)
+    return bytes(out)
+
+
+def _take_time(raw: bytes, at: int) -> tuple[float, int]:
+    if at + 8 > len(raw):
+        raise DeviceFormatError("the device ends in the middle of a time")
+    (value,) = struct.unpack(">d", raw[at : at + 8])
+    if not math.isfinite(value):
+        raise DeviceFormatError("the device holds a time that is not a time")
+    return value, at + 8
+
+
+def _take_conversations(raw: bytes, at: int) -> tuple[dict[bytes, StoredConversation], int]:
+    if at + 2 > len(raw):
+        raise DeviceFormatError("the device ends before its conversations")
+    (count,) = struct.unpack(">H", raw[at : at + 2])
+    at += 2
+
+    conversations: dict[bytes, StoredConversation] = {}
+    for _ in range(count):
+        identity, at = _take_field(raw, at)
+        if identity in conversations:
+            raise DeviceFormatError("the device holds two conversations for one contact")
+        if at >= len(raw):
+            raise DeviceFormatError("the device ends before a keyring's size")
+        size = raw[at]
+        at += 1
+        if size == 0:
+            raise DeviceFormatError("the device holds a keyring with no keys")
+
+        keys = []
+        for _ in range(size):
+            if at >= len(raw):
+                raise DeviceFormatError("the device ends before a key")
+            flags = raw[at]
+            at += 1
+            if flags & ~_KNOWN_FLAGS:
+                raise DeviceFormatError(f"unknown key flags {flags:#x}")
+            created, at = _take_time(raw, at)
+            superseded = None
+            if flags & _FLAG_SUPERSEDED:
+                superseded, at = _take_time(raw, at)
+            private = public = b""
+            introduction = bool(flags & _FLAG_INTRODUCTION)
+            if not introduction:
+                private, at = _take_field(raw, at)
+                public, at = _take_field(raw, at)
+                if not private or not public:
+                    raise DeviceFormatError("the device holds a rotated key with no key material")
+            keys.append(
+                StoredKey(
+                    private=private,
+                    public=public,
+                    created=created,
+                    confirmed=bool(flags & _FLAG_CONFIRMED),
+                    superseded=superseded,
+                    introduction=introduction,
+                ),
+            )
+
+        if at >= len(raw):
+            raise DeviceFormatError("the device ends before a conversation's epochs")
+        epoch_count = raw[at]
+        at += 1
+        epochs = []
+        for _ in range(epoch_count):
+            identifier, at = _take_field(raw, at)
+            root, at = _take_field(raw, at)
+            created, at = _take_time(raw, at)
+            opened_with, at = _take_field(raw, at)
+            if at + 12 > len(raw):
+                raise DeviceFormatError("the device ends in the middle of a replay window")
+            highest, seen = struct.unpack(">iQ", raw[at : at + 12])
+            at += 12
+            if not identifier or not root:
+                raise DeviceFormatError("the device holds an epoch with no root")
+            epochs.append(
+                EpochRecord(
+                    identifier=identifier,
+                    root=root,
+                    created=created,
+                    opened_with=opened_with,
+                    highest=highest,
+                    seen=seen,
+                ),
+            )
+
+        if at + 2 > len(raw):
+            raise DeviceFormatError("the device ends before a conversation's retired epochs")
+        (retired_count,) = struct.unpack(">H", raw[at : at + 2])
+        at += 2
+        retired: dict[bytes, float] = {}
+        for _ in range(retired_count):
+            identifier, at = _take_field(raw, at)
+            retired[identifier], at = _take_time(raw, at)
+
+        conversations[identity] = StoredConversation(keys=keys, epochs=epochs, retired=retired)
+    return conversations, at
 
 
 def deserialise(raw: bytes) -> Device:
@@ -140,8 +347,9 @@ def deserialise(raw: bytes) -> Device:
     if len(raw) < 6:
         raise DeviceFormatError("too short to be a device")
 
-    if raw[0] != LAYOUT_VERSION:
-        raise DeviceFormatError(f"device layout {raw[0]} is not layout {LAYOUT_VERSION}")
+    layout = raw[0]
+    if layout not in READABLE_LAYOUTS:
+        raise DeviceFormatError(f"device layout {layout} is not one this build reads {READABLE_LAYOUTS}")
 
     marker = raw[1]
     if marker not in (_KEYS_ABSENT, _KEYS_PRESENT):
@@ -167,18 +375,26 @@ def deserialise(raw: bytes) -> Device:
         raise DeviceFormatError("the device ends before its contact book")
     (length,) = struct.unpack(">I", raw[at : at + 4])
     at += 4
-    if at + length != len(raw):
-        # Not "at + length > len(raw)": a book shorter than the rest of the file
-        # means something was appended, and ignoring it would let anything ride
-        # along unnoticed.
+    if at + length > len(raw):
+        raise DeviceFormatError("the device claims a contact book longer than what is left of it")
+    if layout == 1 and at + length != len(raw):
+        # Layout 1 ends with the book. Anything after it means the file is not
+        # what it says, and ignoring it would let anything ride along unnoticed.
         raise DeviceFormatError("the device and its contact book disagree about where the file ends")
 
     try:
         book = book_format.deserialise(raw[at : at + length])
     except BookFormatError as broken:
         raise DeviceFormatError(f"the device holds something that is not a contact book: {broken}") from broken
+    at += length
 
-    return Device(us=us, book=book)
+    conversations: dict[bytes, StoredConversation] = {}
+    if layout >= 2:
+        conversations, at = _take_conversations(raw, at)
+        if at != len(raw):
+            raise DeviceFormatError("the device has more bytes after its conversations")
+
+    return Device(us=us, book=book, conversations=conversations)
 
 
 def load(store: Store) -> Device | None:

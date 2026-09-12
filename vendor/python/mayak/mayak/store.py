@@ -31,6 +31,20 @@ Argon2id itself comes from :mod:`mayak.stretch`, which finds it in `cryptography
 on the desktop and in `argon2-cffi` on Android, where Chaquopy's `cryptography`
 has none. The two give identical bytes, so a file opens on either.
 
+## One stretch per process, not one per save
+
+A conversation's receiving state is written before each message is shown to a
+person, so that nothing seen can be replayed after a crash. Stretching the
+passphrase afresh for every one of those writes would cost a third of a second
+and 64 MiB per message. So a store derives its key once — from the file's salt
+when it opens one, from a fresh salt when it creates one — and reuses that salt
+and key for every later save, with a fresh nonce each time.
+
+That gives up nothing that was held back before: the store already keeps the
+passphrase for as long as it lives, and a nonce that never repeats is what
+AES-GCM actually requires. What an observer of successive file versions learns
+is that they came from one run, which the timestamps say anyway.
+
 ## Wiping is overwrite-then-remove, and it is not a guarantee
 
 :meth:`EncryptedStore.wipe` overwrites the bytes before unlinking. On a plain
@@ -128,6 +142,8 @@ class EncryptedStore:
             raise StoreError("a store with no passphrase is not encrypted")
         self._path = Path(path)
         self._passphrase = passphrase
+        #: (salt, key) once derived — see the module docstring.
+        self._derived: tuple[bytes, bytes] | None = None
 
     @property
     def path(self) -> Path:
@@ -154,7 +170,7 @@ class EncryptedStore:
         nonce = raw[len(MAGIC) + 1 + SALT_LENGTH : _HEADER]
 
         try:
-            key = self._derive(salt)
+            key = self._key_for(salt)
             # The header is authenticated, so a file whose salt or version was
             # edited fails here rather than decrypting into something else.
             return AESGCM(key).decrypt(nonce, raw[_HEADER:], raw[:_HEADER])
@@ -162,10 +178,10 @@ class EncryptedStore:
             raise StoreError("the store could not be opened") from refused
 
     def save(self, payload: bytes) -> None:
-        salt = secrets.token_bytes(SALT_LENGTH)
+        salt = self._derived[0] if self._derived is not None else secrets.token_bytes(SALT_LENGTH)
         nonce = secrets.token_bytes(NONCE_LENGTH)
         header = MAGIC + bytes([VERSION]) + salt + nonce
-        ciphertext = AESGCM(self._derive(salt)).encrypt(nonce, payload, header)
+        ciphertext = AESGCM(self._key_for(salt)).encrypt(nonce, payload, header)
 
         # Written beside the target and moved into place, so a process that dies
         # mid-write leaves the previous store intact rather than half of a new
@@ -188,6 +204,7 @@ class EncryptedStore:
         and the key is not stored anywhere — the bytes that survive are bytes
         nobody can open.
         """
+        self._derived = None
         if not self._path.is_file():
             return
         length = self._path.stat().st_size
@@ -196,6 +213,11 @@ class EncryptedStore:
             handle.flush()
             os.fsync(handle.fileno())
         self._path.unlink()
+
+    def _key_for(self, salt: bytes) -> bytes:
+        if self._derived is None or self._derived[0] != salt:
+            self._derived = (salt, self._derive(salt))
+        return self._derived[1]
 
     def _derive(self, salt: bytes) -> bytes:
         return argon2id(
