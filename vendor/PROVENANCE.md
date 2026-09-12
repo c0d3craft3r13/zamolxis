@@ -147,6 +147,58 @@ The extra symbols in the old binaries are themselves evidence for the provenance
 `opus_decode24` does not exist in opus 1.5.2, so whatever produced that file was not the
 version the script claims.
 
+## mlkem-native (`vendor/mlkem-native/`)
+
+| Directory | Upstream | Commit | Date | License |
+|---|---|---|---|---|
+| `mlkem-native/mlkem` | [pq-code-package/mlkem-native](https://github.com/pq-code-package/mlkem-native) | `0924122d0e92b2d682fab5d5e5e2593ec84c8a1f` | 2026-09-10 | Apache-2.0 OR ISC OR MIT |
+
+ML-KEM-768 (FIPS 203) for the Mayak protocol's post-quantum half on Android. On the
+desktop that half comes from `cryptography` 47+, which is AWS-LC underneath; Chaquopy's
+package index stops at `cryptography` 42.0.8, so on the phone it comes from here instead,
+compiled by `rns-backend-py/src/main/cpp/CMakeLists.txt` into `libmayak_mlkem.so` and
+loaded from Python with `ctypes`. There is no JNI and no Kotlin in the path.
+
+Only `mlkem/` and `LICENSE` were taken, **byte-identical** — no local patches. Upstream's
+`proofs/`, `test/`, `dev/`, `integration/`, CI and Nix files were left behind; several of
+the CBMC proof harness paths also exceed Windows' path limit and do not check out there at
+all. mlkem-native is a fork of the public-domain Kyber reference implementation, and all
+of `mlkem/*` carries the triple licence above.
+
+**What this project adds is outside `vendor/`:**
+
+- `rns-backend-py/src/main/cpp/mayak_mlkem_config.h` — `MLK_CONFIG_PARAMETER_SET 768`,
+  namespace `mlk_upstream`, and `MLK_CONFIG_NO_RANDOMIZED_API`. No random number
+  generator is compiled into the C at all; every random byte comes from Python's
+  `os.urandom`. Upstream states plainly that it provides no RNG and the consumer must;
+  supplying none is the safest way to honour that.
+- `rns-backend-py/src/main/cpp/mayak_mlkem.c` — a wrapper that stores the private key as
+  the 64-byte seed (as `cryptography`'s `private_bytes_raw()` does) rather than the
+  2400-byte expanded key, so a device file is interchangeable between the phone and the
+  desktop.
+
+Portable C backend only. The AArch64 assembly (`mlkem_native_asm.S`, formally proved
+constant-time with HOL-Light upstream) is vendored but not enabled: this protocol
+encapsulates once per epoch, so there is no speed to gain, and turning it on is a config
+change, not another re-vendor. Inline value barriers stay on (`MLK_CONFIG_NO_ASM` unset).
+
+Upstream is built as its own static target, without this project's `-Werror`, so a new
+NDK warning cannot break the build on a file nobody here may edit.
+
+**Verified against an independent implementation, on hardware.** The same two translation
+units compiled for x86-64 Windows (`tools/build_mlkem_native.py` in ProjectBeta) agree
+with `cryptography`/AWS-LC in both directions — same public key from the same seed, each
+decapsulating the other's ciphertext, full hybrid seals crossing both ways. On a moto g54
+5G (arm64-v8a), `MlKemNativeInstrumentedTest` checks known answers that `cryptography`
+produced or verified: the public key for a fixed seed, decapsulation of a
+`cryptography`-made ciphertext, and a fixed-coins encapsulation byte-identical to the
+x86-64 build's.
+
+To re-sync: replace `mlkem/` and `LICENSE` from a new upstream commit, update the row
+above, rebuild, and run `MlKemNativeInstrumentedTest` on a device and
+`tests/test_mlkem_native.py` in ProjectBeta. A changed known answer is a stop, not a
+fixture to regenerate.
+
 ## The Python stack (`vendor/python/`)
 
 The `pythonBackend` flavor runs upstream Python RNS/LXMF through Chaquopy. Those three
