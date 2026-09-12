@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The test APK only. MayakPhoneToLaptopInstrumentedTest opens a TCP socket to
+  127.0.0.1, which `adb reverse` forwards over USB to a laptop — no Wi-Fi, nothing
+  beyond the cable. The library this module ships declares no permissions, and
+  this does not change that.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

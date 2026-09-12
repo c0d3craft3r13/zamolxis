@@ -234,6 +234,16 @@ native ML-KEM and `argon2-cffi` while holding a conversation: a Cyrillic message
 across frames, a reply, an encrypted store reopened and wiped. Loopback only; nothing on
 the air.
 
+**And between two devices.** `MayakPhoneToLaptopInstrumentedTest`, driven from a laptop
+by ProjectBeta's `tools/phone_link_check.py`, sends a Mayak message from the phone to
+`mayak listen` on the laptop over real Reticulum and receives a Cyrillic reply. The link
+is a TCP interface forwarded over USB with `adb reverse` — no Wi-Fi, nothing on the air.
+The two ends use different implementations of both primitives at once: native ML-KEM and
+argon2-cffi on the phone, `cryptography` on the laptop, and the phone opens a device file
+the laptop sealed. Passed on two consecutive runs (3.8 s and 3.9 s on the phone). Without
+the laptop's arguments the test is skipped by assumption, so the module's ordinary run
+does not need one.
+
 ## The Python stack (`vendor/python/`)
 
 The `pythonBackend` flavor runs upstream Python RNS/LXMF through Chaquopy. Those three
