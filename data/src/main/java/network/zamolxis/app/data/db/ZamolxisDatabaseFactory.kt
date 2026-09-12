@@ -143,6 +143,29 @@ object ZamolxisDatabaseFactory {
             .build()
     }
 
+    /**
+     * Prepare another of this app's databases to be opened encrypted.
+     *
+     * Loads SQLCipher, takes the same device-bound passphrase, and converts a file
+     * left plaintext by an install that predates encryption. The caller hands the
+     * returned passphrase to its own open helper.
+     *
+     * It lives here because loading the native library and holding the key are this
+     * module's business — SQLCipher is an `implementation` dependency and does not
+     * reach other modules' compile classpaths. A caller only has to know which file
+     * it is opening.
+     */
+    fun prepareEncrypted(
+        context: Context,
+        databaseName: String,
+    ): ByteArray {
+        SqlCipherNative.ensureLoaded()
+        val appContext = context.applicationContext
+        val passphrase = keyStore(appContext).loadOrCreate()
+        PlaintextDatabaseMigration.migrateIfNeeded(appContext.getDatabasePath(databaseName), passphrase)
+        return passphrase
+    }
+
     /** The passphrase store for this app, keyed by the Keystore-backed encryptor. */
     fun keyStore(context: Context): DatabaseKeyStore = DatabaseKeyStore(context.applicationContext.filesDir, IdentityKeyEncryptor())
 }

@@ -11,9 +11,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import network.zamolxis.app.data.database.InterfaceDatabase
 import network.zamolxis.app.data.database.dao.InterfaceDao
 import network.zamolxis.app.data.db.ZamolxisDatabase
+import network.zamolxis.app.data.db.ZamolxisDatabaseFactory
 import network.zamolxis.app.data.repository.ConversationRepository
 import network.zamolxis.app.data.repository.IdentityRepository
 import network.zamolxis.app.repository.InterfaceRepository
@@ -78,6 +80,9 @@ object InterfaceDatabaseModule {
     @Provides
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
+    /** The on-disk name; shared by the opener and the plaintext conversion. */
+    private const val INTERFACE_DATABASE_NAME = "interface_database"
+
     /**
      * Provides the Interface database singleton.
      */
@@ -87,16 +92,30 @@ object InterfaceDatabaseModule {
         @ApplicationContext context: Context,
         @ApplicationScope applicationScope: CoroutineScope,
         database: Provider<InterfaceDatabase>,
-    ): InterfaceDatabase =
-        Room
+    ): InterfaceDatabase {
+        // Encrypted at rest, for the same reason the message database is. Each row's
+        // `configJson` is a serialized InterfaceConfig, and that carries the IFAC
+        // network name and passphrase — the credential that admits a node to a private
+        // mesh. Left in plain SQLite it is readable from a seized phone once Android's
+        // file-based encryption has been unlocked even once, which is the state a phone
+        // taken from someone is usually in.
+        // Loads SQLCipher, takes the device passphrase, and converts a file left
+        // plaintext by an install that predates encryption — all before Room opens it.
+        val passphrase = ZamolxisDatabaseFactory.prepareEncrypted(context, INTERFACE_DATABASE_NAME)
+
+        return Room
             .databaseBuilder(
                 context,
                 InterfaceDatabase::class.java,
-                "interface_database",
+                INTERFACE_DATABASE_NAME,
             ).addCallback(InterfaceDatabase.Callback(context, database, applicationScope))
+            // `clearPassphrase = false` for the reason ZamolxisDatabaseFactory gives:
+            // SQLCipher zeroes the array it is handed, which breaks Room's reopens.
+            .openHelperFactory(SupportOpenHelperFactory(passphrase, null, false))
             .fallbackToDestructiveMigration()
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()
+    }
 
     /**
      * Provides the InterfaceDao from the database.

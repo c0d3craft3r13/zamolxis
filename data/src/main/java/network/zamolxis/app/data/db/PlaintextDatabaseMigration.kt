@@ -5,13 +5,15 @@ import net.zetetic.database.sqlcipher.SQLiteDatabase
 import java.io.File
 
 /**
- * Converts an existing unencrypted message database to an encrypted one.
+ * Converts an existing unencrypted database to an encrypted one.
  *
  * Installs that predate encryption have a plain SQLite file on disk. SQLCipher
  * cannot open it with a key, and there is no in-place switch — the contents have to
  * be copied into a new, keyed database via `sqlcipher_export`. This runs once,
  * before Room opens anything, and does nothing on installs that are already
- * encrypted or have no database yet.
+ * encrypted or have no database yet. Used for the message database and for the
+ * interface database, which holds IFAC passphrases — nothing here is specific to
+ * either.
  *
  * What happens if the process dies partway through is the whole design here:
  *
@@ -87,7 +89,7 @@ object PlaintextDatabaseMigration {
         restoreInterruptedMigration(databaseFile)
         if (!isPlaintextSqlite(databaseFile)) return false
 
-        Log.i(TAG, "Encrypting the existing message database")
+        Log.i(TAG, "Encrypting the existing database ${databaseFile.name}")
         val exported = File(databaseFile.path + EXPORT_SUFFIX)
         // A leftover from an attempt that died mid-export is half a database.
         exported.delete()

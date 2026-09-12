@@ -601,6 +601,10 @@ dependencies {
 
     // Room
     implementation(libs.room)
+    // The interface database holds IFAC passphrases, so it is opened encrypted the
+    // same way the message database is. SQLCipher already ships in the APK via
+    // `:data`; this only puts it on this module's compile classpath.
+    implementation(libs.sqlcipher)
     ksp(libs.room.compiler)
 
     // Crash Reporting - GlitchTip (Sentry-compatible)
