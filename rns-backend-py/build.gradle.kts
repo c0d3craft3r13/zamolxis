@@ -39,6 +39,10 @@ android {
     namespace = "network.zamolxis.app.rns.backend.py"
     compileSdk = 36
 
+    // Same pin as :vendor:lxst-kt:lxst. Two modules in one build compiling C
+    // with two different toolchains is a difference nobody would look for.
+    ndkVersion = "28.2.13676358"
+
     defaultConfig {
         minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -77,6 +81,20 @@ android {
 
     buildFeatures {
         buildConfig = true
+    }
+
+    // C called by Python through ctypes, not by the JVM through JNI — see
+    // src/main/cpp/mayak_native.c. This is the route ML-KEM-768 takes on
+    // Android, where Chaquopy's newest `cryptography` is 42.0.8 and ML-KEM
+    // landed in 47.
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            // Pinned for the reason :vendor:lxst-kt:lxst pins it: letting AGP
+            // choose means a different build host silently uses a different
+            // toolchain. 3.22.1 is what the Android SDK installs by default.
+            version = "3.22.1"
+        }
     }
 
     testOptions {
