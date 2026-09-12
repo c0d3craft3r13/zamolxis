@@ -19,6 +19,15 @@ The `src/main/python/` tree contains **only**:
    (~150 lines). A callback receiver that flattens RNS/LXMF events to dicts
    of primitives before they cross JNI.
 
+**Mayak is not an exception to this rule, because it is not in that tree.** The Mayak
+protocol — this project's own replacement for LXMF — is pip-installed from
+`vendor/python/mayak/`, exactly like RNS, and never copied into `src/main/python/`. It is
+a protocol stack, not a facade over one: it does not wrap RNS for Kotlin's convenience,
+it uses RNS as a transport. Its native half (`libmayak_mlkem.so`, ML-KEM-768) is built
+from `src/main/cpp/` and loaded by Python with `ctypes`, because Chaquopy's
+`cryptography` is 42.0.8 and has neither ML-KEM nor Argon2id. Change it in its own
+repository and re-vendor with `scripts/vendor-mayak.sh`; do not edit the snapshot.
+
 **Adding a `rns_*.py` facade is a regression.** The Kotlin sub-impls
 (`PythonRnsCore`, `PythonRnsLxmf`, …) call upstream RNS/LXMF methods *directly*
 via `PyObject.callAttr(...)`. There is no `reticulum_wrapper.py` and there will

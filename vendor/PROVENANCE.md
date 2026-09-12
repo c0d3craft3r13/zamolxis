@@ -199,6 +199,41 @@ above, rebuild, and run `MlKemNativeInstrumentedTest` on a device and
 `tests/test_mlkem_native.py` in ProjectBeta. A changed known answer is a stop, not a
 fixture to regenerate.
 
+## Mayak (`vendor/python/mayak/`)
+
+| Directory | Source | Commit | License |
+|---|---|---|---|
+| `python/mayak` | ProjectBeta (this project's own repository) | `b608759460031af8913d5ed4ded24c2c2fa349b2` | same as this repository |
+
+**The one thing under `vendor/` this project wrote.** Mayak — the messaging protocol that
+replaces LXMF — is developed and tested in its own repository, and reaches the app the
+way Reticulum does: a snapshot of committed state, pip-installed by Chaquopy from this
+directory, with the commit recorded in `VENDORED_COMMIT`. The reasons are the same ones
+this file gives for everything else: the build never reaches another checkout, and a
+protocol change arrives here only as a reviewable diff.
+
+Only the `mayak/` package and `pyproject.toml` are taken, via `git archive` of a named
+commit so an uncommitted edit cannot ship. No tests, no tools. Re-vendor with
+`scripts/vendor-mayak.sh`; do not edit the snapshot.
+
+**What the phone lacks, and where it comes from instead.** Every `cryptography` import in
+the package was checked against the 42.0.8 Chaquopy installs. Two are missing:
+
+- **ML-KEM-768** (in `cryptography` from 47) — `libmayak_mlkem.so`, see mlkem-native above.
+- **Argon2id** (from 44) — `argon2-cffi`, pulled in by Mayak's `pyproject.toml`; its native
+  half, `argon2-cffi-bindings` 21.2.0, is in Chaquopy's own index for cp311 on every ABI.
+  It and `cryptography`'s Argon2id gave identical bytes at the store's parameters and two
+  others, so a device file opens on either.
+
+Mayak refuses rather than weakens when either is absent — no fallback to scrypt, no
+classical-only sealing without being told in as many words.
+
+**Verified on hardware.** `MayakOnDeviceInstrumentedTest` on a moto g54 5G runs
+`mayak.selfcheck.run` — the same function Mayak's own suite runs — and asserts it used
+native ML-KEM and `argon2-cffi` while holding a conversation: a Cyrillic message, one split
+across frames, a reply, an encrypted store reopened and wiped. Loopback only; nothing on
+the air.
+
 ## The Python stack (`vendor/python/`)
 
 The `pythonBackend` flavor runs upstream Python RNS/LXMF through Chaquopy. Those three

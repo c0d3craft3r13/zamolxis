@@ -1,0 +1,27 @@
+# Packaging for one consumer that matters: the Android app, whose Chaquopy build
+# pip-installs a vendored snapshot of this directory the way it installs its
+# vendored RNS. Desktop development still uses requirements.txt.
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mayak"
+version = "0.1.0"
+description = "The Mayak messaging layer: fixed-size sealed frames over Reticulum, addressed by derivation."
+requires-python = ">=3.11"
+
+# The floors are what the phone has, not what the laptop has. Chaquopy's newest
+# cryptography is 42.0.8, which lacks ML-KEM (47) and Argon2id (44); mayak finds
+# those in its own native ML-KEM build and in argon2-cffi instead, and refuses
+# rather than weakens where neither is present. `rns` is not listed: the app
+# carries its own vendored Reticulum, and pulling a second one from PyPI would
+# put two stacks in one process.
+dependencies = [
+    "cryptography>=42",
+    "argon2-cffi>=21.3",
+]
+
+[tool.setuptools]
+packages = ["mayak"]
