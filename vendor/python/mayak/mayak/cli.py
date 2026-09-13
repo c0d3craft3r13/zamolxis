@@ -89,6 +89,7 @@ from mayak.kem import HybridKem, Kem, X25519Kem
 from mayak.mechanisms import post_quantum_mechanism
 from mayak.node import Node, NodeError
 from mayak.rns_transport import RnsTransport, body_length_for, drain
+from mayak import invite_codes
 from mayak.bound_store import open_store
 from mayak.store import Store, StoreError
 from mayak.vault import hardware_vault
@@ -97,10 +98,7 @@ from mayak.transport import TransportError
 #: Where a device keeps itself when the caller does not say otherwise.
 DEFAULT_DEVICE_FILE = Path.home() / ".mayak" / "device.mayak"
 
-#: What an invitation looks like when it is pasted into a message or read off a
-#: screen. The prefix is there so a person can tell what they have been sent,
-#: and so a future layout can be refused rather than misread.
-INVITE_PREFIX = "mayak1:"
+INVITE_PREFIX = invite_codes.INVITE_PREFIX
 
 #: How often ``listen`` wakes to check for held messages and epoch rollover.
 DEFAULT_FLUSH_SECONDS = 60.0
@@ -168,46 +166,21 @@ def build_kem(*, classical_only: bool) -> tuple[Kem, bool]:
 
 
 def invitation(identity_key: bytes, kem_key: bytes) -> str:
-    """The two public keys as one string somebody can send."""
-    raw = base64.urlsafe_b64encode(identity_key + kem_key).decode("ascii").rstrip("=")
-    return INVITE_PREFIX + raw
+    """The two public keys as one string somebody can send. See mayak.invite_codes."""
+    return invite_codes.encode(identity_key, kem_key)
 
 
 def read_invitation(text: str, kem: Kem) -> tuple[bytes, bytes]:
-    """Take an invitation apart, refusing anything that is not one.
-
-    The encapsulation key length is checked against the mechanism in use. That
-    catches two people running different mechanisms here, where it can be said
-    plainly, rather than later as messages that never open.
-    """
-    offered = text.strip()
-    if not offered.startswith(INVITE_PREFIX):
-        raise CliError(f"that does not look like an invitation; they start with {INVITE_PREFIX!r}")
-
-    body = offered[len(INVITE_PREFIX) :]
+    """Take an invitation apart, or say at the terminal why not."""
     try:
-        raw = base64.urlsafe_b64decode(body + "=" * (-len(body) % 4))
-    except (ValueError, TypeError) as unreadable:
-        raise CliError("the invitation is damaged and cannot be read") from unreadable
-
-    expected = IDENTITY_KEY_LENGTH + kem.public_key_length
-    if len(raw) != expected:
-        raise CliError(
-            f"the invitation carries {len(raw)} bytes of key and this build expects {expected}.\n"
-            f"That usually means the other device is not running {kem.name}.",
-        )
-    return raw[:IDENTITY_KEY_LENGTH], raw[IDENTITY_KEY_LENGTH:]
+        return invite_codes.decode(text, kem)
+    except invite_codes.InvitationError as refused:
+        raise CliError(str(refused)) from refused
 
 
 def fingerprint_of(identity_key: bytes, kem_key: bytes) -> str:
-    """Our own fingerprint, by the same route a contact's is computed.
-
-    Through :class:`~mayak.contacts.Contact` rather than a second copy of the
-    hash, because the number printed here and the number the other person sees
-    must be the same number, and two implementations of one hash is how they
-    stop being.
-    """
-    return Contact(name="me", identity_key=identity_key, kem_key=kem_key).spoken_fingerprint
+    """Our own fingerprint, by the same route a contact's is computed."""
+    return invite_codes.spoken_fingerprint(identity_key, kem_key)
 
 
 # ------------------------------------------------------------------ wiring

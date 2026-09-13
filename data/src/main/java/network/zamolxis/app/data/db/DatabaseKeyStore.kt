@@ -21,18 +21,37 @@ import java.security.SecureRandom
  * block in one process says nothing to the other, and two processes each writing a
  * freshly generated passphrase would leave one of them unable to read the database
  * it just wrote.
+ *
+ * The Mayak device file is opened by the same service under the same constraint,
+ * so it takes its passphrase from here too, under its own [keyFileName] — see
+ * [forMayak].
  */
 class DatabaseKeyStore(
     private val filesDir: File,
     private val encryptor: SecretBlobEncryptor,
     private val random: SecureRandom = SecureRandom(),
+    private val keyFileName: String = KEY_FILE_NAME,
 ) {
     companion object {
         /** 256-bit passphrase, matching the AES key size SQLCipher derives. */
         const val PASSPHRASE_LENGTH = 32
 
         private const val KEY_FILE_NAME = "zamolxis_database.key"
-        private const val LOCK_FILE_NAME = "zamolxis_database.key.lock"
+
+        /** Beside the Mayak device file; see [forMayak]. */
+        const val MAYAK_KEY_FILE_NAME = "mayak_store.key"
+
+        /**
+         * The passphrase of the Mayak device file, kept in [directory].
+         *
+         * [directory] should be under `Context.getNoBackupFilesDir()`: a wrapped key
+         * restored onto other hardware unwraps nothing, and the device file it opens
+         * must not leave the phone either.
+         */
+        fun forMayak(
+            directory: File,
+            encryptor: SecretBlobEncryptor,
+        ): DatabaseKeyStore = DatabaseKeyStore(directory, encryptor, keyFileName = MAYAK_KEY_FILE_NAME)
 
         /**
          * Serialises callers inside this process before they reach the file lock.
@@ -45,8 +64,8 @@ class DatabaseKeyStore(
         private val PROCESS_LOCK = Any()
     }
 
-    private val keyFile: File get() = File(filesDir, KEY_FILE_NAME)
-    private val lockFile: File get() = File(filesDir, LOCK_FILE_NAME)
+    private val keyFile: File get() = File(filesDir, keyFileName)
+    private val lockFile: File get() = File(filesDir, "$keyFileName.lock")
 
     /** True once a passphrase exists, i.e. the database is expected to be encrypted. */
     fun exists(): Boolean = keyFile.exists()
@@ -91,7 +110,7 @@ class DatabaseKeyStore(
         // — which this class reads as "no key yet" and answers by generating a new
         // one, leaving a database nothing can open again. The window is small and
         // the consequence is the whole message history.
-        val temp = File(filesDir, "$KEY_FILE_NAME.tmp")
+        val temp = File(filesDir, "$keyFileName.tmp")
         FileOutputStream(temp).use { out ->
             out.write(wrapped)
             out.flush()

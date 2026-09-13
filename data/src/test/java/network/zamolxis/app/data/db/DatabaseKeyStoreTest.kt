@@ -107,6 +107,19 @@ class DatabaseKeyStoreTest {
     }
 
     @Test
+    fun `the Mayak passphrase is a different secret in a different file`() {
+        val encryptor = ReversingEncryptor()
+        val database = store(encryptor).loadOrCreate()
+
+        val mayak = DatabaseKeyStore.forMayak(folder.root, encryptor).loadOrCreate()
+
+        assertFalse("Two stores must not share one passphrase", database.contentEquals(mayak))
+        assertTrue(folder.root.resolve(DatabaseKeyStore.MAYAK_KEY_FILE_NAME).isFile)
+        assertArrayEquals(database, store(encryptor).loadOrCreate())
+        assertArrayEquals(mayak, DatabaseKeyStore.forMayak(folder.root, encryptor).loadOrCreate())
+    }
+
+    @Test
     fun `concurrent first opens agree on one passphrase`() {
         val encryptor = ReversingEncryptor()
         val threads = 8

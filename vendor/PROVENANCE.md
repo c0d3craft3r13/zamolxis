@@ -203,7 +203,7 @@ fixture to regenerate.
 
 | Directory | Source | Commit | License |
 |---|---|---|---|
-| `python/mayak` | ProjectBeta (this project's own repository) | `fc111b6ceb1066659a62f0bd4923ca02c3e1f144` | same as this repository |
+| `python/mayak` | ProjectBeta (this project's own repository) | `c216c6dbe28c2ac20d088fbe9894ea3730f2e8a1` | same as this repository |
 
 **The one thing under `vendor/` this project wrote.** Mayak — the messaging protocol that
 replaces LXMF — is developed and tested in its own repository, and reaches the app the
@@ -257,6 +257,17 @@ trusted execution environment (the moto g54 5G has no StrongBox), ordinary save 
 key rotation 39–57 ms. A software-only keystore is refused. Found on the phone on the way:
 Chaquopy cannot call `Enumeration.nextElement` on `KeyStore.aliases()`, and Keystore keys
 outlive files, so a crashed run's keys needed `forget_orphaned_stores` to reclaim.
+
+**Since `c216c6db`: running inside the app.** `mayak.host` is what the `:reticulum`
+service drives — `PythonMayakHost` in `:rns-host` starts it on backend READY over the running
+Reticulum, with the device file and its Keystore-wrapped passphrase under `noBackupFilesDir`,
+and passes radio silence through. `mayak.bound_store.rebind` turns an existing file bound or
+portable in place. `MayakHostInstrumentedTest` runs the service's calls on the moto g54 5G
+against the real Keystore: first start 1.4 s; bind 4.2 s and unbind 4.0 s at first, 2.8 s and
+2.6 s once the host started on the store the conversion had already derived, one Argon2id
+stretch fewer. Whole module on the phone: OK (13 tests, the laptop link skipped). The installed
+Маяк debug build logs `Mayak running: kem=x25519+ml-kem-768, bound=false, vault=trusted
+environment` from `:reticulum`.
 
 **And between two devices.** `MayakPhoneToLaptopInstrumentedTest`, driven from a laptop
 by ProjectBeta's `tools/phone_link_check.py`, sends a Mayak message from the phone to

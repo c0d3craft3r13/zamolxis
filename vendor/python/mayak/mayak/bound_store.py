@@ -46,6 +46,12 @@ Keystore outlives files. :func:`forget_orphaned_stores` destroys every store key
 whose file is not among those an application says it still has. Found on the
 phone: a self-check that crashed half way left keys that the next run counted.
 
+## Changing mode
+
+:func:`rebind` turns an existing file bound or portable in place, for a setting a
+person can switch. The two directions reach different things, and its docstring
+says which.
+
 ## The format
 
     magic (6) || version 2 (1) || salt (16) || nonce (12)
@@ -257,21 +263,80 @@ def open_store(path: str | Path, passphrase: bytes, vault: KeyVault | None = Non
     nothing should make it silently.
     """
     location = Path(path)
-    if location.is_file():
-        head = location.read_bytes()[: len(MAGIC) + 1]
-        if head[: len(MAGIC)] == MAGIC and len(head) > len(MAGIC) and head[len(MAGIC)] == BOUND_VERSION:
-            if vault is None:
-                raise StoreError(
-                    "this device file is bound to the hardware of the phone it was made on, and opens only there",
-                )
-            return BoundStore(location, passphrase, vault)
-        return EncryptedStore(location, passphrase)
+    if is_bound(location):
+        if vault is None:
+            raise StoreError(
+                "this device file is bound to the hardware of the phone it was made on, and opens only there",
+            )
+        return BoundStore(location, passphrase, vault)
+
+    if bind and not location.is_file():
+        if vault is None:
+            raise StoreError("there is no hardware keystore on this device to bind a file to")
+        return BoundStore(location, passphrase, vault)
+
+    if vault is not None:
+        # A file that is not bound has no business with vault keys. Any found
+        # under its name were left by a crash part-way through binding or
+        # unbinding it — see rebind — and open nothing that exists.
+        _destroy_keys_of(location, vault)
+    return EncryptedStore(location, passphrase)
+
+
+def is_bound(path: str | Path) -> bool:
+    """Whether the file at ``path`` is a store bound to a vault."""
+    location = Path(path)
+    if not location.is_file():
+        return False
+    with open(location, "rb") as handle:
+        head = handle.read(len(MAGIC) + 1)
+    return len(head) == len(MAGIC) + 1 and head[: len(MAGIC)] == MAGIC and head[len(MAGIC)] == BOUND_VERSION
+
+
+def rebind(path: str | Path, passphrase: bytes, vault: KeyVault | None, *, bind: bool) -> Store:
+    """Turn an existing device file bound or portable, in place. Returns the store it now is.
+
+    What each direction does and does not reach, because the two are not mirror
+    images:
+
+    - **Binding** rewrites the file under a new vault key. It cannot reach copies
+      already on flash: those stay sealed under the passphrase alone, holding
+      whatever secrets the file held until now. Binding protects what comes
+      after it — the keys made and destroyed from here on — not what came before.
+    - **Unbinding** rewrites the file under the passphrase alone, then destroys
+      the vault keys. Earlier bound copies stop opening, the file can be copied
+      off the phone again, and from here on so can every earlier copy of it.
+
+    The new file is in place before any vault key is destroyed, so a crash
+    leaves a file that opens; a vault key it leaves behind is destroyed by
+    :func:`open_store` the next time the file is opened.
+    """
+    location = Path(path)
+    current = open_store(location, passphrase, vault)
+    payload = current.load()
+    if payload is None:
+        raise StoreError("there is no device file here to convert")
+
+    if bind == isinstance(current, BoundStore):
+        return current
 
     if bind:
         if vault is None:
             raise StoreError("there is no hardware keystore on this device to bind a file to")
-        return BoundStore(location, passphrase, vault)
-    return EncryptedStore(location, passphrase)
+        target: Store = BoundStore(location, passphrase, vault)
+        target.save(payload)
+        return target
+
+    target = EncryptedStore(location, passphrase)
+    target.save(payload)
+    if vault is not None:
+        _destroy_keys_of(location, vault)
+    return target
+
+
+def _destroy_keys_of(path: Path, vault: KeyVault) -> None:
+    for alias in vault.aliases(key_prefix(path)):
+        vault.destroy(alias)
 
 
 __all__ = [
@@ -280,6 +345,8 @@ __all__ = [
     "PASSPHRASE_ONLY_VERSION",
     "BoundStore",
     "forget_orphaned_stores",
+    "is_bound",
     "key_prefix",
     "open_store",
+    "rebind",
 ]
