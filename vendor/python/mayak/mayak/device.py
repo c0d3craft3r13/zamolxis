@@ -41,6 +41,16 @@ from.
                    || opened with (2 + n) || highest counter (4) || seen (8)
       retired count (2)
       per retired: identifier (2 + n) || when (8)
+      -- layout 3 only:
+      introduced with (2 + n) || disputed (1)
+    -- layout 3 only:
+    open invitation count (1)
+    per invitation: private (2 + n) || public (2 + n) || created (8)
+
+Layout 3 added one-time invitations — see :mod:`mayak.invitations`: the keys of
+invitations handed out and not yet used, a flag on a conversation key that came
+from one, which of our keys each contact was introduced with, and whether a
+contact named an invitation somebody else had already used.
 
 Layout 2 added what a conversation needs to keep receiving across a restart:
 its receiving keys — see :mod:`mayak.keyring` — and its receiving epochs, with
@@ -81,15 +91,16 @@ from mayak import book as book_format
 from mayak.book import BookFormatError
 from mayak.contacts import ContactBook
 from mayak.epoch import EpochRecord
+from mayak.invitations import InvitationKey
 from mayak.kem import Kem
 from mayak.session import Us
 from mayak.store import Store
 
 #: This module's own format marker, separate from the store's and the book's.
-LAYOUT_VERSION = 2
+LAYOUT_VERSION = 3
 
 #: Layouts this build reads. Only :data:`LAYOUT_VERSION` is written.
-READABLE_LAYOUTS = (1, 2)
+READABLE_LAYOUTS = (1, 2, 3)
 
 _MAX_FIELD = 0xFFFF
 _KEYS_ABSENT = 0
@@ -98,7 +109,9 @@ _KEYS_PRESENT = 1
 _FLAG_INTRODUCTION = 0x01
 _FLAG_CONFIRMED = 0x02
 _FLAG_SUPERSEDED = 0x04
-_KNOWN_FLAGS = _FLAG_INTRODUCTION | _FLAG_CONFIRMED | _FLAG_SUPERSEDED
+_FLAG_INVITATION = 0x08
+_KNOWN_FLAGS = _FLAG_INTRODUCTION | _FLAG_CONFIRMED | _FLAG_SUPERSEDED | _FLAG_INVITATION
+_MAX_OPEN_INVITATIONS = 255
 _MAX_KEYS_PER_RING = 255
 _MAX_EPOCHS_PER_CONVERSATION = 255
 
@@ -121,6 +134,7 @@ class StoredKey:
     confirmed: bool = False
     superseded: float | None = None
     introduction: bool = False
+    invitation: bool = False
 
 
 @dataclass(frozen=True)
@@ -136,6 +150,12 @@ class StoredConversation:
     #: Recently retired epoch identifiers, and when.
     retired: dict[bytes, float] = field(default_factory=dict)
 
+    #: Our public key the contact was introduced with; empty until known.
+    introduced_with: bytes = b""
+
+    #: Whether the contact named an invitation someone else had already used.
+    disputed: bool = False
+
 
 @dataclass(frozen=True)
 class Device:
@@ -147,6 +167,9 @@ class Device:
 
     #: Contact identity key -> that conversation's receiving side.
     conversations: dict[bytes, StoredConversation] = field(default_factory=dict)
+
+    #: Invitations handed out and not yet used.
+    invitations: list[InvitationKey] = field(default_factory=list)
 
 
 def new_keys(kem: Kem) -> Us:
@@ -221,12 +244,20 @@ def serialise(device: Device) -> bytes:
         out += struct.pack(">H", len(retired))
         for identifier, when in retired.items():
             out += _field(identifier) + struct.pack(">d", when)
+        out += _field(conversation.introduced_with) + bytes([1 if conversation.disputed else 0])
+
+    if len(device.invitations) > _MAX_OPEN_INVITATIONS:
+        raise DeviceFormatError(f"{len(device.invitations)} open invitations exceeds what the format allows")
+    out.append(len(device.invitations))
+    for invitation in device.invitations:
+        out += _field(invitation.private) + _field(invitation.public) + struct.pack(">d", invitation.created)
     return bytes(out)
 
 
 def _stored_key(key: StoredKey) -> bytes:
     flags = (
         (_FLAG_INTRODUCTION if key.introduction else 0)
+        | (_FLAG_INVITATION if key.invitation else 0)
         | (_FLAG_CONFIRMED if key.confirmed else 0)
         | (_FLAG_SUPERSEDED if key.superseded is not None else 0)
     )
@@ -249,7 +280,7 @@ def _take_time(raw: bytes, at: int) -> tuple[float, int]:
     return value, at + 8
 
 
-def _take_conversations(raw: bytes, at: int) -> tuple[dict[bytes, StoredConversation], int]:
+def _take_conversations(raw: bytes, at: int, layout: int) -> tuple[dict[bytes, StoredConversation], int]:
     if at + 2 > len(raw):
         raise DeviceFormatError("the device ends before its conversations")
     (count,) = struct.unpack(">H", raw[at : at + 2])
@@ -294,6 +325,7 @@ def _take_conversations(raw: bytes, at: int) -> tuple[dict[bytes, StoredConversa
                     confirmed=bool(flags & _FLAG_CONFIRMED),
                     superseded=superseded,
                     introduction=introduction,
+                    invitation=bool(flags & _FLAG_INVITATION),
                 ),
             )
 
@@ -333,8 +365,40 @@ def _take_conversations(raw: bytes, at: int) -> tuple[dict[bytes, StoredConversa
             identifier, at = _take_field(raw, at)
             retired[identifier], at = _take_time(raw, at)
 
-        conversations[identity] = StoredConversation(keys=keys, epochs=epochs, retired=retired)
+        introduced_with, disputed = b"", False
+        if layout >= 3:
+            introduced_with, at = _take_field(raw, at)
+            if at >= len(raw):
+                raise DeviceFormatError("the device ends before a conversation's dispute flag")
+            if raw[at] not in (0, 1):
+                raise DeviceFormatError(f"unknown dispute flag {raw[at]}")
+            disputed = raw[at] == 1
+            at += 1
+
+        conversations[identity] = StoredConversation(
+            keys=keys,
+            epochs=epochs,
+            retired=retired,
+            introduced_with=introduced_with,
+            disputed=disputed,
+        )
     return conversations, at
+
+
+def _take_invitations(raw: bytes, at: int) -> tuple[list[InvitationKey], int]:
+    if at >= len(raw):
+        raise DeviceFormatError("the device ends before its open invitations")
+    count = raw[at]
+    at += 1
+    invitations = []
+    for _ in range(count):
+        private, at = _take_field(raw, at)
+        public, at = _take_field(raw, at)
+        created, at = _take_time(raw, at)
+        if not private or not public:
+            raise DeviceFormatError("the device holds an invitation with no key")
+        invitations.append(InvitationKey(private=private, public=public, created=created))
+    return invitations, at
 
 
 def deserialise(raw: bytes) -> Device:
@@ -389,12 +453,15 @@ def deserialise(raw: bytes) -> Device:
     at += length
 
     conversations: dict[bytes, StoredConversation] = {}
+    invitations: list[InvitationKey] = []
     if layout >= 2:
-        conversations, at = _take_conversations(raw, at)
-        if at != len(raw):
-            raise DeviceFormatError("the device has more bytes after its conversations")
+        conversations, at = _take_conversations(raw, at, layout)
+    if layout >= 3:
+        invitations, at = _take_invitations(raw, at)
+    if layout >= 2 and at != len(raw):
+        raise DeviceFormatError("the device has more bytes after what it holds")
 
-    return Device(us=us, book=book, conversations=conversations)
+    return Device(us=us, book=book, conversations=conversations, invitations=invitations)
 
 
 def load(store: Store) -> Device | None:

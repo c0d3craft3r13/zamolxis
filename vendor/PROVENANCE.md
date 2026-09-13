@@ -203,7 +203,7 @@ fixture to regenerate.
 
 | Directory | Source | Commit | License |
 |---|---|---|---|
-| `python/mayak` | ProjectBeta (this project's own repository) | `ef4b49552a8a4ea10498429c0b82f6af947d6dec` | same as this repository |
+| `python/mayak` | ProjectBeta (this project's own repository) | `67b057f916f886d7478ee24c810f3c8384219f6e` | same as this repository |
 
 **The one thing under `vendor/` this project wrote.** Mayak — the messaging protocol that
 replaces LXMF — is developed and tested in its own repository, and reaches the app the
@@ -241,6 +241,12 @@ of each conversation is saved before a message is shown. `MayakOnDeviceInstrumen
 covers both on the phone — `mayak.selfcheck` moves a conversation off its invitation keys
 and restarts a device part-way through a contact's epoch. Whole module on the moto g54 5G:
 OK (12 tests).
+
+**Since `67b057f9`: invitations work once.** Each invitation carries a key of its own,
+claimed by the one conversation that uses it and destroyed with that conversation's keys, so
+a conversation's first exchange no longer opens with a seized device either. The self-check
+the phone runs now meets through one-time invitations. OK (12 tests) on the phone, and phone
+to laptop twice (2.55 s and 2.51 s).
 
 **And between two devices.** `MayakPhoneToLaptopInstrumentedTest`, driven from a laptop
 by ProjectBeta's `tools/phone_link_check.py`, sends a Mayak message from the phone to

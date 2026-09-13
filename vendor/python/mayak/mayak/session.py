@@ -160,8 +160,9 @@ from mayak.envelope import EnvelopeError, Inbound, content_capacity, open_messag
 from mayak.epoch import EpochRecord, Opener, Sealer
 from mayak.fragment import WHOLE, WHOLE_HEADER, FragmentError, Reassembler, split
 from mayak.frame import Kind
+from mayak.invitations import TAG_LENGTH, tag_of
 from mayak.kem import Kem, KemError
-from mayak.keyring import ReceiveKeyring
+from mayak.keyring import ReceiveKey, ReceiveKeyring
 from mayak.outbox import Outbox
 from mayak.transport import Transport, TransportError
 
@@ -170,6 +171,10 @@ MessageHandler = Callable[[Inbound], None]
 
 #: Called with a contact's new encapsulation key, so it can be kept.
 PeerKeyHandler = Callable[[bytes], None]
+
+#: Offered a private key that opened an epoch but is not in this conversation's
+#: ring; returns the key to adopt if it is an unclaimed invitation key, else None.
+KeyAdopter = Callable[[bytes], "ReceiveKey | None"]
 
 #: The first byte of a control frame's content: what kind of housekeeping it is.
 CONTROL_KEY_UPDATE = 0x01
@@ -224,6 +229,10 @@ class Session:
         receiving_state: tuple[list[EpochRecord], dict[bytes, float]] | None = None,
         on_peer_key: PeerKeyHandler | None = None,
         on_state_changed: Callable[[], None] | None = None,
+        invitation_keys: Callable[[], list[bytes]] | None = None,
+        adopt_key: KeyAdopter | None = None,
+        peer_introduced_key: bytes | None = None,
+        on_introduced: Callable[[bytes], None] | None = None,
     ) -> None:
         """
         :param keyring: the keys this conversation receives on. A new
@@ -234,6 +243,15 @@ class Session:
             previous run left them — see :attr:`receiving_state`.
         :param on_state_changed: told when something that must survive a crash
             has changed — see the module docstring for exactly when.
+        :param invitation_keys: private keys of invitations nobody has used yet,
+            tried after this conversation's own keys. See :mod:`mayak.keyring`.
+        :param adopt_key: claims an invitation key for this conversation once an
+            opening under it arrives here.
+        :param peer_introduced_key: the contact's key we were introduced to them
+            with; its tag rides in every key update so the contact learns which of
+            their invitations we hold. Defaults to the key we seal to now.
+        :param on_introduced: told the tag of the invitation the contact says
+            they hold for us.
         """
         self._kem = kem
         self._us = us
@@ -256,6 +274,10 @@ class Session:
         self._keyring = keyring or ReceiveKeyring.introduced(us.kem_private_key, us.kem_public_key, clock=clock)
         self._on_peer_key = on_peer_key
         self._on_state_changed = on_state_changed
+        self._invitation_keys = invitation_keys
+        self._adopt_key = adopt_key
+        self._peer_introduced_tag = tag_of(peer_introduced_key or peer.kem_public_key)
+        self._on_introduced = on_introduced
 
         self._sealer = Sealer(
             kem,
@@ -265,7 +287,7 @@ class Session:
         )
         self._opener = Opener(
             kem,
-            self._keyring.private_keys,
+            self._candidate_keys,
             clock=clock,
             allow_classical_only=allow_classical_only,
             on_opening=self._opened_under,
@@ -389,7 +411,11 @@ class Session:
             self._state_changed()
 
         if self._keyring.announcement_due():
-            self._send_frames(Kind.CONTROL, bytes([CONTROL_KEY_UPDATE]) + self._keyring.newest.public)
+            # The tag rides along for free: sixteen bytes inside frames the key
+            # already fills. It tells the contact which of their invitations we
+            # were introduced with — see mayak.invitations.
+            update = bytes([CONTROL_KEY_UPDATE]) + self._keyring.newest.public + self._peer_introduced_tag
+            self._send_frames(Kind.CONTROL, update)
             self._keyring.announced()
 
     def _send_frames(self, kind: Kind, content: bytes) -> EpochAddress:
@@ -469,12 +495,26 @@ class Session:
             self.held += 1
         return outbound.address
 
+    def _candidate_keys(self) -> list[bytes]:
+        """Keys an opening may be sealed to: this conversation's, then unclaimed invitations'."""
+        own = self._keyring.private_keys()
+        if self._invitation_keys is None:
+            return own
+        return own + [key for key in self._invitation_keys() if key not in own]
+
     def _opened_under(self, private_key: bytes) -> None:
         """An epoch opening decapsulated under this key: the contact has it.
+
+        A key the ring does not hold is an invitation key, arriving here for the
+        first time; it is claimed for this conversation before it is confirmed.
 
         Reported whether or not the key's state moved, because a new epoch was
         learned either way and its root has to survive a crash.
         """
+        if private_key not in self._keyring.private_keys() and self._adopt_key is not None:
+            adopted = self._adopt_key(private_key)
+            if adopted is not None:
+                self._keyring.adopt(adopted)
         self._keyring.confirm(private_key)
         self._state_changed()
 
@@ -502,10 +542,14 @@ class Session:
             self.control_refused += 1
             return
 
-        key = content[1:]
-        if len(key) != self._kem.public_key_length:
+        payload = content[1:]
+        length = self._kem.public_key_length
+        if len(payload) not in (length, length + TAG_LENGTH):
             self.control_refused += 1
             return
+        key, tag = payload[:length], payload[length:]
+        if tag and self._on_introduced is not None:
+            self._on_introduced(tag)
         if key == self._peer.kem_public_key:
             # A repeat — updates are re-sent until the contact uses them.
             return

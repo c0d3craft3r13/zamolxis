@@ -300,6 +300,17 @@ def _describe(contact: Contact) -> str:
     return f"{contact.name} [{marker[contact.trust]}] {contact.spoken_fingerprint}"
 
 
+def _spoken(fingerprint: str) -> str:
+    return " ".join(fingerprint[at : at + 4] for at in range(0, len(fingerprint), 4))
+
+
+def _print_invitation(identity_key: bytes, kem_key: bytes) -> None:
+    say(f"fingerprint of this invitation: {fingerprint_of(identity_key, kem_key)}")
+    say()
+    say("send this to one person who should be able to reach you. It works once:")
+    say(invitation(identity_key, kem_key))
+
+
 # ---------------------------------------------------------------- commands
 
 
@@ -309,20 +320,23 @@ def command_init(arguments: argparse.Namespace) -> int:
         raise CliError(f"{path} already exists; wipe it first if you mean to start over")
 
     node, _ = _open(arguments, confirm_passphrase=True)
-    identity_key, kem_key = node.public_keys
     say(f"device created at {path}")
-    say(f"fingerprint: {fingerprint_of(identity_key, kem_key)}")
-    say()
-    say("send this to someone who should be able to reach you:")
-    say(invitation(identity_key, kem_key))
+    _print_invitation(*node.invite())
+    return 0
+
+
+def command_invite(arguments: argparse.Namespace) -> int:
+    """A new one-time invitation. Each person gets their own — see mayak.invitations."""
+    node, _ = _open(arguments)
+    _print_invitation(*node.invite())
     return 0
 
 
 def command_whoami(arguments: argparse.Namespace) -> int:
     node, _ = _open(arguments)
-    identity_key, kem_key = node.public_keys
-    say(f"fingerprint: {fingerprint_of(identity_key, kem_key)}")
-    say(invitation(identity_key, kem_key))
+    open_count = node.open_invitations
+    say(f"open invitations: {open_count}")
+    say("Invitations work once. For someone new, run: mayak invite")
     return 0
 
 
@@ -351,6 +365,16 @@ def command_contacts(arguments: argparse.Namespace) -> int:
         return 0
     for contact in contacts:
         say(_describe(contact))
+        ours = node.our_fingerprint_for(contact.identity_key)
+        if ours is None:
+            say("  you, as they know you: not known until they write")
+        else:
+            say(f"  you, as they know you: {_spoken(ours)}")
+        if node.key_status(contact.identity_key).introduction_disputed:
+            say(
+                "  WARNING: they named an invitation already used by someone else or never issued here."
+                " Compare fingerprints before trusting anything from them.",
+            )
     return 0
 
 
@@ -543,7 +567,8 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     commands.add_parser("init", help="create a device and its keys").set_defaults(run=command_init)
-    commands.add_parser("whoami", help="print our fingerprint and invitation").set_defaults(run=command_whoami)
+    commands.add_parser("invite", help="make a one-time invitation for one person").set_defaults(run=command_invite)
+    commands.add_parser("whoami", help="how many invitations are open").set_defaults(run=command_whoami)
 
     add = commands.add_parser("add", help="record someone from their invitation")
     add.add_argument("name")

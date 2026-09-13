@@ -41,6 +41,17 @@ need it — so it is marked, never written into the ring on disk, and simply sto
 being tried once superseded. The first thing a conversation does is replace it,
 so what stays exposed to seizure is the first exchange, not the history.
 
+## Keys from an invitation
+
+An invitation carries a key made for that invitation alone — see
+:mod:`mayak.invitations`. Until the contact's first opening arrives, nobody knows
+which conversation it belongs to, so it is tried by every conversation that has
+no proof of its own yet. The first opening under it settles that: it is
+:meth:`ReceiveKeyring.adopt`-ed by the conversation it arrived in, removed from
+everyone else's reach, and from then on lives and dies like any other key in
+that ring. That is what keeps the first exchange from being sealed to something
+the device keeps for ever.
+
 ## What this still does not protect
 
 Memory. A running process holds live keys and live epoch roots, and nothing in
@@ -100,16 +111,53 @@ class ReceiveKey:
     #: written into a ring on disk.
     introduction: bool = False
 
+    #: A one-time invitation key this conversation claimed. Unlike the device's
+    #: key it belongs to this conversation alone, and is destroyed like any other.
+    invitation: bool = False
+
 
 class ReceiveKeyring:
     """The receiving keys of one conversation, newest last."""
 
-    def __init__(self, keys: list[ReceiveKey], *, clock: Callable[[], float] = time.time) -> None:
+    def __init__(
+        self,
+        keys: list[ReceiveKey],
+        *,
+        clock: Callable[[], float] = time.time,
+        introduced_with: bytes | None = None,
+        disputed: bool = False,
+    ) -> None:
         if not keys:
             raise ValueError("a keyring with no keys cannot receive anything")
         self._keys = list(keys)
         self._clock = clock
         self._last_announced: float | None = None
+        self._introduced_with = introduced_with
+        self._disputed = disputed
+
+    @property
+    def introduced_with(self) -> bytes | None:
+        """Our public key the contact was introduced with, once it is known."""
+        return self._introduced_with
+
+    @property
+    def disputed(self) -> bool:
+        """Whether the contact named an invitation someone else had already used."""
+        return self._disputed
+
+    def introduce(self, public: bytes) -> bool:
+        """Record which of our keys the contact was introduced with. First answer stands."""
+        if self._introduced_with is not None:
+            return False
+        self._introduced_with = public
+        return True
+
+    def dispute(self) -> bool:
+        """The contact named an invitation this conversation cannot have. Kept, not cleared."""
+        if self._disputed:
+            return False
+        self._disputed = True
+        return True
 
     @classmethod
     def introduced(cls, private: bytes, public: bytes, *, clock: Callable[[], float] = time.time) -> ReceiveKeyring:
@@ -141,6 +189,21 @@ class ReceiveKeyring:
         self._last_announced = None
         return key
 
+    def adopt(self, key: ReceiveKey) -> None:
+        """Take a key this conversation did not create: one from an invitation.
+
+        It goes in as the oldest key, which is what it is — the contact used it
+        before any rotation — so confirming it supersedes nothing newer, and the
+        normal lifecycle destroys it once the conversation moves on.
+
+        A conversation that already has a confirmed key has moved on already — a
+        key claimed that late was never sealed to — so it arrives superseded and
+        is gone after the usual grace rather than lingering unconfirmed for a month.
+        """
+        if key.superseded is None and any(existing.confirmed for existing in self._keys):
+            key.superseded = self._clock()
+        self._keys.insert(0, key)
+
     def announcement_due(self) -> bool:
         """Whether the newest key should be sent to the contact now."""
         if self.newest.confirmed or self.newest.introduction:
@@ -161,8 +224,11 @@ class ReceiveKeyring:
 
         changed = False
         now = self._clock()
-        if not self._keys[position].confirmed:
-            self._keys[position].confirmed = True
+        confirmed = self._keys[position]
+        if not confirmed.confirmed:
+            confirmed.confirmed = True
+            changed = True
+        if (confirmed.introduction or confirmed.invitation) and self.introduce(confirmed.public):
             changed = True
         for older in self._keys[:position]:
             if older.superseded is None:

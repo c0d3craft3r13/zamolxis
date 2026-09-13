@@ -51,6 +51,16 @@ Saves can now come from two threads — a message arriving on the transport's
 thread can confirm a key while the caller is adding a contact — so saving is
 serialised. Two unsynchronised saves would race on the store's temporary file.
 
+## Invitations are one-time
+
+:meth:`Node.invite` makes a new invitation with a key of its own — see
+:mod:`mayak.invitations`. Conversations that do not yet know which of our keys
+their contact was introduced with try the open invitations; the first opening
+under one, or the contact naming it in a key update, claims it for that
+conversation. A contact who names an invitation this device cannot account for
+— used by someone else, expired, never ours — marks the conversation disputed,
+which an interface should show rather than hide.
+
 ## Wiping is the operation the rest of the design exists for
 
 :meth:`wipe` destroys the store and drops every key held in memory. What is left
@@ -71,6 +81,7 @@ from mayak.contacts import Contact, ContactBook, ContactError, Trust
 from mayak.envelope import Inbound
 from mayak.epoch import EpochRecord
 from mayak.kem import Kem
+from mayak.invitations import InvitationPool, tag_of
 from mayak.keyring import ReceiveKey, ReceiveKeyring
 from mayak.session import Peer, Session, Us
 from mayak.store import Store
@@ -104,6 +115,10 @@ class KeyStatus:
 
     #: How long ago the newest key was created.
     newest_age_seconds: float
+
+    #: Whether the contact named an invitation this device cannot account for —
+    #: one already used by another contact, expired, or never issued here.
+    introduction_disputed: bool = False
 
 
 @dataclass(frozen=True)
@@ -150,7 +165,7 @@ class Node:
         self._sessions: dict[bytes, Session] = {}
         stored = saved.conversations if saved is not None else {}
         self._keyrings: dict[bytes, ReceiveKeyring] = {
-            identity: self._keyring_from(conversation.keys)
+            identity: self._keyring_from(conversation)
             for identity, conversation in stored.items()
             if identity in self._book
         }
@@ -160,6 +175,7 @@ class Node:
             for identity, conversation in stored.items()
             if identity in self._book
         }
+        self._invitations = InvitationPool(saved.invitations if saved is not None else [], clock=clock)
         self._save_lock = threading.RLock()
         self._wiped = False
 
@@ -206,9 +222,48 @@ class Node:
 
     @property
     def public_keys(self) -> tuple[bytes, bytes]:
-        """What a contact needs to reach this device: identity, then encapsulation."""
+        """The device's identity key and its own encapsulation key.
+
+        Not what to hand a contact any more — that is :meth:`invite`, whose key is
+        used once and then belongs to one conversation. The device's own key stays
+        for contacts introduced before invitations were one-time.
+        """
         self._require_usable()
         return self._us.public_key, self._us.kem_public_key
+
+    def invite(self) -> tuple[bytes, bytes]:
+        """Make a one-time invitation: the identity key, and a key for this invitation alone.
+
+        Saved before it is returned, because an invitation handed out and then
+        forgotten in a crash is one whose contact can never write.
+        """
+        self._require_usable()
+        with self._save_lock:
+            self._invitations.expire()
+            key = self._invitations.create(self._kem)
+            self.save()
+        return self._us.public_key, key.public
+
+    @property
+    def open_invitations(self) -> int:
+        """Invitations handed out and not yet used."""
+        self._require_usable()
+        return len(self._invitations)
+
+    def our_fingerprint_for(self, identity_key: bytes) -> str | None:
+        """This device's fingerprint as a contact has it, once it is known.
+
+        Each invitation has its own, so the number to read out depends on which
+        invitation the contact used — which this device learns from their first
+        opening or key update. Until then there is no honest answer, and None
+        says so.
+        """
+        self._require_usable()
+        self._require_contact(identity_key)
+        introduced = self._keyring_for(identity_key).introduced_with
+        if introduced is None:
+            return None
+        return Contact(name="me", identity_key=self._us.public_key, kem_key=introduced).fingerprint
 
     # ------------------------------------------------------------- contacts
 
@@ -246,8 +301,11 @@ class Node:
         return KeyStatus(
             held=len(ring.keys),
             newest_confirmed=newest.confirmed,
-            invitation_key_retired=all(key.introduction is False or key.superseded is not None for key in ring.keys),
+            invitation_key_retired=all(
+                not (key.introduction or key.invitation) or key.superseded is not None for key in ring.keys
+            ),
             newest_age_seconds=self._clock() - newest.created,
+            introduction_disputed=ring.disputed,
         )
 
     # ------------------------------------------------------------ messaging
@@ -325,11 +383,14 @@ class Node:
                 device_format.Device(
                     us=self._us if self._store_keys else None,
                     book=self._book,
+                    invitations=self._invitations.keys,
                     conversations={
                         identity: device_format.StoredConversation(
                             keys=_stored(ring),
                             epochs=self._receiving_of(identity)[0],
                             retired=self._receiving_of(identity)[1],
+                            introduced_with=ring.introduced_with or b"",
+                            disputed=ring.disputed,
                         )
                         for identity, ring in list(self._keyrings.items())
                     },
@@ -389,6 +450,10 @@ class Node:
             receiving_state=self._receiving.pop(identity, None),
             on_peer_key=lambda key, who=identity: self._peer_rotated(who, key),
             on_state_changed=self._save_from_a_conversation,
+            invitation_keys=lambda who=identity: self._invitation_keys_for(who),
+            adopt_key=lambda private, who=identity: self._adopt_invitation(who, private),
+            peer_introduced_key=contact.introduced_kem_key,
+            on_introduced=lambda tag, who=identity: self._introduced(who, tag),
         )
         self._sessions[identity] = session
         return session
@@ -406,7 +471,51 @@ class Node:
             self._keyrings[identity] = ring
         return ring
 
-    def _keyring_from(self, stored: list[device_format.StoredKey]) -> ReceiveKeyring:
+    def _invitation_keys_for(self, identity: bytes) -> list[bytes]:
+        # Only a conversation that does not yet know how it was introduced may
+        # claim an invitation. One that does has no business trying anyone else's.
+        if self._keyring_for(identity).introduced_with is not None:
+            return []
+        return self._invitations.open_private_keys()
+
+    def _adopt_invitation(self, identity: bytes, private: bytes) -> ReceiveKey | None:
+        with self._save_lock:
+            claimed = self._invitations.claim(private)
+        if claimed is None:
+            return None
+        return ReceiveKey(private=claimed.private, public=claimed.public, created=claimed.created, invitation=True)
+
+    def _introduced(self, identity: bytes, tag: bytes) -> None:
+        """The contact says which of our keys they were introduced with."""
+        with self._save_lock:
+            if self._wiped or identity not in self._book:
+                return
+            ring = self._keyring_for(identity)
+            if ring.introduced_with is not None:
+                if tag_of(ring.introduced_with) != tag and ring.dispute():
+                    self._save_from_a_conversation()
+                return
+
+            claimed = self._invitations.claim_by_tag(tag)
+            if claimed is not None:
+                ring.adopt(
+                    ReceiveKey(private=claimed.private, public=claimed.public, created=claimed.created, invitation=True),
+                )
+                ring.introduce(claimed.public)
+            elif tag == tag_of(self._us.kem_public_key):
+                # Introduced with the device's own key, before invitations were one-time.
+                ring.introduce(self._us.kem_public_key)
+            else:
+                adopted = next((key for key in ring.keys if key.invitation and tag_of(key.public) == tag), None)
+                if adopted is not None:
+                    ring.introduce(adopted.public)
+                else:
+                    # An invitation this device cannot account for: used by another
+                    # contact first, expired, or never ours. Kept and shown.
+                    ring.dispute()
+            self._save_from_a_conversation()
+
+    def _keyring_from(self, conversation: device_format.StoredConversation) -> ReceiveKeyring:
         keys = [
             ReceiveKey(
                 # The invitation key is never in a keyring on disk; it is the
@@ -417,10 +526,16 @@ class Node:
                 confirmed=entry.confirmed,
                 superseded=entry.superseded,
                 introduction=entry.introduction,
+                invitation=entry.invitation,
             )
-            for entry in stored
+            for entry in conversation.keys
         ]
-        return ReceiveKeyring(keys, clock=self._clock)
+        return ReceiveKeyring(
+            keys,
+            clock=self._clock,
+            introduced_with=conversation.introduced_with or None,
+            disputed=conversation.disputed,
+        )
 
     def _peer_rotated(self, identity: bytes, key: bytes) -> None:
         # Authenticated by the conversation it arrived in, so trust is untouched.
@@ -463,6 +578,7 @@ def _stored(ring: ReceiveKeyring) -> list[device_format.StoredKey]:
             confirmed=key.confirmed,
             superseded=key.superseded,
             introduction=key.introduction,
+            invitation=key.invitation,
         )
         for key in ring.keys
     ]

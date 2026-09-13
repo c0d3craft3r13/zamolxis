@@ -12,9 +12,10 @@ It is deliberately the same function on both: the desktop suite calls it, and so
 does the instrumented test on the phone. A self-check that differed between them
 would be checking two things and reporting one.
 
-It also covers the two things most likely to differ on a phone and least likely
-to be exercised by a quick try: a conversation moving off its invitation keys,
-and a device restarting part-way through a contact's epoch.
+It also covers what is most likely to differ on a phone and least likely to be
+exercised by a quick try: two devices meeting through one-time invitations, a
+conversation moving off the keys it was introduced with, and a device restarting
+part-way through a contact's epoch.
 
 ## What it does not touch
 
@@ -102,8 +103,8 @@ def _conversation(kem: Kem, workspace: Path) -> None:
         )
 
     alice, bob = node("alice", alice_keys), node("bob", bob_keys)
-    alice.add_contact("Bob", bob_keys.public_key, bob_keys.kem_public_key)
-    bob.add_contact("Alice", alice_keys.public_key, alice_keys.kem_public_key)
+    alice.add_contact("Bob", *bob.invite())
+    bob.add_contact("Alice", *alice.invite())
     alice.listen()
     bob.listen()
 
@@ -122,6 +123,10 @@ def _conversation(kem: Kem, workspace: Path) -> None:
     status = alice.key_status(bob_keys.public_key)
     if not (status.invitation_key_retired and status.newest_confirmed):
         raise SelfCheckFailed("the conversation did not move off its invitation keys")
+    if alice.open_invitations or bob.open_invitations:
+        raise SelfCheckFailed("an invitation that was used is still open")
+    if alice.our_fingerprint_for(bob_keys.public_key) != bob.contacts.get(alice_keys.public_key).fingerprint:
+        raise SelfCheckFailed("the fingerprint a contact reads back is not the one this device shows")
 
     # Bob restarts while alice is part-way through her epoch. A store that cannot
     # be reopened loses every contact; a conversation that cannot be resumed
