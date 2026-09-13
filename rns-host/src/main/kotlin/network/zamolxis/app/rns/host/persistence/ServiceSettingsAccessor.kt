@@ -36,6 +36,24 @@ class ServiceSettingsAccessor(
          * privately would be a flag the other kept transmitting through.
          */
         const val KEY_RADIO_SILENCE = "radio_silence"
+
+        /**
+         * The developer setting's request for the Mayak device file: true to bind it to
+         * this phone's hardware keystore, false to unbind it. Absent when nothing is
+         * pending — the service removes it once it has acted, whether that worked or not,
+         * so a conversion that fails is reported once rather than retried every few
+         * seconds for ever.
+         */
+        const val KEY_MAYAK_BIND_REQUEST = "mayak_bind_request"
+
+        /** What the service last found the device file to be; a [MayakFileState] name. */
+        const val KEY_MAYAK_FILE_STATE = "mayak_file_state"
+
+        /** Whether this phone has a hardware keystore the file could be bound to. */
+        const val KEY_MAYAK_CAN_BIND = "mayak_can_bind"
+
+        /** Why the last conversion or start failed, until the next one succeeds. */
+        const val KEY_MAYAK_FILE_ERROR = "mayak_file_error"
     }
 
     // Get fresh SharedPreferences each time to avoid caching issues across processes
@@ -53,6 +71,52 @@ class ServiceSettingsAccessor(
     fun setRadioSilence(silent: Boolean) {
         getCrossProcessPrefs().edit().putBoolean(KEY_RADIO_SILENCE, silent).apply()
     }
+
+    /** Ask the service to bind the Mayak device file ([bound] true) or unbind it. */
+    fun requestMayakBound(bound: Boolean) {
+        getCrossProcessPrefs().edit().putBoolean(KEY_MAYAK_BIND_REQUEST, bound).commit()
+    }
+
+    /** The pending request, or null when there is none. */
+    fun getMayakBindRequest(): Boolean? {
+        val prefs = getCrossProcessPrefs()
+        return if (prefs.contains(KEY_MAYAK_BIND_REQUEST)) prefs.getBoolean(KEY_MAYAK_BIND_REQUEST, false) else null
+    }
+
+    /**
+     * Remove the request the service has acted on — but only if it is still [handled].
+     * A request the user changed while the conversion ran is left for the next pass.
+     */
+    fun clearMayakBindRequest(handled: Boolean) {
+        if (getMayakBindRequest() == handled) {
+            getCrossProcessPrefs().edit().remove(KEY_MAYAK_BIND_REQUEST).commit()
+        }
+    }
+
+    /** Called by the service only. [error] null clears the last one. */
+    fun reportMayakFile(
+        state: MayakFileState,
+        canBind: Boolean,
+        error: String?,
+    ) {
+        val editor =
+            getCrossProcessPrefs()
+                .edit()
+                .putString(KEY_MAYAK_FILE_STATE, state.name)
+                .putBoolean(KEY_MAYAK_CAN_BIND, canBind)
+        if (error == null) editor.remove(KEY_MAYAK_FILE_ERROR) else editor.putString(KEY_MAYAK_FILE_ERROR, error)
+        editor.commit()
+    }
+
+    fun getMayakFileState(): MayakFileState =
+        getCrossProcessPrefs()
+            .getString(KEY_MAYAK_FILE_STATE, null)
+            ?.let { name -> MayakFileState.entries.firstOrNull { it.name == name } }
+            ?: MayakFileState.NOT_RUNNING
+
+    fun getMayakCanBind(): Boolean = getCrossProcessPrefs().getBoolean(KEY_MAYAK_CAN_BIND, false)
+
+    fun getMayakFileError(): String? = getCrossProcessPrefs().getString(KEY_MAYAK_FILE_ERROR, null)
 
     /**
      * Save the network change announce timestamp.

@@ -20,6 +20,7 @@ import network.zamolxis.app.rns.backend.py.ChaquopyRnsBackend
 import network.zamolxis.app.rns.backend.py.PyEventCallback
 import network.zamolxis.app.rns.backend.py.dictStr
 import network.zamolxis.app.rns.backend.py.toPyBytes
+import network.zamolxis.app.rns.host.persistence.MayakFileState
 import network.zamolxis.app.rns.host.persistence.ServiceSettingsAccessor
 import java.io.File
 
@@ -42,6 +43,11 @@ import java.io.File
  * every [SETTINGS_POLL_MS], and Python is only called when it changes — a poll
  * that crossed into Python every time would take the GIL from the RNS reactor for
  * nothing.
+ *
+ * **Binding** the device file to the phone's hardware keystore, or unbinding it, is a
+ * developer setting in the UI process. It reaches this service as a request in the
+ * cross-process preferences, picked up on the same poll; the service reports back what
+ * the file is now ([MayakFileState]) and why a conversion failed, if it did.
  *
  * **Messages** arrive on [messages], without their text ever being logged. Nothing
  * shows them yet: until contacts can be added from a screen, nobody can write to
@@ -117,17 +123,24 @@ class PythonMayakHost(
             created.callAttr("start")
             host = created
             appliedTransmitting = null
+            report(created, error = null)
             applySettings(created)
             Log.i(TAG, "Mayak running: ${describe(created.callAttr("status"))}")
             settingsLoop =
                 scope.launch {
                     while (isActive) {
                         delay(SETTINGS_POLL_MS)
-                        host?.let(::applySettings)
+                        // An exception out of this loop would be uncaught in the
+                        // service process, and take Reticulum down with it.
+                        host?.let { running ->
+                            runCatching { applySettings(running) }
+                                .onFailure { Log.e(TAG, "Mayak settings not applied: ${it.message}") }
+                        }
                     }
                 }
         } catch (e: Throwable) {
             Log.e(TAG, "Mayak did not start: ${e.message}")
+            settings.reportMayakFile(MayakFileState.NOT_RUNNING, canBind = false, error = reason(e))
         }
     }
 
@@ -143,6 +156,7 @@ class PythonMayakHost(
         } catch (e: Throwable) {
             Log.e(TAG, "Mayak did not stop cleanly: ${e.message}")
         }
+        settings.reportMayakFile(MayakFileState.NOT_RUNNING, settings.getMayakCanBind(), error = null)
     }
 
     private fun applySettings(running: PyObject) {
@@ -151,7 +165,59 @@ class PythonMayakHost(
             running.callAttr("set_transmitting", transmitting)
             appliedTransmitting = transmitting
         }
+        settings.getMayakBindRequest()?.let { bind -> convert(running, bind) }
     }
+
+    /**
+     * Carry out the developer setting's request, once. The request is removed whatever
+     * happens — see [ServiceSettingsAccessor.KEY_MAYAK_BIND_REQUEST] — and a failure is
+     * reported beside the state the file is actually left in.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    private fun convert(
+        running: PyObject,
+        bind: Boolean,
+    ) {
+        val status = running.callAttr("status")
+        val canBind = status.dictStr("can_bind") == "true"
+        if ((status.dictStr("bound") == "true") == bind) {
+            settings.clearMayakBindRequest(bind)
+            report(running, error = null)
+            return
+        }
+        settings.reportMayakFile(MayakFileState.CONVERTING, canBind, error = null)
+        val error =
+            try {
+                val dropped = running.callAttr("set_bound", bind).toInt()
+                Log.i(TAG, "Mayak device file ${if (bind) "bound" else "unbound"}; $dropped held message(s) dropped")
+                null
+            } catch (e: Throwable) {
+                Log.e(TAG, "Mayak device file not ${if (bind) "bound" else "unbound"}: ${e.message}")
+                reason(e)
+            }
+        settings.clearMayakBindRequest(bind)
+        report(running, error)
+    }
+
+    private fun report(
+        running: PyObject,
+        error: String?,
+    ) {
+        val status = running.callAttr("status")
+        settings.reportMayakFile(
+            state = if (status.dictStr("bound") == "true") MayakFileState.BOUND else MayakFileState.PORTABLE,
+            canBind = status.dictStr("can_bind") == "true",
+            error = error,
+        )
+    }
+
+    /** A Python exception's own words, without the class name Chaquopy puts in front. */
+    private fun reason(e: Throwable): String =
+        e.message
+            .orEmpty()
+            .lineSequence()
+            .first()
+            .substringAfter(": ")
 
     private fun onEvent(payload: PyObject) {
         if (payload.dictStr("kind") != "message") return

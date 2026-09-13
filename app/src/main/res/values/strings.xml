@@ -1087,6 +1087,23 @@ TO TALK</string>
     <string name="pq_state_partial_sub">The text got the hybrid layer. The attachment was too large to seal in memory, so it travelled with Reticulum\'s encryption only.</string>
     <string name="pq_state_unopened">Sealed, could not be opened</string>
     <string name="pq_state_unopened_sub">The ciphertext is kept, so it may still open once a key change is resolved or a key pair is restored.</string>
+    <!-- Developer setting: the Mayak device file bound to this phone's hardware keystore -->
+    <string name="mayak_file_title">Mayak device file</string>
+    <string name="mayak_file_desc">Mayak keeps its keys and contacts in one encrypted file. Bound to this phone, it also needs a key held in the phone\'s hardware keystore, and that key is replaced whenever a key leaves the file — so earlier copies of the file left on flash stop opening, even with the passphrase.</string>
+    <string name="mayak_file_bind">Bind to this phone</string>
+    <string name="mayak_file_status_portable">Portable: the file opens with its passphrase, wherever a copy of it goes.</string>
+    <string name="mayak_file_status_bound">Bound: the file opens only on this phone.</string>
+    <string name="mayak_file_status_converting">Rewriting the file…</string>
+    <string name="mayak_file_status_not_running">Mayak is not running, so the file cannot be changed now.</string>
+    <string name="mayak_file_no_keystore">This phone has no hardware keystore to bind the file to.</string>
+    <string name="mayak_file_error">Not changed: %1$s</string>
+    <string name="mayak_file_bind_confirm_title">Bind the file to this phone?</string>
+    <string name="mayak_file_bind_confirm_body">Mayak contacts will open only on this phone: not from a backup, not on a new phone. Losing or resetting this phone loses them.\n\nCopies of the file already on flash stay openable with the passphrase; binding protects what changes from now on.\n\nMessages waiting to be resent are dropped.</string>
+    <string name="mayak_file_bind_action">Bind</string>
+    <string name="mayak_file_unbind_confirm_title">Unbind the file?</string>
+    <string name="mayak_file_unbind_confirm_body">The file will open with its passphrase alone again, and so will every copy of it made from now on. Copies made while it was bound stay unreadable.\n\nMessages waiting to be resent are dropped.</string>
+    <string name="mayak_file_unbind_action">Unbind</string>
+    <string name="mayak_file_cancel">Cancel</string>
     <string name="about_forked_from">Forked from Columba © Columba Contributors, used under MPL 2.0</string>
     <string name="about_view_license">View License</string>
     <string name="licenses_title">Licences</string>
