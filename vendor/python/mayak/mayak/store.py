@@ -107,11 +107,45 @@ class Store(Protocol):
     def load(self) -> bytes | None:
         """Return what was saved, or None if nothing has been."""
 
-    def save(self, payload: bytes) -> None:
-        """Replace the contents with ``payload``."""
+    def save(self, payload: bytes, *, forget_previous: bool = False) -> None:
+        """Replace the contents with ``payload``.
+
+        ``forget_previous`` says a secret has left the payload since the last
+        save. A store that can make earlier copies unreadable — one bound to a
+        hardware vault, see :mod:`mayak.bound_store` — does so then; a store that
+        cannot ignores it.
+        """
 
     def wipe(self) -> None:
         """Destroy the contents. Safe to call when there is nothing there."""
+
+
+def write_atomically(path: Path, data: bytes) -> None:
+    """Write beside the target and move into place.
+
+    A process that dies mid-write leaves the previous file intact rather than
+    half of a new one. A store that can be truncated by a battery is a store that
+    loses every contact at the worst possible moment.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".writing")
+    with open(temporary, "wb") as handle:
+        handle.write(data)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(temporary, path)
+
+
+def overwrite_and_remove(path: Path) -> None:
+    """Overwrite a file with noise, then remove it. Not erasure on flash — see the module docstring."""
+    if not path.is_file():
+        return
+    length = path.stat().st_size
+    with open(path, "r+b") as handle:
+        handle.write(secrets.token_bytes(length))
+        handle.flush()
+        os.fsync(handle.fileno())
+    path.unlink()
 
 
 class MemoryStore:
@@ -127,7 +161,7 @@ class MemoryStore:
     def load(self) -> bytes | None:
         return self._payload
 
-    def save(self, payload: bytes) -> None:
+    def save(self, payload: bytes, *, forget_previous: bool = False) -> None:
         self._payload = payload
 
     def wipe(self) -> None:
@@ -177,23 +211,14 @@ class EncryptedStore:
         except (InvalidTag, ValueError) as refused:
             raise StoreError("the store could not be opened") from refused
 
-    def save(self, payload: bytes) -> None:
+    def save(self, payload: bytes, *, forget_previous: bool = False) -> None:
+        # forget_previous is ignored: nothing here can reach an earlier copy on
+        # flash. That is what mayak.bound_store is for.
         salt = self._derived[0] if self._derived is not None else secrets.token_bytes(SALT_LENGTH)
         nonce = secrets.token_bytes(NONCE_LENGTH)
         header = MAGIC + bytes([VERSION]) + salt + nonce
         ciphertext = AESGCM(self._key_for(salt)).encrypt(nonce, payload, header)
-
-        # Written beside the target and moved into place, so a process that dies
-        # mid-write leaves the previous store intact rather than half of a new
-        # one. A store that can be truncated by a battery is a store that loses
-        # every contact at the worst possible moment.
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self._path.with_suffix(self._path.suffix + ".writing")
-        with open(temporary, "wb") as handle:
-            handle.write(header + ciphertext)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, self._path)
+        write_atomically(self._path, header + ciphertext)
 
     def wipe(self) -> None:
         """Overwrite and remove, and do not pretend that is erasure.
@@ -205,14 +230,7 @@ class EncryptedStore:
         nobody can open.
         """
         self._derived = None
-        if not self._path.is_file():
-            return
-        length = self._path.stat().st_size
-        with open(self._path, "r+b") as handle:
-            handle.write(secrets.token_bytes(length))
-            handle.flush()
-            os.fsync(handle.fileno())
-        self._path.unlink()
+        overwrite_and_remove(self._path)
 
     def _key_for(self, salt: bytes) -> bytes:
         if self._derived is None or self._derived[0] != salt:
@@ -220,11 +238,16 @@ class EncryptedStore:
         return self._derived[1]
 
     def _derive(self, salt: bytes) -> bytes:
-        return argon2id(
-            self._passphrase,
-            salt,
-            length=KEY_LENGTH,
-            iterations=ITERATIONS,
-            lanes=LANES,
-            memory_kib=MEMORY_KIB,
-        )
+        return stretch_passphrase(self._passphrase, salt)
+
+
+def stretch_passphrase(passphrase: bytes, salt: bytes) -> bytes:
+    """The store's Argon2id, at the store's parameters."""
+    return argon2id(
+        passphrase,
+        salt,
+        length=KEY_LENGTH,
+        iterations=ITERATIONS,
+        lanes=LANES,
+        memory_kib=MEMORY_KIB,
+    )

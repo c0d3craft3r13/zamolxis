@@ -89,7 +89,9 @@ from mayak.kem import HybridKem, Kem, X25519Kem
 from mayak.mechanisms import post_quantum_mechanism
 from mayak.node import Node, NodeError
 from mayak.rns_transport import RnsTransport, body_length_for, drain
-from mayak.store import EncryptedStore, StoreError
+from mayak.bound_store import open_store
+from mayak.store import Store, StoreError
+from mayak.vault import hardware_vault
 from mayak.transport import TransportError
 
 #: Where a device keeps itself when the caller does not say otherwise.
@@ -230,9 +232,15 @@ def passphrase_for(arguments: argparse.Namespace, *, confirm: bool = False) -> b
     return entered
 
 
-def _store(arguments: argparse.Namespace, *, confirm: bool = False) -> EncryptedStore:
+def _store(arguments: argparse.Namespace, *, confirm: bool = False) -> Store:
+    """The device file's store: bound to hardware if it is, or if ``--bind`` asks for a new one."""
     try:
-        return EncryptedStore(Path(arguments.file), passphrase_for(arguments, confirm=confirm))
+        return open_store(
+            Path(arguments.file),
+            passphrase_for(arguments, confirm=confirm),
+            hardware_vault(),
+            bind=getattr(arguments, "bind", False),
+        )
     except StoreError as refused:
         raise CliError(str(refused)) from refused
 
@@ -566,7 +574,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     commands = parser.add_subparsers(dest="command", required=True)
 
-    commands.add_parser("init", help="create a device and its keys").set_defaults(run=command_init)
+    init = commands.add_parser("init", help="create a device and its keys")
+    init.add_argument(
+        "--bind",
+        action="store_true",
+        help="bind the device file to this phone's hardware keystore: earlier copies on flash will not open, "
+        "and neither will the file anywhere else — losing the phone loses the contacts",
+    )
+    init.set_defaults(run=command_init)
     commands.add_parser("invite", help="make a one-time invitation for one person").set_defaults(run=command_invite)
     commands.add_parser("whoami", help="how many invitations are open").set_defaults(run=command_whoami)
 

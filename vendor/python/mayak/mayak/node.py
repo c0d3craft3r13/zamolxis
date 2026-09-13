@@ -61,6 +61,15 @@ conversation. A contact who names an invitation this device cannot account for
 — used by someone else, expired, never ours — marks the conversation disputed,
 which an interface should show rather than hide.
 
+## Telling the store when a secret has left
+
+A store bound to a hardware vault can make every earlier copy of the file
+unreadable, and does so when told a secret has left — see :mod:`mayak.bound_store`.
+The node does not rely on every place that destroys a key remembering to say so.
+Each save compares what the new file holds against what the last one held — keys,
+epoch roots, invitations, and who the contacts are — and anything gone means the
+earlier copies must go too.
+
 ## Wiping is the operation the rest of the design exists for
 
 :meth:`wipe` destroys the store and drops every key held in memory. What is left
@@ -71,6 +80,7 @@ erase flash on request, and it is stated rather than dressed up.
 
 from __future__ import annotations
 
+import hashlib
 import threading
 import time
 from collections.abc import Callable
@@ -176,6 +186,9 @@ class Node:
             if identity in self._book
         }
         self._invitations = InvitationPool(saved.invitations if saved is not None else [], clock=clock)
+        #: What the file on disk holds that must not outlive its removal. None
+        #: until something has been read or written.
+        self._last_secrets: frozenset[bytes] | None = _secrets_in(saved) if saved is not None else None
         self._save_lock = threading.RLock()
         self._wiped = False
 
@@ -378,8 +391,7 @@ class Node:
         """
         self._require_usable()
         with self._save_lock:
-            device_format.save(
-                self._store,
+            device = (
                 device_format.Device(
                     us=self._us if self._store_keys else None,
                     book=self._book,
@@ -394,8 +406,12 @@ class Node:
                         )
                         for identity, ring in list(self._keyrings.items())
                     },
-                ),
+                )
             )
+            secrets = _secrets_in(device)
+            removed = self._last_secrets is not None and not self._last_secrets <= secrets
+            self._store.save(device_format.serialise(device), forget_previous=removed)
+            self._last_secrets = secrets
 
     def wipe(self) -> None:
         """Destroy the store and drop every key held in memory.
@@ -567,6 +583,24 @@ class Node:
     def _require_usable(self) -> None:
         if self._wiped:
             raise NodeError("this node has been wiped")
+
+
+def _secrets_in(device: device_format.Device) -> frozenset[bytes]:
+    """Digests of everything in a device whose removal must reach earlier copies.
+
+    Private keys, epoch roots and invitations, obviously. Contacts' identity keys
+    too: forgetting someone is removing the fact of knowing them, and an earlier
+    copy of the file still says it.
+    """
+    material: list[bytes] = []
+    if device.us is not None:
+        material += [device.us.private_key, device.us.kem_private_key]
+    material += [contact.identity_key for contact in device.book]
+    for conversation in device.conversations.values():
+        material += [key.private for key in conversation.keys if key.private]
+        material += [epoch.root for epoch in conversation.epochs]
+    material += [invitation.private for invitation in device.invitations]
+    return frozenset(hashlib.sha256(b"mayak/node/secret/v1" + value).digest() for value in material)
 
 
 def _stored(ring: ReceiveKeyring) -> list[device_format.StoredKey]:

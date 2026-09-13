@@ -203,7 +203,7 @@ fixture to regenerate.
 
 | Directory | Source | Commit | License |
 |---|---|---|---|
-| `python/mayak` | ProjectBeta (this project's own repository) | `67b057f916f886d7478ee24c810f3c8384219f6e` | same as this repository |
+| `python/mayak` | ProjectBeta (this project's own repository) | `fc111b6ceb1066659a62f0bd4923ca02c3e1f144` | same as this repository |
 
 **The one thing under `vendor/` this project wrote.** Mayak — the messaging protocol that
 replaces LXMF — is developed and tested in its own repository, and reaches the app the
@@ -247,6 +247,16 @@ claimed by the one conversation that uses it and destroyed with that conversatio
 a conversation's first exchange no longer opens with a seized device either. The self-check
 the phone runs now meets through one-time invitations. OK (12 tests) on the phone, and phone
 to laptop twice (2.55 s and 2.51 s).
+
+**Since `fc111b6c`: a bound mode, on the real Android Keystore.** A device file can be bound
+to the phone's hardware keystore, reached from Python through Chaquopy's java bridge — no
+Kotlin. Whenever a secret leaves the file, a new Keystore key is made and the old one
+destroyed, so earlier copies of the file on flash do not open even with the passphrase.
+`MayakOnDeviceInstrumentedTest` requires it on the phone and reports it: bound to the
+trusted execution environment (the moto g54 5G has no StrongBox), ordinary save 2–3 ms,
+key rotation 39–57 ms. A software-only keystore is refused. Found on the phone on the way:
+Chaquopy cannot call `Enumeration.nextElement` on `KeyStore.aliases()`, and Keystore keys
+outlive files, so a crashed run's keys needed `forget_orphaned_stores` to reclaim.
 
 **And between two devices.** `MayakPhoneToLaptopInstrumentedTest`, driven from a laptop
 by ProjectBeta's `tools/phone_link_check.py`, sends a Mayak message from the phone to

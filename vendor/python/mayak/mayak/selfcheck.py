@@ -17,6 +17,11 @@ exercised by a quick try: two devices meeting through one-time invitations, a
 conversation moving off the keys it was introduced with, and a device restarting
 part-way through a contact's epoch.
 
+Where the device has a hardware keystore it also exercises the bound store —
+see :mod:`mayak.bound_store` — for real: a file is bound, a secret leaves it, and
+an earlier copy put back where it was must fail to open. The report says which
+hardware held the key and how long a rotation took, measured.
+
 ## What it does not touch
 
 The network. The transport is the in-process loopback, so this says nothing
@@ -29,6 +34,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import time
 from pathlib import Path
 
 from mayak.device import new_keys
@@ -38,6 +44,7 @@ from mayak.node import Node
 from mayak.store import ITERATIONS, KEY_LENGTH, LANES, MEMORY_KIB, EncryptedStore
 from mayak.stretch import argon2id
 from mayak.transport import LoopbackTransport, Switchboard
+from mayak.vault import hardware_vault
 
 #: Argon2id at the store's parameters for a fixed passphrase and salt, agreed by
 #: `cryptography` and the reference C before it was written here. A device whose
@@ -80,9 +87,63 @@ def run(directory: str | None = None) -> dict[str, str]:
 
     with tempfile.TemporaryDirectory(dir=directory) as workspace:
         _conversation(HybridKem(X25519Kem(), quantum), Path(workspace))
+        report["conversation"] = "ok"
+    report.update(_bound_store(Path(directory or tempfile.gettempdir())))
 
-    report["conversation"] = "ok"
     return report
+
+
+def _bound_store(workspace: Path) -> dict[str, str]:
+    vault = hardware_vault()
+    if vault is None:
+        return {"store": "passphrase only (no hardware keystore here)"}
+
+    from mayak.bound_store import BoundStore, key_prefix
+    from mayak.store import StoreError
+
+    # One fixed file, not a temporary one: a run that crashes part-way leaves
+    # hardware keys the Keystore keeps, and only the same path finds them again.
+    # Wiping first is that cleanup.
+    path = workspace / "mayak-selfcheck-bound.mayak"
+    passphrase = os.urandom(16).hex().encode()
+    store = BoundStore(path, passphrase, vault)
+    store.wipe()
+    try:
+        store.save(b"holds a key about to be destroyed")
+        earlier = path.read_bytes()
+
+        started = time.monotonic()
+        store.save(b"only a window moved")
+        ordinary_ms = (time.monotonic() - started) * 1000
+
+        started = time.monotonic()
+        store.save(b"the key is gone", forget_previous=True)
+        rotation_ms = (time.monotonic() - started) * 1000
+
+        current = path.read_bytes()
+        path.write_bytes(earlier)
+        try:
+            BoundStore(path, passphrase, vault).load()
+        except StoreError:
+            pass
+        else:
+            raise SelfCheckFailed("an earlier copy of a bound file still opened after a secret left it")
+        path.write_bytes(current)
+
+        if BoundStore(path, passphrase, vault).load() != b"the key is gone":
+            raise SelfCheckFailed("a bound file did not reopen")
+    finally:
+        store.wipe()
+
+    left = vault.aliases(key_prefix(path))
+    if left:
+        raise SelfCheckFailed(f"wiping a bound file left {len(left)} hardware key(s) behind")
+
+    return {
+        "store": f"bound to {vault.name}",
+        "store_save_ms": f"{ordinary_ms:.0f}",
+        "store_rotation_ms": f"{rotation_ms:.0f}",
+    }
 
 
 def _conversation(kem: Kem, workspace: Path) -> None:
