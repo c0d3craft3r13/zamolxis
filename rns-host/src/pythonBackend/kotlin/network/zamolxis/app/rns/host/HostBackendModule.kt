@@ -130,15 +130,6 @@ object HostBackendModule {
             contactsGate = contactsGate,
         )
 
-    /** Eager for the same reason as [providePythonCallManager]: it starts Mayak on backend READY. */
-    @Provides
-    @Singleton
-    fun providePythonMayakHost(
-        @ApplicationContext context: Context,
-        backend: ChaquopyRnsBackend,
-        settingsAccessor: ServiceSettingsAccessor,
-    ): PythonMayakHost = PythonMayakHost(context = context, backend = backend, settings = settingsAccessor)
-
     /**
      * Flavor-local [RnsBackend] view of [ChaquopyRnsBackend]. [LocalBackend]
      * qualifier disambiguates from the process-aware unqualified
@@ -155,6 +146,5 @@ object HostBackendModule {
     fun provideLocalRnsBackend(
         backend: ChaquopyRnsBackend,
         @Suppress("UNUSED_PARAMETER") eagerCallManager: PythonCallManager,
-        @Suppress("UNUSED_PARAMETER") eagerMayakHost: PythonMayakHost,
     ): RnsBackend = backend
 }

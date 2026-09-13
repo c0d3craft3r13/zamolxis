@@ -67,7 +67,6 @@ enum class SettingsCardId {
     MESSAGE_DELIVERY,
     IMAGE_COMPRESSION,
     POST_QUANTUM,
-    MAYAK_DEVICE_FILE,
     THEME,
     BATTERY,
     DATA_MIGRATION,

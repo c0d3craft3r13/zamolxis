@@ -70,7 +70,6 @@ import network.zamolxis.app.ui.screens.settings.cards.ImageCompressionCard
 import network.zamolxis.app.ui.screens.settings.cards.PostQuantumCard
 import network.zamolxis.app.ui.screens.settings.cards.LocationSharingCard
 import network.zamolxis.app.ui.screens.settings.cards.MapSourcesCard
-import network.zamolxis.app.ui.screens.settings.cards.MayakDeviceFileCard
 import network.zamolxis.app.ui.screens.settings.cards.MessageDeliveryRetrievalCard
 import network.zamolxis.app.ui.screens.settings.cards.NetworkCard
 import network.zamolxis.app.ui.screens.settings.cards.NotificationSettingsCard
@@ -95,7 +94,6 @@ import network.zamolxis.app.util.safeOpenUrl
 import network.zamolxis.app.viewmodel.BlockedUsersViewModel
 import network.zamolxis.app.viewmodel.DebugViewModel
 import network.zamolxis.app.viewmodel.AppLockViewModel
-import network.zamolxis.app.viewmodel.MayakDeviceFileViewModel
 import network.zamolxis.app.viewmodel.SettingsCardId
 import network.zamolxis.app.viewmodel.SettingsViewModel
 import network.zamolxis.app.viewmodel.SharedInstanceAccessEvent
@@ -606,15 +604,6 @@ fun SettingsScreen(
                         isExpanded = state.cardExpansionStates[SettingsCardId.DATA_MIGRATION.name] ?: false,
                         onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.DATA_MIGRATION, it) },
                         onNavigateToMigration = onNavigateToMigration,
-                    )
-
-                    val mayakFileViewModel: MayakDeviceFileViewModel = hiltViewModel()
-                    val mayakFile by mayakFileViewModel.state.collectAsState()
-                    MayakDeviceFileCard(
-                        isExpanded = state.cardExpansionStates[SettingsCardId.MAYAK_DEVICE_FILE.name] ?: false,
-                        onExpandedChange = { viewModel.toggleCardExpanded(SettingsCardId.MAYAK_DEVICE_FILE, it) },
-                        state = mayakFile,
-                        onRequestBound = mayakFileViewModel::requestBound,
                     )
                 }
 

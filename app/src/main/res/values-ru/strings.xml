@@ -1113,23 +1113,6 @@
     <string name="pq_state_partial_sub">Гибридный слой получил только текст. Вложение оказалось слишком крупным, чтобы запечатать его в памяти, и ушло лишь под шифрованием Reticulum.</string>
     <string name="pq_state_unopened">Запечатано, открыть не удалось</string>
     <string name="pq_state_unopened_sub">Шифртекст сохранён, поэтому сообщение может открыться после решения по смене ключа или восстановления пары ключей.</string>
-    <!-- Настройка разработчика: файл устройства Маяка, привязанный к аппаратному хранилищу ключей -->
-    <string name="mayak_file_title">Файл устройства Маяка</string>
-    <string name="mayak_file_desc">Маяк хранит ключи и контакты в одном зашифрованном файле. Привязанный к телефону, он требует ещё и ключ из аппаратного хранилища ключей, а этот ключ меняется всякий раз, когда из файла уходит ключ, — поэтому старые копии файла, оставшиеся во флеш-памяти, перестают открываться даже с паролем.</string>
-    <string name="mayak_file_bind">Привязать к телефону</string>
-    <string name="mayak_file_status_portable">Переносимый: файл открывается паролем, куда бы ни попала его копия.</string>
-    <string name="mayak_file_status_bound">Привязан: файл открывается только на этом телефоне.</string>
-    <string name="mayak_file_status_converting">Файл перезаписывается…</string>
-    <string name="mayak_file_status_not_running">Маяк не запущен, поэтому файл сейчас изменить нельзя.</string>
-    <string name="mayak_file_no_keystore">На этом телефоне нет аппаратного хранилища ключей, к которому можно привязать файл.</string>
-    <string name="mayak_file_error">Не изменено: %1$s</string>
-    <string name="mayak_file_bind_confirm_title">Привязать файл к телефону?</string>
-    <string name="mayak_file_bind_confirm_body">Контакты Маяка будут открываться только на этом телефоне: не из резервной копии и не на новом телефоне. Потеря или сброс телефона — потеря контактов.\n\nКопии файла, уже лежащие во флеш-памяти, по-прежнему открываются паролем; привязка защищает то, что меняется с этого момента.\n\nСообщения, ожидающие повторной отправки, будут потеряны.</string>
-    <string name="mayak_file_bind_action">Привязать</string>
-    <string name="mayak_file_unbind_confirm_title">Отвязать файл?</string>
-    <string name="mayak_file_unbind_confirm_body">Файл снова будет открываться одним паролем, как и каждая его копия, сделанная с этого момента. Копии, сделанные пока он был привязан, останутся нечитаемыми.\n\nСообщения, ожидающие повторной отправки, будут потеряны.</string>
-    <string name="mayak_file_unbind_action">Отвязать</string>
-    <string name="mayak_file_cancel">Отмена</string>
     <string name="about_forked_from">Форк проекта Columba © Участники Columba, используется по лицензии MPL 2.0</string>
     <string name="about_view_license">Открыть лицензию</string>
     <string name="licenses_title">Лицензии</string>

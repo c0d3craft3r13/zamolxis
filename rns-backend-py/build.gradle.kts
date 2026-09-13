@@ -39,10 +39,6 @@ android {
     namespace = "network.zamolxis.app.rns.backend.py"
     compileSdk = 36
 
-    // Same pin as :vendor:lxst-kt:lxst. Two modules in one build compiling C
-    // with two different toolchains is a difference nobody would look for.
-    ndkVersion = "28.2.13676358"
-
     defaultConfig {
         minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -83,20 +79,6 @@ android {
         buildConfig = true
     }
 
-    // C called by Python through ctypes, not by the JVM through JNI — see
-    // src/main/cpp/mayak_native.c. This is the route ML-KEM-768 takes on
-    // Android, where Chaquopy's newest `cryptography` is 42.0.8 and ML-KEM
-    // landed in 47.
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            // Pinned for the reason :vendor:lxst-kt:lxst pins it: letting AGP
-            // choose means a different build host silently uses a different
-            // toolchain. 3.22.1 is what the Android SDK installs by default.
-            version = "3.22.1"
-        }
-    }
-
     testOptions {
         unitTests {
             isReturnDefaultValues = true
@@ -135,13 +117,6 @@ chaquopy {
             install(rootProject.file("vendor/python/ble-reticulum").absolutePath)
 
             install("cryptography>=42.0.0")
-
-            // Mayak — this project's own messaging protocol, vendored from its
-            // repository (ProjectBeta) at the commit in vendor/python/mayak/
-            // VENDORED_COMMIT. Pulls argon2-cffi, whose native half Chaquopy ships:
-            // its cryptography is 42.0.8, which has no Argon2id. ML-KEM-768 comes
-            // from libmayak_mlkem.so (src/main/cpp), not from pip.
-            install(rootProject.file("vendor/python/mayak").absolutePath)
 
             // msgpack — Sideband-compatible telemetry + LXST signalling wire format.
             install("u-msgpack-python")
