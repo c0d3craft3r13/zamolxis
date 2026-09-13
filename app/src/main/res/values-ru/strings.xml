@@ -506,14 +506,6 @@
 
     <!-- Контакты -->
     <string name="contacts_title">Контакты</string>
-    <!-- Shown under the Contacts title when the tab row is hidden, so the count does
-         not vanish with the tab label that used to carry it. -->
-    <plurals name="contact_count">
-        <item quantity="one">%1$d контакт</item>
-        <item quantity="few">%1$d контакта</item>
-        <item quantity="many">%1$d контактов</item>
-        <item quantity="other">%1$d контакта</item>
-    </plurals>
     <string name="contacts_add_cd">Добавить контакт</string>
     <string name="contacts_add_contact">Добавить контакт</string>
     <string name="contacts_announce_now">Анонсировать сейчас</string>
@@ -521,10 +513,6 @@
     <string name="contacts_my_relay">МОЙ РЕТРАНСЛЯТОР</string>
     <string name="contacts_my_relay_cd">Мой ретранслятор</string>
     <string name="contacts_auto">(авто)</string>
-    <!-- Stands in for the destination hash on the relay card in Маяк, where the
-         propagation node was picked automatically and never announced a name.
-         See RelayLabel. -->
-    <string name="contacts_relay_unnamed">Ретранслятор сети</string>
     <string name="contacts_pinned">ЗАКРЕПЛЁН</string>
     <string name="contacts_all">ВСЕ КОНТАКТЫ</string>
     <string name="contacts_unset_relay_title">Убрать назначение ретранслятором?</string>
