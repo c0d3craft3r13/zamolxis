@@ -28,6 +28,15 @@ data class TcpCommunityServer(
 object TcpCommunityServers {
     val servers: List<TcpCommunityServer> =
         listOf(
+            // AETHER hubs: our own transport + LXMF propagation nodes (rnsd + lxmd,
+            // see aether deploy/rns). They are first so they are the onboarding
+            // default. They back each other up: a BackboneInterface link joins the
+            // two, and their propagation stores sync. Measured 4 Oct 2026: a path
+            // across both hubs resolved in 1.5 s, a direct message was delivered
+            // with proof in 0.5 s, and a message left at Amsterdam while the
+            // recipient was offline was fetched later through Russia.
+            TcpCommunityServer("AETHER Amsterdam", "195.63.134.192", 4242, isBootstrap = true),
+            TcpCommunityServer("AETHER Russia", "185.209.28.17", 4242, isBootstrap = true),
             // Bootstrap servers: the ones a fresh install depends on, so they are
             // chosen from measurement rather than reputation. Each was left
             // connected for five minutes and judged on two things: whether the
